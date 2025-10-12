@@ -2,255 +2,146 @@
 <html lang="th">
 <head>
 <meta charset="utf-8"/>
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://accounts.google.com;">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>กระทู้/บทความ – ตารางคมชัด</title>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://accounts.google.com;">
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>อ่านกระทู้</title>
 <style>
-  :root{ --bg:#f8fafc; --paper:#fff; --ink:#111827; --muted:#6b7280; --brand:#2563eb;
-         --line:#e5e7eb; --line-dark:#d1d5db; --radius:10px; --ctl-h:32px; --fs:14px; --fs-sm:12.5px; }
+  :root{ --bg:#f9fafb; --paper:#fff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#2563eb; }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Sarabun",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",Arial,sans-serif;font-size:var(--fs)}
-  header{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--line)}
-  .wrap{max-width:1040px;margin:auto;padding:10px 12px}
-  .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between}
-  .search{flex:1;display:flex;gap:6px;align-items:center}
-  input[type="search"],select{height:var(--ctl-h);padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#fafafa;font-size:13.5px}
-  button{height:var(--ctl-h);padding:0 12px;border:0;border-radius:8px;background:var(--brand);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}
-  button.ghost{background:#e9eefb;color:#1e3a8a} button.danger{background:#ef4444}
-  button[disabled]{opacity:.6;cursor:not-allowed}
-  .sign{display:flex;gap:6px;align-items:center}
-  .avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;display:none}
-
-  .table-wrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:10px}
-  .scroll-x{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;table-layout:fixed}
-  thead{background:#f3f4f6;position:sticky;top:0;z-index:10;border-bottom:1px solid var(--line-dark)}
-  th,td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;word-break:break-word}
-  th{text-align:left;font-weight:700;color:#374151;font-size:13.5px}
-  .col-no{width:64px;text-align:right}
-  .col-title{width:auto}
-  .col-owner{width:180px}
-  .col-latest{width:160px}
-  .col-actions{width:160px}
-  .title a{font-weight:700;color:#111827;text-decoration:none}
-  .title a:hover{text-decoration:underline}
-  .meta{font-size:var(--fs-sm);color:var(--muted);margin-top:4px}
-  .btn-row{display:flex;gap:6px;flex-wrap:wrap}
-  @media (max-width:720px){ .col-owner{display:none} .col-actions{width:140px} }
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Sarabun",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;line-height:1.7}
+  a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+  header{background:#1e40af;color:#fff;padding:10px 14px;font-weight:600}
+  main{max-width:900px;margin:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);padding:16px;margin-top:14px}
+  .title{font-size:1.25rem;font-weight:700;margin:0 0 10px 0}
+  .meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .content{padding:12px 14px;background:#fefefe;border:1px solid var(--line);border-radius:6px}
+  .content img{max-width:100%;border-radius:6px;margin:6px 0}
+  .content pre{background:#f3f4f6;padding:10px;border-radius:6px;overflow-x:auto;font-family:monospace;font-size:13px}
+  .content code{background:#f3f4f6;padding:2px 4px;border-radius:4px}
+  .actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  button{background:#2563eb;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:14px}
+  button.danger{background:#ef4444}
+  footer{max-width:900px;margin:auto;color:#6b7280;font-size:13px;text-align:center;padding:16px 0}
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <div class="toolbar">
-      <div class="search">
-        <input id="q" type="search" placeholder="ค้นหาเรื่อง…"/>
-        <select id="catFilter"><option value="">ทุกหมวด</option></select>
-        <button class="ghost" id="btnSearch">ค้นหา</button>
-      </div>
-      <div class="sign">
-        <img id="avatar" class="avatar" alt="">
-        <div id="signin"></div>
-        <button id="btnSignOut" class="ghost" style="display:none">ออก</button>
-        <button id="btnAdd" disabled>เพิ่ม</button>
-      </div>
-    </div>
-  </div>
-</header>
+<header>อ่านกระทู้</header>
 
-<main class="wrap">
-  <div class="table-wrap">
-    <div class="scroll-x">
-      <table>
-        <thead>
-          <tr>
-            <th class="col-no">ลำดับ</th>
-            <th class="col-title">เรื่อง</th>
-            <th class="col-owner">โดย</th>
-            <th class="col-latest">ล่าสุด</th>
-            <th class="col-actions">การทำงาน</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div style="display:flex;gap:6px;justify-content:center;align-items:center;padding:12px">
-      <button id="prev">ย้อนกลับ</button>
-      <div id="pageInfo" style="font-size:12.5px;background:#eef2ff;color:#1e40af;padding:6px 10px;border-radius:8px"></div>
-      <button id="next">ถัดไป</button>
-    </div>
+<main>
+  <div class="title" id="postTitle">กำลังโหลด...</div>
+  <div class="meta" id="postMeta"></div>
+  <div class="content" id="postBody">โปรดรอสักครู่...</div>
+  <div class="actions">
+    <button onclick="location.href='index.html'">« กลับไปหน้าหลัก</button>
+    <button id="btnDelete" class="danger" style="display:none">ลบโพสต์นี้</button>
   </div>
 </main>
 
-<!-- Dialog เพิ่ม/แก้ -->
-<div id="dlg" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);padding:12px;z-index:60">
-  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;max-width:520px;width:100%;padding:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <h3 id="dlgTitle" style="margin:0">เพิ่มข้อมูล</h3>
-      <button id="closeDlg" class="ghost">ปิด</button>
-    </div>
-    <div style="display:grid;gap:8px;margin-top:10px">
-      <input id="title" type="text" placeholder="หัวข้อ" style="height:32px;padding:0 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa">
-      <textarea id="body" rows="5" placeholder="รายละเอียด (รองรับ b/i/u/a/img/pre/code)" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa"></textarea>
-      <select id="postCategory" style="height:32px;padding:0 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa"><option value="">(กำลังโหลดหมวด…)</option></select>
-      <input id="file" type="file" accept="image/*">
-      <button id="save">บันทึก</button>
-    </div>
-  </div>
-</div>
+<!-- Facebook Comments -->
+<div id="fb-root"></div>
+<div class="fb-comments" data-href="" data-width="100%" data-numposts="5"></div>
 
+<footer>© <span id="year"></span> Webboard Demo</footer>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  const WEB_APP_BASE = 'https://script.google.com/macros/s/AKfycbxb7T5EfOjBh-zsQW7bfl6Bo8TRvfQduDrfjRLI5FTwSyIPs7Qh4FM7U3KDvy3qIDebxA/exec';
-  const CLIENT_ID    = '986811661821-d65agv1s2rmdcq743nif06a3ek0a01b5.apps.googleusercontent.com';
+const WEB_APP_BASE = 'https://script.google.com/macros/s/AKfycbxb7T5EfOjBh-zsQW7bfl6Bo8TRvfQduDrfjRLI5FTwSyIPs7Qh4FM7U3KDvy3qIDebxA/exec';
+const CLIENT_ID    = '986811661821-d65agv1s2rmdcq743nif06a3ek0a01b5.apps.googleusercontent.com';
+document.getElementById('year').textContent=new Date().getFullYear();
+function qs(k){return new URLSearchParams(location.search).get(k)||''}
 
-  let idToken='', me=null, page=1; const pageSize=10; let editingId=null;
-
-  const $=(id)=>document.getElementById(id);
-  const toQS=(o)=>Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
-  const alertErr=(t,m)=>Swal.fire({icon:'error',title:t,text:m||''});
-  const alertOK=(t)=>Swal.fire({icon:'success',title:t,showConfirmButton:false,timer:1000});
-
-  function setSignedInUI(on){
-    const avatar=$('avatar'), signin=$('signin'), btnAdd=$('btnAdd'), btnSignOut=$('btnSignOut');
-    if(on){
-      signin.style.display='none'; btnSignOut.style.display='inline-block'; btnAdd.disabled=false;
-      avatar.style.display = me && me.picture ? 'block' : 'none'; if(me && me.picture) avatar.src=me.picture;
-    }else{
-      signin.style.display='block'; btnSignOut.style.display='none'; btnAdd.disabled=true; avatar.style.display='none';
-    }
-  }
-
-  // GIS
-  window.onload = async () => {
-    try{
-      const t=localStorage.getItem('idToken'), u=localStorage.getItem('me');
-      if(t) idToken=t; if(u) me=JSON.parse(u);
-      setSignedInUI(!!(idToken && me && me.email));
-    }catch(e){}
-
-    const initGIS=()=>{ google.accounts.id.initialize({client_id:CLIENT_ID,callback:onCred}); google.accounts.id.renderButton($('signin'),{theme:"outline",size:"medium",text:"signin_with",locale:"th"}); };
-    if(window.google?.accounts?.id){ initGIS(); } else { const iv=setInterval(()=>{ if(window.google?.accounts?.id){ clearInterval(iv); initGIS(); } },120); }
-
-    await loadCategories();
-    if(idToken){ await fetchMe().catch(()=>{}); setSignedInUI(!!(me && me.email)); }
-    if(me && me.email) loadList();
-  };
-
-  async function onCred(resp){
-    if(!resp || !resp.credential){ alertErr('Sign in ไม่สำเร็จ','ไม่พบ credential'); return; }
-    idToken=resp.credential; await fetchMe();
-    if(me && me.email){ localStorage.setItem('idToken',idToken); localStorage.setItem('me',JSON.stringify(me)); setSignedInUI(true); alertOK('ลงชื่อเข้าใช้สำเร็จ!'); loadList(); }
-    else{ setSignedInUI(false); alertErr('ตรวจสอบตัวตนไม่ผ่าน'); }
-  }
-
-  $('btnSignOut').addEventListener('click', ()=>{ try{google.accounts.id.disableAutoSelect();}catch(_){}
-    idToken=''; me=null; localStorage.removeItem('idToken'); localStorage.removeItem('me');
-    setSignedInUI(false); $('tbody').innerHTML=''; $('pageInfo').textContent='';
+/* sanitizer allowlist */
+function sanitizeBasic(html){
+  if(!html) return '';
+  let s = String(html).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  ['b','i','u','pre','code'].forEach(t=>{
+    s = s.replace(new RegExp(`&lt;${t}&gt;`,'gi'), `<${t}>`)
+         .replace(new RegExp(`&lt;\\/${t}&gt;`,'gi'), `</${t}>`);
   });
+  s = s
+    .replace(/&lt;a href=(&quot;|')([^"'<>]+)\1&gt;/gi, '<a href="$2" target="_blank" rel="noopener">')
+    .replace(/&lt;\/a&gt;/gi, '</a>')
+    .replace(/&lt;img src=(&quot;|')(https?:\/\/[^"'<>]+|data:image\/[a-zA-Z+]+;base64,[^"'<>]+)\1\s*\/?&gt;/gi, '<img src="$2">')
+    .replace(/&lt;span style=(&quot;|')color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))\1&gt;/gi, '<span style="color:$2">')
+    .replace(/&lt;\/span&gt;/gi, '</span>');
+  return s;
+}
 
-  async function fetchMe(){
-    const r=await fetch(WEB_APP_BASE+'?'+toQS({action:'me',idToken}));
-    const j=await r.json(); if(!r.ok || j.error) throw new Error(j.error||'me failed'); me=j;
+let idToken='', me=null, post=null;
+
+window.onload = async () => {
+  // GIS init
+  const initGIS=()=>{ google.accounts.id.initialize({client_id:CLIENT_ID,callback:onCred}); };
+  if(window.google?.accounts?.id){ initGIS(); } else { const iv=setInterval(()=>{ if(window.google?.accounts?.id){ clearInterval(iv); initGIS(); } },120); }
+
+  // token จาก index (ถ้ามี)
+  try{ const t=localStorage.getItem('idToken'); const u=localStorage.getItem('me'); if(t) idToken=t; if(u) me=JSON.parse(u); }catch(_){}
+
+  await loadPost();
+
+  // load Facebook comments (ผูกกับ URL ปัจจุบัน)
+  const c=document.querySelector('.fb-comments'); c.setAttribute('data-href', location.href);
+  if(window.FB){ FB.XFBML.parse(); }
+};
+
+function onCred(resp){
+  if(!resp || !resp.credential) return;
+  idToken=resp.credential;
+  fetchMe().catch(()=>{});
+}
+
+async function fetchMe(){
+  const r=await fetch(WEB_APP_BASE+'?action=me&idToken='+encodeURIComponent(idToken));
+  const j=await r.json(); if(!r.ok || j.error) return;
+  me=j;
+  showDeleteButtonIfOwner();
+}
+
+async function loadPost(){
+  const id = qs('id'); if(!id){ document.getElementById('postTitle').textContent='ไม่พบรหัสโพสต์'; return; }
+  try{
+    const r=await fetch(WEB_APP_BASE+'?action=view&id='+encodeURIComponent(id));
+    const j=await r.json(); if(!r.ok || j.error) throw new Error(j.error||'โหลดไม่สำเร็จ');
+    post=j.item||j;
+
+    document.getElementById('postTitle').textContent=post.title||'(ไม่มีหัวข้อ)';
+    document.getElementById('postMeta').textContent=(post.ownerEmail?`โดย ${post.ownerEmail} • `:'')+(post.category?`หมวด: ${post.category} • `:'')+(post.createdAt?new Date(post.createdAt).toLocaleString():'');
+    const body = sanitizeBasic(post.body||'');
+    const bodyEl=document.getElementById('postBody'); bodyEl.innerHTML=body;
+    if(post.imageUrl){ const img=document.createElement('img'); img.src=post.imageUrl; img.alt=''; img.style.marginTop='8px'; bodyEl.prepend(img); }
+
+    showDeleteButtonIfOwner();
+  }catch(err){
+    document.getElementById('postTitle').textContent='โหลดโพสต์ไม่สำเร็จ';
+    document.getElementById('postBody').textContent=String(err.message||err);
   }
+}
 
-  async function loadCategories(){
-    const r=await fetch(WEB_APP_BASE+'?action=categories'); const j=await r.json();
-    const sel=$('catFilter'); sel.innerHTML='<option value="">ทุกหมวด</option>'; (j.categories||[]).forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
-    sel.addEventListener('change',()=>{ page=1; loadList(); });
-    const postSel=$('postCategory'); postSel.innerHTML=''; (j.categories||[]).forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; postSel.appendChild(o); });
+function showDeleteButtonIfOwner(){
+  const btn=document.getElementById('btnDelete');
+  if(post && me && me.email && post.ownerEmail && me.email===post.ownerEmail){
+    btn.style.display='inline-block';
+    btn.onclick = onDelete;
+  }else{
+    btn.style.display='none';
   }
+}
 
-  async function loadList(){
-    if(!idToken){ alertErr('ยังไม่ได้ลงชื่อเข้าใช้'); return; }
-    const q=$('q').value.trim(), category=$('catFilter').value||'';
-    const r=await fetch(WEB_APP_BASE+'?'+toQS({action:'list',idToken,q,page,pageSize,category}));
-    const j=await r.json(); if(!r.ok || j.error){ alertErr('โหลดรายการไม่สำเร็จ', j?.error||''); return; }
-    renderTable(j);
-  }
-
-  function renderTable(data){
-    const tb=$('tbody'); tb.innerHTML='';
-    (data.items||[]).forEach((item,idx)=>{
-      const tr=document.createElement('tr');
-
-      // ลำดับแทนรหัส
-      const no=((data.page-1)*data.pageSize + idx + 1);
-      const cNo=document.createElement('td'); cNo.className='col-no'; cNo.textContent=no;
-
-      const cTitle=document.createElement('td'); cTitle.className='col-title';
-      const a=document.createElement('a'); a.href='view.html?id='+encodeURIComponent(item.id); a.target='_blank'; a.textContent=item.title || '(ไม่มีหัวข้อ)';
-      const tdiv=document.createElement('div'); tdiv.className='title'; tdiv.appendChild(a);
-      const meta=document.createElement('div'); meta.className='meta'; meta.textContent=(item.category?`หมวด: ${item.category} • `:'') + (item.ownerEmail?`โดย ${item.ownerEmail}`:'');
-      cTitle.appendChild(tdiv); cTitle.appendChild(meta);
-
-      const cOwner=document.createElement('td'); cOwner.className='col-owner'; cOwner.textContent=item.ownerEmail||'-';
-      const cLatest=document.createElement('td'); cLatest.className='col-latest'; cLatest.textContent=item.updatedAt?new Date(item.updatedAt).toLocaleString():(item.createdAt?new Date(item.createdAt).toLocaleString():'-');
-
-      const cAct=document.createElement('td'); cAct.className='col-actions';
-      const btns=document.createElement('div'); btns.className='btn-row';
-      const vBtn=document.createElement('button'); vBtn.className='ghost'; vBtn.textContent='View'; vBtn.onclick=()=>{ window.open('view.html?id='+encodeURIComponent(item.id), '_blank'); };
-      btns.appendChild(vBtn);
-
-      if(me && item.ownerEmail && me.email===item.ownerEmail){
-        const dBtn=document.createElement('button'); dBtn.className='danger'; dBtn.textContent='Delete';
-        dBtn.onclick=()=>confirmDelete(item.id);
-        btns.appendChild(dBtn);
-      }
-      cAct.appendChild(btns);
-
-      tr.appendChild(cNo); tr.appendChild(cTitle); tr.appendChild(cOwner); tr.appendChild(cLatest); tr.appendChild(cAct);
-      tb.appendChild(tr);
-    });
-
-    $('pageInfo').textContent=`หน้า ${data.page} / ${data.totalPages} – ทั้งหมด ${data.total} รายการ`;
-    $('prev').disabled=data.page<=1; $('next').disabled=data.page>=data.totalPages;
-  }
-
-  async function confirmDelete(id){
-    const res=await Swal.fire({title:'ลบโพสต์นี้?',text:'ไฟล์รูป/ข้อมูลที่เกี่ยวข้องจะถูกลบทั้งหมด',icon:'warning',showCancelButton:true,confirmButtonText:'ลบเลย',cancelButtonText:'ยกเลิก',confirmButtonColor:'#ef4444'});
-    if(!res.isConfirmed) return;
-    const form=new URLSearchParams(); form.set('action','delete'); form.set('idToken',idToken); form.set('id',id);
-    const r=await fetch(WEB_APP_BASE,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form.toString()});
-    const j=await r.json(); if(!r.ok || j.error){ alertErr('ลบไม่สำเร็จ', j?.error||''); return; }
-    alertOK('ลบสำเร็จ'); loadList();
-  }
-
-  // search/pager
-  $('btnSearch').addEventListener('click', ()=>{ page=1; loadList(); });
-  $('q').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); page=1; loadList(); }});
-  $('prev').addEventListener('click', ()=>{ if(page>1){ page--; loadList(); }});
-  $('next').addEventListener('click', ()=>{ page++; loadList(); });
-
-  // dialog add/edit
-  const dlg=$('dlg'); $('btnAdd').addEventListener('click', openCreate); $('closeDlg').addEventListener('click', ()=> dlg.style.display='none');
-  function openCreate(){ editingId=null; $('dlgTitle').textContent='เพิ่มข้อมูล'; $('title').value=''; $('body').value=''; $('file').value=''; const s=$('postCategory'); if(s&&s.options.length) s.selectedIndex=0; dlg.style.display='flex'; }
-  $('save').addEventListener('click', savePost);
-
-  async function savePost(evt){
-    if(!idToken){ alertErr('กรุณาลงชื่อเข้าใช้'); return; }
-    const title=$('title').value.trim(); const body=$('body').value.trim(); const file=$('file').files[0];
-    const category=($('postCategory')?.value||'').trim(); if(!title){ alertErr('กรุณากรอกหัวข้อ'); return; }
-    const btn=evt.target; const t=btn.textContent; btn.disabled=true; btn.textContent='กำลังบันทึก…';
-    try{
-      let imageData=''; if(file) imageData=await fileToDataURL(file);
-      const form=new URLSearchParams(); form.set('idToken',idToken); form.set('title',title); form.set('body',body);
-      if(category) form.set('category',category); if(imageData) form.set('imageData',imageData);
-      if(editingId){ form.set('action','update'); form.set('id',editingId); } else { form.set('action','create'); }
-      const r=await fetch(WEB_APP_BASE,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form.toString()});
-      const j=await r.json(); if(!r.ok || j.error) throw new Error(j?.error||'save failed');
-      dlg.style.display='none'; alertOK('บันทึกสำเร็จ!'); page=1; loadList();
-    }catch(err){ alertErr('บันทึกไม่สำเร็จ', String(err.message||err)); }
-    finally{ btn.disabled=false; btn.textContent=t; }
-  }
-
-  function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
+async function onDelete(){
+  if(!idToken){ Swal.fire({icon:'error',title:'ต้องลงชื่อเข้าใช้ก่อน'}); return; }
+  const ask=await Swal.fire({title:'ลบโพสต์นี้?',text:'ไฟล์รูปและข้อมูลทั้งหมดจะถูกลบ',icon:'warning',showCancelButton:true,confirmButtonText:'ลบเลย',cancelButtonText:'ยกเลิก',confirmButtonColor:'#ef4444'});
+  if(!ask.isConfirmed) return;
+  const form=new URLSearchParams(); form.set('action','delete'); form.set('idToken',idToken); form.set('id',post.id);
+  const r=await fetch(WEB_APP_BASE,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form.toString()});
+  const j=await r.json(); if(!r.ok || j.error){ Swal.fire({icon:'error',title:'ลบไม่สำเร็จ',text:j?.error||''}); return; }
+  Swal.fire({icon:'success',title:'ลบสำเร็จ',timer:1000,showConfirmButton:false});
+  setTimeout(()=>{ location.href='index.html'; }, 900);
+}
 </script>
+
+<!-- Facebook SDK: ใส่ appId ของคุณ -->
+<script async defer crossorigin="anonymous"
+  src="https://connect.facebook.net/th_TH/sdk.js#xfbml=1&version=v20.0&appId=1334789334502615"></script>
 </body>
 </html>
-
-
