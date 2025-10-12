@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>กระทู้/บทความ – รายการ + ค้นหา + เพิ่มข้อมูล</title>
+
+<!-- ปิด COOP/COEP (ถ้ามี meta พวกนี้ในไฟล์เดิม ให้ลบทิ้ง) -->
+<!-- <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin"> -->
+<!-- <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp"> -->
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+  :root{
+    --bg:#fffdf7; --ink:#111827; --muted:#6b7280; --line:#e5e7eb;
+    --brand:#2563eb; --paper:#ffffff; --radius:14px;
+    --danger:#ef4444; --ghost:#eef2ff; --ok:#16a34a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Sarabun", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", Arial, sans-serif}
+  header{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--line)}
+  .wrap{max-width:900px;margin:auto;padding:14px}
+  .toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between}
+  .search{flex:1;display:flex;gap:8px}
+  input[type="search"]{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fafafa}
+  button{border:0;border-radius:10px;padding:10px 14px;background:var(--brand);color:#fff;cursor:pointer}
+  button[disabled]{opacity:.6;cursor:not-allowed}
+  .list{display:grid;gap:12px;margin-top:14px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:12px;display:grid;grid-template-columns:64px 1fr;gap:12px}
+  .thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:#eee}
+  .title{font-weight:700;margin:0 0 4px 0}
+  .meta{font-size:12px;color:var(--muted)}
+  .pager{display:flex;gap:8px;justify-content:center;margin:16px 0}
+  .dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
+  .dialog{background:var(--paper);border-radius:16px;max-width:520px;width:100%;padding:16px;border:1px solid var(--line)}
+  .dialog h3{margin:0 0 8px 0}
+  .grid{display:grid;gap:10px}
+  textarea, input[type="text"], select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fafafa}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip{border:1px solid var(--line);background:#fff;color:#111;padding:6px 10px;border-radius:999px;font-size:13px;cursor:pointer}
+  .chip.active{background:#f1f5ff;border-color:#c7d2fe}
+  .ghost{background:var(--ghost);color:#1e40af}
+  .danger{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="toolbar">
+      <div class="search">
+        <input id="q" type="search" placeholder="ค้นหาเรื่อง..." />
+        <!-- เพิ่ม filter หมวด จะเติม options หลังโหลดจาก backend -->
+        <select id="catFilter" style="padding:10px;border:1px solid #e5e7eb;border-radius:10px">
+          <option value="">ทุกหมวด</option>
+        </select>
+        <button class="ghost" id="btnSearch">ค้นหา</button>
+      </div>
+      <div class="sign">
+        <img id="avatar" class="avatar" src="" alt="" style="display:none;width:28px;height:28px;border-radius:50%;object-fit:cover">
+        <div id="signin"></div>
+        <button id="btnSignOut" class="ghost" style="display:none">ลงชื่อออก</button>
+        <button id="btnAdd" disabled>เพิ่มข้อมูล</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="list" class="list"></div>
+  <div class="pager">
+    <button id="prev">ย้อนกลับ</button>
+    <div id="pageInfo" class="ghost" style="padding:10px 12px;border-radius:10px;"></div>
+    <button id="next">ถัดไป</button>
+  </div>
+</main>
+
+<!-- Dialog เพิ่ม/แก้ไข -->
+<div id="dlg" class="dialog-backdrop" role="dialog" aria-modal="true">
+  <div class="dialog">
+    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+      <h3 id="dlgTitle">เพิ่มข้อมูล</h3>
+      <button id="closeDlg" class="ghost" style="background:#f3f4f6;color:#111">ปิด</button>
+    </div>
+    <div class="grid">
+      <input id="title" type="text" placeholder="หัวข้อ" />
+      <textarea id="body" rows="5" placeholder="รายละเอียด"></textarea>
+      <select id="postCategory"><option value="">(กำลังโหลดหมวด…)</option></select>
+      <input id="file" type="file" accept="image/*" />
+      <button id="save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ======= ตั้งค่าให้ตรงโปรเจ็คของคุณ =======
+  const WEB_APP_BASE = 'https://script.google.com/macros/s/AKfycbySSYD2QpQxWsX7Len5J2k_PlFdgdqZyZV7q-TiBXXj9bkg93hfsZYCT9DBvlWi7slMJg/exec';
+  const CLIENT_ID = '986811661821-d65agv1s2rmdcq743nif06a3ek0a01b5.apps.googleusercontent.com';
+  // ===========================================
+
+  let idToken = '';
+  let me = null;
+  let page = 1;
+  const pageSize = 10;
+  let editingId = null;
+
+  const EMOJIS = ['👍','❤️','😂','👏'];
+
+  function toQS(obj) { return Object.entries(obj).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&'); }
+  function showError(msg, extra){ console.error('[ERROR]', msg, extra||''); alert(msg + (extra?('\n'+extra):'')); }
+  function setSignedInUI(on){
+    const avatar = document.getElementById('avatar');
+    const signin = document.getElementById('signin');
+    const btnAdd = document.getElementById('btnAdd');
+    const btnSignOut = document.getElementById('btnSignOut');
+    if (on) {
+      signin.style.display = 'none';
+      btnSignOut.style.display = 'inline-block';
+      btnAdd.disabled = false;
+      avatar.style.display = me && me.picture ? 'block' : 'none';
+      if (me && me.picture) avatar.src = me.picture;
+    } else {
+      signin.style.display = 'block';
+      btnSignOut.style.display = 'none';
+      btnAdd.disabled = true;
+      avatar.style.display = 'none';
+    }
+  }
+
+  // ===== GIS =====
+  window.onload = async function() {
+    // restore session
+    try {
+      const savedToken = localStorage.getItem('idToken');
+      const savedMe = localStorage.getItem('me');
+      if (savedToken) idToken = savedToken;
+      if (savedMe) me = JSON.parse(savedMe);
+      if (idToken && me && me.email) setSignedInUI(true);
+    } catch(e){}
+
+    google.accounts.id.initialize({
+      client_id: CLIENT_ID,
+      callback: handleCredentialResponse,
+      auto_select: false,            // ปิด One-Tap เพื่อหลีกเลี่ยง iframe/CSP
+      // use_fedcm_for_prompt: true, // <- ถ้าต้องการใช้ FedCM ให้เอาคอมเมนต์บรรทัดนี้ออก แล้วเรียก google.accounts.id.prompt() ด้านล่าง
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('signin'),
+      { theme: "outline", size: "large", text: "signin_with", locale: "th" }
+    );
+    // google.accounts.id.prompt(); // ใช้เฉพาะเมื่อเปิด use_fedcm_for_prompt:true
+
+    await loadCategoriesToUI();
+
+    if (idToken) {
+      try { await fetchMe(); if (me && me.email) { setSignedInUI(true); loadList(); } else setSignedInUI(false); }
+      catch(e){ setSignedInUI(false); }
+    }
+  };
+
+  async function handleCredentialResponse(resp) {
+    if (!resp || !resp.credential) { showError('Sign in ไม่สำเร็จ: ไม่พบ credential'); return; }
+    idToken = resp.credential;
+    await fetchMe();
+    if (me && me.email) {
+      localStorage.setItem('idToken', idToken);
+      localStorage.setItem('me', JSON.stringify(me));
+      setSignedInUI(true);
+      loadList();
+    } else {
+      setSignedInUI(false);
+      showError('ตรวจสอบตัวตนไม่ผ่าน');
+    }
+  }
+
+  document.getElementById('btnSignOut').addEventListener('click', ()=>{
+    try { google.accounts.id.disableAutoSelect(); } catch(e){}
+    idToken=''; me=null;
+    localStorage.removeItem('idToken'); localStorage.removeItem('me');
+    setSignedInUI(false);
+    document.getElementById('list').innerHTML = '';
+    document.getElementById('pageInfo').textContent = '';
+  });
+
+  async function fetchMe(){
+    const url = WEB_APP_BASE + '?' + toQS({ action:'me', idToken });
+    const r = await fetch(url);
+    const j = await r.json().catch(()=>null);
+    if (!r.ok || (j && j.error)) { me=null; return; }
+    me = j || null;
+  }
+
+  // ===== Categories =====
+  async function loadCategoriesToUI(){
+    const url = WEB_APP_BASE + '?' + toQS({ action:'categories', idToken: idToken || 'dummy' });
+    const r = await fetch(url);
+    const j = await r.json().catch(()=>null);
+    if (!r.ok || !j || j.error) { showError('โหลดหมวดไม่สำเร็จ', j?JSON.stringify(j):''); return; }
+
+    const filterSel = document.getElementById('catFilter');
+    j.categories.forEach(c=>{
+      const o = document.createElement('option'); o.value=c; o.textContent=c; filterSel.appendChild(o);
+    });
+    filterSel.addEventListener('change', ()=>{ page=1; loadList(); });
+
+    const catSel = document.getElementById('postCategory');
+    catSel.innerHTML = '';
+    j.categories.forEach(c=>{
+      const o = document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o);
+    });
+  }
+
+  // ===== Reactions =====
+  async function fetchReactions(postId){
+    const url = WEB_APP_BASE + '?' + toQS({ action:'reactions', idToken, postId });
+    const r = await fetch(url);
+    const j = await r.json().catch(()=>null);
+    if (!r.ok || !j || j.error) throw new Error(j?JSON.stringify(j):'');
+    EMOJIS.forEach(e=>{ if(typeof j.counts[e] !== 'number') j.counts[e]=0; });
+    return j;
+  }
+  async function sendReaction(postId, emoji){
+    const form = new URLSearchParams();
+    form.set('action','react'); form.set('idToken', idToken);
+    form.set('postId', postId); form.set('emoji', emoji);
+    const r = await fetch(WEB_APP_BASE, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: form.toString() });
+    const j = await r.json().catch(()=>null);
+    if (!r.ok || !j || j.error) throw new Error(j?JSON.stringify(j):'');
+    EMOJIS.forEach(e=>{ if(typeof j.counts[e] !== 'number') j.counts[e]=0; });
+    return j;
+  }
+  function renderReactions(container, postId, data){
+    container.innerHTML = '';
+    EMOJIS.forEach(e=>{
+      const b = document.createElement('button');
+      b.className = 'chip' + (data.mine === e ? ' active' : '');
+      b.textContent = `${e} ${data.counts[e]||0}`;
+      b.addEventListener('click', async ()=>{
+        try {
+          const updated = await sendReaction(postId, e);
+          renderReactions(container, postId, updated);
+        } catch(err){ showError('REACT error', String(err)); }
+      });
+      container.appendChild(b);
+    });
+  }
+
+  // ===== List / Render =====
+  async function loadList() {
+    if (!idToken) { showError('ยังไม่ได้ลงชื่อเข้าใช้'); return; }
+    const q = document.getElementById('q').value.trim();
+    const category = document.getElementById('catFilter').value || '';
+    const url = WEB_APP_BASE + '?' + toQS({ action:'list', idToken, q, page, pageSize, category });
+    const r = await fetch(url);
+    const j = await r.json().catch(()=>null);
+    if (!r.ok || !j || j.error) { showError('LIST error', j?JSON.stringify(j):''); return; }
+    renderList(j);
+  }
+
+  function renderList(data) {
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    (data.items || []).forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.src = item.imageUrl ? item.imageUrl : (item.imageId ? ('https://lh3.googleusercontent.com/d/' + item.imageId) : '');
+      img.alt = '';
+
+      const right = document.createElement('div');
+      const h = document.createElement('div');
+      h.className = 'title';
+      h.textContent = item.title || '(ไม่มีหัวข้อ)';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const owner = item.ownerEmail ? ` • โดย ${item.ownerEmail}` : '';
+      const cat = item.category ? ` • หมวด ${item.category}` : '';
+      meta.textContent = (item.createdAt ? new Date(item.createdAt).toLocaleString() : '') + owner + cat;
+
+      const body = document.createElement('div');
+      body.textContent = (item.body || '').slice(0,180) + ((item.body||'').length>180?'...':'');
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const reacts = document.createElement('div');
+      (async()=>{ try{ const rx = await fetchReactions(item.id); renderReactions(reacts, item.id, rx); }catch(e){} })();
+      actions.appendChild(reacts);
+
+      if (me && item.ownerEmail && me.email === item.ownerEmail) {
+        const editBtn = document.createElement('button');
+        editBtn.className = 'ghost'; editBtn.textContent = 'แก้ไข';
+        editBtn.addEventListener('click', ()=> openEdit(item));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'danger'; delBtn.textContent = 'ลบ';
+        delBtn.addEventListener('click', ()=> doDelete(item.id));
+
+        actions.appendChild(editBtn); actions.appendChild(delBtn);
+      }
+
+      right.appendChild(h); right.appendChild(meta); right.appendChild(body); right.appendChild(actions);
+      card.appendChild(img); card.appendChild(right);
+      list.appendChild(card);
+    });
+
+    document.getElementById('pageInfo').textContent = `หน้า ${data.page} / ${data.totalPages} – ทั้งหมด ${data.total} รายการ`;
+    document.getElementById('prev').disabled = data.page <= 1;
+    document.getElementById('next').disabled = data.page >= data.totalPages;
+  }
+
+  // Search & Pager
+  document.getElementById('btnSearch').addEventListener('click', ()=>{ page=1; loadList(); });
+  document.getElementById('q').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ page=1; loadList(); } });
+  document.getElementById('prev').addEventListener('click', ()=>{ if(page>1){ page--; loadList(); }});
+  document.getElementById('next').addEventListener('click', ()=>{ page++; loadList(); });
+
+  // Dialog Add/Edit
+  const dlg = document.getElementById('dlg');
+  const dlgTitle = document.getElementById('dlgTitle');
+  document.getElementById('btnAdd').addEventListener('click', openCreate);
+  document.getElementById('closeDlg').addEventListener('click', ()=> dlg.style.display='none');
+
+  function openCreate(){
+    editingId = null;
+    dlgTitle.textContent = 'เพิ่มข้อมูล';
+    document.getElementById('title').value = '';
+    document.getElementById('body').value = '';
+    document.getElementById('file').value = '';
+    const catSel = document.getElementById('postCategory');
+    if (catSel && catSel.options.length) catSel.selectedIndex = 0;
+    dlg.style.display='flex';
+  }
+  function openEdit(item){
+    editingId = item.id;
+    dlgTitle.textContent = 'แก้ไขโพสต์';
+    document.getElementById('title').value = item.title || '';
+    document.getElementById('body').value = item.body || '';
+    document.getElementById('file').value = '';
+    const catSel = document.getElementById('postCategory');
+    if (catSel) {
+      const ix = [...catSel.options].findIndex(o=>o.value===item.category);
+      catSel.selectedIndex = ix>=0 ? ix : 0;
+    }
+    dlg.style.display='flex';
+  }
+
+  document.getElementById('save').addEventListener('click', async ()=>{
+    if (!idToken) { showError('กรุณาลงชื่อเข้าใช้'); return; }
+    const title = document.getElementById('title').value.trim();
+    const body  = document.getElementById('body').value.trim();
+    const file  = document.getElementById('file').files[0];
+    const category = (document.getElementById('postCategory')?.value || '').trim();
+    if (!title) { showError('กรอกหัวข้อ'); return; }
+
+    let imageData = '';
+    if (file) imageData = await fileToDataURL(file);
+
+    const form = new URLSearchParams();
+    form.set('idToken', idToken);
+    form.set('title', title);
+    form.set('body', body);
+    if (category) form.set('category', category);
+    if (imageData) form.set('imageData', imageData);
+
+    if (editingId) { form.set('action','update'); form.set('id', editingId); }
+    else { form.set('action','create'); }
+
+    const r = await fetch(WEB_APP_BASE, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: form.toString() });
+    const j = await r.json().catch(()=>null);
+    if (!r.ok || (j && j.error)) { showError(`${editingId?'UPDATE':'CREATE'} error`, j?JSON.stringify(j):''); return; }
+    dlg.style.display='none';
+    page = 1; loadList();
+  });
+
+  async function doDelete(id){
+    if (!idToken) { showError('กรุณาลงชื่อเข้าใช้'); return; }
+    if (!confirm('ยืนยันลบโพสต์นี้? (ข้อมูลในชีตจะถูกลบจริง และรีแอคชันที่เกี่ยวข้องจะถูกลบด้วย)')) return;
+    const form = new URLSearchParams();
+    form.set('action','delete'); form.set('idToken', idToken); form.set('id', id);
+    const r = await fetch(WEB_APP_BASE, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: form.toString() });
+    const j = await r.json().catch(()=>null);
+    if (!r.ok || (j && j.error)) { showError('DELETE error', j?JSON.stringify(j):''); return; }
+    loadList();
+  }
+
+  function fileToDataURL(file) {
+    return new Promise((resolve,reject)=>{
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+  }
+</script>
+</body>
+</html>
