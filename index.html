@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>กระทู้/บทความ – ตารางคมชัด + Google Sign-In</title>
 
-<!-- GIS Button -->
+<!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <!-- SweetAlert2 -->
@@ -24,7 +24,6 @@
   header{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--line)}
   .wrap{max-width:1040px;margin:auto;padding:10px 12px}
   .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;min-height:44px}
-
   .search{flex:1;display:flex;gap:6px;align-items:center}
   input[type="search"], select{
     height:var(--ctl-h); padding:0 10px; border:1px solid var(--line); border-radius:8px; background:#fafafa; font-size:13.5px;
@@ -34,12 +33,10 @@
   button.ghost{background:#e9eefb; color:#1e3a8a}
   button.danger{background:#ef4444}
   button[disabled]{opacity:.6; cursor:not-allowed}
-
   .sign{display:flex;gap:6px;align-items:center}
   .avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;display:none}
 
-  /* ===== ตารางจริง (แนวบอร์ด PHP) ===== */
-  .table-wrap{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+  .table-wrap{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;margin-top:10px}
   .scroll-x{overflow-x:auto}
   table{width:100%; border-collapse:collapse; table-layout:fixed}
   thead{background:#f3f4f6; position:sticky; top:0; z-index:10; border-bottom:1px solid var(--line-dark)}
@@ -48,25 +45,22 @@
   td{font-size:13.5px}
   tr:hover td{background:#f9fafb}
 
-  /* คอลัมน์ */
   .col-id{width:72px}
   .col-title{width:auto}
   .col-owner{width:180px}
   .col-latest{width:160px}
   .col-replies{width:84px; text-align:right}
   .col-views{width:84px; text-align:right}
-
-  .title{font-weight:700}
-  .meta{font-size:var(--fs-sm); color:var(--muted)}
+  .title a{font-weight:700; color:#111827; text-decoration:none}
+  .title a:hover{text-decoration:underline}
+  .meta{font-size:var(--fs-sm); color:var(--muted); margin-top:4px}
   .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
   .chip{border:1px solid var(--line); background:#fff; color:#111; padding:3px 8px; border-radius:999px; font-size:12px; height:24px; display:inline-flex; align-items:center}
   .chip.active{background:#e0e7ff; border-color:#a5b4fc; color:#3730a3; font-weight:600}
 
-  /* เพจเจอร์ */
-  .pager{display:flex;gap:6px;justify-content:center;align-items:center; padding:12px 0}
+  .pager{display:flex;gap:6px;justify-content:center;align-items:center; padding:12px}
   #pageInfo{font-size:12.5px; background:#eef2ff; color:#1e40af; padding:6px 10px; border-radius:8px}
 
-  /* มือถือ: ซ่อนบางคอลัมน์เพื่อความแน่น */
   @media (max-width:720px){
     .col-owner,.col-views{display:none}
     .col-id{width:60px}
@@ -80,15 +74,12 @@
     <div class="toolbar">
       <div class="search">
         <input id="q" type="search" placeholder="ค้นหาเรื่อง…"/>
-        <select id="catFilter">
-          <option value="">ทุกหมวด</option>
-        </select>
+        <select id="catFilter"><option value="">ทุกหมวด</option></select>
         <button class="ghost" id="btnSearch" aria-label="ค้นหา">ค้นหา</button>
       </div>
       <div class="sign">
         <img id="avatar" class="avatar" alt="">
-        <!-- IMPORTANT: container นี้ห้ามหาย เพื่อให้ GIS render ปุ่มได้ -->
-        <div id="signin"></div>
+        <div id="signin"></div><!-- ที่วางปุ่ม Google -->
         <button id="btnSignOut" class="ghost" style="display:none">ออก</button>
         <button id="btnAdd" disabled>เพิ่ม</button>
       </div>
@@ -110,9 +101,7 @@
             <th class="col-views" title="อ่าน">อ่าน</th>
           </tr>
         </thead>
-        <tbody id="tbody">
-          <!-- เติมด้วย JS -->
-        </tbody>
+        <tbody id="tbody"></tbody>
       </table>
     </div>
     <div class="pager">
@@ -123,7 +112,7 @@
   </div>
 </main>
 
-<!-- Dialog เพิ่ม/แก้ไข (คงไว้ตามเดิม แต่ย่อคอนโทรล) -->
+<!-- Dialog เพิ่ม/แก้ไข -->
 <div id="dlg" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);padding:12px;z-index:60">
   <div style="background:var(--paper);border:1px solid var(--line);border-radius:10px;max-width:520px;width:100%;padding:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -132,7 +121,7 @@
     </div>
     <div style="display:grid;gap:8px;margin-top:10px">
       <input id="title" type="text" placeholder="หัวข้อ" style="height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#fafafa">
-      <textarea id="body" rows="5" placeholder="รายละเอียด" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fafafa"></textarea>
+      <textarea id="body" rows="5" placeholder="รายละเอียด (รองรับแท็กพื้นฐาน b/i/u/a/img/pre/code) เช่น &lt;b&gt;ตัวหนา&lt;/b&gt;" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fafafa"></textarea>
       <select id="postCategory" style="height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#fafafa"><option value="">(กำลังโหลดหมวด…)</option></select>
       <input id="file" type="file" accept="image/*">
       <button id="save">บันทึก</button>
@@ -141,36 +130,31 @@
 </div>
 
 <script>
-  /* ===== ตั้งค่าของคุณ ===== */
+  /* ===== ตั้งค่า ===== */
   const WEB_APP_BASE = 'https://script.google.com/macros/s/AKfycbySSYD2QpQxWsX7Len5J2k_PlFdgdqZyZV7q-TiBXXj9bkg93hfsZYCT9DBvlWi7slMJg/exec';
-  const CLIENT_ID   = '986811661821-d65agv1s2rmdcq743nif06a3ek0a01b5.apps.googleusercontent.com';
-  /* ======================== */
+  const CLIENT_ID    = '986811661821-d65agv1s2rmdcq743nif06a3ek0a01b5.apps.googleusercontent.com';
+  /* =================== */
 
   let idToken='', me=null, page=1; const pageSize=10; let editingId=null;
   const EMOJIS=['👍','❤️','😂','👏'];
 
-  const $ = (id)=>document.getElementById(id);
-  const toQS = (o)=>Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+  const $=(id)=>document.getElementById(id);
+  const toQS=(o)=>Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
   const showError=(t,m)=>Swal.fire({icon:'error',title:t,text:m||''});
   const showSuccess=(t)=>Swal.fire({icon:'success',title:t,showConfirmButton:false,timer:1200});
 
   function setSignedInUI(on){
     const avatar=$('avatar'), signin=$('signin'), btnAdd=$('btnAdd'), btnSignOut=$('btnSignOut');
     if(on){
-      signin.style.display='none';
-      btnSignOut.style.display='inline-block';
-      btnAdd.disabled=false;
+      signin.style.display='none'; btnSignOut.style.display='inline-block'; btnAdd.disabled=false;
       avatar.style.display = me && me.picture ? 'block' : 'none';
       if(me && me.picture) avatar.src = me.picture;
     }else{
-      signin.style.display='block'; // << สำคัญ: ให้ปุ่ม Google โชว์
-      btnSignOut.style.display='none';
-      btnAdd.disabled=true;
-      avatar.style.display='none';
+      signin.style.display='block'; btnSignOut.style.display='none'; btnAdd.disabled=true; avatar.style.display='none';
     }
   }
 
-  // ===== Google Sign-In (GIS Button) =====
+  // Google Sign-In
   window.onload = async () => {
     try{
       const savedToken=localStorage.getItem('idToken');
@@ -180,19 +164,13 @@
       setSignedInUI(!!(idToken && me && me.email));
     }catch(e){}
 
-    // render ปุ่มทุกครั้ง (container ต้องชื่อ #signin)
-    if(window.google?.accounts?.id){
+    const initGIS = () => {
       google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse, auto_select:false });
       google.accounts.id.renderButton($('signin'), { theme:"outline", size:"medium", text:"signin_with", locale:"th" });
-    }else{
-      // กันกรณี script ยังโหลดไม่ทัน
-      const iv=setInterval(()=>{
-        if(window.google?.accounts?.id){
-          clearInterval(iv);
-          google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse, auto_select:false });
-          google.accounts.id.renderButton($('signin'), { theme:"outline", size:"medium", text:"signin_with", locale:"th" });
-        }
-      },120);
+    };
+    if(window.google?.accounts?.id){ initGIS(); }
+    else {
+      const iv=setInterval(()=>{ if(window.google?.accounts?.id){ clearInterval(iv); initGIS(); } },120);
     }
 
     await loadCategoriesToUI();
@@ -217,7 +195,7 @@
     setSignedInUI(false); $('tbody').innerHTML=''; $('pageInfo').textContent='';
   });
 
-  // ===== Data =====
+  // Data
   async function fetchMe(){
     const r=await fetch(WEB_APP_BASE+'?'+toQS({action:'me', idToken}));
     const j=await r.json().catch(()=>null);
@@ -227,32 +205,29 @@
 
   async function loadCategoriesToUI(){
     try{
-      const r=await fetch(WEB_APP_BASE+'?'+toQS({action:'categories', idToken:idToken||'dummy'}));
-      const j=await r.json().catch(()=>null);
-      if(!r.ok || !j || j.error) throw new Error(j?JSON.stringify(j):'cannot load categories');
-
+      const r=await fetch(WEB_APP_BASE+'?action=categories');
+      const j=await r.json();
       const filterSel=$('catFilter'); filterSel.innerHTML='<option value="">ทุกหมวด</option>';
       j.categories.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; filterSel.appendChild(o); });
       filterSel.addEventListener('change', ()=>{ page=1; loadList(); });
 
       const postSel=$('postCategory'); if(postSel){ postSel.innerHTML=''; j.categories.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; postSel.appendChild(o); }); }
-    }catch(err){ showError('โหลดหมวดไม่สำเร็จ', err.message); }
+    }catch(err){ showError('โหลดหมวดไม่สำเร็จ', String(err)); }
   }
 
   async function fetchReactions(postId){
     const r=await fetch(WEB_APP_BASE+'?'+toQS({action:'reactions', idToken, postId}));
     const j=await r.json().catch(()=>null);
     if(!r.ok || !j || j.error) throw new Error(j?JSON.stringify(j):'');
-    EMOJIS.forEach(e=>{ if(typeof j.counts[e]!=='number') j.counts[e]=0; });
+    EMOJIS.forEach(e=>{ if(typeof j.counts[e] !== 'number') j.counts[e]=0; });
     return j;
   }
-
   async function sendReaction(postId, emoji){
     const form=new URLSearchParams(); form.set('action','react'); form.set('idToken', idToken); form.set('postId', postId); form.set('emoji', emoji);
     const r=await fetch(WEB_APP_BASE,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form.toString()});
     const j=await r.json().catch(()=>null);
     if(!r.ok || !j || j.error) throw new Error(j?JSON.stringify(j):'');
-    EMOJIS.forEach(e=>{ if(typeof j.counts[e]!=='number') j.counts[e]=0; });
+    EMOJIS.forEach(e=>{ if(typeof j.counts[e] !== 'number') j.counts[e]=0; });
     return j;
   }
 
@@ -272,17 +247,19 @@
 
       const tdId=document.createElement('td'); tdId.className='col-id'; tdId.textContent=item.id || (idx+1);
       const tdTitle=document.createElement('td'); tdTitle.className='col-title';
-      const title=document.createElement('div'); title.className='title'; title.textContent=item.title || '(ไม่มีหัวข้อ)';
+      const titleDiv=document.createElement('div'); titleDiv.className='title';
+      const a=document.createElement('a'); a.href='view.html?id='+encodeURIComponent(item.id); a.target='_blank'; a.textContent=item.title || '(ไม่มีหัวข้อ)';
+      titleDiv.appendChild(a);
       const meta=document.createElement('div'); meta.className='meta';
-      meta.textContent = (item.category?`หมวด: ${item.category} • `:'') + (item.ownerEmail?`โดย ${item.ownerEmail}`:'');
+      meta.textContent=(item.category?`หมวด: ${item.category} • `:'') + (item.ownerEmail?`โดย ${item.ownerEmail}`:'');
       const chips=document.createElement('div'); chips.className='chips';
       const reacts=document.createElement('div'); reacts.style.display='flex'; reacts.style.gap='6px';
       (async()=>{ try{ const rx=await fetchReactions(item.id); renderReacts(reacts,item.id,rx);}catch(e){} })();
       chips.appendChild(reacts);
-      tdTitle.appendChild(title); tdTitle.appendChild(meta); tdTitle.appendChild(chips);
+      tdTitle.appendChild(titleDiv); tdTitle.appendChild(meta); tdTitle.appendChild(chips);
 
       const tdOwner=document.createElement('td'); tdOwner.className='col-owner'; tdOwner.textContent=item.ownerEmail||'-';
-      const tdLatest=document.createElement('td'); tdLatest.className='col-latest'; tdLatest.textContent=item.createdAt ? new Date(item.createdAt).toLocaleString() : '-';
+      const tdLatest=document.createElement('td'); tdLatest.className='col-latest'; tdLatest.textContent=item.updatedAt ? new Date(item.updatedAt).toLocaleString() : (item.createdAt?new Date(item.createdAt).toLocaleString():'-');
       const tdReplies=document.createElement('td'); tdReplies.className='col-replies'; tdReplies.textContent = item.replies ?? '0';
       const tdViews=document.createElement('td'); tdViews.className='col-views'; tdViews.textContent = item.views ?? '0';
 
@@ -309,14 +286,14 @@
     });
   }
 
-  /* ค้นหา/เพจเจอร์ */
+  // ค้นหา/เพจเจอร์/ไดอะล็อก
   $('btnSearch').addEventListener('click', ()=>{ page=1; loadList(); });
   $('q').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); page=1; loadList(); }});
   $('prev').addEventListener('click', ()=>{ if(page>1){ page--; loadList(); }});
   $('next').addEventListener('click', ()=>{ page++; loadList(); });
 
-  /* Dialog */
   const dlg=$('dlg'); $('btnAdd').addEventListener('click', openCreate); $('closeDlg').addEventListener('click', ()=> dlg.style.display='none');
+
   function openCreate(){ editingId=null; $('dlgTitle').textContent='เพิ่มข้อมูล'; $('title').value=''; $('body').value=''; $('file').value=''; const s=$('postCategory'); if(s&&s.options.length) s.selectedIndex=0; dlg.style.display='flex'; }
   function openEdit(item){ editingId=item.id; $('dlgTitle').textContent='แก้ไขโพสต์'; $('title').value=item.title||''; $('body').value=item.body||''; $('file').value=''; const s=$('postCategory'); if(s){ const ix=[...s.options].findIndex(o=>o.value===item.category); s.selectedIndex= ix>=0?ix:0; } dlg.style.display='flex'; }
 
