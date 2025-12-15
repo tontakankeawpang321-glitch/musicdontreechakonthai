@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>กรับเสภา จำลอง (Thai Krap Simulator)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #1a1a1a;
+            background-image: radial-gradient(#2a2a2a 1px, transparent 1px);
+            background-size: 20px 20px;
+            overscroll-behavior: none;
+            touch-action: none; /* Prevent zoom/scroll on mobile */
+            user-select: none;
+        }
+
+        /* Wood Texture Generation using CSS */
+        .wood-texture {
+            background-color: #6d4c41;
+            background-image: 
+                linear-gradient(90deg, rgba(255,255,255,0.05) 50%, transparent 50%),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 50%, transparent 50%),
+                linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.1) 50%),
+                linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.1) 50%);
+            background-size: 10px 100%, 20px 100%, 30px 100%, 40px 100%;
+            border-radius: 8px;
+            box-shadow: 
+                inset 2px 2px 5px rgba(255,255,255,0.2),
+                inset -2px -2px 5px rgba(0,0,0,0.4),
+                5px 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .krap-stick {
+            width: 220px;
+            height: 60px;
+            position: relative;
+            transform-origin: center center;
+            transition: transform 0.05s ease-out;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* Top stick animation */
+        .krap-container.active .krap-top {
+            transform: translateY(15px) rotate(-2deg);
+        }
+
+        /* Bottom stick animation (reaction) */
+        .krap-container.active .krap-bottom {
+            transform: translateY(5px) rotate(1deg);
+        }
+
+        .krap-top {
+            background: linear-gradient(180deg, #8d6e63 0%, #5d4037 100%);
+            z-index: 20;
+            top: 20px; /* Overlap slightly */
+        }
+
+        .krap-bottom {
+            background: linear-gradient(180deg, #795548 0%, #4e342e 100%);
+            z-index: 10;
+            top: -20px;
+        }
+
+        .glow-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, rgba(255,215,0,0) 70%);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: transform 0.1s ease-out, opacity 0.2s ease-out;
+            opacity: 0;
+            z-index: 0;
+        }
+
+        .krap-container.active .glow-effect {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            transition: transform 0.05s ease-out, opacity 0.05s ease-out;
+        }
+
+        /* Floating Note Animation */
+        .note {
+            position: absolute;
+            color: #FFD700;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        /* Recorder Pulse */
+        .recording-pulse {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
+        /* Mobile specific adjustments */
+        @media (max-width: 640px) {
+            .krap-stick { width: 180px; height: 50px; }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-between text-white overflow-hidden p-4">
+
+    <!-- Header -->
+    <header class="text-center mt-4">
+        <h1 class="text-3xl font-bold text-yellow-500 drop-shadow-md">กรับเสภา</h1>
+        <p class="text-gray-400 text-sm mt-1">แตะที่หน้าจอหรือเคาะเพื่อเล่น</p>
+    </header>
+
+    <!-- Main Instrument Area -->
+    <main class="flex-grow flex items-center justify-center w-full relative" id="touch-area">
+        
+        <!-- Interactive Area -->
+        <div id="krap-wrapper" class="krap-container relative cursor-pointer select-none transform transition-transform active:scale-95">
+            <div class="glow-effect"></div>
+            
+            <!-- Top Stick -->
+            <div class="krap-stick krap-top wood-texture mx-auto shadow-xl border-b-2 border-black/30 flex items-center justify-center">
+                <div class="w-full h-full absolute inset-0 bg-black/10 rounded-lg"></div>
+                <div class="w-2 h-2 bg-yellow-900/50 rounded-full mx-2 shadow-inner"></div>
+                <div class="w-2 h-2 bg-yellow-900/50 rounded-full mx-2 shadow-inner"></div>
+            </div>
+
+            <!-- Bottom Stick -->
+            <div class="krap-stick krap-bottom wood-texture mx-auto shadow-lg flex items-center justify-center">
+                <div class="w-2 h-2 bg-yellow-900/50 rounded-full mx-2 shadow-inner"></div>
+                <div class="w-2 h-2 bg-yellow-900/50 rounded-full mx-2 shadow-inner"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Controls Dashboard -->
+    <div class="w-full max-w-md bg-gray-800/90 backdrop-blur-sm rounded-2xl p-4 shadow-2xl border border-gray-700 mb-6">
+        
+        <!-- Status Display -->
+        <div class="flex justify-between items-center mb-4 px-2">
+            <div id="status-text" class="text-xs font-mono text-gray-400">พร้อมใช้งาน</div>
+            <div id="timer" class="text-xl font-mono text-yellow-400 font-bold">00:00</div>
+        </div>
+
+        <!-- Buttons Grid -->
+        <div class="grid grid-cols-4 gap-3">
+            <!-- Record Button -->
+            <button id="btn-record" class="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors active:bg-gray-800">
+                <div class="w-8 h-8 rounded-full bg-red-500 mb-1 flex items-center justify-center shadow-md transition-all" id="record-icon">
+                    <i class="fas fa-microphone text-white text-sm"></i>
+                </div>
+                <span class="text-xs">อัดเสียง</span>
+            </button>
+
+            <!-- Stop Button -->
+            <button id="btn-stop" class="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors opacity-50 cursor-not-allowed" disabled>
+                <div class="w-8 h-8 rounded-full bg-gray-400 mb-1 flex items-center justify-center shadow-md">
+                    <i class="fas fa-stop text-white text-sm"></i>
+                </div>
+                <span class="text-xs">หยุด</span>
+            </button>
+
+            <!-- Play Button -->
+            <button id="btn-play" class="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors opacity-50 cursor-not-allowed" disabled>
+                <div class="w-8 h-8 rounded-full bg-green-500 mb-1 flex items-center justify-center shadow-md">
+                    <i class="fas fa-play text-white text-sm pl-1"></i>
+                </div>
+                <span class="text-xs">ฟังเสียง</span>
+            </button>
+
+            <!-- Download Button -->
+            <button id="btn-download" class="flex flex-col items-center justify-center p-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors opacity-50 cursor-not-allowed" disabled>
+                <div class="w-8 h-8 rounded-full bg-blue-500 mb-1 flex items-center justify-center shadow-md">
+                    <i class="fas fa-download text-white text-sm"></i>
+                </div>
+                <span class="text-xs">โหลด</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Audio Element for Playback -->
+    <audio id="audio-playback" class="hidden"></audio>
+
+    <script>
+        // --- Audio Engine (Web Audio API) ---
+        let audioCtx;
+        let masterGain;
+        let recorderDestination;
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob = null;
+        let startTime;
+        let timerInterval;
+
+        // Unlock AudioContext on first user interaction
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                
+                // Master Volume
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.8;
+                masterGain.connect(audioCtx.destination);
+
+                // Setup Recorder Destination (So we record what is generated)
+                recorderDestination = audioCtx.createMediaStreamDestination();
+                masterGain.connect(recorderDestination);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Synthesize Realistic Woodblock Sound (Physics modeling approximation)
+        function playKrapSound() {
+            initAudio();
+            const t = audioCtx.currentTime;
+
+            // 1. The Impact (Click) - Short High Frequency burst
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'triangle'; 
+            osc1.frequency.setValueAtTime(1200, t);
+            osc1.frequency.exponentialRampToValueAtTime(800, t + 0.05); // Pitch drop for thump
+            
+            gain1.gain.setValueAtTime(0, t);
+            gain1.gain.linearRampToValueAtTime(1, t + 0.005);
+            gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+
+            osc1.connect(gain1);
+            gain1.connect(masterGain);
+            
+            osc1.start(t);
+            osc1.stop(t + 0.1);
+
+            // 2. The Resonance (Wood Body) - Bandpassed Square/Sine
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            osc2.type = 'square';
+            // Slight random pitch variation for realism
+            const randomPitch = 850 + (Math.random() * 50); 
+            osc2.frequency.setValueAtTime(randomPitch, t);
+
+            // Wood resonance filter
+            filter.type = 'bandpass';
+            filter.frequency.value = 1400;
+            filter.Q.value = 1.5;
+
+            gain2.gain.setValueAtTime(0, t);
+            gain2.gain.linearRampToValueAtTime(0.6, t + 0.005);
+            gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.15); // Shorter decay for sharp wood
+
+            osc2.connect(filter);
+            filter.connect(gain2);
+            gain2.connect(masterGain);
+
+            osc2.start(t);
+            osc2.stop(t + 0.2);
+        }
+
+        // --- Visual Logic ---
+        const krapWrapper = document.getElementById('krap-wrapper');
+        const touchArea = document.getElementById('touch-area');
+
+        function triggerKrap(e) {
+            // Prevent default if it's touch to avoid double firing
+            if(e.type === 'touchstart') {
+                // e.preventDefault(); // Optional: might block scrolling
+            }
+
+            // Audio
+            playKrapSound();
+
+            // Animation Class
+            krapWrapper.classList.remove('active');
+            void krapWrapper.offsetWidth; // Trigger reflow
+            krapWrapper.classList.add('active');
+
+            // Remove animation class after short delay
+            setTimeout(() => {
+                krapWrapper.classList.remove('active');
+            }, 100);
+
+            // Create Visual Note
+            createNote();
+        }
+
+        function createNote() {
+            const notes = ['♪', '♫', '♩', '♬'];
+            const randomNote = notes[Math.floor(Math.random() * notes.length)];
+            const noteEl = document.createElement('div');
+            noteEl.classList.add('note');
+            noteEl.innerText = randomNote;
+            
+            // Random position near the center
+            const offsetX = (Math.random() - 0.5) * 100;
+            noteEl.style.left = `calc(50% + ${offsetX}px)`;
+            noteEl.style.top = '40%';
+            
+            krapWrapper.appendChild(noteEl);
+
+            // Cleanup
+            setTimeout(() => {
+                noteEl.remove();
+            }, 1000);
+        }
+
+        // Events
+        // We attach to the whole main area for easier hitting on mobile
+        touchArea.addEventListener('pointerdown', (e) => {
+            triggerKrap(e);
+        });
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                triggerKrap(e);
+            }
+        });
+
+
+        // --- Recording Logic ---
+        const btnRecord = document.getElementById('btn-record');
+        const btnStop = document.getElementById('btn-stop');
+        const btnPlay = document.getElementById('btn-play');
+        const btnDownload = document.getElementById('btn-download');
+        const statusText = document.getElementById('status-text');
+        const timerDisplay = document.getElementById('timer');
+        const recordIcon = document.getElementById('record-icon');
+        const audioPlayback = document.getElementById('audio-playback');
+
+        let isRecording = false;
+
+        function updateTimer() {
+            const now = Date.now();
+            const diff = Math.floor((now - startTime) / 1000);
+            const m = Math.floor(diff / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
+            timerDisplay.innerText = `${m}:${s}`;
+        }
+
+        btnRecord.addEventListener('click', () => {
+            initAudio(); // Ensure context is ready
+            audioChunks = [];
+            
+            // Check browser support
+            const mimeTypes = [
+                'audio/webm;codecs=opus',
+                'audio/ogg;codecs=opus', 
+                'audio/mp4' // Safari usually likes mp4
+            ];
+            
+            let options = {};
+            for (let type of mimeTypes) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    options = { mimeType: type };
+                    break;
+                }
+            }
+
+            try {
+                mediaRecorder = new MediaRecorder(recorderDestination.stream, options);
+            } catch (err) {
+                // Fallback for Safari if specific codecs fail
+                mediaRecorder = new MediaRecorder(recorderDestination.stream);
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                audioPlayback.src = audioUrl;
+                
+                // Enable Play/Download
+                btnPlay.disabled = false;
+                btnPlay.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnDownload.disabled = false;
+                btnDownload.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                statusText.innerText = "บันทึกเสร็จสิ้น";
+                statusText.className = "text-xs font-mono text-green-400";
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // UI Updates
+            statusText.innerText = "กำลังอัดเสียง...";
+            statusText.className = "text-xs font-mono text-red-400";
+            recordIcon.classList.add('recording-pulse');
+            
+            btnRecord.disabled = true;
+            btnRecord.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            btnStop.disabled = false;
+            btnStop.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            btnPlay.disabled = true;
+            btnPlay.classList.add('opacity-50', 'cursor-not-allowed');
+            btnDownload.disabled = true;
+            btnDownload.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+
+        btnStop.addEventListener('click', () => {
+            if (isRecording && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                isRecording = false;
+                clearInterval(timerInterval);
+                recordIcon.classList.remove('recording-pulse');
+
+                btnStop.disabled = true;
+                btnStop.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                btnRecord.disabled = false;
+                btnRecord.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        btnPlay.addEventListener('click', () => {
+            if (audioPlayback.src) {
+                statusText.innerText = "กำลังเล่นเสียง...";
+                statusText.className = "text-xs font-mono text-blue-400";
+                audioPlayback.play();
+                audioPlayback.onended = () => {
+                    statusText.innerText = "พร้อมใช้งาน";
+                    statusText.className = "text-xs font-mono text-gray-400";
+                };
+            }
+        });
+
+        btnDownload.addEventListener('click', () => {
+            if (audioBlob) {
+                const url = URL.createObjectURL(audioBlob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                
+                const ext = (mediaRecorder.mimeType.includes('mp4')) ? 'mp4' : 'webm';
+                a.href = url;
+                a.download = `krap_recording_${Date.now()}.${ext}`;
+                document.body.appendChild(a);
+                a.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            }
+        });
+
+    </script>
+</body>
+</html>
