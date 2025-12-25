@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chinese Luo (Gong) Instrument</title>
+    <style>
+        :root {
+            --bg-color: #1a0505;
+            --gong-gold: #d4af37;
+            --gong-shadow: #8a6e18;
+            --text-color: #f0e6d2;
+            --accent-red: #c92a2a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #2b0b0b 0%, #000000 100%);
+            color: var(--text-color);
+            font-family: 'Sarabun', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none; /* Prevent zoom/scroll on mobile */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1 {
+            margin: 10px 0 5px 0;
+            font-size: 1.3rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        /* Controls Area */
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            transform: scale(0.9); /* Slightly smaller controls */
+        }
+
+        .btn {
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            outline: none;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-record {
+            background-color: #444;
+            color: white;
+        }
+
+        .btn-record.recording {
+            background-color: var(--accent-red);
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-play {
+            background-color: var(--gong-gold);
+            color: #332600;
+        }
+
+        .btn-play:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .btn-download {
+            background-color: #2b8a3e;
+            color: white;
+        }
+        
+        .btn-download:disabled {
+            background-color: #555;
+            color: #888;
+        }
+
+        /* Instrument Area */
+        .instrument-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
+            gap: 20px;
+            padding-bottom: 30px;
+        }
+
+        .gong-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gong {
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 
+                0 10px 20px rgba(0,0,0,0.6),
+                inset 0 0 40px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .gong:active, .gong.hit {
+            transform: scale(0.96);
+        }
+
+        /* Realistic Gong Visuals */
+        .gong-face {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle at 30% 30%,
+                #f3d878 0%,
+                #d4af37 20%,
+                #b88a00 50%,
+                #7a5c00 90%,
+                #423200 100%
+            );
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            border: 4px solid #5c4500;
+        }
+
+        /* Concentric circles pattern (lathe marks) */
+        .gong-face::after {
+            content: '';
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            background: repeating-radial-gradient(
+                transparent 0,
+                transparent 4px,
+                rgba(0,0,0,0.1) 5px,
+                transparent 6px
+            );
+            pointer-events: none;
+        }
+
+        .gong-center {
+            position: absolute;
+            z-index: 2;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, #5c4500, #2e2300);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .gong-label {
+            position: absolute;
+            bottom: -25px;
+            font-size: 0.9rem;
+            color: var(--gong-gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        /* Sizes - Optimized for Mobile */
+        .gong-large {
+            width: 230px;
+            height: 230px;
+        }
+        .gong-large .gong-center {
+            width: 65px;
+            height: 65px;
+        }
+
+        .gong-small {
+            width: 150px;
+            height: 150px;
+        }
+        .gong-small .gong-center {
+            width: 45px;
+            height: 45px;
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple-anim 0.6s linear;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes ripple-anim {
+            to {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(201, 42, 42, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0); }
+        }
+
+        .status-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 100;
+            display: none;
+        }
+
+        /* Desktop Layout adjustments */
+        @media (min-width: 768px) {
+            .instrument-container {
+                flex-direction: row;
+                gap: 50px;
+            }
+            .gong-large {
+                width: 350px;
+                height: 350px;
+            }
+            .gong-large .gong-center {
+                width: 90px;
+                height: 90px;
+            }
+            .gong-small {
+                width: 220px;
+                height: 220px;
+            }
+            .gong-small .gong-center {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>เครื่องดนตรีจีน: ลั้ว (ฆ้อง)</h1>
+    <div class="subtitle">แตะเพื่อเล่น • รองรับมัลติทัช</div>
+
+    <div class="controls">
+        <button id="btnRecord" class="btn btn-record">
+            <span>●</span> อัดเสียง
+        </button>
+        <button id="btnPlay" class="btn btn-play" disabled>
+            <span>▶</span> ฟังเสียง
+        </button>
+        <button id="btnDownload" class="btn btn-download" disabled>
+            <span>⬇</span> โหลด
+        </button>
+    </div>
+
+    <div class="instrument-container">
+        <!-- Gong 1: Small Luo (High Pitch) -->
+        <div class="gong-wrapper">
+            <div class="gong gong-small" id="gongSmall" data-pitch="high">
+                <div class="gong-face"></div>
+                <div class="gong-center"></div>
+            </div>
+            <div class="gong-label">ลั้วเล็ก (Small)</div>
+        </div>
+
+        <!-- Gong 2: Large Luo (Low Pitch) -->
+        <div class="gong-wrapper">
+            <div class="gong gong-large" id="gongLarge" data-pitch="low">
+                <div class="gong-face"></div>
+                <div class="gong-center"></div>
+            </div>
+            <div class="gong-label">ลั้วใหญ่ (Large)</div>
+        </div>
+    </div>
+
+    <div id="statusMsg" class="status-msg">แตะหน้าจอเพื่อเริ่มใช้งานเสียง</div>
+
+    <script>
+        /**
+         * Audio Engine Implementation
+         * Uses Web Audio API for synthesized sound to ensure stability without external assets.
+         */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        let masterGain;
+        let recorderDestination;
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+        let isRecording = false;
+
+        // Sound Parameters (Gong Synthesis)
+        const GONG_PRESETS = {
+            low: {
+                baseFreq: 110, // Hz
+                ratios: [1, 1.34, 1.76, 2.4, 3.8, 5.2],
+                gains: [1, 0.7, 0.6, 0.4, 0.2, 0.1],
+                decay: 3.5 // seconds
+            },
+            high: {
+                baseFreq: 196, // Hz (G3)
+                ratios: [1, 1.15, 1.56, 2.1, 3.5],
+                gains: [1, 0.8, 0.5, 0.3, 0.1],
+                decay: 2.0 // seconds
+            }
+        };
+
+        // Initialize Audio Context (Must be done on user interaction)
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+                
+                // Create Master Gain (Volume)
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.8;
+                masterGain.connect(audioCtx.destination);
+
+                // Setup Recording Stream
+                recorderDestination = audioCtx.createMediaStreamDestination();
+                masterGain.connect(recorderDestination);
+
+                console.log("Audio Engine Started");
+            } else if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Play Gong Sound
+        function playGong(type) {
+            initAudio();
+            
+            const preset = GONG_PRESETS[type];
+            const now = audioCtx.currentTime;
+            
+            // Create a gain node for this specific hit (Envelope)
+            const hitGain = audioCtx.createGain();
+            hitGain.connect(masterGain);
+            
+            // Amplitude Envelope
+            hitGain.gain.setValueAtTime(0, now);
+            hitGain.gain.linearRampToValueAtTime(1.0, now + 0.01); // Fast attack
+            hitGain.gain.exponentialRampToValueAtTime(0.001, now + preset.decay); // Long decay
+
+            // Synthesis: Additive + FM to create inharmonic metallic sound
+            preset.ratios.forEach((ratio, index) => {
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+                
+                // Slight detuning for realism
+                const detune = (Math.random() - 0.5) * 10; 
+                
+                // Main oscillators (Sine/Triangle mix for body)
+                osc.type = index === 0 ? 'triangle' : 'sine';
+                osc.frequency.value = preset.baseFreq * ratio;
+                osc.detune.value = detune;
+
+                // Frequency Modulation for "Crash" effect on attack
+                if (index > 0) {
+                     // Pitch envelope (pitch drops slightly after hit)
+                    osc.frequency.setValueAtTime(preset.baseFreq * ratio * 1.05, now);
+                    osc.frequency.exponentialRampToValueAtTime(preset.baseFreq * ratio, now + 0.1);
+                }
+
+                oscGain.gain.value = preset.gains[index];
+                
+                osc.connect(oscGain);
+                oscGain.connect(hitGain);
+                
+                osc.start(now);
+                osc.stop(now + preset.decay + 1);
+            });
+
+            // Add some noise burst for the initial impact
+            const noiseBufferSize = audioCtx.sampleRate * 0.1; // 0.1 seconds
+            const buffer = audioCtx.createBuffer(1, noiseBufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < noiseBufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseGain = audioCtx.createGain();
+            
+            // Lowpass filter the noise so it's not too harsh
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.value = 1000;
+
+            noiseGain.gain.setValueAtTime(0.5, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(hitGain);
+            noise.start(now);
+
+            // Cleanup
+            setTimeout(() => {
+                hitGain.disconnect();
+            }, (preset.decay + 1) * 1000);
+        }
+
+        // --- Interaction Logic ---
+
+        function createRipple(event, element) {
+            const circle = document.createElement("div");
+            const diameter = Math.max(element.clientWidth, element.clientHeight);
+            const radius = diameter / 2;
+
+            const rect = element.getBoundingClientRect();
+            
+            // Check if it's a touch event or mouse event
+            let clientX, clientY;
+            if (event.changedTouches && event.changedTouches.length > 0) {
+                clientX = event.changedTouches[0].clientX;
+                clientY = event.changedTouches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${clientX - rect.left - radius}px`;
+            circle.style.top = `${clientY - rect.top - radius}px`;
+            circle.classList.add("ripple");
+
+            const ripple = element.getElementsByClassName("ripple")[0];
+            if (ripple) {
+                ripple.remove();
+            }
+
+            element.appendChild(circle);
+        }
+
+        function handleHit(e, type) {
+            e.preventDefault(); // Prevent default touch actions (scrolling/zoom)
+            playGong(type);
+            
+            const target = e.currentTarget;
+            createRipple(e, target);
+            
+            // Visual feedback
+            target.classList.add('hit');
+            setTimeout(() => target.classList.remove('hit'), 100);
+        }
+
+        // Event Listeners for Gongs
+        const smallGong = document.getElementById('gongSmall');
+        const largeGong = document.getElementById('gongLarge');
+
+        // Touch Events (Multi-touch support)
+        smallGong.addEventListener('touchstart', (e) => handleHit(e, 'high'), {passive: false});
+        largeGong.addEventListener('touchstart', (e) => handleHit(e, 'low'), {passive: false});
+
+        // Mouse Events (Fallback)
+        smallGong.addEventListener('mousedown', (e) => handleHit(e, 'high'));
+        largeGong.addEventListener('mousedown', (e) => handleHit(e, 'low'));
+
+        // --- Recording Logic ---
+
+        const btnRecord = document.getElementById('btnRecord');
+        const btnPlay = document.getElementById('btnPlay');
+        const btnDownload = document.getElementById('btnDownload');
+        let recordedAudio = new Audio();
+
+        btnRecord.addEventListener('click', () => {
+            initAudio(); // Ensure context is ready
+            
+            if (!isRecording) {
+                // Start Recording
+                startRecording();
+            } else {
+                // Stop Recording
+                stopRecording();
+            }
+        });
+
+        function startRecording() {
+            audioChunks = [];
+            
+            // Use mimeType supported by browser
+            const options = { mimeType: 'audio/webm' };
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                delete options.mimeType; // Fallback to default
+            }
+
+            try {
+                mediaRecorder = new MediaRecorder(recorderDestination.stream, options);
+            } catch (err) {
+                alert("Browser not supported for recording.");
+                return;
+            }
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                recordedAudio.src = audioUrl;
+                
+                // Enable buttons
+                btnPlay.disabled = false;
+                btnDownload.disabled = false;
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            
+            // UI Updates
+            btnRecord.innerHTML = "<span>■</span> หยุดอัด";
+            btnRecord.classList.add('recording');
+            btnPlay.disabled = true;
+            btnDownload.disabled = true;
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            isRecording = false;
+            
+            // UI Updates
+            btnRecord.innerHTML = "<span>●</span> อัดเสียง";
+            btnRecord.classList.remove('recording');
+        }
+
+        btnPlay.addEventListener('click', () => {
+            if (recordedAudio.src) {
+                recordedAudio.play();
+                btnPlay.innerHTML = "<span>🔊</span> กำลังเล่น...";
+                recordedAudio.onended = () => {
+                    btnPlay.innerHTML = "<span>▶</span> ฟังเสียง";
+                };
+            }
+        });
+
+        btnDownload.addEventListener('click', () => {
+            if (audioBlob) {
+                const url = URL.createObjectURL(audioBlob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'my-gong-performance.webm';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            }
+        });
+
+        // Initialize audio on first click anywhere if not started
+        document.body.addEventListener('click', initAudio, { once: true });
+        document.body.addEventListener('touchstart', initAudio, { once: true });
+
+    </script>
+</body>
+</html>
