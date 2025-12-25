@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Suona Virtual Instrument - ขัวน่าจำลอง</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            touch-action: none; /* ป้องกันการเลื่อนหน้าจอ */
+            background-color: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* สไตล์สำหรับรูขัวน่า */
+        .hole {
+            width: 65px; /* เพิ่มขนาดปุ่มเล็กน้อยเพื่อให้กดง่ายขึ้น */
+            height: 65px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #5c3a21, #2e1d11);
+            border: 4px solid #d4af37;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            transition: transform 0.05s, background 0.05s;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            z-index: 20; /* ให้ปุ่มอยู่ชั้นบนสุดเสมอ */
+        }
+
+        .hole:active, .hole.active {
+            transform: scale(0.9);
+            background: radial-gradient(circle at 30% 30%, #8b5a33, #5c3a21);
+            box-shadow: 0 0 20px #d4af37, inset 0 0 10px #000;
+        }
+
+        .hole.active::after {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 50%;
+            border: 2px solid #ffcc00;
+            opacity: 0.8;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 0; }
+        }
+
+        /* ตัวเครื่องดนตรี */
+        .instrument-body {
+            background: linear-gradient(90deg, #3e2723 0%, #5d4037 50%, #3e2723 100%);
+            border-left: 2px solid rgba(255,255,255,0.1);
+            border-right: 2px solid rgba(0,0,0,0.3);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .bell {
+            background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+        }
+
+        .ctrl-btn {
+            transition: all 0.2s;
+        }
+        .ctrl-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .recording-pulse {
+            animation: recordPulse 1s infinite;
+        }
+
+        @keyframes recordPulse {
+            0% { background-color: #ef4444; }
+            50% { background-color: #b91c1c; }
+            100% { background-color: #ef4444; }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-between bg-zinc-900">
+
+    <!-- Header -->
+    <header class="w-full p-3 bg-zinc-800 flex flex-col md:flex-row items-center justify-between gap-3 z-30 shadow-lg border-b border-zinc-700">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-yellow-600 rounded-full flex items-center justify-center border-2 border-yellow-300 shadow-md">
+                <span class="text-xl">🎺</span>
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold text-yellow-500 tracking-wide">ขัวน่า (Suona)</h1>
+        </div>
+        
+        <div class="flex gap-2 flex-wrap justify-center">
+            <button id="toggleLabelsBtn" class="ctrl-btn bg-zinc-600 hover:bg-zinc-500 text-white px-3 py-2 rounded-lg text-xs font-bold shadow-md">
+                ซ่อนโน้ต
+            </button>
+            <button id="recordBtn" class="ctrl-btn bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold shadow-md flex items-center gap-2">
+                <span id="recordIcon">●</span> <span id="recordText">อัดเสียง</span>
+            </button>
+            <button id="playBtn" disabled class="ctrl-btn bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg text-xs font-bold shadow-md">
+                ฟังเสียง
+            </button>
+            <button id="downloadBtn" disabled class="ctrl-btn bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg text-xs font-bold shadow-md">
+                ดาวน์โหลด
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Instrument Area -->
+    <main class="flex-grow w-full flex justify-center items-center relative overflow-hidden py-2" id="instrumentArea">
+        
+        <!-- Background -->
+        <div class="absolute inset-0 opacity-10 pointer-events-none flex justify-center items-center select-none">
+            <div class="text-[20rem] text-red-600 font-serif">唢呐</div>
+        </div>
+
+        <!-- The Instrument -->
+        <div class="relative flex flex-col items-center h-full max-h-[850px] w-full justify-center">
+            <!-- Top Reed -->
+            <div class="w-2 h-6 bg-yellow-200 rounded-t-sm mb-1 opacity-90"></div>
+            <div class="w-5 h-5 bg-yellow-600 rounded-full mb-[-8px] z-10 border border-yellow-300 shadow-sm"></div>
+
+            <!-- Main Pipe Body -->
+            <div class="instrument-body w-24 md:w-32 h-[75%] rounded-t-lg flex flex-col items-center justify-evenly py-4 relative z-10">
+                <!-- Holes -->
+                <div class="hole" data-note="G5" data-label="ซอล (สูง)">ซอล</div>
+                <div class="hole" data-note="F#5" data-label="ฟา#">ฟา#</div>
+                <div class="hole" data-note="E5" data-label="มี">มี</div>
+                <div class="hole" data-note="D5" data-label="เร">เร</div>
+                <div class="hole" data-note="C5" data-label="โด">โด</div>
+                <div class="hole" data-note="B4" data-label="ที">ที</div>
+                <div class="hole" data-note="A4" data-label="ลา">ลา</div>
+                <div class="hole" data-note="G4" data-label="ซอล">ซอล</div>
+            </div>
+
+            <!-- Bell -->
+            <div class="bell w-44 h-20 mt-[-5px] shadow-2xl z-20 flex items-end justify-center pb-2">
+                <span class="text-yellow-900 font-bold opacity-30 text-xs tracking-widest">TRADITIONAL</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-zinc-900 text-zinc-600 text-[10px] p-2 text-center select-none">
+        แตะค้างเพื่อเล่น • ระบบเสียง High Performance Audio • ป้องกันเสียงค้างอัตโนมัติ
+    </footer>
+
+    <!-- Audio & Logic -->
+    <script>
+        // --- High Stability Audio Engine ---
+        let audioCtx;
+        let masterGain;
+        let compressor;
+        let activeOscillators = {}; 
+        
+        // Configuration for Suona Sound
+        const SUONA_CONFIG = {
+            attack: 0.02, // Fast attack for responsiveness
+            decay: 0.1,
+            sustain: 0.8,
+            release: 0.1, // Short release to prevent mud
+            vibratoSpeed: 5.5,
+            vibratoDepth: 12,
+        };
+
+        const NOTE_FREQS = {
+            "G4": 392.00, "A4": 440.00, "B4": 493.88, "C5": 523.25,
+            "D5": 587.33, "E5": 659.25, "F#5": 739.99, "G5": 783.99
+        };
+
+        // Recording
+        let mediaRecorder;
+        let audioChunks = [];
+        let destNode;
+        let audioUrl;
+        let isRecording = false;
+
+        const holes = document.querySelectorAll('.hole');
+        const recordBtn = document.getElementById('recordBtn');
+        const playBtn = document.getElementById('playBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const toggleLabelsBtn = document.getElementById('toggleLabelsBtn');
+        let labelsVisible = true;
+
+        // Initialize Audio Context Safely
+        function initAudio() {
+            if (!audioCtx) {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext({ latencyHint: 'interactive' });
+                    
+                    masterGain = audioCtx.createGain();
+                    masterGain.gain.value = 0.5;
+
+                    compressor = audioCtx.createDynamicsCompressor();
+                    // Limiter settings to prevent distortion
+                    compressor.threshold.value = -12;
+                    compressor.knee.value = 40;
+                    compressor.ratio.value = 12;
+                    compressor.attack.value = 0.003;
+                    compressor.release.value = 0.25;
+
+                    masterGain.connect(compressor);
+                    compressor.connect(audioCtx.destination);
+
+                    destNode = audioCtx.createMediaStreamDestination();
+                    compressor.connect(destNode);
+                } catch (e) {
+                    console.error("Audio Context Init Failed", e);
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playNote(noteName) {
+            initAudio();
+            if (!audioCtx) return;
+
+            // Stop existing note abruptly if re-triggered (Prevents stacking volume)
+            if (activeOscillators[noteName]) {
+                try {
+                    activeOscillators[noteName].gain.gain.cancelScheduledValues(audioCtx.currentTime);
+                    activeOscillators[noteName].gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    activeOscillators[noteName].oscs.forEach(o => o.stop());
+                } catch(e) {}
+                delete activeOscillators[noteName];
+            }
+
+            const freq = NOTE_FREQS[noteName];
+            const t = audioCtx.currentTime;
+
+            // Synthesis Graph
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            const envGain = audioCtx.createGain();
+
+            // Settings
+            osc1.type = 'sawtooth';
+            osc2.type = 'sawtooth'; // Sawtooth gives the reedy/buzzy sound
+            osc1.frequency.value = freq;
+            osc2.frequency.value = freq;
+            osc2.detune.value = 10; // Chorus effect
+
+            // Formant Filter (Nasal sound)
+            filter.type = 'bandpass';
+            filter.frequency.value = 1800;
+            filter.Q.value = 1.0;
+
+            // Vibrato
+            lfo.frequency.value = SUONA_CONFIG.vibratoSpeed;
+            lfoGain.gain.value = SUONA_CONFIG.vibratoDepth;
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.frequency);
+            lfoGain.connect(osc2.frequency);
+            lfo.start(t);
+
+            // Envelope
+            envGain.gain.setValueAtTime(0, t);
+            envGain.gain.linearRampToValueAtTime(0.8, t + SUONA_CONFIG.attack);
+            envGain.gain.exponentialRampToValueAtTime(SUONA_CONFIG.sustain, t + SUONA_CONFIG.attack + SUONA_CONFIG.decay);
+
+            // Wiring
+            osc1.connect(envGain);
+            osc2.connect(envGain);
+            
+            // Parallel Filter Path for body
+            const bodyFilter = audioCtx.createBiquadFilter();
+            bodyFilter.type = 'lowpass';
+            bodyFilter.frequency.value = 4000;
+            osc1.connect(bodyFilter);
+            bodyFilter.connect(envGain);
+
+            envGain.connect(masterGain);
+
+            osc1.start(t);
+            osc2.start(t);
+
+            // Store active note
+            activeOscillators[noteName] = {
+                oscs: [osc1, osc2, lfo],
+                gain: envGain,
+                filter: [filter, bodyFilter, lfoGain] // Keep track to disconnect later
+            };
+        }
+
+        function stopNote(noteName) {
+            if (activeOscillators[noteName] && audioCtx) {
+                const voice = activeOscillators[noteName];
+                const now = audioCtx.currentTime;
+                
+                // Release envelope
+                voice.gain.gain.cancelScheduledValues(now);
+                voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+                voice.gain.gain.exponentialRampToValueAtTime(0.001, now + SUONA_CONFIG.release);
+
+                // Scheduled stop
+                voice.oscs.forEach(o => o.stop(now + SUONA_CONFIG.release + 0.1));
+                
+                // Garbage Collection Helper: Disconnect nodes after sound stops
+                setTimeout(() => {
+                    voice.oscs.forEach(o => o.disconnect());
+                    voice.filter.forEach(f => f.disconnect());
+                    voice.gain.disconnect();
+                }, (SUONA_CONFIG.release + 0.2) * 1000);
+
+                delete activeOscillators[noteName];
+            }
+        }
+
+        function stopAllNotes() {
+            Object.keys(activeOscillators).forEach(note => stopNote(note));
+            holes.forEach(h => h.classList.remove('active'));
+        }
+
+        // --- Robust Input Handling ---
+        
+        const handleStart = (e) => {
+            e.preventDefault(); // Important: Stops mouse emulation & scrolling
+            initAudio(); // Force resume audio context
+            const note = e.currentTarget.getAttribute('data-note');
+            e.currentTarget.classList.add('active');
+            playNote(note);
+        };
+
+        const handleEnd = (e) => {
+            e.preventDefault();
+            const note = e.currentTarget.getAttribute('data-note');
+            e.currentTarget.classList.remove('active');
+            stopNote(note);
+        };
+
+        holes.forEach(hole => {
+            // Touch Events (High Priority)
+            hole.addEventListener('touchstart', handleStart, {passive: false});
+            hole.addEventListener('touchend', handleEnd, {passive: false});
+            hole.addEventListener('touchcancel', handleEnd, {passive: false});
+
+            // Mouse Events (Fallback for PC)
+            hole.addEventListener('mousedown', (e) => {
+                if(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; // Prevent double trigger on touch devices
+                handleStart(e);
+            });
+            hole.addEventListener('mouseup', (e) => {
+                if(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                handleEnd(e);
+            });
+            hole.addEventListener('mouseleave', (e) => {
+                if(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                handleEnd(e);
+            });
+        });
+
+        // Safety: Global stop if window loses focus or user drags off screen weirdly
+        window.addEventListener('blur', stopAllNotes);
+        window.addEventListener('touchend', (e) => {
+            // If the touch ends SOMEWHERE not on a button, make sure things are clean
+            // Check if any buttons are still "active" but shouldn't be
+             holes.forEach(h => {
+                // Logic: If user's finger left the screen entirely, clear visual state
+                if (e.touches.length === 0) {
+                     h.classList.remove('active');
+                     stopNote(h.getAttribute('data-note'));
+                }
+             });
+        });
+        
+        // Prevent Context Menu on long press
+        window.oncontextmenu = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        };
+
+        // --- Controls Logic ---
+
+        toggleLabelsBtn.addEventListener('click', () => {
+            labelsVisible = !labelsVisible;
+            holes.forEach(hole => {
+                hole.innerText = labelsVisible ? hole.getAttribute('data-label') : '';
+            });
+            toggleLabelsBtn.innerText = labelsVisible ? 'ซ่อนโน้ต' : 'แสดงโน้ต';
+        });
+
+        recordBtn.addEventListener('click', () => {
+            initAudio();
+            if (!isRecording) {
+                audioChunks = [];
+                const stream = destNode.stream;
+                
+                try {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                } catch (e) {
+                     mediaRecorder = new MediaRecorder(stream); // Fallback if specific mime not supported
+                }
+
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioUrl = URL.createObjectURL(audioBlob);
+                    playBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.classList.add('recording-pulse');
+                document.getElementById('recordText').innerText = "หยุด";
+                document.getElementById('recordIcon').innerText = "■";
+                playBtn.disabled = true;
+                downloadBtn.disabled = true;
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.classList.remove('recording-pulse');
+                document.getElementById('recordText').innerText = "อัดเสียง";
+                document.getElementById('recordIcon').innerText = "●";
+            }
+        });
+
+        playBtn.addEventListener('click', () => {
+            if (audioUrl) {
+                const audio = new Audio(audioUrl);
+                audio.play();
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (audioUrl) {
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = audioUrl;
+                a.download = `Suona_Recording_${new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        });
+    </script>
+</body>
+</html>

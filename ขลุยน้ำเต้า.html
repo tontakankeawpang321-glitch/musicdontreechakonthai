@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>น้ำเต้าปี่เสมือนจริง (Virtual Hulusi)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+
+        :root {
+            --gourd-color: #d4a056;
+            --gourd-dark: #8c5e26;
+            --pipe-color: #3e2723;
+            --bg-color: #1a1a1a;
+            --text-color: #fff;
+            --accent-color: #ffb74d;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh; /* Fixed height for mobile */
+            overflow: hidden; /* Prevent scroll on mobile */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Start Overlay */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            transition: opacity 0.5s;
+        }
+
+        .start-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 183, 77, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Controls Area */
+        .controls {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 100;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* Prevent controls from shrinking */
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--accent-color);
+            background: transparent;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn.recording {
+            background: #e53935;
+            color: white;
+            border-color: #e53935;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        /* Instrument Area */
+        .instrument-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+            padding: 10px 0; /* Reduced padding */
+            box-sizing: border-box;
+            height: 100%; /* Take remaining height */
+        }
+
+        /* The Hulusi Graphic */
+        .hulusi-body {
+            position: relative;
+            width: 120px;
+            height: 98%; /* Fill container height */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Gourd (Top) */
+        .gourd-top {
+            width: 6vh; /* Responsive width based on height */
+            height: 8vh; /* Responsive height */
+            max-width: 60px;
+            max-height: 80px;
+            background: radial-gradient(circle at 30% 30%, var(--gourd-color), var(--gourd-dark));
+            border-radius: 40px 40px 30px 30px;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+        
+        .gourd-bottom {
+            width: 11vh; /* Responsive width */
+            height: 10vh; /* Responsive height */
+            max-width: 110px;
+            max-height: 100px;
+            background: radial-gradient(circle at 30% 30%, var(--gourd-color), var(--gourd-dark));
+            border-radius: 50%;
+            margin-top: -1.5vh;
+            z-index: 2;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset -5px -5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        /* Decorative Tassel */
+        .tassel {
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            width: 30px;
+            height: 100px;
+            background: repeating-linear-gradient(to bottom, #d32f2f, #d32f2f 2px, #b71c1c 4px);
+            clip-path: polygon(40% 0, 60% 0, 100% 100%, 0% 100%);
+            z-index: 1;
+            transform: rotate(-10deg);
+            transform-origin: top center;
+        }
+
+        /* Main Pipe */
+        .main-pipe {
+            width: 5vh; /* Responsive width */
+            max-width: 50px;
+            background: linear-gradient(90deg, #5d4037, #8d6e63, #5d4037);
+            flex-grow: 1; /* Allow pipe to fill remaining space */
+            margin-top: -1vh;
+            border-radius: 0 0 10px 10px;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            padding-bottom: 2vh;
+            min-height: 0; /* Allow shrinking */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        /* Bamboo texture rings */
+        .pipe-ring {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: #3e2723;
+            opacity: 0.6;
+        }
+
+        /* Finger Holes (Buttons) */
+        .note-btn {
+            width: 7vh;  /* Size based on screen height */
+            height: 7vh; /* Size based on screen height */
+            max-width: 55px;
+            max-height: 55px;
+            min-width: 40px; /* Minimum size for touch */
+            min-height: 40px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #4a3b2a, #251d14);
+            border: 3px solid #8d6e63;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.1s, background-color 0.1s;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.7);
+            touch-action: none; 
+            margin: 2px 0; /* Small margin to prevent overlap */
+        }
+
+        .note-btn.active {
+            background: radial-gradient(circle at 50% 50%, #ffcc80, #f57c00);
+            box-shadow: 0 0 15px #ffb74d;
+            transform: scale(0.95);
+            border-color: #ffb74d;
+        }
+
+        .note-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px black;
+        }
+        
+        .note-btn.active .note-label {
+            color: #3e2723;
+            text-shadow: none;
+        }
+
+        /* Visualizer */
+        canvas {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 15vh;
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .status-msg {
+            position: absolute;
+            top: 70px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: none;
+            z-index: 200;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Overlay to start audio context -->
+    <div id="overlay">
+        <div style="margin-bottom: 20px; font-size: 3rem;">🤠🎶</div>
+        <h1>น้ำเต้าปี่เสมือนจริง</h1>
+        <p>Virtual Hulusi Instrument</p>
+        <p style="font-size: 0.9rem; color: #ccc;">กรุณาเปิดเสียงอุปกรณ์ของท่าน</p>
+        <br>
+        <button class="start-btn" onclick="initAudio()">เริ่มใช้งาน / Start</button>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button id="btnRecord" class="btn" onclick="toggleRecording()">
+            <span>🔴</span> อัดเสียง
+        </button>
+        <button id="btnStop" class="btn" onclick="stopPlayback()" disabled>
+            <span>⏹️</span> หยุดเล่น
+        </button>
+        <button id="btnPlay" class="btn" onclick="playRecording()" disabled>
+            <span>▶️</span> ฟัง
+        </button>
+        <button id="btnDownload" class="btn" onclick="downloadRecording()" disabled>
+            <span>⬇️</span> โหลด
+        </button>
+    </div>
+
+    <div id="statusMsg" class="status-msg"></div>
+
+    <!-- Canvas for Visualizer -->
+    <canvas id="visualizer"></canvas>
+
+    <!-- Instrument Body -->
+    <div class="instrument-container">
+        <div class="hulusi-body">
+            <!-- Gourd Shape -->
+            <div class="gourd-top"></div>
+            <div class="gourd-bottom">
+                <div class="tassel"></div>
+            </div>
+            
+            <!-- Pipe & Holes -->
+            <div class="main-pipe">
+                <div class="pipe-ring" style="top: 10%"></div>
+                
+                <!-- Notes (Mapping typical Hulusi C/Bb scale range) -->
+                <!-- High notes on top, Low on bottom usually, but logical map for screen -->
+                
+                <div class="note-btn" data-note="A5" ontouchstart="startNote(event, 'A5')" ontouchend="stopNote(event, 'A5')" onmousedown="startNote(event, 'A5')" onmouseup="stopNote(event, 'A5')" onmouseleave="stopNote(event, 'A5')">
+                    <span class="note-label">ลา H</span>
+                </div>
+                
+                <div class="note-btn" data-note="G5" ontouchstart="startNote(event, 'G5')" ontouchend="stopNote(event, 'G5')" onmousedown="startNote(event, 'G5')" onmouseup="stopNote(event, 'G5')" onmouseleave="stopNote(event, 'G5')">
+                    <span class="note-label">ซอล H</span>
+                </div>
+
+                <div class="note-btn" data-note="E5" ontouchstart="startNote(event, 'E5')" ontouchend="stopNote(event, 'E5')" onmousedown="startNote(event, 'E5')" onmouseup="stopNote(event, 'E5')" onmouseleave="stopNote(event, 'E5')">
+                    <span class="note-label">มี H</span>
+                </div>
+
+                <div class="note-btn" data-note="D5" ontouchstart="startNote(event, 'D5')" ontouchend="stopNote(event, 'D5')" onmousedown="startNote(event, 'D5')" onmouseup="stopNote(event, 'D5')" onmouseleave="stopNote(event, 'D5')">
+                    <span class="note-label">เร H</span>
+                </div>
+
+                <div class="note-btn" data-note="C5" ontouchstart="startNote(event, 'C5')" ontouchend="stopNote(event, 'C5')" onmousedown="startNote(event, 'C5')" onmouseup="stopNote(event, 'C5')" onmouseleave="stopNote(event, 'C5')">
+                    <span class="note-label">โด M</span>
+                </div>
+
+                <div class="note-btn" data-note="A4" ontouchstart="startNote(event, 'A4')" ontouchend="stopNote(event, 'A4')" onmousedown="startNote(event, 'A4')" onmouseup="stopNote(event, 'A4')" onmouseleave="stopNote(event, 'A4')">
+                    <span class="note-label">ลา L</span>
+                </div>
+
+                <div class="note-btn" data-note="G4" ontouchstart="startNote(event, 'G4')" ontouchend="stopNote(event, 'G4')" onmousedown="startNote(event, 'G4')" onmouseup="stopNote(event, 'G4')" onmouseleave="stopNote(event, 'G4')">
+                    <span class="note-label">ซอล L</span>
+                </div>
+
+                <div class="pipe-ring" style="bottom: 5%"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Audio Context & Variables ---
+        let audioCtx;
+        let masterGain;
+        let compressor;
+        let reverbNode;
+        let analyser;
+        const activeOscillators = {};
+        
+        // Frequencies (C Major Pentatonic oriented + typical Hulusi range)
+        // Using Just Intonation for smoother harmony if possible, but ET is safer for web
+        const notes = {
+            'G4': 392.00, // Low Sol
+            'A4': 440.00, // Low La
+            'C5': 523.25, // Do
+            'D5': 587.33, // Re
+            'E5': 659.25, // Mi
+            'G5': 783.99, // High Sol
+            'A5': 880.00  // High La
+        };
+
+        // Recorder variables
+        let mediaRecorder;
+        let recordedChunks = [];
+        let audioURL;
+        let audioPlaybackElement = new Audio();
+        let isRecording = false;
+        let destStream; // Destination for recording
+
+        // Visualizer variables
+        const canvas = document.getElementById('visualizer');
+        const canvasCtx = canvas.getContext('2d');
+        let dataArray;
+
+        // --- Initialization ---
+        function initAudio() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+
+            // Master Gain
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.6;
+
+            // Dynamics Compressor (keeps volume even)
+            compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.value = -24;
+            compressor.knee.value = 30;
+            compressor.ratio.value = 12;
+            compressor.attack.value = 0.003;
+            compressor.release.value = 0.25;
+
+            // Simple Reverb (Convolver substitute using Delay for performance/stability)
+            // Creating a delay to simulate bamboo resonance
+            const delay = audioCtx.createDelay();
+            delay.delayTime.value = 0.04; // short delay for resonance
+            const delayGain = audioCtx.createGain();
+            delayGain.gain.value = 0.3;
+            
+            // Analyser for visuals
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+
+            // Routing
+            // Oscillators -> LocalGain -> Compressor -> Master -> Delay -> Destination
+            
+            masterGain.connect(compressor);
+            compressor.connect(audioCtx.destination); // Speaker
+            
+            // Effect routing
+            compressor.connect(delay);
+            delay.connect(delayGain);
+            delayGain.connect(compressor); // Feedback loop for resonance
+            
+            compressor.connect(analyser);
+
+            // Recorder setup routing
+            destStream = audioCtx.createMediaStreamDestination();
+            compressor.connect(destStream);
+
+            // Hide overlay
+            document.getElementById('overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('overlay').style.display = 'none';
+            }, 500);
+
+            // Start Visualizer
+            drawVisualizer();
+            
+            // Fix iOS Audio Context state
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // --- Sound Synthesis (The Hulusi Sound) ---
+        function createHulusiSound(frequency) {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            // 1. Oscillator Type
+            // Sawtooth waves are rich in harmonics, good for reeds.
+            osc.type = 'sawtooth'; 
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+            // 2. Filter (The Gourd/Bamboo body simulation)
+            // Lowpass filter removes harsh high frequencies, making it "mellow"
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, audioCtx.currentTime); // Start closed
+            filter.Q.value = 1; // Resonance
+
+            // 3. Envelope (ADSR)
+            const now = audioCtx.currentTime;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.4, now + 0.05); // Attack (Soft but quick)
+            gainNode.gain.linearRampToValueAtTime(0.3, now + 0.2); // Decay
+            
+            // Filter Envelope (Wah effect for articulation)
+            filter.frequency.linearRampToValueAtTime(1500, now + 0.05);
+            filter.frequency.linearRampToValueAtTime(1200, now + 0.2);
+
+            // Vibrato (LFO) - Subtle pitch modulation
+            const lfo = audioCtx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.value = 5; // 5Hz vibrato
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 3; // Depth
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc.frequency);
+            lfo.start();
+
+            // Connections
+            osc.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(masterGain);
+
+            osc.start();
+
+            return { osc, gainNode, lfo, filter };
+        }
+
+        // --- Interaction Logic ---
+        function startNote(e, note) {
+            if (e.type === 'touchstart') e.preventDefault(); // Prevent ghost clicks
+            if (!audioCtx) return;
+            if (activeOscillators[note]) return; // Already playing
+
+            const freq = notes[note];
+            const soundObj = createHulusiSound(freq);
+            activeOscillators[note] = soundObj;
+
+            // Visual feedback
+            const btn = document.querySelector(`.note-btn[data-note="${note}"]`);
+            if(btn) btn.classList.add('active');
+        }
+
+        function stopNote(e, note) {
+            if (e.type === 'touchend') e.preventDefault();
+            if (!activeOscillators[note]) return;
+
+            const { osc, gainNode, lfo } = activeOscillators[note];
+            const now = audioCtx.currentTime;
+
+            // Release phase
+            gainNode.gain.cancelScheduledValues(now);
+            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1); // Quick release
+
+            osc.stop(now + 0.1);
+            lfo.stop(now + 0.1);
+
+            delete activeOscillators[note];
+
+            // Visual feedback
+            const btn = document.querySelector(`.note-btn[data-note="${note}"]`);
+            if(btn) btn.classList.remove('active');
+        }
+
+        // --- Recording Logic ---
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            recordedChunks = [];
+            // Check supported types
+            const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+            
+            try {
+                mediaRecorder = new MediaRecorder(destStream.stream, { mimeType: mimeType });
+            } catch (e) {
+                // Fallback for Safari/Basic
+                mediaRecorder = new MediaRecorder(destStream.stream);
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                audioURL = URL.createObjectURL(blob);
+                audioPlaybackElement.src = audioURL;
+                
+                document.getElementById('btnPlay').disabled = false;
+                document.getElementById('btnDownload').disabled = false;
+                showStatus("บันทึกเสร็จสิ้น");
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            
+            // UI Update
+            const btnRec = document.getElementById('btnRecord');
+            btnRec.innerHTML = "<span>⬛</span> หยุดอัด";
+            btnRec.classList.add('recording');
+            document.getElementById('btnPlay').disabled = true;
+            document.getElementById('btnDownload').disabled = true;
+            showStatus("กำลังอัดเสียง...");
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            isRecording = false;
+            
+            // UI Update
+            const btnRec = document.getElementById('btnRecord');
+            btnRec.innerHTML = "<span>🔴</span> อัดเสียง";
+            btnRec.classList.remove('recording');
+        }
+
+        function playRecording() {
+            if (audioURL) {
+                audioPlaybackElement.play();
+                document.getElementById('btnStop').disabled = false;
+                showStatus("กำลังเล่นเสียงที่อัด...");
+                
+                audioPlaybackElement.onended = () => {
+                    document.getElementById('btnStop').disabled = true;
+                    showStatus("");
+                }
+            }
+        }
+
+        function stopPlayback() {
+            audioPlaybackElement.pause();
+            audioPlaybackElement.currentTime = 0;
+            document.getElementById('btnStop').disabled = true;
+            showStatus("หยุดเล่นแล้ว");
+        }
+
+        function downloadRecording() {
+            if (audioURL) {
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = audioURL;
+                a.download = `hulusi_recording_${new Date().getTime()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    // window.URL.revokeObjectURL(audioURL); // Don't revoke immediately in case of multiple downloads
+                }, 100);
+                showStatus("ดาวน์โหลดเรียบร้อย");
+            }
+        }
+        
+        function showStatus(msg) {
+            const el = document.getElementById('statusMsg');
+            el.innerText = msg;
+            el.style.display = 'block';
+            if(msg === "") el.style.display = 'none';
+            
+            // Auto hide after 3 seconds if not generic status
+            if(msg !== "กำลังอัดเสียง...") {
+                 setTimeout(() => { if(!isRecording) el.style.display = 'none'; }, 3000);
+            }
+        }
+
+        // --- Visualizer ---
+        function drawVisualizer() {
+            requestAnimationFrame(drawVisualizer);
+
+            const width = canvas.width = window.innerWidth;
+            const height = canvas.height;
+
+            analyser.getByteFrequencyData(dataArray);
+
+            canvasCtx.fillStyle = '#1a1a1a';
+            canvasCtx.clearRect(0, 0, width, height);
+
+            const barWidth = (width / dataArray.length) * 2.5;
+            let barHeight;
+            let x = 0;
+
+            for(let i = 0; i < dataArray.length; i++) {
+                barHeight = dataArray[i] / 2;
+
+                // Gradient color based on frequency volume
+                canvasCtx.fillStyle = `rgb(${barHeight + 100}, ${183}, 77)`;
+                canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
+
+                x += barWidth + 1;
+            }
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+        });
+
+    </script>
+</body>
+</html>

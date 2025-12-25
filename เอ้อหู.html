@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>เครื่องดนตรีจีน เอ้อหู เสมือนจริง (Virtual Erhu)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --wood-dark: #2a1b15;
+            --wood-mid: #4a332a;
+            --wood-light: #795548;
+            --skin-base: #d7ccc8;
+            --skin-pattern: #8d6e63;
+            --string-color: #e0e0e0;
+            --accent: #b71c1c; /* China Red */
+            --gold: #ffc107;
+            --bg-dark: #121212;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-dark);
+            /* ลายพื้นหลังแบบจีนจางๆ */
+            background-image: 
+                radial-gradient(circle at 50% 50%, #2c1e1a 0%, #000 100%);
+            color: white;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        /* Decorative Chinese Border Pattern */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 2px solid rgba(255, 215, 0, 0.1);
+            margin: 10px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header & Controls */
+        header {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.4));
+            width: 100%;
+            padding: 15px 10px;
+            text-align: center;
+            z-index: 20;
+            position: relative;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: 'Ma Shan Zheng', cursive, 'Sarabun', sans-serif; /* ฟอนต์สไตล์พู่กันจีน */
+            font-size: 2.2rem;
+            color: var(--gold);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(183, 28, 28, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(145deg, #3e2723, #2d1b15);
+            border: 1px solid #5d4037;
+            color: #e0e0e0;
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: 'Sarabun', sans-serif;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        button.record-btn {
+            border-color: #b71c1c;
+            color: #ffcdd2;
+        }
+        
+        button.record-btn.recording {
+            animation: pulse-red 1.5s infinite;
+            background: #b71c1c;
+            color: white;
+            box-shadow: 0 0 15px rgba(183, 28, 28, 0.6);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        /* Main Instrument Area */
+        .erhu-container {
+            position: relative;
+            flex-grow: 1;
+            width: 100%;
+            max-width: 400px; /* กระชับขึ้นเพื่อให้ดูสมจริง */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* จัดให้ตัวซออยู่ด้านล่าง */
+            padding-bottom: 30px;
+            z-index: 5;
+            perspective: 1000px;
+        }
+
+        /* --- Realistic Erhu Components --- */
+
+        /* 1. The Neck (Pole) - ไม้เนื้อแข็งขัดเงา */
+        .erhu-neck {
+            position: absolute;
+            top: -50px; /* ยาวขึ้นไปด้านบน */
+            bottom: 100px;
+            width: 24px;
+            background: linear-gradient(90deg, #1a100c, #4e342e 40%, #1a100c 100%);
+            border-radius: 12px;
+            z-index: 2;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* หัวซอ (Top decoration) */
+        .erhu-head {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            background: linear-gradient(135deg, #2d1b15, #1a100c);
+            border-radius: 5px 5px 20px 20px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+
+        /* ลูกบิด (Tuning Pegs) - ตกแต่ง */
+        .peg {
+            position: absolute;
+            width: 80px;
+            height: 12px;
+            background: linear-gradient(to bottom, #3e2723, #1a100c);
+            border-radius: 5px;
+            z-index: 1;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        .peg.top { top: 40px; left: -40px; transform: rotate(-10deg); }
+        .peg.bottom { top: 90px; left: -40px; transform: rotate(-10deg); }
+
+        /* พันเชือก (Qianjin) - จุดรวบสาย */
+        .qianjin {
+            position: absolute;
+            top: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 25px;
+            background: repeating-linear-gradient(
+                0deg,
+                #d7ccc8 0px,
+                #d7ccc8 2px,
+                #5d4037 3px,
+                #5d4037 4px
+            );
+            border-radius: 4px;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* 2. Resonator Body (กล่องเสียงแปดเหลี่ยม) */
+        .erhu-body-container {
+            position: relative;
+            width: 130px;
+            height: 120px;
+            z-index: 10;
+            margin-bottom: 20px;
+        }
+
+        /* ตัวกล่องไม้แปดเหลี่ยม */
+        .erhu-resonator {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #3e2723, #271c19);
+            /* สร้างรูปทรงหกเหลี่ยม/แปดเหลี่ยมด้วย clip-path */
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        
+        /* ขอบไม้เงาๆ */
+        .erhu-resonator::after {
+            content: "";
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            background: transparent;
+            z-index: 11;
+        }
+
+        /* หนังงู (Snake Skin) */
+        .skin {
+            width: 80%;
+            height: 80%;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            background-color: #c7b299;
+            /* สร้างลายเกล็ด */
+            background-image: 
+                radial-gradient(circle, #5d4037 30%, transparent 35%),
+                radial-gradient(circle, #3e2723 30%, transparent 35%);
+            background-size: 12px 12px;
+            background-position: 0 0, 6px 6px;
+            opacity: 0.9;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* หย่อง (Bridge) */
+        .bridge {
+            width: 14px;
+            height: 10px;
+            background: #d4e157; /* ไม้ไผ่/ไม้สีอ่อน */
+            border-radius: 2px;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+            position: relative;
+            top: -5px;
+        }
+        
+        /* ฐานรองใต้ตัวซอ (Base) */
+        .base-plate {
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 15px;
+            background: #1a100c;
+            border-radius: 5px;
+            z-index: 1;
+        }
+
+        /* --- Interactive Strings Area --- */
+        .fretboard {
+            position: absolute;
+            top: 225px; /* เริ่มใต้ Qianjin */
+            bottom: 120px; /* เหนือตัวซอ */
+            width: 140px;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* พื้นหลังไกด์ไลน์ (จางๆ) */
+        .fretboard-guide {
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 24px; /* เท่ากับคอซอ */
+            /* เส้นบอกตำแหน่งนิ้วจางๆ */
+            background-image: repeating-linear-gradient(
+                0deg,
+                rgba(255,255,255,0.1) 0px,
+                rgba(255,255,255,0.1) 1px,
+                transparent 1px,
+                transparent 40px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .string-lane {
+            position: relative;
+            width: 50px; /* พื้นที่กดกว้างขึ้น */
+            height: 100%;
+            cursor: pointer;
+            z-index: 25;
+            /* Debug border: border: 1px solid red; */
+        }
+
+        /* สายซอจริง */
+        .string {
+            position: absolute;
+            left: 50%;
+            top: -210px; /* ลากยาวไปถึงลูกบิด */
+            bottom: -80px; /* ลากไปถึงหย่อง */
+            width: 2px;
+            background: linear-gradient(90deg, #cfd8dc, #fff, #b0bec5); /* สีโลหะเงิน */
+            transform: translateX(-50%);
+            pointer-events: none;
+            box-shadow: 1px 0 2px rgba(0,0,0,0.3);
+        }
+
+        /* ผ้าสักหลาดรองสาย (Damper) ใต้หย่อง */
+        .damper {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 20px;
+            background: #546e7a;
+            border-radius: 4px;
+            z-index: 15;
+        }
+
+        .string.vibrating {
+            animation: vibrate 0.05s infinite;
+            background: #fff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+
+        /* คันชักจำลอง (Bow visual representation) */
+        .bow-hair {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 18;
+        }
+
+        /* Note Labels */
+        .note-marker {
+            position: absolute;
+            right: 0px; /* ย้ายมาด้านขวาของสายใน */
+            color: rgba(255, 215, 0, 0.6);
+            font-size: 11px;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px black;
+            font-family: sans-serif;
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+            width: 20px;
+            text-align: center;
+        }
+        
+        #lane-outer .note-marker {
+            left: 0px; /* ด้านซ้ายของสายนอก */
+            right: auto;
+        }
+
+        .string-label {
+            position: absolute;
+            bottom: -150px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--gold);
+            font-weight: 600;
+            text-shadow: 0 2px 4px black;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 0;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        /* Visual Effects */
+        .glow-effect {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 30;
+            mix-blend-mode: screen;
+        }
+
+        /* Bottom Controls (Notes) */
+        .quick-notes {
+            width: 100%;
+            padding: 20px 10px;
+            background: linear-gradient(to top, #1a100c, #2d1b15);
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            border-top: 1px solid #4e342e;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+            z-index: 30;
+        }
+
+        .note-btn {
+            min-width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #5d4037, #2d1b15);
+            border: 2px solid #8d6e63;
+            font-weight: bold;
+            color: #d7ccc8;
+            font-family: 'Sarabun', sans-serif;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+
+        .note-btn:active {
+            background: radial-gradient(circle, var(--gold), #ff8f00);
+            color: #3e2723;
+            transform: scale(0.9);
+            border-color: #ffe082;
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        /* Overlay */
+        #start-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 5, 5, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--gold);
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        #start-overlay h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        #start-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            background: linear-gradient(90deg, #b71c1c, #d32f2f);
+            border: 2px solid #ffcdd2;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(211, 47, 47, 0.4);
+            font-weight: bold;
+        }
+
+        @keyframes vibrate {
+            0% { transform: translateX(-51%); opacity: 0.8; }
+            50% { transform: translateX(-49%); opacity: 1; }
+            100% { transform: translateX(-51%); opacity: 0.8; }
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(183, 28, 28, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(183, 28, 28, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(183, 28, 28, 0); }
+        }
+
+        .status-text {
+            font-size: 0.85rem;
+            color: #d7ccc8;
+            margin-top: 8px;
+            height: 20px;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-overlay">
+        <h1>เอ้อหู</h1>
+        <p style="font-size: 1.2rem; opacity: 0.8;">สัมผัสสุนทรียภาพแห่งดนตรีจีน</p>
+        <button id="start-btn">เข้าสู่เครื่องดนตรี (Start)</button>
+    </div>
+
+    <header>
+        <h1>เอ้อหู</h1>
+        <div class="subtitle">Virtual Erhu Simulator</div>
+        <div class="control-panel">
+            <button id="recordBtn" class="record-btn">🔴 บันทึกเสียง</button>
+            <button id="playBtn" class="play-btn" disabled>▶️ เล่นที่บันทึก</button>
+            <button id="downloadBtn" class="download-btn" disabled>⬇️ ดาวน์โหลด</button>
+        </div>
+        <div class="status-text" id="statusText">พร้อมใช้งาน - กดปุ่ม Start เพื่อเริ่ม</div>
+    </header>
+
+    <div class="erhu-container">
+        <!-- Components -->
+        <div class="erhu-head"></div>
+        <div class="peg top"></div>
+        <div class="peg bottom"></div>
+        
+        <div class="erhu-neck"></div>
+        
+        <div class="qianjin"></div> <!-- จุดรวบสาย -->
+
+        <div class="fretboard" id="fretboard">
+            <div class="fretboard-guide"></div>
+
+            <!-- สายใน (D4 - เสียงทุ้ม) -->
+            <div class="string-lane" id="lane-inner">
+                <div class="string" id="string-inner"></div>
+                <!-- Damper/Felt pad decoration inside lane but visually near bridge -->
+                <div class="string-label">สายใน (Inner)<br><span style="font-size:0.8em; color:#aaa;">D4</span></div>
+                <!-- Visual Markers -->
+                <div class="note-marker" style="top: 15%">E</div>
+                <div class="note-marker" style="top: 30%">F#</div>
+                <div class="note-marker" style="top: 45%">G</div>
+                <div class="note-marker" style="top: 60%">A</div>
+            </div>
+
+            <!-- สายนอก (A4 - เสียงแหลม) -->
+            <div class="string-lane" id="lane-outer">
+                <div class="string" id="string-outer"></div>
+                <div class="string-label">สายนอก (Outer)<br><span style="font-size:0.8em; color:#aaa;">A4</span></div>
+                <!-- Visual Markers -->
+                <div class="note-marker" style="top: 15%">B</div>
+                <div class="note-marker" style="top: 30%">C#</div>
+                <div class="note-marker" style="top: 45%">D</div>
+                <div class="note-marker" style="top: 60%">E</div>
+            </div>
+            
+            <!-- Glow Effect follow finger -->
+            <div class="glow-effect" id="glow"></div>
+        </div>
+
+        <div class="damper"></div> <!-- ผ้าสักหลาด -->
+        <div class="bow-hair"></div> <!-- หางม้าคันชัก -->
+
+        <div class="erhu-body-container">
+            <div class="erhu-resonator">
+                <div class="skin">
+                    <div class="bridge"></div>
+                </div>
+            </div>
+        </div>
+        <div class="base-plate"></div>
+    </div>
+
+    <div class="quick-notes">
+        <button class="note-btn" onmousedown="playNoteBtn(293.66)" onmouseup="stopNoteBtn()">D</button>
+        <button class="note-btn" onmousedown="playNoteBtn(329.63)" onmouseup="stopNoteBtn()">E</button>
+        <button class="note-btn" onmousedown="playNoteBtn(369.99)" onmouseup="stopNoteBtn()">F#</button>
+        <button class="note-btn" onmousedown="playNoteBtn(392.00)" onmouseup="stopNoteBtn()">G</button>
+        <button class="note-btn" onmousedown="playNoteBtn(440.00)" onmouseup="stopNoteBtn()">A</button>
+        <button class="note-btn" onmousedown="playNoteBtn(493.88)" onmouseup="stopNoteBtn()">B</button>
+        <button class="note-btn" onmousedown="playNoteBtn(554.37)" onmouseup="stopNoteBtn()">C#</button>
+        <button class="note-btn" onmousedown="playNoteBtn(587.33)" onmouseup="stopNoteBtn()">D5</button>
+    </div>
+
+    <script>
+        // --- Audio Context & Variables ---
+        let audioCtx;
+        let masterGain;
+        let activeOscillator = null;
+        let activeGain = null;
+        let lfo = null;
+        let isPlaying = false;
+
+        // Recording Variables
+        let mediaRecorder;
+        let recordedChunks = [];
+        let audioDestination;
+        let audioBlob;
+        let audioUrl;
+        let playbackAudio = new Audio();
+
+        const INNER_STRING_BASE = 293.66; // D4
+        const OUTER_STRING_BASE = 440.00; // A4
+
+        // --- Initialization ---
+        const startOverlay = document.getElementById('start-overlay');
+        const startBtn = document.getElementById('start-btn');
+        const statusText = document.getElementById('statusText');
+        const glow = document.getElementById('glow');
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                
+                // Create Master Gain
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.4;
+                
+                // Setup Recording Destination
+                audioDestination = audioCtx.createMediaStreamDestination();
+                masterGain.connect(audioCtx.destination);
+                masterGain.connect(audioDestination);
+
+                startOverlay.style.opacity = '0';
+                setTimeout(() => startOverlay.style.display = 'none', 500);
+                statusText.innerText = "แตะที่สายเพื่อเริ่มสีซอ";
+            } catch (e) {
+                alert("เบราว์เซอร์ของคุณไม่รองรับ Web Audio API");
+            }
+        });
+
+        // --- Sound Synthesis Engine (Erhu Simulation) ---
+        function createErhuSound(freq) {
+            if (!audioCtx) return;
+
+            // 1. Oscillator (Source) - Sawtooth for strings
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            // 2. Gain (Envelope)
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            // Attack (Slightly slower for bowed instrument feel)
+            gainNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.15); 
+
+            // 3. Filter (Resonance Body Simulation)
+            // Lowpass
+            const lowPass = audioCtx.createBiquadFilter();
+            lowPass.type = 'lowpass';
+            lowPass.frequency.value = 2200;
+
+            // Formant filters for "Erhu" character (nasal sound)
+            const bandPass1 = audioCtx.createBiquadFilter();
+            bandPass1.type = 'peaking';
+            bandPass1.frequency.value = 800; 
+            bandPass1.Q.value = 1.5;
+            bandPass1.gain.value = 6;
+
+            const bandPass2 = audioCtx.createBiquadFilter();
+            bandPass2.type = 'peaking';
+            bandPass2.frequency.value = 2500; 
+            bandPass2.Q.value = 2;
+            bandPass2.gain.value = 4;
+
+            // 4. Vibrato (LFO)
+            const lfoOsc = audioCtx.createOscillator();
+            lfoOsc.type = 'sine';
+            lfoOsc.frequency.value = 4.5; 
+            
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 3; 
+            
+            lfoOsc.connect(lfoGain);
+            lfoGain.connect(osc.frequency);
+            lfoOsc.start();
+
+            // Connections
+            osc.connect(lowPass);
+            lowPass.connect(bandPass1);
+            bandPass1.connect(bandPass2);
+            bandPass2.connect(gainNode);
+            gainNode.connect(masterGain);
+
+            osc.start();
+
+            return { osc, gainNode, lfoOsc };
+        }
+
+        function stopSound(soundObj) {
+            if (soundObj && soundObj.gainNode) {
+                const now = audioCtx.currentTime;
+                soundObj.gainNode.gain.cancelScheduledValues(now);
+                soundObj.gainNode.gain.setValueAtTime(soundObj.gainNode.gain.value, now);
+                // Release (Damping of string)
+                soundObj.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+                soundObj.osc.stop(now + 0.2);
+                soundObj.lfoOsc.stop(now + 0.2);
+            }
+        }
+
+        // --- Interaction Logic (Mouse/Touch on Strings) ---
+        const laneInner = document.getElementById('lane-inner');
+        const laneOuter = document.getElementById('lane-outer');
+        const stringInner = document.getElementById('string-inner');
+        const stringOuter = document.getElementById('string-outer');
+
+        function handleInput(e, baseFreq, stringEl) {
+            if (!audioCtx) return;
+            e.preventDefault();
+
+            // Calculate position
+            const rect = stringEl.parentElement.getBoundingClientRect(); // Use parent lane for rect
+            let clientY, clientX;
+            if (e.type.includes('touch')) {
+                clientY = e.touches[0].clientY;
+                clientX = e.touches[0].clientX;
+            } else {
+                clientY = e.clientY;
+                clientX = e.clientX;
+            }
+
+            // Normalize position (Top is open string/low pitch)
+            let y = clientY - rect.top;
+            let height = rect.height;
+            let ratio = y / height;
+            if (ratio < 0) ratio = 0;
+            if (ratio > 1) ratio = 1;
+
+            // Pitch Calculation
+            const semitones = ratio * 15; 
+            const frequency = baseFreq * Math.pow(2, semitones / 12);
+
+            // Update Visuals
+            glow.style.display = 'block';
+            // Center glow on the string, but follow Y position
+            const stringRect = stringEl.getBoundingClientRect();
+            glow.style.left = (stringRect.left + stringRect.width/2) + 'px'; 
+            glow.style.top = clientY + 'px';
+
+            // Audio Logic
+            if (!isPlaying) {
+                const sound = createErhuSound(frequency);
+                activeOscillator = sound.osc;
+                activeGain = sound.gainNode;
+                lfo = sound.lfoOsc;
+                isPlaying = true;
+                stringEl.classList.add('vibrating');
+            } else {
+                if (activeOscillator) {
+                    activeOscillator.frequency.setTargetAtTime(frequency, audioCtx.currentTime, 0.05);
+                }
+            }
+        }
+
+        function endInput(stringEl) {
+            if (isPlaying) {
+                stopSound({ osc: activeOscillator, gainNode: activeGain, lfoOsc: lfo });
+                activeOscillator = null;
+                activeGain = null;
+                lfo = null;
+                isPlaying = false;
+                stringEl.classList.remove('vibrating');
+                glow.style.display = 'none';
+            }
+        }
+
+        // Event Listeners for Inner String
+        ['mousedown', 'touchstart'].forEach(evt => 
+            laneInner.addEventListener(evt, (e) => handleInput(e, INNER_STRING_BASE, stringInner))
+        );
+        ['mousemove', 'touchmove'].forEach(evt => 
+            laneInner.addEventListener(evt, (e) => {
+                if(isPlaying) handleInput(e, INNER_STRING_BASE, stringInner);
+            })
+        );
+        ['mouseup', 'mouseleave', 'touchend'].forEach(evt => 
+            laneInner.addEventListener(evt, () => endInput(stringInner))
+        );
+
+        // Event Listeners for Outer String
+        ['mousedown', 'touchstart'].forEach(evt => 
+            laneOuter.addEventListener(evt, (e) => handleInput(e, OUTER_STRING_BASE, stringOuter))
+        );
+        ['mousemove', 'touchmove'].forEach(evt => 
+            laneOuter.addEventListener(evt, (e) => {
+                if(isPlaying) handleInput(e, OUTER_STRING_BASE, stringOuter);
+            })
+        );
+        ['mouseup', 'mouseleave', 'touchend'].forEach(evt => 
+            laneOuter.addEventListener(evt, () => endInput(stringOuter))
+        );
+
+
+        // --- Button Note Logic ---
+        let btnSoundObj = null;
+        window.playNoteBtn = (freq) => {
+             if (btnSoundObj) stopSound(btnSoundObj);
+             btnSoundObj = createErhuSound(freq);
+        };
+
+        window.stopNoteBtn = () => {
+            if (btnSoundObj) {
+                stopSound(btnSoundObj);
+                btnSoundObj = null;
+            }
+        };
+
+
+        // --- Recording Logic ---
+        const recordBtn = document.getElementById('recordBtn');
+        const playBtn = document.getElementById('playBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        recordBtn.addEventListener('click', () => {
+            if (recordBtn.classList.contains('recording')) {
+                // Stop
+                mediaRecorder.stop();
+                recordBtn.classList.remove('recording');
+                recordBtn.innerText = "🔴 บันทึกเสียง";
+                statusText.innerText = "บันทึกเสร็จสิ้น";
+            } else {
+                // Start
+                if (!audioCtx) return alert("กรุณากดเริ่มใช้งานก่อน");
+                
+                recordedChunks = [];
+                const stream = audioDestination.stream;
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    audioUrl = URL.createObjectURL(audioBlob);
+                    playbackAudio.src = audioUrl;
+                    
+                    playBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                };
+
+                mediaRecorder.start();
+                recordBtn.classList.add('recording');
+                recordBtn.innerText = "⏹ หยุดบันทึก";
+                statusText.innerText = "กำลังบันทึก...";
+            }
+        });
+
+        playBtn.addEventListener('click', () => {
+            if (audioUrl) {
+                playbackAudio.play();
+                statusText.innerText = "กำลังเล่นเสียงที่บันทึก...";
+                playbackAudio.onended = () => statusText.innerText = "เล่นจบแล้ว";
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (audioUrl) {
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = audioUrl;
+                a.download = 'my-erhu-song.webm';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(audioUrl); 
+                }, 100);
+            }
+        });
+
+    </script>
+</body>
+</html>

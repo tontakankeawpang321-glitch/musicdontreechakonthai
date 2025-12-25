@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Virtual Yangqin - เครื่องดนตรีจีนจำลอง</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap');
+
+        :root {
+            --wood-dark: #3e2723;
+            --wood-light: #5d4037;
+            --bridge-color: #d7ccc8;
+            --string-color: #fff9c4; /* Golden white */
+            --string-shadow: rgba(0,0,0,0.5);
+            --nut-color: #fff;
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: none; /* Prevent zooming/scrolling */
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            font-family: 'Sarabun', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* --- Header & Controls --- */
+        header {
+            background: linear-gradient(to bottom, #2c1e19, #3e2723);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #ffcc80;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-family: 'Sarabun', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-toggle { background: #8d6e63; color: white; }
+        .btn-record { background: #e53935; color: white; }
+        .btn-record.recording { animation: pulse 1.5s infinite; background: #b71c1c; }
+        .btn-play { background: #43a047; color: white; }
+        .btn-download { background: #1e88e5; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; background: #555; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- Instrument Body --- */
+        .yangqin-container {
+            flex: 1;
+            position: relative;
+            background: 
+                radial-gradient(circle at center, rgba(93, 64, 55, 0.9), rgba(62, 39, 35, 1)),
+                url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjM2UyNzIzIiAvPgo8cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjNGUzNDJlIiAvPjwvc3ZnPg=='); /* Simple wood grain pattern */
+            perspective: 1000px;
+            overflow-y: auto;
+            padding: 20px 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .soundboard {
+            width: 100%;
+            max-width: 800px;
+            background: linear-gradient(135deg, #6d4c41 0%, #4e342e 100%);
+            border-radius: 10px 10px 40px 40px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Left Bridge, Right Bridge */
+            gap: 20px;
+            border: 8px solid #3e2723;
+        }
+
+        /* --- Bridges --- */
+        .bridge-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: relative;
+        }
+
+        .bridge-column {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* The physical bridge visually */
+        .bridge-wood {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            background: linear-gradient(to right, #8d6e63, #d7ccc8, #8d6e63);
+            border-radius: 10px;
+            z-index: 1;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .bridge-left .bridge-wood { left: 50%; transform: translateX(-50%); }
+        .bridge-right .bridge-wood { left: 50%; transform: translateX(-50%); }
+
+        /* --- Strings (Clickable Areas) --- */
+        .string-group {
+            position: relative;
+            width: 100%;
+            height: 45px; /* Touch target size */
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .string-lines {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .string {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.1), var(--string-color) 20%, var(--string-color) 80%, rgba(255,255,255,0.1));
+            box-shadow: 0 1px 2px var(--string-shadow);
+        }
+
+        /* The "Nut" on the bridge */
+        .string-nut {
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            z-index: 3;
+            background: radial-gradient(circle at 30% 30%, #fff, #bdbdbd);
+        }
+
+        /* Note Labels */
+        .note-label {
+            position: absolute;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-shadow: 0 0 3px #000;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s;
+            background: rgba(0,0,0,0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .show-notes .note-label {
+            opacity: 1;
+        }
+
+        /* Label positions relative to the bridge */
+        .bridge-left .string-group .note-label { right: 60%; } /* Left bridge notes usually played on right side */
+        .bridge-right .string-group .note-label { left: 60%; }
+
+        /* Active State (Hit) */
+        .string-group:active .string, 
+        .string-group.active .string {
+            background: #ffeb3b;
+            box-shadow: 0 0 8px #ffeb3b, 0 0 15px #ff9800;
+        }
+
+        .string-group:active .string-nut,
+        .string-group.active .string-nut {
+            transform: translateX(-50%) scale(0.9);
+        }
+
+        /* Decorative Elements */
+        .decorative-hole {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #281815;
+            border-radius: 50%;
+            border: 3px solid #ffcc80;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 0;
+            box-shadow: inset 0 0 10px #000;
+            background-image: radial-gradient(#281815 40%, #000);
+        }
+
+        .bottom-decor {
+            top: auto;
+            bottom: 20px;
+        }
+
+        /* Status Bar */
+        #status-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 200;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #3e2723; }
+        ::-webkit-scrollbar-thumb { background: #8d6e63; border-radius: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>หยางฉิน (Yangqin)</h1>
+        <div class="controls">
+            <button class="btn btn-toggle" id="btnToggleNotes" onclick="toggleNotes()">
+                <span>🎵 โน้ต</span>
+            </button>
+            <button class="btn btn-record" id="btnRecord" onclick="toggleRecording()">
+                <span>🔴 อัด</span>
+            </button>
+            <button class="btn btn-play" id="btnPlay" disabled onclick="playRecording()">
+                <span>▶ เล่น</span>
+            </button>
+            <button class="btn btn-download" id="btnDownload" disabled onclick="downloadRecording()">
+                <span>⬇</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="yangqin-container">
+        <div class="soundboard">
+            <!-- Sound holes decoration -->
+            <div class="decorative-hole"></div>
+            <div class="decorative-hole bottom-decor"></div>
+
+            <!-- Left Bridge (High Notes) -->
+            <div class="bridge-section bridge-left">
+                <div class="bridge-wood"></div>
+                <!-- Generated by JS -->
+            </div>
+
+            <!-- Right Bridge (Mid/Low Notes) -->
+            <div class="bridge-section bridge-right">
+                <div class="bridge-wood"></div>
+                <!-- Generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="status-msg"></div>
+
+    <script>
+        // --- Audio Context & Engine ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        let masterGain;
+        let compressor;
+        
+        // Recording variables
+        let mediaRecorder;
+        let audioChunks = [];
+        let destStream;
+        let recordedBlob;
+        let isRecording = false;
+        let recordingAudioElement = new Audio();
+
+        // Note Frequencies (Simplified Yangqin Scale - Chromatic/G Major mix for playability)
+        // Notation: Octave number 3, 4, 5, 6
+        const notesLeftBridge = [
+            { note: "D6", freq: 1174.66 },
+            { note: "C6", freq: 1046.50 },
+            { note: "B5", freq: 987.77 },
+            { note: "A5", freq: 880.00 },
+            { note: "G5", freq: 783.99 },
+            { note: "F#5", freq: 739.99 },
+            { note: "E5", freq: 659.25 },
+            { note: "D5", freq: 587.33 },
+            { note: "C5", freq: 523.25 },
+            { note: "B4", freq: 493.88 },
+            { note: "A4", freq: 440.00 },
+            { note: "G4", freq: 392.00 }
+        ];
+
+        const notesRightBridge = [
+            { note: "F#4", freq: 369.99 },
+            { note: "E4", freq: 329.63 },
+            { note: "D4", freq: 293.66 },
+            { note: "C4", freq: 261.63 },
+            { note: "B3", freq: 246.94 },
+            { note: "A3", freq: 220.00 },
+            { note: "G3", freq: 196.00 },
+            { note: "F#3", freq: 185.00 },
+            { note: "E3", freq: 164.81 },
+            { note: "D3", freq: 146.83 },
+            { note: "C3", freq: 130.81 },
+            { note: "A2", freq: 110.00 }
+        ];
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+                
+                // Master Volume
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.8;
+
+                // Dynamics Compressor (keeps volume steady when playing many notes)
+                compressor = audioCtx.createDynamicsCompressor();
+                compressor.threshold.value = -10;
+                compressor.knee.value = 40;
+                compressor.ratio.value = 12;
+                compressor.attack.value = 0;
+                compressor.release.value = 0.25;
+
+                // Connect graph: Strings -> Master -> Compressor -> Destination
+                masterGain.connect(compressor);
+                compressor.connect(audioCtx.destination);
+
+                // Setup Recording Stream
+                destStream = audioCtx.createMediaStreamDestination();
+                compressor.connect(destStream);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // --- Sound Synthesis (Yangqin Physics) ---
+        function playNote(freq) {
+            initAudio();
+
+            // 1. Create Nodes
+            const oscMain = audioCtx.createOscillator();
+            const oscHarmonic = audioCtx.createOscillator(); // Detuned slightly for "shimmer"
+            const oscImpact = audioCtx.createOscillator(); // Attack transient
+
+            const gainMain = audioCtx.createGain();
+            const gainHarmonic = audioCtx.createGain();
+            const gainImpact = audioCtx.createGain();
+
+            const now = audioCtx.currentTime;
+
+            // 2. Configure Oscillators
+            // Main body tone (Triangle/Sine hybrid)
+            oscMain.type = 'triangle'; 
+            oscMain.frequency.setValueAtTime(freq, now);
+
+            // Harmonic/String shimmer (Sawtooth for brightness, detuned)
+            oscHarmonic.type = 'sawtooth';
+            oscHarmonic.frequency.setValueAtTime(freq, now);
+            oscHarmonic.detune.setValueAtTime(8, now); // +8 cents detune for chorus effect
+
+            // Impact (High click)
+            oscImpact.type = 'sine';
+            oscImpact.frequency.setValueAtTime(freq * 3, now); // Higher harmonic for strike
+
+            // 3. Envelopes (ADSR)
+            // Yangqin has sharp attack and long decay
+            
+            // Main Tone Envelope
+            gainMain.gain.setValueAtTime(0, now);
+            gainMain.gain.linearRampToValueAtTime(0.5, now + 0.005); // Fast attack
+            gainMain.gain.exponentialRampToValueAtTime(0.001, now + 3.0); // Long decay
+
+            // Harmonic Envelope (Dies out faster than main body)
+            gainHarmonic.gain.setValueAtTime(0, now);
+            gainHarmonic.gain.linearRampToValueAtTime(0.15, now + 0.005);
+            gainHarmonic.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+
+            // Impact Envelope (Very short)
+            gainImpact.gain.setValueAtTime(0, now);
+            gainImpact.gain.linearRampToValueAtTime(0.3, now + 0.002);
+            gainImpact.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+            // 4. Connect and Start
+            oscMain.connect(gainMain);
+            oscHarmonic.connect(gainHarmonic);
+            oscImpact.connect(gainImpact);
+
+            gainMain.connect(masterGain);
+            gainHarmonic.connect(masterGain);
+            gainImpact.connect(masterGain);
+
+            oscMain.start(now);
+            oscHarmonic.start(now);
+            oscImpact.start(now);
+
+            // Garbage collection
+            oscMain.stop(now + 3.5);
+            oscHarmonic.stop(now + 3.5);
+            oscImpact.stop(now + 3.5);
+            
+            // Cleanup nodes after playing
+            setTimeout(() => {
+                gainMain.disconnect();
+                gainHarmonic.disconnect();
+                gainImpact.disconnect();
+            }, 3500);
+        }
+
+        // --- DOM Generation ---
+        function createStrings(containerClass, notesArray) {
+            const container = document.querySelector(containerClass);
+            
+            notesArray.forEach((n, index) => {
+                const group = document.createElement('div');
+                group.className = 'string-group';
+                group.dataset.freq = n.freq;
+                
+                // Add click/touch listener
+                const handleHit = (e) => {
+                    e.preventDefault(); // Prevent ghost clicks
+                    playNote(n.freq);
+                    
+                    // Visual feedback
+                    group.classList.add('active');
+                    setTimeout(() => group.classList.remove('active'), 150);
+                };
+
+                // Use touchstart for faster reaction on mobile, mousedown for PC
+                group.addEventListener('touchstart', handleHit, {passive: false});
+                group.addEventListener('mousedown', handleHit);
+
+                const lines = document.createElement('div');
+                lines.className = 'string-lines';
+                // Double strings for authenticity
+                lines.appendChild(document.createElement('div')).className = 'string';
+                lines.appendChild(document.createElement('div')).className = 'string';
+
+                const nut = document.createElement('div');
+                nut.className = 'string-nut';
+
+                const label = document.createElement('div');
+                label.className = 'note-label';
+                label.innerText = n.note;
+
+                group.appendChild(lines);
+                group.appendChild(nut);
+                group.appendChild(label);
+                container.appendChild(group);
+            });
+        }
+
+        // Initialize Layout
+        window.onload = () => {
+            createStrings('.bridge-left', notesLeftBridge);
+            createStrings('.bridge-right', notesRightBridge);
+        };
+
+        // --- UI Functions ---
+
+        function toggleNotes() {
+            document.body.classList.toggle('show-notes');
+            const btn = document.getElementById('btnToggleNotes');
+            btn.style.background = document.body.classList.contains('show-notes') ? '#a1887f' : '#8d6e63';
+        }
+
+        function showStatus(msg) {
+            const el = document.getElementById('status-msg');
+            el.innerText = msg;
+            el.style.opacity = 1;
+            setTimeout(() => { el.style.opacity = 0; }, 3000);
+        }
+
+        // --- Recorder Logic ---
+
+        function toggleRecording() {
+            initAudio(); // Ensure context is running
+            const btn = document.getElementById('btnRecord');
+            const btnPlay = document.getElementById('btnPlay');
+            const btnDown = document.getElementById('btnDownload');
+
+            if (!isRecording) {
+                // Start Recording
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(destStream.stream);
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioURL = URL.createObjectURL(recordedBlob);
+                    recordingAudioElement.src = audioURL;
+                    
+                    // Enable Play and Download
+                    btnPlay.disabled = false;
+                    btnDown.disabled = false;
+                    showStatus("บันทึกเสร็จสิ้น");
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                btn.innerHTML = "<span>⏹ หยุด</span>";
+                btn.classList.add('recording');
+                btnPlay.disabled = true;
+                btnDown.disabled = true;
+                showStatus("กำลังบันทึก...");
+
+            } else {
+                // Stop Recording
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.innerHTML = "<span>🔴 อัด</span>";
+                btn.classList.remove('recording');
+            }
+        }
+
+        function playRecording() {
+            if (recordedBlob) {
+                recordingAudioElement.play();
+                showStatus("กำลังเล่นเสียงที่บันทึก...");
+            }
+        }
+
+        function downloadRecording() {
+            if (recordedBlob) {
+                const url = URL.createObjectURL(recordedBlob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'my-yangqin-song.webm';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+                showStatus("กำลังดาวน์โหลด...");
+            }
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ขลุ่ยผิวจีนจำลอง (Dizi Virtuoso)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #1a2e1a; /* Dark Bamboo Green */
+            background-image: radial-gradient(#2d4a2d 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #ecfdf5;
+            overflow: hidden; /* Prevent scroll on mobile */
+            touch-action: none; /* Crucial for fast touch response */
+        }
+
+        /* Bamboo Texture CSS */
+        .bamboo-gradient {
+            background: linear-gradient(90deg, #556b2f 0%, #8fbc8f 20%, #ebf8e1 45%, #8fbc8f 55%, #556b2f 100%);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 -5px 10px rgba(0,0,0,0.3);
+            border-radius: 50px;
+            position: relative;
+        }
+
+        .bamboo-joint {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 15%,
+                rgba(48, 61, 28, 0.4) 15.5%,
+                rgba(48, 61, 28, 0.4) 16.5%,
+                transparent 17%
+            );
+        }
+
+        /* Hole/Button Styling */
+        .flute-hole {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #2a2a2a, #000);
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.8), 0 2px 5px rgba(255,255,255,0.2);
+            border: 2px solid #8fbc8f;
+            transition: all 0.05s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.7);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+        }
+
+        .flute-hole.active {
+            transform: scale(0.92);
+            background: radial-gradient(circle at 30% 30%, #d4af37, #8b4500); /* Gold fill when pressed */
+            box-shadow: 0 0 15px #d4af37;
+            color: #2a2a2a;
+            border-color: #ffd700;
+        }
+
+        /* Tassel Animation */
+        .tassel {
+            animation: swing 3s ease-in-out infinite alternate;
+            transform-origin: top center;
+        }
+        @keyframes swing {
+            from { transform: rotate(-5deg); }
+            to { transform: rotate(5deg); }
+        }
+
+        /* Recording Pulse */
+        .recording-pulse {
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Modal for Start */
+        #start-overlay {
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+
+        /* Responsive Grid for Holes */
+        .holes-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+            .holes-container {
+                grid-template-columns: repeat(8, 1fr); /* Horizontal on desktop */
+                gap: 20px;
+            }
+            .flute-hole {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-between py-4">
+
+    <!-- Header & Controls -->
+    <div class="w-full px-4 flex justify-between items-center z-10">
+        <div>
+            <h1 class="text-2xl font-bold text-green-100 drop-shadow-md">ขลุ่ยผิวจีน (Dizi)</h1>
+            <p class="text-xs text-green-400">เครื่องดนตรีจำลองเสมือนจริง</p>
+        </div>
+        <div class="flex gap-2">
+            <button id="btn-record" class="bg-red-900 hover:bg-red-700 text-white rounded-full p-3 shadow-lg transition" title="อัดเสียง">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+            </button>
+            <button id="btn-stop" class="hidden bg-gray-600 hover:bg-gray-500 text-white rounded-full p-3 shadow-lg transition" title="หยุด">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="white" viewBox="0 0 24 24">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+            </button>
+            <button id="btn-play" class="hidden bg-green-700 hover:bg-green-600 text-white rounded-full p-3 shadow-lg transition" title="เล่นเสียงที่อัด">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </button>
+            <a id="btn-download" class="hidden bg-blue-700 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition" title="ดาวน์โหลด">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Visual Flute Representation -->
+    <div class="flex-1 w-full flex flex-col items-center justify-center relative">
+        <!-- Tassel Decoration -->
+        <div class="absolute top-0 right-10 z-0 tassel hidden md:block opacity-80">
+            <div class="w-1 h-20 bg-red-700 mx-auto"></div>
+            <div class="w-8 h-8 bg-red-600 rotate-45 border-2 border-red-800 mx-auto -mt-1 rounded-sm shadow-md"></div>
+            <div class="w-12 h-24 bg-red-600 mx-auto -mt-4 rounded-full blur-sm opacity-50"></div>
+        </div>
+
+        <!-- Flute Body -->
+        <div class="w-[95%] h-16 md:h-24 bamboo-gradient relative flex items-center justify-around px-4 md:px-12 shadow-2xl z-10 border-t border-b border-green-900">
+            <div class="bamboo-joint"></div>
+            <!-- Dimo (Membrane) Hole Visual -->
+            <div class="absolute left-6 md:left-12 w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#f3e5ab] opacity-60 shadow-inner border border-yellow-700 animate-pulse"></div>
+            
+            <div class="text-green-900 font-bold opacity-30 text-4xl tracking-widest absolute pointer-events-none select-none" style="font-family: 'Times New Roman', serif;">
+                中國笛子
+            </div>
+        </div>
+
+        <!-- Status Text -->
+        <div id="status-text" class="mt-4 text-green-300 text-sm h-6">พร้อมเล่น</div>
+    </div>
+
+    <!-- Controls / Holes Area -->
+    <div class="w-full bg-black/30 backdrop-blur-md rounded-t-3xl p-6 pb-12 border-t border-green-800/50">
+        <div class="text-center mb-4 text-green-400 text-sm opacity-70">แตะปุ่มเพื่อเป่า (รองรับหลายนิ้ว)</div>
+        <div class="holes-container" id="keypad">
+            <!-- Keys generated by JS -->
+        </div>
+    </div>
+
+    <!-- Start Overlay (Required for AudioContext) -->
+    <div id="start-overlay" class="fixed inset-0 flex items-center justify-center bg-black/80">
+        <button id="btn-init" class="bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-8 rounded-full text-xl shadow-2xl transform transition hover:scale-105 ring-4 ring-green-900">
+            เริ่มเป่าขลุ่ย (Start)
+        </button>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const NOTES = [
+            { note: 'G4', freq: 392.00, label: 'ซอล (ต่ำ)' },
+            { note: 'A4', freq: 440.00, label: 'ลา (ต่ำ)' },
+            { note: 'B4', freq: 493.88, label: 'ที (ต่ำ)' },
+            { note: 'C5', freq: 523.25, label: 'โด' },
+            { note: 'D5', freq: 587.33, label: 'เร' },
+            { note: 'E5', freq: 659.25, label: 'มี' },
+            { note: 'F5', freq: 698.46, label: 'ฟา' },
+            { note: 'G5', freq: 783.99, label: 'ซอล' },
+            { note: 'A5', freq: 880.00, label: 'ลา' },
+            { note: 'B5', freq: 987.77, label: 'ที' },
+            { note: 'C6', freq: 1046.50, label: 'โด (สูง)' },
+            { note: 'D6', freq: 1174.66, label: 'เร (สูง)' }
+        ];
+
+        // --- Audio Engine ---
+        let audioCtx;
+        let masterGain;
+        let compressor;
+        let delayNode;
+        let reverbGain;
+        let activeOscillators = {}; // Map to track playing notes
+        let dest; // MediaStreamDestination for recording
+        let mediaRecorder;
+        let audioChunks = [];
+
+        function initAudio() {
+            if (audioCtx) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            
+            // Master chain
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.6;
+
+            compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.value = -24;
+            compressor.knee.value = 30;
+            compressor.ratio.value = 12;
+            compressor.attack.value = 0.003;
+            compressor.release.value = 0.25;
+
+            // Simple Delay for "Airy" space
+            delayNode = audioCtx.createDelay();
+            delayNode.delayTime.value = 0.15; // 150ms echo
+            const delayFeedback = audioCtx.createGain();
+            delayFeedback.gain.value = 0.2;
+            const delayFilter = audioCtx.createBiquadFilter();
+            delayFilter.type = "lowpass";
+            delayFilter.frequency.value = 1000;
+
+            delayNode.connect(delayFilter);
+            delayFilter.connect(delayFeedback);
+            delayFeedback.connect(delayNode);
+            
+            reverbGain = audioCtx.createGain();
+            reverbGain.gain.value = 0.3; // Wet level
+
+            // Connections
+            masterGain.connect(compressor);
+            compressor.connect(audioCtx.destination); // To Speakers
+            
+            // Delay Chain
+            masterGain.connect(delayNode);
+            delayNode.connect(reverbGain);
+            reverbGain.connect(compressor);
+
+            // Setup Recording Destination
+            dest = audioCtx.createMediaStreamDestination();
+            compressor.connect(dest);
+        }
+
+        function playNote(freq, id) {
+            if (!audioCtx) initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            // Stop existing note if rapid firing on same key
+            if (activeOscillators[id]) {
+                stopNote(id);
+            }
+
+            const t = audioCtx.currentTime;
+            
+            // 1. Fundamental Tone (Sine) - The body
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(freq, t);
+
+            // 2. Harmonics (Triangle/Saw) - The "Buzz" (Dimo membrane effect)
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(freq, t);
+            // Slight detune for thickness
+            osc2.detune.setValueAtTime(5, t); 
+
+            // 3. Breath Noise (White noise buffer)
+            const bufferSize = audioCtx.sampleRate * 2; // 2 seconds buffer
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            noise.loop = true;
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.value = freq * 2;
+            noiseFilter.Q.value = 1;
+
+            // Envelopes
+            const gain1 = audioCtx.createGain(); // Main body gain
+            const gain2 = audioCtx.createGain(); // Buzz gain
+            const gainNoise = audioCtx.createGain(); // Breath gain
+
+            // --- Flute Envelope (ADSR) ---
+            // Attack: Fast but not instant (breath buildup)
+            // Sustain: Steady
+            // Release: Quick fade out
+
+            // Main Tone
+            gain1.gain.setValueAtTime(0, t);
+            gain1.gain.linearRampToValueAtTime(0.7, t + 0.05); // Attack
+            gain1.gain.setValueAtTime(0.7, t + 0.05); // Sustain start
+
+            // Buzz (Lower volume)
+            gain2.gain.setValueAtTime(0, t);
+            gain2.gain.linearRampToValueAtTime(0.15, t + 0.04);
+            
+            // Breath (Short burst at start, then low sustain)
+            gainNoise.gain.setValueAtTime(0, t);
+            gainNoise.gain.linearRampToValueAtTime(0.05, t + 0.02); // Chiff
+            gainNoise.gain.exponentialRampToValueAtTime(0.01, t + 0.1); // Sustain breath
+
+            // Vibrato (LFO)
+            const lfo = audioCtx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.value = 5; // 5Hz vibrato
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 5; // Depth
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.frequency);
+            lfoGain.connect(osc2.frequency);
+            lfo.start(t);
+
+            // Connections
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(gainNoise);
+
+            gain1.connect(masterGain);
+            gain2.connect(masterGain);
+            gainNoise.connect(masterGain);
+
+            osc1.start(t);
+            osc2.start(t);
+            noise.start(t);
+
+            activeOscillators[id] = {
+                sources: [osc1, osc2, noise, lfo],
+                gains: [gain1, gain2, gainNoise]
+            };
+        }
+
+        function stopNote(id) {
+            if (!activeOscillators[id]) return;
+
+            const t = audioCtx.currentTime;
+            const nodes = activeOscillators[id];
+            
+            // Release Envelope
+            nodes.gains.forEach(g => {
+                g.gain.cancelScheduledValues(t);
+                g.gain.setValueAtTime(g.gain.value, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.15); // Release time
+            });
+
+            // Stop oscillators after release
+            nodes.sources.forEach(s => {
+                s.stop(t + 0.2);
+            });
+
+            delete activeOscillators[id];
+        }
+
+        // --- UI Generation ---
+        const keypad = document.getElementById('keypad');
+        
+        NOTES.forEach((n, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'flute-hole';
+            btn.innerHTML = `<span class="pointer-events-none text-sm md:text-base">${n.label}</span>`;
+            btn.dataset.freq = n.freq;
+            btn.dataset.id = index;
+            
+            // Touch Events (Low Latency)
+            const startHandler = (e) => {
+                e.preventDefault();
+                btn.classList.add('active');
+                playNote(n.freq, index);
+                updateStatus(`กำลังเป่า: ${n.label}`);
+            };
+
+            const endHandler = (e) => {
+                e.preventDefault();
+                btn.classList.remove('active');
+                stopNote(index);
+                updateStatus('...');
+            };
+
+            btn.addEventListener('touchstart', startHandler, {passive: false});
+            btn.addEventListener('touchend', endHandler, {passive: false});
+            btn.addEventListener('mousedown', startHandler);
+            btn.addEventListener('mouseup', endHandler);
+            btn.addEventListener('mouseleave', endHandler);
+
+            keypad.appendChild(btn);
+        });
+
+        function updateStatus(text) {
+            document.getElementById('status-text').innerText = text;
+        }
+
+        // --- Recording Logic ---
+        const btnRecord = document.getElementById('btn-record');
+        const btnStop = document.getElementById('btn-stop');
+        const btnPlay = document.getElementById('btn-play');
+        const btnDownload = document.getElementById('btn-download');
+        let audioBlob = null;
+
+        btnRecord.addEventListener('click', () => {
+            if (!audioCtx) initAudio();
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(dest.stream);
+            
+            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                // Setup play button
+                const audio = new Audio(audioUrl);
+                btnPlay.onclick = () => audio.play();
+                
+                // Setup download button
+                btnDownload.href = audioUrl;
+                btnDownload.download = `dizi-recording-${Date.now()}.webm`;
+                
+                btnPlay.classList.remove('hidden');
+                btnDownload.classList.remove('hidden');
+            };
+
+            mediaRecorder.start();
+            btnRecord.classList.add('hidden');
+            btnStop.classList.remove('hidden');
+            btnRecord.parentElement.classList.add('recording-pulse');
+            updateStatus('🔴 กำลังอัดเสียง...');
+        });
+
+        btnStop.addEventListener('click', () => {
+            mediaRecorder.stop();
+            btnStop.classList.add('hidden');
+            btnRecord.classList.remove('hidden');
+            btnRecord.parentElement.classList.remove('recording-pulse');
+            updateStatus('อัดเสียงเสร็จสิ้น');
+        });
+
+        // --- Initialization ---
+        document.getElementById('btn-init').addEventListener('click', () => {
+            initAudio();
+            document.getElementById('start-overlay').style.display = 'none';
+        });
+
+    </script>
+</body>
+</html>

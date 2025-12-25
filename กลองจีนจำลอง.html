@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>กลองจีนเสมือนจริง - Chinese Drum Master</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+
+        :root {
+            --primary-red: #c92a2a;
+            --dark-red: #8a1c1c;
+            --gold: #ffd43b;
+            --wood: #5c3a21;
+            --skin: #f4e4bc;
+            --bg-color: #2b2b2b;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #3a3a3a 0%, #1a1a1a 100%);
+            color: white;
+            margin: 0;
+            height: 100dvh; /* Use dynamic viewport height for mobile */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden; /* Prevent scrolling on mobile */
+            touch-action: none; /* Crucial for fast touch response */
+        }
+
+        header {
+            text-align: center;
+            padding: 5px; /* Compact padding */
+            background: linear-gradient(to bottom, var(--dark-red), var(--primary-red));
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            border-bottom: 2px solid var(--gold);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1rem; /* Compact font */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            color: var(--gold);
+        }
+
+        .controls {
+            display: flex;
+            gap: 5px;
+            padding: 5px; /* Compact padding */
+            justify-content: center;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.3);
+            width: 100%;
+            backdrop-filter: blur(5px);
+            flex-shrink: 0;
+        }
+
+        button.ctrl-btn {
+            padding: 5px 12px; /* Compact buttons */
+            border: 1px solid var(--gold);
+            background: rgba(0,0,0,0.6);
+            color: var(--gold);
+            border-radius: 20px;
+            font-family: 'Sarabun', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+        }
+
+        button.ctrl-btn:active {
+            transform: scale(0.95);
+        }
+
+        button.ctrl-btn.recording {
+            background: var(--primary-red);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(201, 42, 42, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0); }
+        }
+
+        /* Drum Layout */
+        .drum-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            padding: 5px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .drum-set {
+            display: grid;
+            /* Default Mobile Portrait Layout */
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px; /* Tight gap */
+            width: 100%;
+            height: 100%;
+            justify-items: center;
+            align-items: center;
+            
+            /* Define areas for better ergonomic placement on mobile */
+            grid-template-areas: 
+                "cym-l cym-r"
+                "tom-l tom-r"
+                "wood  bass";
+        }
+
+        /* Assign Grid Areas */
+        .drum-wrapper:nth-child(1) { grid-area: cym-l; } /* Cymbal L */
+        .drum-wrapper:nth-child(2) { grid-area: bass; }  /* Bass (moved to bottom right) */
+        .drum-wrapper:nth-child(3) { grid-area: cym-r; } /* Cymbal R */
+        .drum-wrapper:nth-child(4) { grid-area: tom-l; } /* Tom L */
+        .drum-wrapper:nth-child(5) { grid-area: wood; }  /* Wood (moved to bottom left) */
+        .drum-wrapper:nth-child(6) { grid-area: tom-r; } /* Tom R */
+
+        /* Responsive adjustments for Desktop/Landscape */
+        @media (min-width: 768px) {
+            .drum-set {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+                gap: 20px;
+                grid-template-areas: 
+                    "cym-l bass cym-r"
+                    "tom-l tom-c tom-r"; /* tom-c is usually small drum, mapping wood here */
+            }
+            /* Remap for desktop layout */
+            .drum-wrapper:nth-child(1) { grid-area: 1 / 1 / 2 / 2; } /* Cymbal L */
+            .drum-wrapper:nth-child(2) { grid-area: 1 / 2 / 2 / 3; } /* Bass Center */
+            .drum-wrapper:nth-child(3) { grid-area: 1 / 3 / 2 / 4; } /* Cymbal R */
+            .drum-wrapper:nth-child(4) { grid-area: 2 / 1 / 3 / 2; } /* Tom L */
+            .drum-wrapper:nth-child(5) { grid-area: 2 / 2 / 3 / 3; } /* Wood Center */
+            .drum-wrapper:nth-child(6) { grid-area: 2 / 3 / 3 / 4; } /* Tom R */
+        }
+        
+        /* Landscape Mobile adjustments */
+        @media (max-width: 767px) and (orientation: landscape) {
+             .drum-set {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+                /* Reset areas for landscape flow */
+                grid-template-areas: none; 
+            }
+            /* Simple flow for landscape mobile */
+            .drum-wrapper:nth-child(1) { grid-area: auto; }
+            .drum-wrapper:nth-child(2) { grid-area: auto; order: 2; } 
+            .drum-wrapper:nth-child(3) { grid-area: auto; }
+            .drum-wrapper:nth-child(4) { grid-area: auto; }
+            .drum-wrapper:nth-child(5) { grid-area: auto; }
+            .drum-wrapper:nth-child(6) { grid-area: auto; }
+
+            .controls { display: none; } 
+            header { padding: 2px; }
+            h1 { font-size: 0.8rem; }
+        }
+
+        .drum-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drum-pad {
+            /* Compact Logic for Vertical Mobile */
+            width: min(30vw, 16vh); 
+            height: min(30vw, 16vh);
+            
+            /* Max limits */
+            max-width: 150px;
+            max-height: 150px;
+            
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--skin), #d4c4a0);
+            border: min(1.5vw, 6px) solid var(--wood);
+            box-shadow: 
+                0 4px 10px rgba(0,0,0,0.6),
+                inset 0 0 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.05s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Decoration for Chinese Drums */
+        .drum-pad::after {
+            content: '';
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            border: 2px dashed rgba(92, 58, 33, 0.3);
+            pointer-events: none;
+        }
+
+        .drum-pad.large {
+            width: min(36vw, 20vh);
+            height: min(36vw, 20vh);
+            max-width: 180px;
+            max-height: 180px;
+            border-width: min(2vw, 8px);
+            background: radial-gradient(circle at 30% 30%, var(--skin), #cbb381);
+        }
+
+        .drum-pad.metal {
+            background: radial-gradient(circle at 30% 30%, #fffbe6, #ffd43b, #b08d00);
+            border: min(1vw, 4px) solid #b08d00;
+        }
+
+        .drum-pad:active, .drum-pad.active {
+            transform: scale(0.95);
+            box-shadow: 
+                0 2px 5px rgba(0,0,0,0.5),
+                inset 0 0 30px rgba(0,0,0,0.4);
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple-anim 0.4s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-anim {
+            to {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .drum-label {
+            margin-top: 2px;
+            font-size: 0.75rem;
+            color: #ddd;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        .key-hint {
+            position: absolute;
+            bottom: -5px;
+            right: 0;
+            background: var(--primary-red);
+            color: white;
+            font-size: 0.6rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid white;
+        }
+
+        /* Notification */
+        #notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🥁 กลองจีน (Chinese Drums)</h1>
+    </header>
+
+    <div class="controls">
+        <button id="recordBtn" class="ctrl-btn">
+            <span>●</span> อัด
+        </button>
+        <button id="stopBtn" class="ctrl-btn" disabled>
+            <span>■</span> หยุด
+        </button>
+        <button id="playBtn" class="ctrl-btn" disabled>
+            <span>▶</span> ฟัง
+        </button>
+        <button id="downloadBtn" class="ctrl-btn" disabled>
+            <span>⬇</span> โหลด
+        </button>
+    </div>
+
+    <div class="drum-container">
+        <div class="drum-set">
+            <!-- Cymbal Left -->
+            <div class="drum-wrapper">
+                <div class="drum-pad metal" data-sound="cymbal" data-key="q">
+                    <span class="key-hint">Q</span>
+                </div>
+                <div class="drum-label">ฉาบ (Bo)</div>
+            </div>
+
+            <!-- Large Drum (Center/Bottom Right on mobile) -->
+            <div class="drum-wrapper">
+                <div class="drum-pad large" data-sound="bass" data-key="space">
+                     <span class="key-hint">SPC</span>
+                </div>
+                <div class="drum-label">กลองใหญ่</div>
+            </div>
+
+            <!-- Cymbal Right -->
+            <div class="drum-wrapper">
+                <div class="drum-pad metal" data-sound="gong" data-key="e">
+                     <span class="key-hint">E</span>
+                </div>
+                <div class="drum-label">ฆ้อง (Luo)</div>
+            </div>
+
+            <!-- Tom Left -->
+            <div class="drum-wrapper">
+                <div class="drum-pad" data-sound="tom1" data-key="a">
+                     <span class="key-hint">A</span>
+                </div>
+                <div class="drum-label">กลองทุ้ม</div>
+            </div>
+
+             <!-- Wood Block (Bottom Left on mobile) -->
+             <div class="drum-wrapper">
+                <div class="drum-pad" data-sound="wood" data-key="s">
+                     <span class="key-hint">S</span>
+                </div>
+                <div class="drum-label">เกราะไม้</div>
+            </div>
+
+            <!-- Tom Right -->
+            <div class="drum-wrapper">
+                <div class="drum-pad" data-sound="tom2" data-key="d">
+                     <span class="key-hint">D</span>
+                </div>
+                <div class="drum-label">กลองกลาง</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification">Notification</div>
+    <audio id="playbackAudio" style="display:none;"></audio>
+
+    <script>
+        // --- Audio Engine (Web Audio API) ---
+        let audioCtx;
+        let masterGain;
+        let dest; // Destination for recording
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+        let audioUrl;
+
+        // Initialize Audio Context on first interaction
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                
+                // Master Volume
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.8;
+                
+                // Destination setup for recording
+                dest = audioCtx.createMediaStreamDestination();
+                masterGain.connect(audioCtx.destination);
+                masterGain.connect(dest);
+                
+                showToast("ระบบเสียงพร้อมทำงาน!");
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // --- Sound Synthesis Functions ---
+        // Generates drum sounds procedurally (No external files needed)
+        
+        function playSound(type) {
+            initAudio();
+            const t = audioCtx.currentTime;
+
+            // Common nodes
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            // Connect
+            osc.connect(gainNode);
+            gainNode.connect(masterGain);
+
+            switch (type) {
+                case 'bass': // Da Gu (Deep, Resonant)
+                    osc.frequency.setValueAtTime(150, t);
+                    osc.frequency.exponentialRampToValueAtTime(40, t + 0.5);
+                    gainNode.gain.setValueAtTime(1, t);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.8);
+                    
+                    // Add impact noise
+                    createNoise(t, 0.05, 0.5);
+                    break;
+
+                case 'tom1': // Tang Gu (Mid-Low)
+                    osc.frequency.setValueAtTime(250, t);
+                    osc.frequency.exponentialRampToValueAtTime(80, t + 0.3);
+                    gainNode.gain.setValueAtTime(0.8, t);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                    createNoise(t, 0.03, 0.3);
+                    break;
+
+                case 'tom2': // Pai Gu (Mid-High)
+                    osc.frequency.setValueAtTime(350, t);
+                    osc.frequency.exponentialRampToValueAtTime(120, t + 0.25);
+                    gainNode.gain.setValueAtTime(0.8, t);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                    createNoise(t, 0.03, 0.3);
+                    break;
+                
+                case 'wood': // Bangzi (Woodblock - Sharp, Short)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800, t);
+                    gainNode.gain.setValueAtTime(0.7, t);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                    break;
+
+                case 'cymbal': // Bo (Noise based)
+                    createMetallicNoise(t, 0.8);
+                    return; // Oscillator used in helper function
+                
+                case 'gong': // Luo (FM Synthesis for metallic sound)
+                    playGong(t);
+                    return;
+            }
+
+            osc.start(t);
+            osc.stop(t + 1.0);
+        }
+
+        // Helper: White Noise for drum impact
+        function createNoise(time, duration, vol) {
+            const bufferSize = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(vol, time);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+            
+            noise.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            noise.start(time);
+        }
+
+        // Helper: Metallic Sound (Bandpass Noise)
+        function createMetallicNoise(time, duration) {
+            const bufferSize = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+
+            const bandpass = audioCtx.createBiquadFilter();
+            bandpass.type = "bandpass";
+            bandpass.frequency.value = 1000; // Center freq for cymbal
+            bandpass.Q.value = 0.5;
+
+            const highpass = audioCtx.createBiquadFilter();
+            highpass.type = "highpass";
+            highpass.frequency.value = 2000;
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.5, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+
+            noise.connect(bandpass);
+            bandpass.connect(highpass);
+            highpass.connect(gain);
+            gain.connect(masterGain);
+            noise.start(time);
+        }
+
+        // Helper: Gong Sound
+        function playGong(t) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            // FM Synthesis: Modulator
+            const mod = audioCtx.createOscillator();
+            const modGain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.value = 200;
+            
+            mod.type = 'square';
+            mod.frequency.value = 245; // Disharmonic ratio
+            modGain.gain.value = 300;
+
+            mod.connect(modGain);
+            modGain.connect(osc.frequency);
+            
+            osc.connect(gain);
+            gain.connect(masterGain);
+
+            gain.gain.setValueAtTime(0.8, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+
+            osc.start(t);
+            mod.start(t);
+            osc.stop(t + 2.0);
+            mod.stop(t + 2.0);
+        }
+
+
+        // --- Interaction Logic ---
+        const drums = document.querySelectorAll('.drum-pad');
+        const activeTouches = new Map(); // Track multitouch
+
+        function triggerDrum(element) {
+            const soundType = element.dataset.sound;
+            
+            // Audio
+            playSound(soundType);
+
+            // Visual
+            element.classList.add('active');
+            createRipple(element);
+            
+            setTimeout(() => {
+                element.classList.remove('active');
+            }, 100);
+        }
+
+        function createRipple(element) {
+            const ripple = document.createElement('div');
+            ripple.classList.add('ripple');
+            // Randomize position slightly for realism
+            const size = element.offsetWidth;
+            ripple.style.width = size + 'px';
+            ripple.style.height = size + 'px';
+            ripple.style.left = '0px'; 
+            ripple.style.top = '0px';
+            
+            element.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 400);
+        }
+
+        // Mouse & Touch Events
+        drums.forEach(drum => {
+            // Mouse
+            drum.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                triggerDrum(drum);
+            });
+
+            // Touch (Multitouch support)
+            drum.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Stop scrolling
+                initAudio(); // Ensure audio starts on first touch
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    triggerDrum(drum);
+                }
+            }, { passive: false });
+        });
+
+        // Keyboard Support
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            
+            const key = e.key.toLowerCase() === ' ' ? 'space' : e.key.toLowerCase();
+            const drum = document.querySelector(`.drum-pad[data-key="${key}"]`);
+            
+            if (drum) {
+                triggerDrum(drum);
+            }
+        });
+
+        // --- Recording Logic ---
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const playBtn = document.getElementById('playBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const playbackAudio = document.getElementById('playbackAudio');
+
+        recordBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+        playBtn.addEventListener('click', playRecording);
+        downloadBtn.addEventListener('click', downloadRecording);
+
+        function startRecording() {
+            initAudio();
+            audioChunks = [];
+            
+            // Check browser support
+            const options = MediaRecorder.isTypeSupported('audio/webm') 
+                ? { mimeType: 'audio/webm' } 
+                : { mimeType: 'audio/mp4' };
+
+            mediaRecorder = new MediaRecorder(dest.stream, options);
+            
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // Generic container
+                audioUrl = URL.createObjectURL(audioBlob);
+                playbackAudio.src = audioUrl;
+                
+                playBtn.disabled = false;
+                downloadBtn.disabled = false;
+                showToast("บันทึกเสร็จสิ้น!");
+            };
+
+            mediaRecorder.start();
+            recordBtn.classList.add('recording');
+            recordBtn.innerHTML = "<span>●</span> กำลังอัด...";
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+            playBtn.disabled = true;
+            downloadBtn.disabled = true;
+            
+            showToast("เริ่มอัดเสียง...");
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = "<span>●</span> อัด";
+                recordBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+
+        function playRecording() {
+            if (audioUrl) {
+                playbackAudio.play();
+                showToast("กำลังเล่นเสียงที่อัด...");
+            }
+        }
+
+        function downloadRecording() {
+            if (audioUrl) {
+                const a = document.createElement('a');
+                a.href = audioUrl;
+                a.download = `chinese_drum_session_${new Date().getTime()}.wav`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        // --- UI Utils ---
+        function showToast(msg) {
+            const el = document.getElementById('notification');
+            el.innerText = msg;
+            el.style.opacity = '1';
+            setTimeout(() => {
+                el.style.opacity = '0';
+            }, 2000);
+        }
+
+    </script>
+</body>
+</html>
