@@ -42,6 +42,8 @@
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
             z-index: 10;
+            height: 50px; /* Fixed height for calculations */
+            box-sizing: border-box;
         }
 
         h1 {
@@ -128,9 +130,11 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 0 10px;
             position: relative;
             perspective: 800px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* Rows */
@@ -142,14 +146,14 @@
         }
 
         .row.accidentals {
-            margin-bottom: -30px; /* Overlap slightly */
+            margin-bottom: -5vh; /* Responsive overlap */
             z-index: 2;
             pointer-events: none; /* Let clicks pass through gaps */
         }
 
         .row.naturals {
             z-index: 1;
-            padding-top: 10px;
+            padding-top: 2vh;
         }
 
         /* Keys (Bars) */
@@ -180,7 +184,7 @@
 
         /* Accidental Keys styling */
         .key.accidental {
-            height: 140px; /* Short keys */
+            /* Height set by JS now for responsiveness */
             width: 5%; /* Relative width */
             margin: 0 1.5%; /* Spacing */
             background: linear-gradient(to right, 
@@ -200,22 +204,15 @@
 
         /* Natural Keys styling */
         .key.natural {
-            height: 220px;
+            /* Height set by JS now for responsiveness */
             width: 8%;
             margin: 0 0.5%;
             transform-origin: top center;
         }
 
-        /* Length variation for realism (Lower notes are longer) */
-        .key:nth-child(1) { height: 100%; }
-        .key:nth-child(2) { height: 98%; }
-        .key:nth-child(3) { height: 96%; }
-        .key:nth-child(4) { height: 94%; }
-        /* ... continued via JS for dynamic sizing */
-
         /* Interaction feedback */
         .key.active {
-            transform: translateY(5px) rotateX(-2deg);
+            transform: translateY(1vh) rotateX(-2deg);
             filter: brightness(1.2);
             box-shadow: var(--key-active-shadow);
         }
@@ -227,8 +224,8 @@
         /* Mallet Hit Marker (Visual flair) */
         .hit-marker {
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 30px;
+            height: 30px;
             background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
             border-radius: 50%;
             pointer-events: none;
@@ -285,12 +282,34 @@
             font-size: 0.7rem;
             color: #666;
             pointer-events: none;
+            z-index: 5;
         }
 
         /* Mobile specific adjustments */
         @media (max-width: 768px) and (orientation: portrait) {
-            .marimba-container { transform: rotate(90deg); width: 100vh; height: 100vw; }
-            body { overflow: hidden; }
+            /* Force landscape rotation on phone portrait */
+            .marimba-container {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 100vh;  /* Use height as width */
+                height: 100vw; /* Use width as height */
+                transform: translate(-50%, -50%) rotate(90deg);
+                padding: 0;
+            }
+            
+            /* Hide controls in portrait to focus on playing or move them */
+            header {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 20;
+            }
+            
+            .footer-note {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -612,9 +631,11 @@
 
                 if (noteData.type === 'natural') {
                     key.className = 'key natural';
-                    // Visual tweak: make higher pitch bars slightly shorter (simulating real marimba)
-                    const reduction = (index / notes.length) * 30; // max 30% reduction
-                    key.style.height = `calc(240px - ${reduction}px)`;
+                    // Use VH for height instead of PX to fit screen
+                    // Base height 55vh, reducing slightly for higher notes
+                    const reduction = (index / notes.length) * 5; // max 5vh reduction
+                    key.style.height = `calc(55vh - ${reduction}vh)`;
+                    
                     naturalRow.appendChild(key);
 
                     // Check if we skipped an accidental (between E-F and B-C)
@@ -626,9 +647,10 @@
                     }
                 } else {
                     key.className = 'key accidental';
-                    // Short bars also get shorter
-                    const reduction = (index / notes.length) * 20;
-                    key.style.height = `calc(150px - ${reduction}px)`;
+                    // Use VH for height. Base 32vh
+                    const reduction = (index / notes.length) * 3;
+                    key.style.height = `calc(32vh - ${reduction}vh)`;
+                    
                     accidentalRow.appendChild(key);
                 }
 
