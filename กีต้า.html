@@ -2,8 +2,8 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic Acoustic Guitar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Hybrid Guitar Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
@@ -13,367 +13,269 @@
             background-color: #1a1a1a;
             color: #fff;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* Disable native touch gestures */
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            /* Fit Screen Logic */
+            height: 100vh; 
+            height: 100dvh; /* Dynamic Viewport Height for mobile browsers */
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overscroll-behavior: none; /* Prevent pull-to-refresh */
         }
 
-        /* --- Guitar Graphics Layer --- */
-        .guitar-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
+        /* --- Layout --- */
+        .top-controls {
+            height: 50px;
+            background: #262626;
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: #2b2b2b;
+            padding: 0 10px;
+            gap: 8px;
+            border-bottom: 2px solid #444;
+            z-index: 50;
+            overflow-x: auto;
+            flex-shrink: 0; /* Prevent shrinking */
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+        }
+        .top-controls::-webkit-scrollbar {
+            display: none; /* Hide scrollbar Chrome/Safari */
+        }
+
+        /* Fretboard Section (Top Half) */
+        .neck-container {
+            flex: 1; /* Takes available space */
+            background: #3e2723;
+            position: relative;
             overflow: hidden;
+            box-shadow: inset 0 -20px 40px rgba(0,0,0,0.8);
+            border-bottom: 8px solid #1a1a1a; /* Separator */
         }
 
-        .guitar-body-graphic {
-            position: absolute;
-            top: 50%;
-            right: -10%; /* Shift soundhole to right */
-            transform: translateY(-50%);
-            width: 80vh; /* Responsive based on height */
-            height: 80vh;
-            border-radius: 50%;
-            background: radial-gradient(circle, #3e2723 30%, #5d4037 60%, #8d6e63 100%);
-            /* Soundhole */
-            box-shadow: 
-                inset 0 0 40px #000,
-                0 0 0 10px #3e2723, /* Rosette Inner */
-                0 0 0 15px #d7ccc8, /* Rosette White */
-                0 0 0 25px #3e2723, /* Rosette Outer */
-                0 0 0 28px #5d4037;
-            z-index: 1;
+        /* Strum Section (Bottom Half) */
+        .body-container {
+            height: 38%; /* Adjusted for better proportion */
+            min-height: 200px;
+            background: #5d4037;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 120%, #8d6e63 10%, #5d4037 60%, #3e2723 100%);
+            flex-shrink: 0; /* Prevent shrinking */
         }
 
-        /* Inner black hole */
-        .guitar-soundhole {
+        .soundhole {
             position: absolute;
-            top: 50%;
+            bottom: -50px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 70%;
-            background: #0f0f0f;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: #111;
             border-radius: 50%;
-            box-shadow: inset 10px 10px 40px rgba(0,0,0,0.8);
-            z-index: 2;
+            border: 15px solid #3e2723;
+            box-shadow: inset 0 0 40px #000;
         }
+
+        /* --- Guitar Elements --- */
         
-        /* Label inside soundhole */
-        .label-sticker {
+        /* Strings (Horizontal) */
+        .string-row {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40%;
-            height: 50%;
-            background: #d7ccc8;
-            opacity: 0.8;
-            border-radius: 4px;
+            left: 0;
+            right: 0;
+            height: 24px; /* Increased Hit area height for easier touch */
+            transform: translateY(-50%);
             display: flex;
             align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            font-size: 10px;
-            color: #3e2723;
-            text-align: center;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 20;
+            pointer-events: none; /* Logic handles touch */
         }
 
-        /* Wood Texture Overlay for whole bg */
-        .wood-texture {
-            position: absolute;
-            inset: 0;
-            background: #a1887f;
-            background-image: 
-                repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(62, 39, 35, 0.1) 2px, rgba(62, 39, 35, 0.1) 4px),
-                linear-gradient(to right, #5d4037, #8d6e63, #d7ccc8, #8d6e63);
-            z-index: 0;
-        }
-
-        /* --- Fretboard Layer --- */
-        .fretboard {
-            position: relative;
+        .string-line {
             width: 100%;
-            max-width: 1000px;
-            height: 280px; /* Fixed height for guitar neck look */
-            background: #3e2723; /* Dark Ebony/Rosewood */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            border-top: 4px solid #d7ccc8; /* Binding */
-            border-bottom: 4px solid #d7ccc8;
-            transform: translate(0, 0);
+            height: 2px;
+            background: linear-gradient(to bottom, #ddd, #fff, #999);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* Body Shake Animation */
-        @keyframes body-shake-anim {
-            0% { transform: translate(0, 0); }
-            25% { transform: translate(2px, 2px); }
-            50% { transform: translate(-2px, -2px); }
-            75% { transform: translate(-2px, 2px); }
-            100% { transform: translate(0, 0); }
-        }
-        .body-shake { animation: body-shake-anim 0.1s linear; }
+        /* String Thicknesses */
+        .s5 .string-line { height: 5px; background: #d4af37; } /* Low E */
+        .s4 .string-line { height: 4px; background: #d4af37; }
+        .s3 .string-line { height: 3px; background: #d4af37; }
+        .s2 .string-line { height: 2px; background: #fff; }
+        .s1 .string-line { height: 1.5px; background: #fff; }
+        .s0 .string-line { height: 1px; background: #fff; }
 
-        /* Frets */
+        /* Frets (Vertical Lines) */
         .fret-line {
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 5px;
-            background: linear-gradient(to right, #90a4ae, #eceff1, #78909c);
-            box-shadow: 2px 0 3px rgba(0,0,0,0.5);
+            width: 4px;
+            background: linear-gradient(to right, #90a4ae, #b0bec5, #78909c);
+            z-index: 10;
             pointer-events: none;
-            z-index: 5;
-        }
-
-        /* The Nut (Plastic part on left) */
-        .nut {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 12px;
-            background: #fff3e0;
-            z-index: 20;
             box-shadow: 2px 0 5px rgba(0,0,0,0.3);
         }
 
-        /* Strings */
-        .string-container {
-            position: relative;
-            width: 100%;
-            height: 16.66%; /* 100% / 6 strings */
-            display: flex;
-            align-items: center;
-            z-index: 15;
-        }
-
-        .string {
-            width: 100%;
+        .nut {
             position: absolute;
+            top: 0;
+            bottom: 0;
             left: 0;
+            width: 12px;
+            background: #d7ccc8;
+            z-index: 15;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        }
+
+        /* Markers */
+        .fret-marker {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
             pointer-events: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        
-        /* Bronze Strings (Low) */
-        .string-3, .string-4, .string-5 {
-            background: linear-gradient(to bottom, #5d4037, #ffb74d, #5d4037);
-        }
-        /* Steel Strings (High) */
-        .string-0, .string-1, .string-2 {
-            background: linear-gradient(to bottom, #78909c, #fff, #78909c);
         }
 
-        .string-0 { height: 1px; }
-        .string-1 { height: 2px; }
-        .string-2 { height: 3px; }
-        .string-3 { height: 4px; }
-        .string-4 { height: 5px; }
-        .string-5 { height: 6px; }
+        /* Finger Press Indicator */
+        .finger-dot {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 193, 7, 0.9);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255,193,7, 0.8);
+            z-index: 30;
+            display: none;
+        }
+        .finger-dot.active { display: block; }
 
-        @keyframes vibrate-anim {
+        /* Animation */
+        @keyframes vibrate-v {
             0% { transform: translateY(0); }
             25% { transform: translateY(-2px); }
             50% { transform: translateY(0); }
             75% { transform: translateY(2px); }
             100% { transform: translateY(0); }
         }
-        .vibrating .string { animation: vibrate-anim 0.08s infinite linear; }
-        
-        @keyframes vibrate-subtle {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(0.5px); }
-            100% { transform: translateY(0); }
-        }
-        .vibrating-subtle .string { animation: vibrate-subtle 0.1s infinite linear; }
-
-        /* Fret Markers */
-        .fret-marker {
-            position: absolute;
-            background: radial-gradient(circle, #fff, #bdbdbd);
-            border-radius: 50%;
-            pointer-events: none;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            z-index: 4;
-            opacity: 0.9;
+        .vibrating .string-line {
+            animation: vibrate-v 0.08s infinite linear;
         }
 
-        /* Chord Panel Overlay */
-        .chord-panel {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 95%;
-            max-width: 800px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            padding: 10px;
+        /* Buttons */
+        .btn-control {
+            background: #333;
+            border: 1px solid #555;
+            padding: 6px 12px;
             border-radius: 8px;
-            z-index: 100;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            justify-content: center;
+            font-size: 12px;
+            white-space: nowrap;
         }
-
         .chord-btn {
-            background: #424242;
-            color: #fff;
-            border: 1px solid #616161;
+            background: #4e342e;
+            color: #ffccbc;
+            border: 1px solid #6d4c41;
             padding: 6px 14px;
-            border-radius: 4px;
+            border-radius: 14px;
             font-size: 14px;
+            min-width: 44px;
+            text-align: center;
             font-weight: bold;
-            cursor: pointer;
-            transition: all 0.1s;
-            box-shadow: 0 2px 0 #212121;
         }
-        .chord-btn:active {
-            transform: translateY(2px);
-            box-shadow: none;
-            background: #616161;
-        }
-        .chord-btn.major { background: #5d4037; border-color: #8d6e63; }
-        .chord-btn.minor { background: #455a64; border-color: #607d8b; }
-
-        /* Controls Bottom */
-        .controls-bottom {
+        .chord-btn:active { background: #6d4c41; }
+        
+        .fret-number {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
+            bottom: 4px;
+            font-size: 10px;
+            color: #aaa;
             transform: translateX(-50%);
-            z-index: 100;
-            display: flex;
-            gap: 10px;
-            align-items: center;
         }
 
-        .active-touch {
-            background-color: rgba(255, 255, 255, 0.1);
+        /* Touch Layers */
+        #neckTouch, #bodyTouch {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
         }
     </style>
 </head>
-<body class="h-screen w-screen overflow-hidden">
+<body>
 
-    <!-- Chord Panel (Like in the image) -->
-    <div class="chord-panel">
-        <button class="chord-btn major" onclick="playChord('C')">C</button>
-        <button class="chord-btn major" onclick="playChord('D')">D</button>
-        <button class="chord-btn major" onclick="playChord('E')">E</button>
-        <button class="chord-btn major" onclick="playChord('F')">F</button>
-        <button class="chord-btn major" onclick="playChord('G')">G</button>
-        <button class="chord-btn major" onclick="playChord('A')">A</button>
-        <button class="chord-btn major" onclick="playChord('B')">B</button>
-        <div class="w-full h-1"></div> <!-- Break -->
-        <button class="chord-btn minor" onclick="playChord('Cm')">Cm</button>
-        <button class="chord-btn minor" onclick="playChord('Dm')">Dm</button>
-        <button class="chord-btn minor" onclick="playChord('Em')">Em</button>
-        <button class="chord-btn minor" onclick="playChord('Fm')">Fm</button>
-        <button class="chord-btn minor" onclick="playChord('Gm')">Gm</button>
-        <button class="chord-btn minor" onclick="playChord('Am')">Am</button>
-        <button class="chord-btn minor" onclick="playChord('Bm')">Bm</button>
+    <!-- Controls -->
+    <div class="top-controls">
+        <button id="recordBtn" class="btn-control text-red-400 border-red-900/50 bg-red-900/20 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-red-500 block"></span> Rec
+        </button>
+        <div class="w-[1px] h-6 bg-gray-600 mx-1"></div>
+        <button class="chord-btn" onclick="setChord('C')">C</button>
+        <button class="chord-btn" onclick="setChord('D')">D</button>
+        <button class="chord-btn" onclick="setChord('E')">E</button>
+        <button class="chord-btn" onclick="setChord('F')">F</button>
+        <button class="chord-btn" onclick="setChord('G')">G</button>
+        <button class="chord-btn" onclick="setChord('A')">A</button>
+        <button class="chord-btn" onclick="setChord('Em')">Em</button>
+        <button class="chord-btn bg-stone-700 border-stone-600 text-stone-300" onclick="clearChords()">Free</button>
     </div>
 
-    <!-- Main Guitar Graphic Area -->
-    <div class="guitar-container">
-        <!-- Wood Background -->
-        <div class="wood-texture"></div>
+    <!-- Top: Neck (Fretboard) -->
+    <div class="neck-container" id="neckContainer">
+        <div class="nut"></div>
+        <!-- Generated via JS -->
+        <div id="neckTouch"></div>
+    </div>
 
-        <!-- Soundhole Graphic (Right side) -->
-        <div class="guitar-body-graphic">
-            <div class="guitar-soundhole">
-                <div class="label-sticker">
-                    <span class="font-bold text-lg">PRO GUITAR</span>
-                    <span>Handcrafted Tone</span>
-                    <span>Model: Canvas-01</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fretboard -->
-        <div id="fretboard" class="fretboard">
-            <div class="nut"></div>
-            <!-- JS generates content here -->
+    <!-- Bottom: Body (Strumming) -->
+    <div class="body-container" id="bodyContainer">
+        <div class="soundhole"></div>
+        <!-- Generated via JS -->
+        <div id="bodyTouch"></div>
+        <div class="absolute bottom-4 w-full text-center text-white/30 text-sm font-light pointer-events-none tracking-wider">
+            STRUM HERE
         </div>
     </div>
 
     <!-- Start Overlay -->
-    <div id="startOverlay" class="absolute inset-0 z-[200] bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm cursor-pointer">
-        <div class="bg-amber-600 p-6 rounded-full mb-4 shadow-[0_0_40px_rgba(217,119,6,0.5)] animate-pulse">
-            <span class="text-4xl">▶</span>
+    <div id="startOverlay" class="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center cursor-pointer backdrop-blur-md">
+        <div class="bg-amber-700 p-6 rounded-full mb-4 animate-pulse shadow-[0_0_30px_rgba(180,83,9,0.5)]">
+            <span class="text-4xl text-white">▶</span>
         </div>
-        <h2 class="text-2xl font-bold text-white">แตะเพื่อเริ่มเล่น</h2>
-        <p class="text-gray-300">Tap to Start</p>
-    </div>
-
-    <!-- Bottom Controls -->
-    <div class="controls-bottom">
-        <button id="toggleNotesBtn" class="bg-stone-800 border border-stone-600 px-4 py-2 rounded text-xs text-white hover:bg-stone-700 transition-colors">
-            แสดงโน้ต (Notes)
-        </button>
-        
-        <button id="recordBtn" class="bg-stone-800 border border-stone-600 px-4 py-2 rounded text-xs text-red-400 hover:bg-stone-700 transition-colors flex items-center gap-2">
-            <div id="recDot" class="w-2 h-2 rounded-full bg-red-500"></div>
-            <span id="recText">อัดเสียง (Rec)</span>
-        </button>
+        <h2 class="text-xl font-bold text-white mb-2">แตะเพื่อเล่น (Tap to Start)</h2>
+        <p class="text-gray-400 text-xs">Full Screen Experience</p>
     </div>
 
     <script>
-        // --- Audio Config ---
+        // --- Configuration ---
         const config = {
-            numFrets: 14,
             strings: 6,
-            // Standard Tuning frequencies (High E to Low E)
-            // String indices: 0=e, 1=B, 2=G, 3=D, 4=A, 5=E
-            baseFreqs: [329.63, 246.94, 196.00, 146.83, 110.00, 82.41], 
-            noteNames: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+            visibleFrets: 5, 
+            baseFreqs: [82.41, 110.00, 146.83, 196.00, 246.94, 329.63].reverse() 
         };
 
-        // --- Chord Definitions (String: Fret) -1 = Mute/Don't play ---
-        // Indices: 5(Low E), 4(A), 3(D), 2(G), 1(B), 0(High E)
-        const chords = {
-            'C':  [0, 1, 0, 2, 3, -1],
-            'D':  [2, 3, 2, 0, -1, -1],
-            'E':  [0, 0, 1, 2, 2, 0],
-            'F':  [1, 1, 2, 3, 3, 1],
-            'G':  [3, 0, 0, 0, 2, 3],
-            'A':  [0, 2, 2, 2, 0, -1],
-            'B':  [2, 4, 4, 4, 2, -1],
-            'Cm': [3, 4, 5, 5, 3, -1],
-            'Dm': [1, 3, 2, 0, -1, -1],
-            'Em': [0, 0, 0, 2, 2, 0],
-            'Fm': [1, 1, 1, 3, 3, 1],
-            'Gm': [3, 3, 3, 5, 5, 3],
-            'Am': [0, 1, 2, 2, 0, -1],
-            'Bm': [2, 3, 4, 4, 2, -1]
-        };
+        const stringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63]; 
 
+        let stringState = [0, 0, 0, 0, 0, 0];
+        let isChordMode = false;
+        const markers = [];
+
+        // --- Audio Context ---
         let audioCtx;
         let masterGain;
         let compressor;
-        let recorderDestination;
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-
+        let noiseBuffer;
         const activeVoices = new Array(6).fill(null);
-        let noiseBuffer = null;
 
-        function getNoteName(freq) {
-            const n = 12 * Math.log2(freq / 440);
-            const midi = Math.round(69 + n);
-            return config.noteNames[midi % 12];
-        }
+        // Recording
+        let recorderDest;
+        let mediaRecorder;
+        let chunks = [];
+        let isRecording = false;
 
         function initAudio() {
             if (audioCtx) return;
@@ -381,41 +283,43 @@
             audioCtx = new AudioContext({ latencyHint: 'interactive' });
             
             masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.6;
+            masterGain.gain.value = 0.8;
 
             compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20;
-            compressor.ratio.value = 12;
+            compressor.threshold.value = -18;
+            compressor.ratio.value = 10;
 
-            recorderDestination = audioCtx.createMediaStreamDestination();
+            recorderDest = audioCtx.createMediaStreamDestination();
 
             compressor.connect(masterGain);
             masterGain.connect(audioCtx.destination);
-            masterGain.connect(recorderDestination); // Output to recorder
+            masterGain.connect(recorderDest);
 
-            // Sharp Pick Noise Buffer
-            const bufferSize = audioCtx.sampleRate * 0.05;
-            noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const size = audioCtx.sampleRate * 0.05;
+            noiseBuffer = audioCtx.createBuffer(1, size, audioCtx.sampleRate);
             const data = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * 0.8; // Slightly softer base noise
-            }
+            for(let i=0; i<size; i++) data[i] = (Math.random()*2 - 1) * 0.5;
 
             document.getElementById('startOverlay').classList.add('opacity-0', 'pointer-events-none');
         }
 
-        function playTone(freq, stringIndex, delay = 0) {
+        function playString(index, velocity = 1.0) {
             if (!audioCtx) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const t = audioCtx.currentTime + delay;
-            
-            // Stop previous note ONLY on this specific string (Polyphonic support)
-            if (activeVoices[stringIndex]) {
+
+            const fret = stringState[index];
+            if (fret === -1) return;
+
+            const freq = stringFreqs[index] * Math.pow(2, fret / 12);
+            const t = audioCtx.currentTime;
+
+            if (activeVoices[index]) {
                 try {
-                    activeVoices[stringIndex].gain.gain.setValueAtTime(activeVoices[stringIndex].gain.gain.value, t);
-                    activeVoices[stringIndex].gain.gain.linearRampToValueAtTime(0, t + 0.05);
-                    activeVoices[stringIndex].osc.stop(t + 0.05);
+                    const v = activeVoices[index];
+                    v.gain.gain.cancelScheduledValues(t);
+                    v.gain.gain.setValueAtTime(v.gain.gain.value, t);
+                    v.gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+                    v.osc.stop(t + 0.05);
                 } catch(e) {}
             }
 
@@ -426,266 +330,231 @@
             osc.type = 'sawtooth';
             osc.frequency.value = freq;
 
-            // Bright filter for pick attack simulation
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(4000, t); // Brighter start
-            filter.frequency.exponentialRampToValueAtTime(100, t + 4);
+            filter.frequency.setValueAtTime(3000, t);
+            filter.frequency.exponentialRampToValueAtTime(100, t + 4.0);
 
-            // Volume Envelope
             gain.gain.setValueAtTime(0, t);
-            gain.gain.linearRampToValueAtTime(0.3, t + 0.005); // Faster attack (Pick style)
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 4.0 + (stringIndex * 0.5));
+            gain.gain.linearRampToValueAtTime(0.4 * velocity, t + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 3.0);
+
+            const nSrc = audioCtx.createBufferSource();
+            nSrc.buffer = noiseBuffer;
+            const nGain = audioCtx.createGain();
+            nGain.gain.setValueAtTime(0.15 * velocity, t);
+            nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
 
             osc.connect(filter);
             filter.connect(gain);
             gain.connect(compressor);
-
-            // Distinct Pick Noise ("Click")
-            const nSrc = audioCtx.createBufferSource();
-            nSrc.buffer = noiseBuffer;
-            const nFilter = audioCtx.createBiquadFilter();
-            nFilter.type = 'highpass';
-            nFilter.frequency.value = 2500; // High frequency click
-            const nGain = audioCtx.createGain();
-            nGain.gain.setValueAtTime(0.1, t); // Louder click
-            nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.03); // Very short
-            
-            nSrc.connect(nFilter);
-            nFilter.connect(nGain);
+            nSrc.connect(nGain);
             nGain.connect(compressor);
 
             osc.start(t);
             nSrc.start(t);
-            osc.stop(t + 6);
+            osc.stop(t + 5);
 
-            activeVoices[stringIndex] = { osc, gain };
+            activeVoices[index] = { osc, gain };
 
-            // Visuals
-            setTimeout(() => {
-                animateString(stringIndex);
-                if (navigator.vibrate) navigator.vibrate(10);
-            }, delay * 1000);
+            animateString(index);
+            if(navigator.vibrate) navigator.vibrate(10);
         }
 
-        // --- Chord Logic ---
-        window.playChord = function(chordName) {
-            initAudio();
-            const pattern = chords[chordName];
-            
-            if (!pattern) return;
+        // --- UI Construction ---
+        const neckContainer = document.getElementById('neckContainer');
+        const bodyContainer = document.getElementById('bodyContainer');
 
-            let delay = 0;
-            // Iterate strings from Low (5) to High (0)
-            for (let s = 5; s >= 0; s--) {
-                const fret = pattern[s];
-                if (fret !== -1) {
-                    const freq = config.baseFreqs[s] * Math.pow(2, fret / 12);
-                    playTone(freq, s, delay);
-                    
-                    const fretEl = document.querySelector(`.hitbox[data-string="${s}"][data-fret="${fret}"]`);
-                    if(fretEl) {
-                        setTimeout(() => {
-                            fretEl.classList.add('active-touch');
-                            setTimeout(() => fretEl.classList.remove('active-touch'), 300);
-                        }, delay * 1000);
-                    }
+        function buildUI() {
+            for(let s=0; s<6; s++) {
+                const topPos = (s + 0.5) * (100 / 6);
+                const strN = createStringEl(s, topPos, true); 
+                neckContainer.appendChild(strN);
+                const strB = createStringEl(s, topPos, false);
+                bodyContainer.appendChild(strB);
 
-                    delay += 0.04; // 40ms strum speed
+                const dot = document.createElement('div');
+                dot.className = 'finger-dot';
+                neckContainer.appendChild(dot);
+                markers.push(dot);
+            }
+
+            const fretWidth = 100 / (config.visibleFrets + 0.5); 
+
+            for(let f=1; f<=config.visibleFrets; f++) {
+                const line = document.createElement('div');
+                line.className = 'fret-line';
+                line.style.left = `${f * fretWidth}%`;
+                neckContainer.appendChild(line);
+
+                const num = document.createElement('div');
+                num.className = 'fret-number';
+                num.textContent = f;
+                num.style.left = `${(f - 0.5) * fretWidth}%`;
+                neckContainer.appendChild(num);
+
+                if(f===3 || f===5) {
+                   const dot = document.createElement('div');
+                   dot.className = 'fret-marker';
+                   dot.style.left = `${(f - 0.5) * fretWidth}%`;
+                   dot.style.top = '50%';
+                   neckContainer.appendChild(dot);
                 }
             }
-            
-            const fb = document.getElementById('fretboard');
-            fb.classList.remove('body-shake');
-            void fb.offsetWidth;
-            fb.classList.add('body-shake');
-        };
-
-        // --- Recording Logic ---
-        const recordBtn = document.getElementById('recordBtn');
-        const recDot = document.getElementById('recDot');
-        const recText = document.getElementById('recText');
-
-        recordBtn.addEventListener('click', () => {
-            initAudio();
-            if (!isRecording) {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        });
-
-        function startRecording() {
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(recorderDestination.stream);
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(audioChunks, { type: 'audio/wav' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `guitar-solo-${Date.now()}.wav`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                }, 100);
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            recDot.classList.add('animate-pulse', 'bg-red-400');
-            recText.textContent = "หยุด (Stop)";
-            recordBtn.classList.add('bg-red-900/50', 'border-red-800', 'text-white');
         }
 
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            }
-            isRecording = false;
-            recDot.classList.remove('animate-pulse', 'bg-red-400');
-            recText.textContent = "อัดเสียง (Rec)";
-            recordBtn.classList.remove('bg-red-900/50', 'border-red-800', 'text-white');
+        function createStringEl(index, topPerc, isNeck) {
+            const el = document.createElement('div');
+            el.className = `string-row`;
+            el.style.top = `${topPerc}%`;
+            const thicknessClass = `s${5 - index}`; 
+            el.dataset.idx = index;
+            el.dataset.loc = isNeck ? 'neck' : 'body';
+            const line = document.createElement('div');
+            line.className = `string-line ${thicknessClass}`;
+            el.appendChild(line);
+            return el;
         }
 
-
-        // --- Visual Construction ---
-        const fretboard = document.getElementById('fretboard');
-
-        function buildGuitar() {
-            // Create Frets
-            for (let i = 1; i < config.numFrets; i++) {
-                const fret = document.createElement('div');
-                fret.className = 'fret-line';
-                const pos = (i / config.numFrets) * 96 + 2; 
-                fret.style.left = `${pos}%`;
-                fretboard.appendChild(fret);
-
-                // Markers
-                if ([3, 5, 7, 9, 12].includes(i)) {
-                    const dot = document.createElement('div');
-                    dot.className = 'fret-marker w-4 h-4';
-                    const prevPos = ((i - 1) / config.numFrets) * 96 + 2;
-                    const centerPos = (pos + prevPos) / 2;
-                    dot.style.left = `${centerPos}%`;
-                    dot.style.top = '50%';
-                    dot.style.transform = 'translate(-50%, -50%)';
-                    if (i === 12) {
-                        const dot2 = dot.cloneNode();
-                        dot.style.top = '25%';
-                        dot2.style.top = '75%';
-                        dot2.style.left = dot.style.left;
-                        dot2.style.transform = dot.style.transform;
-                        fretboard.appendChild(dot2);
-                    }
-                    fretboard.appendChild(dot);
-                }
-            }
-
-            // Create Strings
-            for (let s = 0; s < config.strings; s++) {
-                const row = document.createElement('div');
-                row.className = 'string-container';
-                row.dataset.string = s;
-
-                const strLine = document.createElement('div');
-                strLine.className = `string string-${s}`;
-                row.appendChild(strLine);
-
-                // Create Hitboxes (Frets)
-                for (let f = 0; f < config.numFrets; f++) {
-                    const hitBox = document.createElement('div');
-                    hitBox.className = 'hitbox absolute top-0 bottom-0 transition-colors duration-100';
-                    const posCurrent = (f / config.numFrets) * 96 + 2;
-                    const posNext = ((f + 1) / config.numFrets) * 96 + 2;
-                    
-                    if (f === 0) { // Open string area (Nut to Fret 1)
-                        hitBox.style.left = '0%';
-                        hitBox.style.width = `${(1/config.numFrets)*96 + 2}%`;
-                    } else {
-                        hitBox.style.left = `${posCurrent}%`;
-                        hitBox.style.width = `${posNext - posCurrent}%`;
-                    }
-
-                    hitBox.dataset.string = s;
-                    hitBox.dataset.fret = f;
-                    const freq = config.baseFreqs[s] * Math.pow(2, f / 12);
-                    hitBox.dataset.freq = freq;
-
-                    // Note Badge (Hidden by default)
-                    const badge = document.createElement('div');
-                    badge.className = 'absolute bg-yellow-500 text-black rounded-full w-4 h-4 text-[9px] flex items-center justify-center opacity-0 transition-opacity font-bold left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 note-badge pointer-events-none';
-                    badge.textContent = getNoteName(freq);
-                    hitBox.appendChild(badge);
-
-                    row.appendChild(hitBox);
-                }
-                fretboard.appendChild(row);
-            }
-        }
-
-        function animateString(stringIndex) {
-            const row = document.querySelector(`.string-container[data-string="${stringIndex}"]`);
-            if (row) {
-                row.classList.remove('vibrating');
-                void row.offsetWidth;
-                row.classList.add('vibrating');
-                setTimeout(() => row.classList.remove('vibrating'), 500);
-            }
+        function animateString(idx) {
+            const targets = document.querySelectorAll(`.string-row[data-idx="${idx}"]`);
+            targets.forEach(el => {
+                el.classList.remove('vibrating');
+                void el.offsetWidth;
+                el.classList.add('vibrating');
+                setTimeout(() => el.classList.remove('vibrating'), 300);
+            });
         }
 
         // --- Interaction ---
-        fretboard.addEventListener('touchstart', (e) => {
+        const neckTouch = document.getElementById('neckTouch');
+        neckTouch.addEventListener('touchstart', handleNeck, {passive:false});
+        neckTouch.addEventListener('touchmove', handleNeck, {passive:false});
+        neckTouch.addEventListener('touchend', handleNeck, {passive:false});
+
+        function handleNeck(e) {
             e.preventDefault();
             initAudio();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                handleInput(document.elementFromPoint(e.changedTouches[i].clientX, e.changedTouches[i].clientY));
+            const currentTouches = {}; 
+            const rect = neckContainer.getBoundingClientRect();
+            for(let i=0; i<e.touches.length; i++) {
+                const t = e.touches[i];
+                if(t.clientY >= rect.top && t.clientY <= rect.bottom) {
+                    const yPerc = (t.clientY - rect.top) / rect.height;
+                    const sIdx = Math.floor(yPerc * 6);
+                    const xPerc = (t.clientX - rect.left) / rect.width;
+                    const fretWidthPerc = 1 / (config.visibleFrets + 0.5);
+                    const fretNum = Math.ceil(xPerc / fretWidthPerc);
+                    if(sIdx >=0 && sIdx < 6 && fretNum > 0 && fretNum <= config.visibleFrets) {
+                        currentTouches[sIdx] = fretNum;
+                    }
+                }
             }
-        }, {passive: false});
-
-        fretboard.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                handleInput(document.elementFromPoint(e.changedTouches[i].clientX, e.changedTouches[i].clientY));
-            }
-        }, {passive: false});
-
-        fretboard.addEventListener('mousedown', (e) => {
-            initAudio();
-            handleInput(e.target);
-        });
-
-        // Debounce map per string to prevent machine-gunning but allow fast strums
-        const lastPlay = {};
-
-        function handleInput(el) {
-            if (!el) return;
-            const hitBox = el.closest('.hitbox');
-            if (hitBox) {
-                const s = hitBox.dataset.string;
-                const freq = parseFloat(hitBox.dataset.freq);
-                const now = Date.now();
-                
-                // Allow faster retriggering (80ms) to support sweeping/strumming
-                if (!lastPlay[s] || now - lastPlay[s] > 80) {
-                    playTone(freq, parseInt(s));
-                    lastPlay[s] = now;
-                    
-                    hitBox.classList.add('active-touch');
-                    setTimeout(() => hitBox.classList.remove('active-touch'), 200);
+            for(let s=0; s<6; s++) {
+                if(currentTouches[s]) {
+                    stringState[s] = currentTouches[s];
+                    const fretWidth = 100 / (config.visibleFrets + 0.5);
+                    markers[s].style.left = `${(stringState[s] - 0.5) * fretWidth}%`;
+                    markers[s].style.top = `${(s + 0.5) * (100/6)}%`;
+                    markers[s].classList.add('active');
+                } else if(!isChordMode) {
+                    stringState[s] = 0;
+                    markers[s].classList.remove('active');
                 }
             }
         }
 
-        document.getElementById('startOverlay').addEventListener('click', initAudio);
-        document.getElementById('startOverlay').addEventListener('touchstart', initAudio);
+        const bodyTouch = document.getElementById('bodyTouch');
+        const lastStrum = [0,0,0,0,0,0];
 
-        document.getElementById('toggleNotesBtn').addEventListener('click', () => {
-            document.querySelectorAll('.note-badge').forEach(el => el.classList.toggle('opacity-0'));
+        bodyTouch.addEventListener('touchstart', handleStrum, {passive:false});
+        bodyTouch.addEventListener('touchmove', handleStrum, {passive:false});
+
+        function handleStrum(e) {
+            e.preventDefault();
+            initAudio();
+            const rect = bodyContainer.getBoundingClientRect();
+            for(let i=0; i<e.touches.length; i++) {
+                const t = e.touches[i];
+                if(t.clientY >= rect.top && t.clientY <= rect.bottom) {
+                    const yPerc = (t.clientY - rect.top) / rect.height;
+                    const sIdx = Math.floor(yPerc * 6);
+                    if(sIdx >=0 && sIdx < 6) {
+                        const now = Date.now();
+                        if(now - lastStrum[sIdx] > 60) {
+                            playString(sIdx);
+                            lastStrum[sIdx] = now;
+                        }
+                    }
+                }
+            }
+        }
+
+        const chords = {
+            'C': [-1, 3, 2, 0, 1, 0],
+            'D': [-1, -1, 0, 2, 3, 2],
+            'E': [0, 2, 2, 1, 0, 0],
+            'F': [1, 3, 3, 2, 1, 1],
+            'G': [3, 2, 0, 0, 0, 3],
+            'A': [-1, 0, 2, 2, 2, 0],
+            'Em': [0, 2, 2, 0, 0, 0]
+        };
+
+        window.setChord = function(name) {
+            isChordMode = true;
+            const shape = chords[name];
+            if(shape) {
+                markers.forEach(m => m.classList.remove('active'));
+                for(let s=0; s<6; s++) {
+                    stringState[s] = shape[s];
+                    if(shape[s] > 0) {
+                        const fretWidth = 100 / (config.visibleFrets + 0.5);
+                        markers[s].style.left = `${(shape[s] - 0.5) * fretWidth}%`;
+                        markers[s].style.top = `${(s + 0.5) * (100/6)}%`;
+                        markers[s].classList.add('active');
+                    }
+                }
+            }
+        };
+
+        window.clearChords = function() {
+            isChordMode = false;
+            stringState = [0,0,0,0,0,0];
+            markers.forEach(m => m.classList.remove('active'));
+        };
+
+        const recordBtn = document.getElementById('recordBtn');
+        recordBtn.addEventListener('click', () => {
+            initAudio();
+            if(!isRecording) {
+                chunks = [];
+                mediaRecorder = new MediaRecorder(recorderDest.stream);
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, {'type':'audio/wav'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display='none';
+                    a.href=url;
+                    a.download = `rec-${Date.now()}.wav`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(()=>a.remove(), 100);
+                };
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-white animate-pulse block"></span> Stop';
+                recordBtn.classList.add('bg-red-600', 'text-white');
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500 block"></span> Rec';
+                recordBtn.classList.remove('bg-red-600', 'text-white');
+            }
         });
 
-        buildGuitar();
+        document.getElementById('startOverlay').addEventListener('click', initAudio);
+        document.getElementById('startOverlay').addEventListener('touchstart', initAudio);
+        buildUI();
     </script>
 </body>
 </html>
