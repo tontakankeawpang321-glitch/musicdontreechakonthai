@@ -2,10 +2,15 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>กรับสเปนจำลอง (Virtual Castanets)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+
+        * {
+            -webkit-tap-highlight-color: transparent; /* ลบไฮไลท์สีเทาเวลาแตะบนมือถือ */
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -16,10 +21,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            /* ใช้ dvh เพื่อให้เต็มจอจริงบนมือถือไม่ว่าจะมี address bar หรือไม่ */
             height: 100vh;
+            height: 100dvh; 
             font-family: 'Sarabun', sans-serif;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* ป้องกันการเลื่อน/ซูม 100% */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -30,6 +37,7 @@
             font-size: 1.5rem;
             text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
             text-align: center;
+            pointer-events: none; /* ป้องกันการไปแตะโดนข้อความ */
         }
 
         .instruction {
@@ -38,6 +46,7 @@
             margin-bottom: 15px;
             opacity: 0.8;
             text-align: center;
+            pointer-events: none;
         }
 
         .container {
@@ -48,12 +57,14 @@
             width: 100%;
             max-width: 600px;
             margin-bottom: 20px;
+            /* ป้องกันการแตะพื้นที่ว่างแล้วเกิด action แปลกๆ */
+            -webkit-touch-callout: none;
         }
 
         /* ดีไซน์ตัวกรับ (Castanet) */
         .castanet {
-            width: 38vw;
-            height: 43vw;
+            width: 40vw;
+            height: 45vw;
             max-width: 180px;
             max-height: 220px;
             background: radial-gradient(circle at 30% 30%, #8d6e63, #3e2723);
@@ -63,11 +74,13 @@
                 0 10px 20px rgba(0,0,0,0.4),
                 inset 0 0 20px rgba(0,0,0,0.8);
             cursor: pointer;
-            transition: transform 0.05s ease-out;
+            /* เปลี่ยน transition ให้ไวขึ้นสำหรับการรัว */
+            transition: transform 0.03s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             display: flex;
             justify-content: center;
             align-items: flex-start;
             border: 4px solid #3e2723;
+            touch-action: manipulation;
         }
 
         .castanet::after {
@@ -113,10 +126,11 @@
         }
 
         .castanet.active {
-            transform: scale(0.92) translateY(5px);
+            transform: scale(0.94) translateY(3px);
             box-shadow: 
                 0 2px 5px rgba(0,0,0,0.4),
                 inset 0 0 30px rgba(0,0,0,0.9);
+            border-color: #5d4037;
         }
 
         .label {
@@ -135,27 +149,29 @@
             justify-content: center;
             align-items: center;
             margin-top: 10px;
+            z-index: 10;
         }
 
         .record-btn {
             background-color: white;
             color: #d32f2f;
             border: 2px solid #d32f2f;
-            padding: 10px 24px;
+            padding: 12px 28px; /* เพิ่มขนาดปุ่มให้แตะง่ายขึ้น */
             border-radius: 30px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-family: 'Sarabun', sans-serif;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            touch-action: manipulation;
         }
 
-        .record-btn:hover {
-            background-color: #ffebee;
+        .record-btn:active {
+            transform: scale(0.95);
         }
 
         /* สถานะกำลังบันทึก */
@@ -195,13 +211,14 @@
             font-size: 0.9rem;
             color: #d32f2f;
             font-weight: bold;
+            text-align: center;
         }
 
         /* Overlay */
         #start-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.85); /* เข้มขึ้นเล็กน้อยเพื่อโฟกัส */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -209,10 +226,11 @@
             flex-direction: column;
             color: white;
             text-align: center;
+            backdrop-filter: blur(5px);
         }
 
         #start-btn {
-            padding: 15px 30px;
+            padding: 20px 40px;
             font-size: 1.5rem;
             background: #d32f2f;
             color: white;
@@ -220,9 +238,10 @@
             border-radius: 50px;
             cursor: pointer;
             font-family: 'Sarabun', sans-serif;
-            margin-top: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             animation: pulse 1.5s infinite;
+            -webkit-tap-highlight-color: transparent;
         }
 
         @keyframes pulse {
@@ -235,7 +254,7 @@
         @media (max-width: 400px) {
             .castanet { width: 42vw; height: 48vw; }
             h1 { font-size: 1.2rem; }
-            .record-btn { padding: 8px 16px; font-size: 0.9rem; }
+            .record-btn { padding: 10px 20px; font-size: 1rem; }
         }
     </style>
 </head>
@@ -248,7 +267,7 @@
     </div>
 
     <h1>Castanets Simulator</h1>
-    <p class="instruction">แตะที่กรับ หรือกดปุ่ม A / L</p>
+    <p class="instruction">แตะที่กรับทั้งสองเพื่อเล่นเสียง</p>
 
     <div class="container">
         <div class="castanet" id="left-castanet" data-pitch="low">
@@ -266,7 +285,6 @@
         </div>
     </div>
 
-    <!-- ปุ่มควบคุมการบันทึก -->
     <div class="controls">
         <button id="record-btn" class="record-btn">
             <span class="dot"></span>
@@ -276,24 +294,50 @@
     <div id="status-msg"></div>
 
     <script>
-        // --- ระบบเสียงและบันทึกเสียง (Web Audio & Recorder) ---
+        // --- Web Audio Context Setup ---
         let audioCtx;
-        let destNode; // สำหรับส่งสัญญาณเสียงไปที่ Recorder
+        let destNode;
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
-        
+        let audioUnlocked = false;
+
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
+                audioCtx = new AudioContext({
+                    latencyHint: 'interactive', // ขอ Latency ต่ำที่สุด
+                    sampleRate: 44100
+                });
                 
-                // สร้าง Destination Node สำหรับบันทึกเสียง (Stream)
+                // Destination Node for recording
                 destNode = audioCtx.createMediaStreamDestination();
             }
+            
+            // Resume if suspended (Common in mobile browsers)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().then(() => {
+                    audioUnlocked = true;
+                });
+            } else {
+                audioUnlocked = true;
+            }
+        }
+
+        // Silent buffer play specifically for iOS unlocking
+        function unlockAudioIOS() {
+            if (audioUnlocked || !audioCtx) return;
+            
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+            
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+            audioUnlocked = true;
         }
 
         function playCastanetSound(type) {
@@ -304,75 +348,82 @@
             const gainNode = audioCtx.createGain();
             const filter = audioCtx.createBiquadFilter();
 
+            // Sound Synthesis Settings
             filter.type = "bandpass";
-            filter.Q.value = 5;
+            filter.Q.value = 4.5; // ลด Q ลงนิดนึงให้เสียงแน่นขึ้น
 
-            if (type === 'high') {
-                osc.frequency.setValueAtTime(1400, t);
-                filter.frequency.setValueAtTime(1400, t);
-            } else {
-                osc.frequency.setValueAtTime(1100, t);
-                filter.frequency.setValueAtTime(1100, t);
+            if (type === 'high') { // Hembra
+                osc.frequency.setValueAtTime(1450, t);
+                filter.frequency.setValueAtTime(1450, t);
+            } else { // Macho
+                osc.frequency.setValueAtTime(1150, t);
+                filter.frequency.setValueAtTime(1150, t);
             }
             
             osc.type = 'triangle';
 
+            // Connections
             osc.connect(filter);
             filter.connect(gainNode);
-            
-            // เชื่อมต่อเสียงออกลำโพง
             gainNode.connect(audioCtx.destination);
-            
-            // *สำคัญ* เชื่อมต่อเสียงเข้าตัวบันทึกด้วย (ถ้ามี)
-            if (destNode) {
-                gainNode.connect(destNode);
-            }
+            if (destNode) gainNode.connect(destNode);
 
+            // Envelope (Snappy for mobile)
             gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(1, t + 0.005);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+            gainNode.gain.linearRampToValueAtTime(1.0, t + 0.003); // Attack ไวมาก
+            gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.08); // Decay สั้นลงเพื่อรองรับการรัว
 
             osc.start(t);
-            osc.stop(t + 0.15);
+            osc.stop(t + 0.1);
+
+            // Garbage collection help
+            setTimeout(() => {
+                osc.disconnect();
+                gainNode.disconnect();
+                filter.disconnect();
+            }, 200);
         }
 
-        // --- ระบบจัดการการบันทึก (Recorder Logic) ---
+        // --- Recording Logic ---
         const recordBtn = document.getElementById('record-btn');
         const recordText = document.getElementById('record-text');
         const statusMsg = document.getElementById('status-msg');
 
-        recordBtn.addEventListener('click', toggleRecording);
+        recordBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // กัน Double tap zoom
+            toggleRecording();
+        });
 
         function toggleRecording() {
             if (!audioCtx) initAudio();
-
-            if (!isRecording) {
-                // เริ่มบันทึก
-                startRecording();
-            } else {
-                // หยุดบันทึก
-                stopRecording();
-            }
+            if (!isRecording) startRecording();
+            else stopRecording();
         }
 
         function startRecording() {
             recordedChunks = [];
-            // ใช้ Stream จาก Web Audio API
             const stream = destNode.stream;
             
-            // ตรวจสอบ Browser Support
-            const options = { mimeType: 'audio/webm' };
+            // Check MIME types support
+            let options = { mimeType: 'audio/webm' };
+            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                 if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    options = { mimeType: 'audio/mp4' };
+                 } else {
+                    options = {}; // Default fallback
+                 }
+            }
+
             try {
                 mediaRecorder = new MediaRecorder(stream, options);
             } catch (e) {
-                // Fallback สำหรับ Safari บางเวอร์ชัน
-                mediaRecorder = new MediaRecorder(stream);
+                console.error("Recorder error:", e);
+                statusMsg.textContent = "อุปกรณ์นี้ไม่รองรับการบันทึก";
+                return;
             }
 
             mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    recordedChunks.push(e.data);
-                }
+                if (e.data.size > 0) recordedChunks.push(e.data);
             };
 
             mediaRecorder.onstop = saveRecording;
@@ -380,88 +431,110 @@
 
             isRecording = true;
             recordBtn.classList.add('recording');
-            recordText.textContent = "หยุดบันทึก";
-            statusMsg.textContent = "กำลังบันทึก... เล่นกรับได้เลย!";
+            recordText.textContent = "หยุด";
+            statusMsg.textContent = "กำลังอัด... เล่นเลย!";
         }
 
         function stopRecording() {
-            mediaRecorder.stop();
+            if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
             isRecording = false;
             recordBtn.classList.remove('recording');
             recordText.textContent = "บันทึกเสียง";
-            statusMsg.textContent = "";
         }
 
         function saveRecording() {
-            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+            const blob = new Blob(recordedChunks, { type: 'audio/webm' }); // Default container
             const url = URL.createObjectURL(blob);
-            
-            // สร้างลิงก์ดาวน์โหลดอัตโนมัติ
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
             
-            // ตั้งชื่อไฟล์ตามเวลา
             const date = new Date();
-            const timestamp = `${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`;
-            a.download = `castanets-recording-${timestamp}.webm`;
+            const timestamp = `${date.getHours()}${date.getMinutes()}${date.getSeconds()}`;
+            a.download = `castanets_${timestamp}.webm`;
             
             document.body.appendChild(a);
             a.click();
             
-            // Clean up
             setTimeout(() => {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-                statusMsg.textContent = "บันทึกไฟล์เรียบร้อย!";
-                setTimeout(() => { statusMsg.textContent = ""; }, 3000);
+                statusMsg.textContent = "บันทึกเรียบร้อย!";
+                setTimeout(() => { statusMsg.textContent = ""; }, 2000);
             }, 100);
         }
 
-        // --- ส่วนจัดการ Interaction (UI & Touch) ---
+        // --- Touch & Interaction Logic (Optimized for Mobile) ---
         
         const leftCastanet = document.getElementById('left-castanet');
         const rightCastanet = document.getElementById('right-castanet');
         const startOverlay = document.getElementById('start-overlay');
         const startBtn = document.getElementById('start-btn');
 
-        startBtn.addEventListener('click', () => {
+        // Unlock Audio everywhere
+        function globalUnlock() {
             initAudio();
+            unlockAudioIOS();
+        }
+
+        startBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            globalUnlock();
             startOverlay.style.opacity = '0';
             setTimeout(() => {
                 startOverlay.style.display = 'none';
             }, 500);
         });
 
+        // Trigger Function
         function triggerCastanet(element) {
             const pitch = element.getAttribute('data-pitch');
             playCastanetSound(pitch);
 
+            // Visual Feedback - ใช้การเพิ่ม class และลบออกอย่างรวดเร็ว
             element.classList.remove('active');
+            // Force reflow
             void element.offsetWidth;
             element.classList.add('active');
             
+            // ลดเวลา active ลงเพื่อให้รองรับการเคาะรัวๆ ได้ดีขึ้น
             setTimeout(() => {
                 element.classList.remove('active');
-            }, 100);
+            }, 60); 
         }
 
+        // Multi-touch Handler
         function handleTouch(e) {
-            e.preventDefault();
+            // สำคัญ: preventDefault เพื่อป้องกัน Mouse Emulation และ Zoom
+            if(e.cancelable) e.preventDefault();
+            
+            globalUnlock(); // Ensure audio is ready on first touch
+
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
+                // ใช้ elementFromPoint เพื่อความแม่นยำ
                 const target = document.elementFromPoint(touch.clientX, touch.clientY);
                 
-                if (leftCastanet.contains(target)) {
-                    triggerCastanet(leftCastanet);
-                } else if (rightCastanet.contains(target)) {
-                    triggerCastanet(rightCastanet);
+                if (target) {
+                    if (leftCastanet.contains(target)) {
+                        triggerCastanet(leftCastanet);
+                    } else if (rightCastanet.contains(target)) {
+                        triggerCastanet(rightCastanet);
+                    }
                 }
             }
         }
 
+        // Add Listeners
+        const container = document.querySelector('.container');
+        
+        // ใช้ Listener ที่ container หรือ body เพื่อจับ touch ทั้งหมด
+        // passive: false จำเป็นสำหรับการใช้ preventDefault
         document.addEventListener('touchstart', handleTouch, { passive: false });
 
+        // Mouse Fallback
         leftCastanet.addEventListener('mousedown', (e) => {
             if(e.button === 0) triggerCastanet(leftCastanet);
         });
@@ -469,6 +542,7 @@
             if(e.button === 0) triggerCastanet(rightCastanet);
         });
 
+        // Keyboard
         document.addEventListener('keydown', (e) => {
             if (e.repeat) return;
             if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
