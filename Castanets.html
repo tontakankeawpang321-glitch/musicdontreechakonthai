@@ -8,7 +8,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
 
         * {
-            -webkit-tap-highlight-color: transparent; /* ลบไฮไลท์สีเทาเวลาแตะบนมือถือ */
+            -webkit-tap-highlight-color: transparent;
             box-sizing: border-box;
         }
 
@@ -21,12 +21,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* ใช้ dvh เพื่อให้เต็มจอจริงบนมือถือไม่ว่าจะมี address bar หรือไม่ */
             height: 100vh;
             height: 100dvh; 
             font-family: 'Sarabun', sans-serif;
             overflow: hidden;
-            touch-action: none; /* ป้องกันการเลื่อน/ซูม 100% */
+            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -37,7 +36,7 @@
             font-size: 1.5rem;
             text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
             text-align: center;
-            pointer-events: none; /* ป้องกันการไปแตะโดนข้อความ */
+            pointer-events: none;
         }
 
         .instruction {
@@ -57,7 +56,6 @@
             width: 100%;
             max-width: 600px;
             margin-bottom: 20px;
-            /* ป้องกันการแตะพื้นที่ว่างแล้วเกิด action แปลกๆ */
             -webkit-touch-callout: none;
         }
 
@@ -74,7 +72,6 @@
                 0 10px 20px rgba(0,0,0,0.4),
                 inset 0 0 20px rgba(0,0,0,0.8);
             cursor: pointer;
-            /* เปลี่ยน transition ให้ไวขึ้นสำหรับการรัว */
             transition: transform 0.03s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             display: flex;
             justify-content: center;
@@ -156,7 +153,7 @@
             background-color: white;
             color: #d32f2f;
             border: 2px solid #d32f2f;
-            padding: 12px 28px; /* เพิ่มขนาดปุ่มให้แตะง่ายขึ้น */
+            padding: 12px 28px;
             border-radius: 30px;
             font-size: 1.1rem;
             font-family: 'Sarabun', sans-serif;
@@ -174,7 +171,6 @@
             transform: scale(0.95);
         }
 
-        /* สถานะกำลังบันทึก */
         .record-btn.recording {
             background-color: #d32f2f;
             color: white;
@@ -218,7 +214,7 @@
         #start-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); /* เข้มขึ้นเล็กน้อยเพื่อโฟกัส */
+            background: rgba(0,0,0,0.85);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -306,15 +302,13 @@
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext({
-                    latencyHint: 'interactive', // ขอ Latency ต่ำที่สุด
+                    latencyHint: 'interactive',
                     sampleRate: 44100
                 });
                 
-                // Destination Node for recording
                 destNode = audioCtx.createMediaStreamDestination();
             }
             
-            // Resume if suspended (Common in mobile browsers)
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume().then(() => {
                     audioUnlocked = true;
@@ -324,16 +318,13 @@
             }
         }
 
-        // Silent buffer play specifically for iOS unlocking
         function unlockAudioIOS() {
             if (audioUnlocked || !audioCtx) return;
-            
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const source = audioCtx.createBufferSource();
             source.buffer = buffer;
             source.connect(audioCtx.destination);
             source.start(0);
-            
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -348,35 +339,31 @@
             const gainNode = audioCtx.createGain();
             const filter = audioCtx.createBiquadFilter();
 
-            // Sound Synthesis Settings
             filter.type = "bandpass";
-            filter.Q.value = 4.5; // ลด Q ลงนิดนึงให้เสียงแน่นขึ้น
+            filter.Q.value = 4.5;
 
-            if (type === 'high') { // Hembra
+            if (type === 'high') {
                 osc.frequency.setValueAtTime(1450, t);
                 filter.frequency.setValueAtTime(1450, t);
-            } else { // Macho
+            } else {
                 osc.frequency.setValueAtTime(1150, t);
                 filter.frequency.setValueAtTime(1150, t);
             }
             
             osc.type = 'triangle';
 
-            // Connections
             osc.connect(filter);
             filter.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             if (destNode) gainNode.connect(destNode);
 
-            // Envelope (Snappy for mobile)
             gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(1.0, t + 0.003); // Attack ไวมาก
-            gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.08); // Decay สั้นลงเพื่อรองรับการรัว
+            gainNode.gain.linearRampToValueAtTime(1.0, t + 0.003);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
 
             osc.start(t);
             osc.stop(t + 0.1);
 
-            // Garbage collection help
             setTimeout(() => {
                 osc.disconnect();
                 gainNode.disconnect();
@@ -390,7 +377,7 @@
         const statusMsg = document.getElementById('status-msg');
 
         recordBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // กัน Double tap zoom
+            // ไม่ต้องใส่ preventDefault ที่นี่ เพื่อให้คลิกทำงานได้ปกติบน desktop/mobile
             toggleRecording();
         });
 
@@ -404,21 +391,19 @@
             recordedChunks = [];
             const stream = destNode.stream;
             
-            // Check MIME types support
             let options = { mimeType: 'audio/webm' };
             if (!MediaRecorder.isTypeSupported('audio/webm')) {
                  if (MediaRecorder.isTypeSupported('audio/mp4')) {
                     options = { mimeType: 'audio/mp4' };
                  } else {
-                    options = {}; // Default fallback
+                    options = {}; 
                  }
             }
 
             try {
                 mediaRecorder = new MediaRecorder(stream, options);
             } catch (e) {
-                console.error("Recorder error:", e);
-                statusMsg.textContent = "อุปกรณ์นี้ไม่รองรับการบันทึก";
+                statusMsg.textContent = "Browser not supported";
                 return;
             }
 
@@ -432,7 +417,7 @@
             isRecording = true;
             recordBtn.classList.add('recording');
             recordText.textContent = "หยุด";
-            statusMsg.textContent = "กำลังอัด... เล่นเลย!";
+            statusMsg.textContent = "กำลังอัด...";
         }
 
         function stopRecording() {
@@ -445,7 +430,7 @@
         }
 
         function saveRecording() {
-            const blob = new Blob(recordedChunks, { type: 'audio/webm' }); // Default container
+            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
@@ -466,21 +451,20 @@
             }, 100);
         }
 
-        // --- Touch & Interaction Logic (Optimized for Mobile) ---
+        // --- Touch & Interaction Logic (FIXED) ---
         
         const leftCastanet = document.getElementById('left-castanet');
         const rightCastanet = document.getElementById('right-castanet');
         const startOverlay = document.getElementById('start-overlay');
         const startBtn = document.getElementById('start-btn');
 
-        // Unlock Audio everywhere
         function globalUnlock() {
             initAudio();
             unlockAudioIOS();
         }
 
+        // ปุ่ม Start
         startBtn.addEventListener('click', (e) => {
-            e.preventDefault();
             globalUnlock();
             startOverlay.style.opacity = '0';
             setTimeout(() => {
@@ -488,33 +472,32 @@
             }, 500);
         });
 
-        // Trigger Function
         function triggerCastanet(element) {
             const pitch = element.getAttribute('data-pitch');
             playCastanetSound(pitch);
-
-            // Visual Feedback - ใช้การเพิ่ม class และลบออกอย่างรวดเร็ว
             element.classList.remove('active');
-            // Force reflow
             void element.offsetWidth;
             element.classList.add('active');
-            
-            // ลดเวลา active ลงเพื่อให้รองรับการเคาะรัวๆ ได้ดีขึ้น
             setTimeout(() => {
                 element.classList.remove('active');
             }, 60); 
         }
 
-        // Multi-touch Handler
+        // Multi-touch Handler (Fixed for buttons)
         function handleTouch(e) {
-            // สำคัญ: preventDefault เพื่อป้องกัน Mouse Emulation และ Zoom
+            // **แก้ไขสำคัญ:** ถ้าสิ่งที่แตะเป็นปุ่ม (Button) หรืออยู่ในปุ่ม ให้ข้ามไปเลย
+            // เพื่อให้ Event การคลิก (Click) ทำงานตามปกติ
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                return;
+            }
+
+            // ถ้าไม่ได้แตะปุ่ม ให้ป้องกัน Default เพื่อกันการซูม/เลื่อนหน้าจอ
             if(e.cancelable) e.preventDefault();
             
-            globalUnlock(); // Ensure audio is ready on first touch
+            globalUnlock();
 
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
-                // ใช้ elementFromPoint เพื่อความแม่นยำ
                 const target = document.elementFromPoint(touch.clientX, touch.clientY);
                 
                 if (target) {
@@ -527,14 +510,10 @@
             }
         }
 
-        // Add Listeners
-        const container = document.querySelector('.container');
-        
-        // ใช้ Listener ที่ container หรือ body เพื่อจับ touch ทั้งหมด
-        // passive: false จำเป็นสำหรับการใช้ preventDefault
+        // Listeners
         document.addEventListener('touchstart', handleTouch, { passive: false });
 
-        // Mouse Fallback
+        // Mouse Listeners
         leftCastanet.addEventListener('mousedown', (e) => {
             if(e.button === 0) triggerCastanet(leftCastanet);
         });
