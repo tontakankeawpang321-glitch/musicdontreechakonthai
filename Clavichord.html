@@ -3,294 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Thai Mobile Clavichord</title>
+    <title>Thai Mobile Clavichord (Vertical)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ป้องกันการเลือก text และการ Zoom บนมือถือ */
+        /* ตั้งค่าพื้นฐานสำหรับมือถือ */
         body {
-            touch-action: pan-x;
+            touch-action: none; /* ปิด Gestures ของ Browser */
             user-select: none;
             -webkit-user-select: none;
-            background-color: #2c1a0e; /* Dark Wood color */
+            background-color: #2c1a0e;
             overflow: hidden;
             font-family: 'Sarabun', sans-serif;
         }
 
-        /* ลายไม้ */
         .wood-texture {
             background: #5d4037;
             background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 10px);
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
 
-        /* คีย์บอร์ด Wrapper - ปรับให้เต็มจอ ไม่ Scroll */
-        .keyboard-container {
-            width: 100%;
-            height: 60vh;
-            padding-top: 10px;
-            background: #1a1a1a;
-            box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
-            position: relative;
-            display: flex; /* ใช้ Flex เพื่อจัดเรียงคีย์ขาว */
-            overflow: hidden; /* ซ่อนส่วนเกิน */
+        .main-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* คีย์ขาว - ใช้ flex grow เพื่อให้แบ่งเท่ากัน */
+        /* ส่วนควบคุม */
+        .controls-area {
+            flex: 0 0 auto;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            z-index: 50;
+        }
+
+        /* คอนเทนเนอร์คีย์บอร์ดแบบแนวตั้ง */
+        .keyboard-container {
+            flex: 1 1 auto;
+            position: relative;
+            display: flex;
+            flex-direction: column-reverse; /* เรียงจากล่างขึ้นบน */
+            background: #1a1a1a;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* คีย์ขาว (แนวนอนเต็มจอ) */
         .key-white {
-            flex: 1; /* ยืดเต็มพื้นที่เท่าๆ กัน */
-            height: 100%;
-            background: linear-gradient(to bottom, #fff 0%, #eee 90%, #ccc 100%);
-            border: 1px solid #999;
-            border-bottom: 6px solid #888;
-            border-radius: 0 0 5px 5px;
+            flex: 1; /* ยืดความสูงให้เท่าๆ กัน */
+            width: 100%;
+            background: linear-gradient(to right, #ccc 0%, #eee 10%, #fff 50%, #eee 90%, #ccc 100%);
+            border-top: 1px solid #999;
+            border-bottom: 1px solid #888;
             position: relative;
             z-index: 1;
-            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.1);
-            transition: background 0.05s, transform 0.05s;
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            box-sizing: border-box;
         }
         .key-white.active {
             background: #ddd;
-            border-bottom: 2px solid #888;
-            transform: translateY(4px);
+            transform: scale(0.98);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            border-color: #666;
         }
 
-        /* คีย์ดำ - ใช้ absolute position คำนวณ % จาก JS */
+        /* คีย์ดำ (อยู่ด้านขวา) */
         .key-black {
             position: absolute;
-            top: 0;
-            height: 60%;
-            background: linear-gradient(to bottom, #333 0%, #000 100%);
+            right: 0;
+            width: 60%; /* ความยาวของคีย์ดำ */
+            /* height และ bottom จะถูกคำนวณโดย JS */
+            background: linear-gradient(to right, #111 0%, #333 10%, #000 100%);
             border: 1px solid #000;
-            border-bottom: 4px solid #000;
-            border-radius: 0 0 3px 3px;
+            border-left: 4px solid #000;
+            border-radius: 4px 0 0 4px;
             z-index: 10;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-            transition: background 0.05s, transform 0.05s;
-            /* width และ left จะถูกกำหนดโดย JS */
+            box-shadow: -3px 3px 6px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
         }
         .key-black.active {
             background: #222;
-            border-bottom: 1px solid #000;
-            transform: translateY(3px);
+            border-left: 2px solid #000;
+            transform: translateX(2px) scale(0.98);
+            box-shadow: -1px 1px 3px rgba(0,0,0,0.6);
         }
 
         /* ป้ายชื่อโน้ต */
         .note-label {
-            position: absolute;
-            bottom: 15px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 0.8rem; /* ปรับขนาดตัวอักษรให้เล็กลงหน่อยเพื่อให้พอดี */
+            font-size: 0.9rem;
             color: #666;
             font-weight: bold;
             pointer-events: none;
         }
         .key-black .note-label {
-            color: #aaa;
-            bottom: 10px;
-            font-size: 0.6rem;
+            color: #ccc;
+            font-size: 0.8rem;
         }
 
-        /* ไฟสถานะอัดเสียง */
-        .recording-dot {
-            width: 12px;
-            height: 12px;
-            background-color: #555;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .recording-dot.active {
-            background-color: #ff3b30;
-            box-shadow: 0 0 10px #ff3b30;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .controls-area {
-            height: 40vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #e2c7a6;
-            text-shadow: 1px 1px 2px black;
-        }
-
+        /* Buttons & Controls */
         .btn-custom {
             background: linear-gradient(to bottom, #8d6e63, #5d4037);
-            border: 2px solid #3e2723;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: all 0.1s;
+            border: 1px solid #3e2723;
         }
-        .btn-custom:active {
-            transform: translateY(2px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        .btn-custom:active { transform: translateY(1px); }
+
+        .recording-dot {
+            width: 8px; height: 8px; background-color: #555; border-radius: 50%;
+            display: inline-block; margin-right: 6px;
+        }
+        .recording-dot.active {
+            background-color: #ff3b30; box-shadow: 0 0 8px #ff3b30; animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        /* Volume Slider Customization */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px; border-radius: 50%; background: #fbbf24; margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; background: #888; border-radius: 2px;
         }
     </style>
 </head>
-<body class="wood-texture h-screen w-screen overflow-hidden flex flex-col">
+<body class="wood-texture h-screen w-screen overflow-hidden">
 
-    <!-- ส่วนควบคุม -->
-    <div class="controls-area p-4 space-y-4">
-        <h1 class="text-3xl font-serif italic text-amber-200 tracking-wider">Clavichord</h1>
-        
-        <div class="bg-black/40 p-4 rounded-lg backdrop-blur-sm border border-white/10 w-full max-w-md flex flex-col gap-3">
-            <!-- แถวปุ่มควบคุม -->
-            <div class="flex justify-between items-center w-full">
-                <div class="flex items-center gap-2">
-                    <button id="recordBtn" class="btn-custom px-4 py-2 rounded-lg font-bold text-white flex items-center gap-2">
-                        <span class="recording-dot" id="recDot"></span> อัดเสียง
+    <div class="main-container">
+        <!-- Control Bar -->
+        <div class="controls-area">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl font-serif italic text-amber-200">Clavichord</h1>
+                    <span class="text-[10px] text-amber-100/40 uppercase tracking-widest border border-amber-100/20 px-1 rounded">Vertical</span>
+                </div>
+                <button onclick="stopAllSounds(true)" class="text-[10px] bg-red-900/60 text-red-100 border border-red-800 px-2 py-1 rounded hover:bg-red-800">
+                    รีเซ็ตเสียง
+                </button>
+            </div>
+
+            <div class="flex justify-between items-center gap-2">
+                <!-- Record Controls -->
+                <div class="flex gap-2">
+                    <button id="recordBtn" class="btn-custom px-3 py-1 rounded text-xs font-bold text-white flex items-center shadow-md">
+                        <span class="recording-dot" id="recDot"></span> REC
                     </button>
-                    <button id="stopRecBtn" class="btn-custom px-4 py-2 rounded-lg font-bold text-white hidden bg-red-800">
-                        หยุด
+                    <button id="stopRecBtn" class="btn-custom px-3 py-1 rounded text-xs font-bold text-white hidden bg-red-800 shadow-md">
+                        STOP
                     </button>
                 </div>
-                <div class="text-sm text-amber-100/70">
-                    Volume: <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.7" class="accent-amber-500 w-20 align-middle">
+
+                <!-- Volume -->
+                <div class="flex items-center gap-2 flex-1 justify-end max-w-[120px]">
+                    <span class="text-[10px] text-amber-100/60">VOL</span>
+                    <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.7" class="w-full">
                 </div>
             </div>
 
-            <!-- เครื่องเล่นเสียง -->
-            <div id="audioPlayerContainer" class="hidden w-full mt-2">
-                <audio id="audioPlayback" controls class="w-full h-8"></audio>
-                <a id="downloadLink" class="text-xs text-amber-300 hover:text-white mt-1 block text-right">ดาวน์โหลดไฟล์เสียง</a>
+            <!-- Audio Player (Pop up when needed) -->
+            <div id="audioPlayerContainer" class="hidden w-full mt-2 bg-black/50 p-2 rounded">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] text-gray-300">Recorded Audio</span>
+                    <a id="downloadLink" class="text-[10px] text-amber-300 underline">Save</a>
+                </div>
+                <audio id="audioPlayback" controls class="w-full h-6"></audio>
             </div>
         </div>
-        
-        <p class="text-xs text-amber-100/50 mt-2">ขนาดพอดีหน้าจอ (C3-B4)</p>
-    </div>
 
-    <!-- ส่วนคีย์บอร์ด -->
-    <div class="keyboard-container" id="keyboard">
-        <!-- Keys will be generated by JS -->
+        <!-- Keyboard Area -->
+        <div class="keyboard-container" id="keyboard">
+            <!-- Keys generated by JS -->
+        </div>
     </div>
 
     <script>
-        // --- 1. Audio Engine (Web Audio API) ---
+        // --- Audio Engine (Enhanced Stability) ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
-        let masterGain;
-        let limiter;
-        
-        // สำหรับอัดเสียง
-        let dest;
-        let mediaRecorder;
+        let masterGain, limiter, dest, mediaRecorder;
         let audioChunks = [];
-
-        // เก็บสถานะ Oscillator ที่กำลังเล่นเพื่อป้องกันเสียงค้าง
         const activeOscillators = {};
 
         function initAudio() {
             if (!audioCtx) {
-                audioCtx = new AudioContext();
+                audioCtx = new AudioContext({ latencyHint: 'interactive' });
                 
-                // Master Gain (Volume)
                 masterGain = audioCtx.createGain();
                 masterGain.gain.value = 0.7;
 
-                // Limiter (ป้องกันเสียงแตกเมื่อกดหลายปุ่ม)
                 limiter = audioCtx.createDynamicsCompressor();
-                limiter.threshold.value = -10;
-                limiter.knee.value = 40;
+                limiter.threshold.value = -8;
+                limiter.knee.value = 30;
                 limiter.ratio.value = 12;
-                limiter.attack.value = 0;
+                limiter.attack.value = 0.002;
                 limiter.release.value = 0.25;
 
                 masterGain.connect(limiter);
                 limiter.connect(audioCtx.destination);
                 
-                // ตั้งค่าสำหรับอัดเสียง
                 dest = audioCtx.createMediaStreamDestination();
                 limiter.connect(dest);
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // --- 2. Clavichord Sound Synthesis ---
-        // สูตร: Sawtooth wave (คมชัด) + Triangle wave (เนื้อเสียง) + Filter
         function playSound(noteFreq, keyId) {
             if (!audioCtx) initAudio();
-
             const now = audioCtx.currentTime;
 
-            // 1. Oscillators
+            if (activeOscillators[keyId]) stopSound(keyId, true);
+
             const osc1 = audioCtx.createOscillator();
             const osc2 = audioCtx.createOscillator();
-            
-            // Clavichord มีความไม่สมบูรณ์เล็กน้อย (Detune)
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            // Clavichord Timbre
             osc1.type = 'sawtooth';
             osc1.frequency.value = noteFreq;
             
             osc2.type = 'triangle';
             osc2.frequency.value = noteFreq;
-            osc2.detune.value = 5; // Slight detune for richness
+            osc2.detune.value = 5;
 
-            // 2. Filter (Lowpass) จำลองไม้/สาย
-            const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 2500; // Brightness
-            filter.Q.value = 0.5;
+            filter.frequency.value = 2800; // Brightness
+            filter.Q.value = 0.6;
 
-            // 3. Envelope (ADSR)
-            const gainNode = audioCtx.createGain();
-            
-            // Wiring
             osc1.connect(filter);
             osc2.connect(filter);
             filter.connect(gainNode);
             gainNode.connect(masterGain);
 
-            // Envelope Parameters (Clavichord is percussive but sustained if held)
+            // Envelope
             gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.5, now + 0.02); // Attack (Quick)
-            gainNode.gain.exponentialRampToValueAtTime(0.3, now + 0.1); // Decay
-            // Sustain level handled by holding the key, release handled in stopSound
+            gainNode.gain.linearRampToValueAtTime(0.5, now + 0.01); 
+            gainNode.gain.exponentialRampToValueAtTime(0.3, now + 0.15); 
 
             osc1.start(now);
             osc2.start(now);
 
-            // Store active nodes to stop them later
-            if (activeOscillators[keyId]) {
-                stopSound(keyId); // Stop existing if re-triggered quickly
-            }
-            activeOscillators[keyId] = { osc1, osc2, gainNode, filter };
+            activeOscillators[keyId] = { osc1, osc2, gainNode };
         }
 
-        function stopSound(keyId) {
+        function stopSound(keyId, immediate = false) {
             if (!audioCtx || !activeOscillators[keyId]) return;
-
             const { osc1, osc2, gainNode } = activeOscillators[keyId];
             const now = audioCtx.currentTime;
             
-            // Release phase (Clavichord sound stops almost immediately when key is lifted)
-            // แต่ให้ Fade out นิดหน่อยกันเสียงตัด ("click")
-            const releaseTime = 0.1; 
-            gainNode.gain.cancelScheduledValues(now);
-            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, now + releaseTime);
+            const release = immediate ? 0.02 : 0.1;
+            
+            try {
+                gainNode.gain.cancelScheduledValues(now);
+                gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + release);
+                osc1.stop(now + release + 0.05);
+                osc2.stop(now + release + 0.05);
+            } catch(e) {}
 
-            osc1.stop(now + releaseTime);
-            osc2.stop(now + releaseTime);
-
-            setTimeout(() => {
-                // Garbage collection cleanup reference
-                if(activeOscillators[keyId] === activeOscillators[keyId]) {
-                    delete activeOscillators[keyId];
-                }
-            }, releaseTime * 1000 + 50);
+            delete activeOscillators[keyId];
         }
 
-        // --- 3. Keyboard Generation & Logic (Fit Screen Version) ---
+        function stopAllSounds(force = false) {
+            Object.keys(activeOscillators).forEach(k => stopSound(k, force));
+            if(force && audioCtx) {
+                audioCtx.close().then(() => { audioCtx = null; initAudio(); });
+            }
+        }
+
+        // --- Keyboard Layout (Vertical) ---
         const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        // ปรับลด Octave ลงเพื่อให้พอดีหน้าจอ (2 Octaves)
         const startOctave = 3;
         const endOctave = 4;
         const keyboardEl = document.getElementById('keyboard');
@@ -302,168 +295,119 @@
         }
 
         function renderKeyboard() {
-            // 1. Count Total White Keys first to calculate percentages
+            // Count total White keys
             let totalWhiteKeys = 0;
             for (let oct = startOctave; oct <= endOctave; oct++) {
-                notes.forEach(note => {
-                    if (!note.includes('#')) totalWhiteKeys++;
-                });
+                notes.forEach(note => { if (!note.includes('#')) totalWhiteKeys++; });
             }
 
-            const whiteKeyWidthPercent = 100 / totalWhiteKeys;
-            const blackKeyWidthPercent = whiteKeyWidthPercent * 0.65; // Black key is ~65% of white key width
-            
-            let whiteKeyIndex = 0; // Track current white key position
+            const whiteKeyHeightPercent = 100 / totalWhiteKeys;
+            const blackKeyHeightPercent = whiteKeyHeightPercent * 0.7; 
+
+            let whiteKeyIndex = 0; // Starts from 0 (Bottom)
 
             for (let oct = startOctave; oct <= endOctave; oct++) {
                 notes.forEach((note) => {
                     const isSharp = note.includes('#');
                     const freq = getFrequency(note, oct);
                     const keyId = `key-${note}-${oct}`;
-                    const label = oct === startOctave || note === 'C' ? note + oct : note; 
 
                     if (!isSharp) {
-                        // --- White Key ---
                         const key = document.createElement('div');
                         key.className = 'key-white';
                         key.id = keyId;
-                        key.dataset.freq = freq;
                         key.innerHTML = `<span class="note-label">${note}${oct}</span>`;
-                        // Width handled by flex: 1 in CSS
+                        // Flex handles layout automatically for white keys in column mode
                         keyboardEl.appendChild(key);
                         addInteraction(key, freq, keyId);
-                        
-                        whiteKeyIndex++; // Move forward
+                        whiteKeyIndex++;
                     } else {
-                        // --- Black Key ---
                         const key = document.createElement('div');
                         key.className = 'key-black';
                         key.id = keyId;
-                        key.dataset.freq = freq;
+                        key.innerHTML = `<span class="note-label">${note}</span>`;
                         
-                        // Calculate Left Position
-                        // The black key sits between the previous white key (index-1) and current white key (index)
-                        // Actually, C# is after C. So if C is index 1 (visually), C# is on the right edge of C.
-                        // Logic: center of C# should align with the line between C and D.
-                        // Current 'whiteKeyIndex' has already been incremented for the previous natural note (e.g., C).
-                        // So the boundary is at (whiteKeyIndex * whiteKeyWidthPercent).
-                        // Left = Boundary - (BlackWidth / 2)
+                        // Vertical Positioning Logic (Bottom Up)
+                        // Black key sits between current white key (already index++) and previous
+                        // Wait, in the loop: C (White) -> C# (Black) -> D (White)
+                        // At C#, whiteKeyIndex is 1 (meaning 1 white key is below it)
+                        // So bottom of black key should be at: (whiteKeyIndex * whiteHeight) - (blackHeight/2)
                         
-                        const leftPos = (whiteKeyIndex * whiteKeyWidthPercent) - (blackKeyWidthPercent / 2);
+                        const bottomPos = (whiteKeyIndex * whiteKeyHeightPercent) - (blackKeyHeightPercent / 2);
                         
-                        key.style.width = `${blackKeyWidthPercent}%`;
-                        key.style.left = `${leftPos}%`;
+                        key.style.height = `${blackKeyHeightPercent}%`;
+                        key.style.bottom = `${bottomPos}%`;
                         
-                        // key.innerHTML = `<span class="note-label">${note}</span>`;
-                        keyboardEl.appendChild(key);
+                        keyboardEl.appendChild(key); // Append to container (absolute pos works relative to container)
                         addInteraction(key, freq, keyId);
                     }
                 });
             }
         }
 
-        // --- 4. Input Handling (Touch & Mouse) ---
+        // --- Interaction (Pointer Events) ---
         function addInteraction(element, freq, keyId) {
             const start = (e) => {
-                e.preventDefault(); // Prevent scroll/zoom on key press
-                if(!element.classList.contains('active')) {
+                e.preventDefault();
+                element.setPointerCapture(e.pointerId);
+                if (!element.classList.contains('active')) {
                     element.classList.add('active');
                     playSound(freq, keyId);
                 }
             };
-
             const end = (e) => {
                 e.preventDefault();
+                element.releasePointerCapture(e.pointerId);
                 element.classList.remove('active');
                 stopSound(keyId);
             };
 
-            // Touch Events
-            element.addEventListener('touchstart', start, { passive: false });
-            element.addEventListener('touchend', end);
-            element.addEventListener('touchcancel', end);
-
-            // Mouse Events
-            element.addEventListener('mousedown', start);
-            element.addEventListener('mouseup', end);
-            element.addEventListener('mouseleave', end);
+            element.addEventListener('pointerdown', start);
+            element.addEventListener('pointerup', end);
+            element.addEventListener('pointercancel', end);
+            element.addEventListener('pointerleave', end);
+            element.addEventListener('contextmenu', e => e.preventDefault());
         }
 
-        // --- 5. Recording System ---
-        const recordBtn = document.getElementById('recordBtn');
-        const stopRecBtn = document.getElementById('stopRecBtn');
-        const recDot = document.getElementById('recDot');
-        const audioPlayerContainer = document.getElementById('audioPlayerContainer');
-        const audioPlayback = document.getElementById('audioPlayback');
-        const downloadLink = document.getElementById('downloadLink');
-
-        recordBtn.addEventListener('click', () => {
-            initAudio(); // Ensure context is ready
+        // --- Recording & Controls ---
+        document.getElementById('recordBtn').addEventListener('click', () => {
+            initAudio();
             audioChunks = [];
-            
-            // Check browser support
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-
+            const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
             try {
-                mediaRecorder = new MediaRecorder(dest.stream, { mimeType: mimeType });
-                
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
+                mediaRecorder = new MediaRecorder(dest.stream, { mimeType: mime });
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: mimeType });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    audioPlayback.src = audioUrl;
-                    downloadLink.href = audioUrl;
-                    downloadLink.download = `clavichord-recording-${new Date().getTime()}.webm`;
-                    audioPlayerContainer.classList.remove('hidden');
+                    const blob = new Blob(audioChunks, { type: mime });
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('audioPlayback').src = url;
+                    const dl = document.getElementById('downloadLink');
+                    dl.href = url;
+                    dl.download = `clavichord-${Date.now()}.webm`;
+                    document.getElementById('audioPlayerContainer').classList.remove('hidden');
                 };
-
                 mediaRecorder.start();
-                
-                // UI Update
-                recordBtn.classList.add('hidden');
-                stopRecBtn.classList.remove('hidden');
-                recDot.classList.add('active');
-                audioPlayerContainer.classList.add('hidden');
-
-            } catch (err) {
-                alert("Browser recording not supported or failed: " + err);
-            }
+                document.getElementById('recordBtn').classList.add('hidden');
+                document.getElementById('stopRecBtn').classList.remove('hidden');
+                document.getElementById('recDot').classList.add('active');
+            } catch(e) { alert("Recording error: " + e); }
         });
 
-        stopRecBtn.addEventListener('click', () => {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-                // UI Update
-                stopRecBtn.classList.add('hidden');
-                recordBtn.classList.remove('hidden');
-                recDot.classList.remove('active');
-            }
+        document.getElementById('stopRecBtn').addEventListener('click', () => {
+            if(mediaRecorder?.state !== 'inactive') mediaRecorder.stop();
+            document.getElementById('stopRecBtn').classList.add('hidden');
+            document.getElementById('recordBtn').classList.remove('hidden');
+            document.getElementById('recDot').classList.remove('active');
         });
 
-        // Volume Control
-        document.getElementById('volumeControl').addEventListener('input', (e) => {
-            if (masterGain) {
-                masterGain.gain.value = parseFloat(e.target.value);
-            }
+        document.getElementById('volumeControl').addEventListener('input', e => {
+            if(masterGain) masterGain.gain.value = parseFloat(e.target.value);
         });
 
-        // Initialize
+        // Start
         renderKeyboard();
-
-        // Global unlock audio context on first touch anywhere
-        document.body.addEventListener('touchstart', function() {
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }, { once: true });
-
-        document.body.addEventListener('click', function() {
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        document.body.addEventListener('pointerdown', () => {
+            if(audioCtx?.state === 'suspended') audioCtx.resume();
         }, { once: true });
 
     </script>
