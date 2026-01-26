@@ -3,78 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Historical Church Organ Simulator</title>
+    <title>Vertical Organ 61 Keys (Auto Fit)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* ป้องกันการเลือกข้อความและการลากบนมือถือ */
+        :root {
+            --key-height: 20px; /* จะถูกคำนวณใหม่โดย JS */
+        }
+
         body {
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden;
             background-color: #0f0f0f;
-            font-family: 'Cinzel', serif; /* ฟอนต์แนวโบราณ/คลาสสิก */
+            font-family: 'Cinzel', serif;
         }
 
         .key {
             position: relative;
             cursor: pointer;
-            border-bottom-left-radius: 4px;
-            border-bottom-right-radius: 4px;
-            transition: background-color 0.05s, transform 0.05s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-            z-index: 1;
+            box-shadow: inset -2px 0 5px rgba(0,0,0,0.2);
+            transition: background-color 0.05s;
         }
 
         .white-key {
-            background: linear-gradient(to bottom, #fdfbf7 0%, #e8e4d9 100%); /* สีงาช้างเก่า */
-            height: 100%;
-            border: 1px solid #d1c7b7;
+            background: linear-gradient(to right, #fdfbf7 0%, #e8e4d9 100%);
+            width: 100%;
+            height: var(--key-height);
+            border-bottom: 1px solid #d1c7b7;
+            border-right: 4px solid #bbb;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 5px;
+            box-sizing: border-box;
+            font-size: 8px; 
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        /* ซ่อนตัวอักษรถ้าปุ่มเล็กเกินไป */
+        .white-key.micro-text {
+            color: transparent;
+            text-shadow: none;
         }
 
         .white-key:active, .white-key.active {
             background: #d6d0c4;
-            transform: translateY(2px);
-            box-shadow: 0 2px 2px rgba(0,0,0,0.3);
+            transform: scaleX(0.98);
+            transform-origin: left;
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.3);
         }
 
         .black-key {
-            background: linear-gradient(to bottom, #2a2a2a 0%, #000 100%); /* ไม้ Ebony */
-            height: 60%;
+            background: linear-gradient(to right, #2a2a2a 0%, #000 100%);
+            width: 60%; /* กว้างขึ้นเล็กน้อยเพื่อให้กดง่ายขึ้นในจอเล็ก */
+            height: calc(var(--key-height) * 0.7); 
             position: absolute;
-            top: 0;
+            right: 0;
             z-index: 10;
-            width: 8%;
-            border-bottom-left-radius: 3px;
-            border-bottom-right-radius: 3px;
-            box-shadow: 2px 3px 5px rgba(0,0,0,0.6);
+            border-top-left-radius: 2px;
+            border-bottom-left-radius: 2px;
+            box-shadow: -2px 2px 4px rgba(0,0,0,0.6);
             border: 1px solid #1a1a1a;
+            border-right: none;
         }
 
         .black-key:active, .black-key.active {
             background: #111;
-            transform: translateY(2px);
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+            transform: scaleX(0.95);
+            transform-origin: right;
+            box-shadow: -1px 1px 2px rgba(0,0,0,0.4);
         }
 
-        /* ตกแต่งส่วนควบคุม ลายไม้โบราณ */
         .wood-texture {
             background-color: #3e2723;
-            background-image: 
-                linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
-                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%235d4037' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
-            border-bottom: 6px solid #271c19;
-            box-shadow: inset 0 -2px 10px rgba(0,0,0,0.5);
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 10px);
+            border-bottom: 2px solid #271c19;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        .gold-text {
-            color: #d4af37;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-            letter-spacing: 1px;
-        }
+        .gold-text { color: #d4af37; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
 
-        /* Animation Pulse */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
@@ -87,72 +98,71 @@
             border-color: #b91c1c !important;
         }
         
-        /* Stop selection styling */
-        select option {
-            background-color: #3e2723;
-            color: #d4af37;
+        .middle-c-marker {
+            width: 4px; height: 4px;
+            background-color: #d4af37;
+            border-radius: 50%;
+            margin-left: 2px;
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-center bg-black">
+<body class="h-screen w-screen flex flex-col bg-black overflow-hidden">
 
-    <!-- Control Panel -->
-    <div class="w-full h-1/4 wood-texture p-4 flex flex-col justify-between relative z-20 border-b-2 border-yellow-900/30">
-        <!-- Top Row -->
-        <div class="flex justify-between items-start">
-            <div>
-                <h1 class="text-3xl font-bold gold-text tracking-widest drop-shadow-md">CATHEDRAL</h1>
-                <p class="text-[10px] text-amber-200/60 uppercase tracking-widest mt-1">Authentic Pipe Organ Simulation</p>
-            </div>
+    <!-- Header Panel -->
+    <div class="w-full flex-none wood-texture p-2 flex flex-col gap-1 z-30 relative shadow-xl" id="header-panel">
+        <div class="flex justify-between items-center px-1">
+            <h1 class="text-xs font-bold gold-text tracking-widest">CHURCH 61</h1>
             
-            <!-- Record Button -->
-            <button id="record-btn" onclick="toggleRecord()" class="bg-stone-800 border-2 border-stone-600 text-stone-300 px-4 py-2 rounded-md font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-stone-700 transition-all shadow-lg active:scale-95">
-                <span id="rec-dot" class="w-2 h-2 rounded-full bg-red-600 shadow-[0_0_5px_red]"></span>
-                <span id="rec-text">REC</span>
-            </button>
-        </div>
-        
-        <!-- Controls Row -->
-        <div class="flex justify-center gap-8 items-end pb-1">
-            <!-- Volume Slider -->
-            <div class="flex flex-col items-center group">
-                <label class="text-[10px] uppercase font-bold text-amber-500/80 mb-2 tracking-wider group-hover:text-amber-400">Master Vol</label>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.75" 
-                       class="w-32 h-2 bg-stone-900 rounded-lg appearance-none cursor-pointer accent-[#d4af37]">
-            </div>
-            
-            <!-- Stop Selection -->
-            <div class="flex flex-col items-center">
-                <label class="text-[10px] uppercase font-bold text-amber-500/80 mb-2 tracking-wider">Pipe Stop</label>
-                <div class="relative">
-                    <select id="waveform-select" class="appearance-none bg-[#2a1d1a] text-[#d4af37] border-2 border-[#5d4037] rounded-md pl-4 pr-10 py-1 text-sm font-bold shadow-inner focus:outline-none focus:border-[#d4af37] cursor-pointer">
-                        <option value="grand">Grand Organ (Full)</option>
-                        <option value="principal">Principal 8' (Pure)</option>
-                        <option value="flute">Flute 4' (Soft)</option>
-                        <option value="chapel">Old Chapel (Vintage)</option>
-                    </select>
-                    <!-- Custom Arrow -->
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#d4af37]">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                    </div>
+            <div class="flex gap-2 items-center">
+                 <!-- Reverb Toggle -->
+                <div class="flex items-center gap-1 cursor-pointer bg-[#2a1d1a] border border-[#5d4037] px-2 py-1 rounded" onclick="toggleReverb()">
+                    <label class="text-[9px] uppercase font-bold text-amber-500/80 cursor-pointer">Verb</label>
+                    <div id="reverb-led" class="w-2 h-2 rounded-full bg-[#111] border border-stone-600"></div>
                 </div>
-            </div>
 
-             <!-- Reverb Toggle -->
-             <div class="flex flex-col items-center cursor-pointer" onclick="toggleReverb()">
-                <label class="text-[10px] uppercase font-bold text-amber-500/80 mb-2 tracking-wider">Reverb</label>
-                <div id="reverb-led" class="w-4 h-4 rounded-full bg-[#111] border border-stone-600 shadow-inner transition-colors duration-300"></div>
-                <span class="text-[9px] text-amber-500/50 mt-1">HALL</span>
+                <button id="record-btn" onclick="toggleRecord()" class="bg-stone-800 border border-stone-600 text-stone-300 px-3 py-1 rounded font-bold text-[9px] uppercase tracking-widest flex items-center gap-1 hover:bg-stone-700 transition-all active:scale-95">
+                    <span id="rec-dot" class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                    <span id="rec-text">REC</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Keyboard Container -->
-    <div class="relative w-full h-3/4 bg-[#0a0a0a] flex justify-center overflow-hidden shadow-[inset_0_10px_20px_rgba(0,0,0,0.8)]" id="keyboard-container">
-        <!-- Keys will be generated by JS -->
+    <!-- Keyboard Container (No Scroll) -->
+    <div class="relative flex-grow bg-[#1a1a1a] overflow-hidden" id="keyboard-wrapper">
+        <div id="keyboard-container" class="relative w-full h-full flex flex-col-reverse">
+            <!-- Keys generated by JS -->
+        </div>
     </div>
 
     <script>
+        // --- Auto Fit Logic ---
+        function fitKeys() {
+            const header = document.getElementById('header-panel');
+            const containerHeight = window.innerHeight - header.offsetHeight;
+            
+            // Standard 61-key organ has 36 white keys (C2 to C7)
+            const whiteKeyCount = 36;
+            
+            // Calculate height per key
+            const heightPerKey = containerHeight / whiteKeyCount;
+            
+            document.documentElement.style.setProperty('--key-height', `${heightPerKey}px`);
+            
+            // Toggle text visibility based on height
+            const keys = document.querySelectorAll('.white-key');
+            keys.forEach(k => {
+                if (heightPerKey < 12) {
+                    k.classList.add('micro-text');
+                } else {
+                    k.classList.remove('micro-text');
+                }
+            });
+        }
+
+        window.addEventListener('resize', fitKeys);
+        window.addEventListener('load', fitKeys);
+
         // --- Audio Engine ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
@@ -162,79 +172,56 @@
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
-        let isReverbOn = true; // Default ON for church realism
+        let isReverbOn = true;
 
         const activeOscillators = {};
+        
+        // Generate 61 Keys (C2 to C7)
+        const notes = [];
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        // Keyboard map for middle range
+        const keyboardMap = {
+            'z': 48, 's': 49, 'x': 50, 'd': 51, 'c': 52, 'v': 53, 'g': 54, 'b': 55, 'h': 56, 'n': 57, 'j': 58, 'm': 59,
+            'q': 60, '2': 61, 'w': 62, '3': 63, 'e': 64, 'r': 65, '5': 66, 't': 67, '6': 68, 'y': 69, '7': 70, 'u': 71, 'i': 72
+        };
 
-        // Note Frequencies
-        const notes = [
-            { note: 'C3', freq: 130.81, type: 'white', key: 'z' }, // Add lower octave for richness
-            { note: 'D3', freq: 146.83, type: 'white', key: 'x' },
-            { note: 'E3', freq: 164.81, type: 'white', key: 'c' },
-            { note: 'F3', freq: 174.61, type: 'white', key: 'v' },
-            { note: 'G3', freq: 196.00, type: 'white', key: 'b' },
-            { note: 'A3', freq: 220.00, type: 'white', key: 'n' },
-            { note: 'B3', freq: 246.94, type: 'white', key: 'm' },
-            { note: 'C4', freq: 261.63, type: 'white', key: 'a' },
-            { note: 'C#4', freq: 277.18, type: 'black', key: 'w', pos: 10 }, 
-            { note: 'D4', freq: 293.66, type: 'white', key: 's' },
-            { note: 'D#4', freq: 311.13, type: 'black', key: 'e', pos: 24 },
-            { note: 'E4', freq: 329.63, type: 'white', key: 'd' },
-            { note: 'F4', freq: 349.23, type: 'white', key: 'f' },
-            { note: 'F#4', freq: 369.99, type: 'black', key: 't', pos: 53 },
-            { note: 'G4', freq: 392.00, type: 'white', key: 'g' },
-            { note: 'G#4', freq: 415.30, type: 'black', key: 'y', pos: 68 },
-            { note: 'A4', freq: 440.00, type: 'white', key: 'h' },
-            { note: 'A#4', freq: 466.16, type: 'black', key: 'u', pos: 82 },
-            { note: 'B4', freq: 493.88, type: 'white', key: 'j' },
-            { note: 'C5', freq: 523.25, type: 'white', key: 'k' },
-            { note: 'C#5', freq: 554.37, type: 'black', key: 'o', pos: 1000 }, 
-            { note: 'D5', freq: 587.33, type: 'white', key: 'l' },
-            { note: 'E5', freq: 659.25, type: 'white', key: ';' }
-        ];
-
-        // Filter for main visible range (C4-E5) to keep keys big enough on mobile
-        // But logic supports full range. We will only render C4+ visually for this specific view to match previous layout
-        const visibleNotes = notes.filter(n => n.freq >= 261.63);
+        for (let i = 36; i <= 96; i++) {
+            const octave = Math.floor(i / 12) - 1;
+            const noteName = noteNames[i % 12];
+            const isBlack = noteName.includes('#');
+            const freq = 440 * Math.pow(2, (i - 69) / 12);
+            
+            notes.push({
+                midi: i,
+                note: noteName + octave,
+                freq: freq,
+                type: isBlack ? 'black' : 'white',
+                isMiddleC: i === 60
+            });
+        }
 
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new AudioContext();
-                
-                // 1. Create Master Output
                 masterGainNode = audioCtx.createGain();
                 masterGainNode.gain.value = 0.8;
-
-                // 2. Create Reverb (Convolution)
                 reverbNode = audioCtx.createConvolver();
-                reverbNode.buffer = createReverbImpulse(2.5); // 2.5 seconds tail
-                
-                // 3. Create Dry/Wet mixing
-                // If Reverb is ON: connect Master -> Reverb -> Destination AND Master -> Destination
+                reverbNode.buffer = createReverbImpulse(2.5);
                 updateReverbState();
-
                 masterGainNode.connect(audioCtx.destination);
                 updateReverbUI();
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // Synthesize a reverb impulse response (Simulates a large hall)
         function createReverbImpulse(duration) {
             const rate = audioCtx.sampleRate;
             const length = rate * duration;
             const impulse = audioCtx.createBuffer(2, length, rate);
             const left = impulse.getChannelData(0);
             const right = impulse.getChannelData(1);
-
             for (let i = 0; i < length; i++) {
-                // Exponential decay function
-                const n = i / length;
-                const decay = Math.pow(1 - n, 2.5); // Slower decay for church feel
-                
-                // White noise
+                const decay = Math.pow(1 - i / length, 2.5);
                 left[i] = (Math.random() * 2 - 1) * decay;
                 right[i] = (Math.random() * 2 - 1) * decay;
             }
@@ -249,15 +236,9 @@
 
         function updateReverbState() {
             if (!audioCtx) return;
-            // Disconnect everything first to reset routing
             try { masterGainNode.disconnect(reverbNode); } catch(e){}
             try { reverbNode.disconnect(); } catch(e){}
-
             if (isReverbOn) {
-                // Route: Source -> Master -> Reverb -> Destination (Wet)
-                // We assume Master is already connected to Destination (Dry) in init, so we add Wet layer
-                // Actually, for better control, let's keep it simple:
-                // We add the Reverb as a parallel path.
                 masterGainNode.connect(reverbNode);
                 reverbNode.connect(audioCtx.destination);
             }
@@ -267,14 +248,13 @@
             const led = document.getElementById('reverb-led');
             if (isReverbOn) {
                 led.style.backgroundColor = '#00ff00';
-                led.style.boxShadow = '0 0 8px #00ff00';
+                led.style.boxShadow = '0 0 6px #00ff00';
             } else {
                 led.style.backgroundColor = '#111';
                 led.style.boxShadow = 'none';
             }
         }
 
-        // --- Recording Logic ---
         function toggleRecord() {
             initAudio();
             const btn = document.getElementById('record-btn');
@@ -284,22 +264,13 @@
             if (!isRecording) {
                 audioChunks = [];
                 destRecording = audioCtx.createMediaStreamDestination();
-                
-                // Connect Master output (including Reverb) to Recorder
                 masterGainNode.connect(destRecording);
                 if (isReverbOn) reverbNode.connect(destRecording);
 
                 let options = { mimeType: 'audio/webm' };
-                if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                    options = { mimeType: 'audio/mp4' }; 
-                    if (!MediaRecorder.isTypeSupported('audio/mp4')) options = undefined; 
-                }
-
-                try {
-                    mediaRecorder = new MediaRecorder(destRecording.stream, options);
-                } catch (e) {
-                    mediaRecorder = new MediaRecorder(destRecording.stream);
-                }
+                if (!MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/mp4' };
+                try { mediaRecorder = new MediaRecorder(destRecording.stream, options); } 
+                catch (e) { mediaRecorder = new MediaRecorder(destRecording.stream); }
 
                 mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
                 mediaRecorder.onstop = () => {
@@ -308,41 +279,28 @@
                     const a = document.createElement('a');
                     a.style.display = 'none';
                     a.href = url;
-                    a.download = `church_organ_${Date.now()}.webm`;
+                    a.download = `organ_autofit_${Date.now()}.webm`;
                     document.body.appendChild(a);
                     a.click();
                     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
                 };
-
                 mediaRecorder.start();
                 isRecording = true;
                 btn.classList.add('recording-pulse');
                 recText.textContent = "STOP";
                 recDot.style.backgroundColor = "white";
-                recDot.style.boxShadow = "none";
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
                 btn.classList.remove('recording-pulse');
                 recText.textContent = "REC";
                 recDot.style.backgroundColor = "#dc2626";
-                recDot.style.boxShadow = "0 0 5px red";
             }
         }
 
         function getWaveConfig() {
-            const type = document.getElementById('waveform-select').value;
-            // More complex harmonic layering for realism
-            switch(type) {
-                case 'principal': // Clean, basic organ sound
-                    return { type: 'triangle', harmonics: [1, 0.5, 0.2] }; 
-                case 'flute': // Softer, hollow sound
-                    return { type: 'sine', harmonics: [1, 0.1, 0.05] };
-                case 'chapel': // Vintage, slight buzz
-                    return { type: 'sawtooth', harmonics: [0.8, 0.4, 0.1], detune: 5 };
-                case 'grand': default: // Full Organ (Tutti)
-                    return { type: 'triangle', harmonics: [1.0, 0.8, 0.6, 0.3], sub: true }; 
-            }
+            // ตั้งค่าคงที่เป็น Grand Organ ตามที่ต้องการ
+            return { type: 'triangle', harmonics: [1.0, 0.8, 0.6, 0.3], sub: true }; 
         }
 
         function playNote(freq, id) {
@@ -351,40 +309,31 @@
 
             const config = getWaveConfig();
             const noteGain = audioCtx.createGain();
-            const volSlider = parseFloat(document.getElementById('volume-slider').value);
+            const vol = 0.8; 
             
             const now = audioCtx.currentTime;
             noteGain.gain.setValueAtTime(0, now);
-            // Slightly slower attack for realism (pipe air buildup)
-            noteGain.gain.linearRampToValueAtTime(volSlider * 0.4, now + 0.08); 
+            noteGain.gain.linearRampToValueAtTime(vol * 0.4, now + 0.08); 
 
             noteGain.connect(masterGainNode);
 
             const oscList = [];
-
-            // Main Harmonics
             config.harmonics.forEach((hVal, index) => {
                 const osc = audioCtx.createOscillator();
-                osc.type = config.type === 'sine' && index > 0 ? 'triangle' : config.type; // Mix wave types for character
-                
-                // Frequency calculation with slight harmonic stretch for realism
+                osc.type = config.type === 'sine' && index > 0 ? 'triangle' : config.type; 
                 osc.frequency.setValueAtTime(freq * (index + 1), now);
-                
-                if (config.detune) osc.detune.value = (Math.random() - 0.5) * config.detune; // Natural slight detuning
-
+                if (config.detune) osc.detune.value = (Math.random() - 0.5) * config.detune;
                 const harmGain = audioCtx.createGain();
                 harmGain.gain.value = hVal;
-                
                 osc.connect(harmGain);
                 harmGain.connect(noteGain);
                 osc.start(now);
                 oscList.push(osc);
             });
 
-            // Sub-octave for "Grand" setting
             if (config.sub) {
                 const subOsc = audioCtx.createOscillator();
-                subOsc.type = 'sine'; // Deep bass
+                subOsc.type = 'sine';
                 subOsc.frequency.setValueAtTime(freq * 0.5, now);
                 const subGain = audioCtx.createGain();
                 subGain.gain.value = 0.5;
@@ -402,76 +351,52 @@
 
         function stopNote(id) {
             if (!activeOscillators[id]) return;
-
             const { oscList, noteGain } = activeOscillators[id];
             const now = audioCtx.currentTime;
-            
-            // Release envelope: Organ sound lingers slightly in the room (plus reverb handles the tail)
             const release = 0.15;
-
             noteGain.gain.cancelScheduledValues(now);
             noteGain.gain.setValueAtTime(noteGain.gain.value, now);
             noteGain.gain.exponentialRampToValueAtTime(0.001, now + release);
-
-            oscList.forEach(osc => {
-                osc.stop(now + release + 0.1); 
-            });
-
+            oscList.forEach(osc => osc.stop(now + release + 0.1));
             delete activeOscillators[id];
-
             const el = document.getElementById(`key-${id}`);
             if (el) el.classList.remove('active');
         }
 
-        // --- UI Generation ---
+        // --- Vertical UI Generation ---
         const container = document.getElementById('keyboard-container');
-        // Render only C4 upwards for the main view to keep keys playable on mobile
-        const displayNotes = notes.filter(n => n.freq >= 261.63); 
+        let whiteKeyIndex = 0;
         
-        const whiteNotes = displayNotes.filter(n => n.type === 'white');
-        const blackNotes = displayNotes.filter(n => n.type === 'black');
-
-        // Render White Keys
-        whiteNotes.forEach(note => {
-            const key = document.createElement('div');
-            key.className = 'key white-key flex-1 flex items-end justify-center pb-4';
-            key.id = `key-${note.key}`;
-            key.dataset.note = note.key;
-            // Don't show text to keep it looking like a real instrument, or keep it subtle
-            key.innerHTML = `<span class="text-stone-400/50 text-[10px] select-none pointer-events-none font-sans">${note.note}</span>`;
-            
-            addInteractions(key, note.freq, note.key);
-            container.appendChild(key);
+        notes.forEach((note) => {
+            if (note.type === 'white') {
+                const key = document.createElement('div');
+                key.className = 'key white-key';
+                key.id = `key-${note.midi}`;
+                if (note.note.startsWith('C')) {
+                    key.innerHTML = `<span class="text-stone-500 font-sans font-bold">${note.note}</span>`;
+                    if (note.isMiddleC) key.innerHTML += `<div class="middle-c-marker"></div>`;
+                }
+                addInteractions(key, note.freq, note.midi);
+                container.appendChild(key);
+                whiteKeyIndex++;
+            } else {
+                const key = document.createElement('div');
+                key.className = 'key black-key';
+                key.id = `key-${note.midi}`;
+                // CSS calc for dynamic positioning based on variable key height
+                key.style.bottom = `calc(${whiteKeyIndex} * var(--key-height) - (var(--key-height) * 0.7 / 2))`;
+                
+                addInteractions(key, note.freq, note.midi);
+                container.appendChild(key);
+            }
         });
-
-        // Render Black Keys
-        const whiteKeyWidth = 100 / whiteNotes.length;
-        const blackKeyPositions = { 'C#4': 1, 'D#4': 2, 'F#4': 4, 'G#4': 5, 'A#4': 6, 'C#5': 8 };
-
-        blackNotes.forEach(note => {
-            if (!blackKeyPositions[note.note]) return; 
-            const key = document.createElement('div');
-            key.className = 'key black-key';
-            key.id = `key-${note.key}`;
-            
-            let visualIndex = 0;
-            if(note.note.startsWith('C#')) visualIndex = 1;
-            if(note.note.startsWith('D#')) visualIndex = 2;
-            if(note.note.startsWith('F#')) visualIndex = 4;
-            if(note.note.startsWith('G#')) visualIndex = 5;
-            if(note.note.startsWith('A#')) visualIndex = 6;
-            if(note.note.includes('5')) visualIndex += 7;
-
-            const leftPos = (visualIndex * whiteKeyWidth) - (4); 
-            key.style.left = `${leftPos}%`;
-            addInteractions(key, note.freq, note.key);
-            container.appendChild(key);
-        });
+        
+        // Initial setup
+        setTimeout(fitKeys, 100);
 
         function addInteractions(element, freq, id) {
             const start = (e) => { e.preventDefault(); playNote(freq, id); };
             const end = (e) => { e.preventDefault(); stopNote(id); };
-
             element.addEventListener('mousedown', start);
             element.addEventListener('mouseup', end);
             element.addEventListener('mouseleave', end);
@@ -482,14 +407,16 @@
 
         window.addEventListener('keydown', (e) => {
             if (e.repeat) return;
-            // Map keys z-m for lower octave if desired, but here mapping to existing visible keys
-            const note = notes.find(n => n.key === e.key.toLowerCase());
-            if (note) playNote(note.freq, note.key);
+            const midi = keyboardMap[e.key.toLowerCase()];
+            if (midi) {
+                const note = notes.find(n => n.midi === midi);
+                if(note) playNote(note.freq, midi);
+            }
         });
 
         window.addEventListener('keyup', (e) => {
-            const note = notes.find(n => n.key === e.key.toLowerCase());
-            if (note) stopNote(note.key);
+            const midi = keyboardMap[e.key.toLowerCase()];
+            if (midi) stopNote(midi);
         });
 
         document.body.addEventListener('click', initAudio, { once: true });
