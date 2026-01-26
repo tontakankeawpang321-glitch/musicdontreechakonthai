@@ -3,488 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Melodica Pro Simulator</title>
+    <title>Melodica Vertical</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: #f0f4f8;
-            touch-action: none; /* ป้องกันการซูมและเลื่อนบนมือถือ */
+            background-color: #1a202c;
+            touch-action: none; /* ห้ามซูม/เลื่อน */
             overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        /* ตัวเครื่องเมโลเดียน */
-        .melodica-case {
-            background: linear-gradient(180deg, #007bb5 0%, #005a87 100%);
-            border-radius: 20px;
-            box-shadow: 
-                0 10px 20px rgba(0,0,0,0.3),
-                inset 0 2px 5px rgba(255,255,255,0.3),
-                inset 0 -2px 5px rgba(0,0,0,0.2);
-            padding: 20px 10px 30px 10px;
-            position: relative;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
 
-        /* สายเป่า (ตกแต่ง) */
-        .tube-connector {
-            position: absolute;
-            left: -30px;
-            top: 50%;
-            width: 40px;
-            height: 40px;
+        /* ส่วนหัวและตัวควบคุม (ด้านบน) */
+        .control-bar {
+            background: linear-gradient(180deg, #005a87 0%, #004060 100%);
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 50;
+            flex: 0 0 auto; /* ความสูงคงที่ */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        /* พื้นที่คีย์บอร์ด (เต็มพื้นที่ที่เหลือ) */
+        .keyboard-container {
+            flex: 1 1 auto;
+            position: relative;
             background: #222;
-            border-radius: 5px;
-            transform: translateY(-50%);
-            z-index: 0;
+            overflow: hidden;
+            /* Flex Column Reverse เพื่อให้โน้ตต่ำอยู่ล่าง (F3) โน้ตสูงอยู่บน (C6) */
+            display: flex;
+            flex-direction: column-reverse; 
+            padding: 5px 0;
+        }
+
+        /* คีย์ขาว (เต็มความกว้าง) */
+        .key-white {
+            flex-grow: 1; /* ยืดความสูงให้เต็มพื้นที่เท่าๆ กัน */
+            width: 100%;
+            background: linear-gradient(to right, #e2e2e2 0%, #ffffff 10%, #ffffff 90%, #cccccc 100%);
+            border-top: 1px solid #999;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            box-sizing: border-box;
+            transition: background 0.05s;
         }
         
-        .tube-hose {
-            position: absolute;
-            left: -150px;
-            top: 50%;
-            width: 120px;
-            height: 20px;
-            background: #eee;
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            transform: translateY(-50%) skewY(10deg);
-            z-index: -1;
-            display: none; /* ซ่อนในมือถือแนวตั้ง */
-        }
-
-        @media (min-width: 768px) {
-            .tube-hose { display: block; }
-        }
-
-        /* คีย์บอร์ด */
-        .keyboard {
-            display: flex;
-            position: relative;
-            justify-content: center;
-            height: 220px;
-            margin-top: 10px;
-        }
-
-        /* คีย์ขาว */
-        .key-white {
-            width: 45px;
-            height: 100%;
-            background: linear-gradient(180deg, #fff 0%, #f0f0f0 100%);
-            border: 1px solid #ccc;
-            border-bottom: 6px solid #aaa;
-            border-radius: 0 0 5px 5px;
-            margin: 0 2px;
-            cursor: pointer;
-            position: relative;
-            z-index: 1;
-            transition: all 0.05s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
         .key-white:active, .key-white.active {
-            background: #e0e0e0;
-            border-bottom: 2px solid #aaa;
-            transform: translateY(4px);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            background: #d4d4d4;
+            border-left: 5px solid #007bb5; /* แถบสีฟ้าเมื่อกด */
         }
 
-        /* คีย์ดำ */
-        .key-black {
-            width: 32px;
-            height: 60%;
-            background: linear-gradient(180deg, #333 0%, #000 100%);
-            border: 1px solid #000;
-            border-bottom: 6px solid #000;
-            border-radius: 0 0 3px 3px;
+        .key-white .label {
             position: absolute;
-            z-index: 2;
-            cursor: pointer;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            transition: all 0.05s ease;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 10px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        /* คีย์ดำ (ลอยอยู่ด้านขวา) */
+        .key-black {
+            position: absolute;
+            right: 0;
+            width: 45%; /* กว้างเกือบครึ่งจอ */
+            background: linear-gradient(to right, #444 0%, #111 20%, #000 100%);
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #000;
+            border-left: 2px solid #000;
+            border-radius: 4px 0 0 4px;
+            z-index: 10;
+            box-shadow: -2px 2px 4px rgba(0,0,0,0.5);
+            transition: width 0.05s, background 0.05s;
         }
 
         .key-black:active, .key-black.active {
             background: #222;
-            border-bottom: 2px solid #000;
-            transform: translateY(4px);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            width: 43%; /* หดนิดนึงเวลากด */
+            background: linear-gradient(to right, #222 0%, #000 100%);
         }
 
-        /* ปุ่มชื่อโน้ต (ซ่อนได้) */
-        .note-label {
+        .key-black .label {
             position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: #888;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 9px;
             pointer-events: none;
         }
 
-        /* แผงควบคุม */
-        .controls-panel {
+        /* ปุ่มอัดเสียง */
+        .btn-record {
             display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            background: rgba(0,0,0,0.2);
-            padding: 10px 20px;
-            border-radius: 50px;
             align-items: center;
+            gap: 6px;
+            background: #f0f0f0;
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-
+        .btn-record.recording {
+            background: #ffebeb;
+            color: #d00;
+        }
         .led {
-            width: 12px;
-            height: 12px;
-            background-color: #333;
+            width: 10px;
+            height: 10px;
+            background: #555;
             border-radius: 50%;
-            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5);
-            transition: background-color 0.2s;
         }
-        .led.on {
-            background-color: #ff3333;
-            box-shadow: 0 0 10px #ff3333, inset 1px 1px 2px rgba(0,0,0,0.2);
+        .btn-record.recording .led {
+            background: #f00;
+            box-shadow: 0 0 8px #f00;
+            animation: blink 1s infinite;
         }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* Scrollbar สำหรับคีย์บอร์ดแนวนอนบนมือถือ */
-        .scroll-container {
-            overflow-x: auto;
-            width: 100%;
-            padding-bottom: 20px; /* Space for shadow */
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .scroll-container::-webkit-scrollbar {
-            height: 8px;
-        }
-        .scroll-container::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 4px;
-        }
-
-        /* Animation */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .recording-anim {
-            animation: pulse 1s infinite;
-        }
     </style>
 </head>
-<body class="h-screen flex flex-col items-center justify-center p-4">
+<body>
 
-    <!-- Header / Title -->
-    <div class="text-center mb-4">
-        <h1 class="text-3xl font-bold text-gray-700">Melodian Simulator</h1>
-        <p class="text-gray-500 text-sm">กดคีย์บอร์ด (A-K, W-U) หรือแตะหน้าจอเพื่อเล่น</p>
-    </div>
-
-    <!-- Main Instrument -->
-    <div class="w-full max-w-4xl melodica-case shadow-2xl">
-        <div class="tube-connector"></div>
-        <div class="tube-hose"></div>
-
-        <!-- Controls -->
-        <div class="controls-panel w-full justify-between sm:justify-center">
-            <div class="flex items-center gap-4">
-                <!-- Record Button -->
-                <button id="recordBtn" class="flex items-center gap-2 bg-gray-200 hover:bg-white text-gray-800 font-bold py-2 px-4 rounded-full shadow transition active:scale-95">
-                    <div id="recordLed" class="led"></div>
-                    <span id="recordText">บันทึกเสียง</span>
-                </button>
-
-                <!-- Download Link (Hidden initially) -->
-                <a id="downloadLink" style="display:none" class="bg-green-500 hover:bg-green-400 text-white font-bold py-2 px-4 rounded-full shadow transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                    โหลดไฟล์
-                </a>
-            </div>
-
-            <div class="flex items-center gap-2 text-white text-sm hidden sm:flex">
-                <span>Volume:</span>
-                <input type="range" id="volumeSlider" min="0" max="100" value="80" class="w-24 accent-white">
-            </div>
+    <!-- แผงควบคุมด้านบน -->
+    <div class="control-bar">
+        <div class="flex flex-col">
+            <h1 class="text-lg font-bold leading-tight">Melodian</h1>
+            <span class="text-[10px] opacity-75">Vertical Mode</span>
         </div>
 
-        <!-- Keyboard Container (Scrollable on mobile) -->
-        <div class="scroll-container" id="scrollContainer">
-            <div class="keyboard relative" id="keyboard">
-                <!-- Keys will be generated by JS -->
-            </div>
+        <div class="flex gap-2">
+            <!-- ปุ่ม Save -->
+            <a id="downloadLink" style="display:none" class="bg-green-600 text-white px-3 py-1 rounded-full text-xs items-center shadow animate-pulse">
+                Save
+            </a>
+
+            <!-- ปุ่ม Record -->
+            <button id="recordBtn" class="btn-record active:scale-95 transition">
+                <div class="led"></div>
+                <span id="recordText">REC</span>
+            </button>
         </div>
     </div>
 
-    <div class="mt-6 text-gray-400 text-xs text-center">
-        Engine: Web Audio API | Recorder: MediaStream Recording API<br>
-        Polyphonic Support Enabled
+    <!-- พื้นที่คีย์บอร์ดแนวตั้ง -->
+    <div class="keyboard-container" id="keyboard">
+        <!-- JS จะสร้างปุ่มที่นี่ -->
     </div>
 
     <script>
-        /**
-         * Melodica Simulator Core Logic
-         * - Uses Web Audio API for sound synthesis (Sawtooth + LowPass Filter for reed sound).
-         * - Handles Multi-touch and Keyboard events.
-         * - Includes MediaRecorder functionality.
-         */
-
+        // --- Sound Engine ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const activeOscillators = {}; // Map to store active notes
+        const activeOscillators = {}; 
         const masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.5;
+        masterGain.gain.value = 0.5; // ความดังเริ่มต้น
         
-        // Setup Recording Stream
+        // Setup Recorder
         const dest = audioCtx.createMediaStreamDestination();
-        masterGain.connect(audioCtx.destination); // Out to speakers
-        masterGain.connect(dest); // Out to recorder
+        masterGain.connect(audioCtx.destination);
+        masterGain.connect(dest);
 
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
 
-        // Note Definitions (F3 to C6 range approx for a 32-key melodica)
+        // Note Data (F3 to C6)
+        // type: white = ปุ่มหลัก, black = ปุ่มแทรก
         const notes = [
-            { note: 'F3', freq: 174.61, type: 'white', key: 'z' },
-            { note: 'F#3', freq: 185.00, type: 'black', key: 's', left: 30 },
-            { note: 'G3', freq: 196.00, type: 'white', key: 'x' },
-            { note: 'G#3', freq: 207.65, type: 'black', key: 'd', left: 80 },
-            { note: 'A3', freq: 220.00, type: 'white', key: 'c' },
-            { note: 'A#3', freq: 233.08, type: 'black', key: 'f', left: 130 },
-            { note: 'B3', freq: 246.94, type: 'white', key: 'v' },
-            { note: 'C4', freq: 261.63, type: 'white', key: 'b' },
-            { note: 'C#4', freq: 277.18, type: 'black', key: 'h', left: 230 }, // Offset calc starts new here roughly
-            { note: 'D4', freq: 293.66, type: 'white', key: 'n' },
-            { note: 'D#4', freq: 311.13, type: 'black', key: 'j', left: 280 },
-            { note: 'E4', freq: 329.63, type: 'white', key: 'm' },
-            { note: 'F4', freq: 349.23, type: 'white', key: ',' },
-            { note: 'F#4', freq: 369.99, type: 'black', key: 'l', left: 380 },
-            { note: 'G4', freq: 392.00, type: 'white', key: '.' },
-            { note: 'G#4', freq: 415.30, type: 'black', key: ';', left: 430 },
-            { note: 'A4', freq: 440.00, type: 'white', key: '/' },
-            { note: 'A#4', freq: 466.16, type: 'black', key: "'", left: 480 },
-            { note: 'B4', freq: 493.88, type: 'white', key: 'q' },
-            { note: 'C5', freq: 523.25, type: 'white', key: 'w' },
-            { note: 'C#5', freq: 554.37, type: 'black', key: '2', left: 580 },
-            { note: 'D5', freq: 587.33, type: 'white', key: 'e' },
-            { note: 'D#5', freq: 622.25, type: 'black', key: '3', left: 630 },
-            { note: 'E5', freq: 659.25, type: 'white', key: 'r' },
-            { note: 'F5', freq: 698.46, type: 'white', key: 't' },
-            { note: 'F#5', freq: 739.99, type: 'black', key: '5', left: 730 },
-            { note: 'G5', freq: 783.99, type: 'white', key: 'y' },
-            { note: 'G#5', freq: 830.61, type: 'black', key: '6', left: 780 },
-            { note: 'A5', freq: 880.00, type: 'white', key: 'u' },
-            { note: 'A#5', freq: 932.33, type: 'black', key: '7', left: 830 },
-            { note: 'B5', freq: 987.77, type: 'white', key: 'i' },
-            { note: 'C6', freq: 1046.50, type: 'white', key: 'o' }
+            { note: 'F3', freq: 174.61, type: 'white' },
+            { note: 'F#3', freq: 185.00, type: 'black' },
+            { note: 'G3', freq: 196.00, type: 'white' },
+            { note: 'G#3', freq: 207.65, type: 'black' },
+            { note: 'A3', freq: 220.00, type: 'white' },
+            { note: 'A#3', freq: 233.08, type: 'black' },
+            { note: 'B3', freq: 246.94, type: 'white' },
+            { note: 'C4', freq: 261.63, type: 'white', isC: true }, // isC เพื่อมาร์คสี
+            { note: 'C#4', freq: 277.18, type: 'black' },
+            { note: 'D4', freq: 293.66, type: 'white' },
+            { note: 'D#4', freq: 311.13, type: 'black' },
+            { note: 'E4', freq: 329.63, type: 'white' },
+            { note: 'F4', freq: 349.23, type: 'white' },
+            { note: 'F#4', freq: 369.99, type: 'black' },
+            { note: 'G4', freq: 392.00, type: 'white' },
+            { note: 'G#4', freq: 415.30, type: 'black' },
+            { note: 'A4', freq: 440.00, type: 'white' },
+            { note: 'A#4', freq: 466.16, type: 'black' },
+            { note: 'B4', freq: 493.88, type: 'white' },
+            { note: 'C5', freq: 523.25, type: 'white', isC: true },
+            { note: 'C#5', freq: 554.37, type: 'black' },
+            { note: 'D5', freq: 587.33, type: 'white' },
+            { note: 'D#5', freq: 622.25, type: 'black' },
+            { note: 'E5', freq: 659.25, type: 'white' },
+            { note: 'F5', freq: 698.46, type: 'white' },
+            { note: 'F#5', freq: 739.99, type: 'black' },
+            { note: 'G5', freq: 783.99, type: 'white' },
+            { note: 'G#5', freq: 830.61, type: 'black' },
+            { note: 'A5', freq: 880.00, type: 'white' },
+            { note: 'A#5', freq: 932.33, type: 'black' },
+            { note: 'B5', freq: 987.77, type: 'white' },
+            { note: 'C6', freq: 1046.50, type: 'white', isC: true }
         ];
 
-        // --- UI Construction ---
+        // --- สร้างปุ่มแนวตั้ง ---
         const keyboardEl = document.getElementById('keyboard');
-        let whiteKeyCount = 0;
-        let whiteKeyWidth = 49; // Width + margin
+        
+        // 1. นับจำนวนปุ่มขาวเพื่อคำนวณความสูง
+        const whiteNotes = notes.filter(n => n.type === 'white');
+        const totalWhiteKeys = whiteNotes.length;
 
-        notes.forEach(n => {
-            const keyEl = document.createElement('div');
-            keyEl.dataset.note = n.note;
-            
-            if (n.type === 'white') {
-                keyEl.className = 'key-white';
-                keyEl.innerHTML = `<span class="note-label">${n.note}</span>`;
-                whiteKeyCount++;
-            } else {
-                keyEl.className = 'key-black';
-                // Calculate position based on previous white keys
-                // Standard offset logic for piano keys
-                let pos = (whiteKeyCount * whiteKeyWidth) - (whiteKeyWidth / 2) - 16; 
-                // Manual tweaking for better visual alignment if needed, but math usually works
-                // Using explicit left from array for perfect alignment if provided, else calc
-                keyEl.style.left = (pos - 15) + 'px'; 
-            }
+        // 2. วนลูปสร้างปุ่ม
+        let whiteKeyIndex = 0; // ตัวนับตำแหน่งปุ่มขาว (0 คือล่างสุด)
 
-            // Touch & Mouse Events
+        notes.forEach((n) => {
+            const btn = document.createElement('div');
+            btn.dataset.note = n.note;
+
+            // ฟังก์ชันเล่นเสียง
             const startPlay = (e) => {
-                e.preventDefault(); // Prevent scroll
-                if(e.buttons === 0 && e.type === 'mouseenter') return; // Drag play check
+                if (e.cancelable) e.preventDefault();
+                // ถ้าลากผ่าน (MouseEnter) ต้องเช็คว่ากดคลิกอยู่ไหม (buttons=1)
+                if (e.type === 'mouseenter' && e.buttons !== 1) return;
+                
                 playNote(n.note, n.freq);
-                keyEl.classList.add('active');
+                btn.classList.add('active');
             };
 
             const stopPlay = (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 stopNote(n.note);
-                keyEl.classList.remove('active');
+                btn.classList.remove('active');
             };
 
-            // Mouse
-            keyEl.addEventListener('mousedown', startPlay);
-            keyEl.addEventListener('mouseup', stopPlay);
-            keyEl.addEventListener('mouseleave', stopPlay);
-            keyEl.addEventListener('mouseenter', (e) => { if(e.buttons === 1) startPlay(e); });
+            // Event Listeners
+            btn.addEventListener('mousedown', startPlay);
+            btn.addEventListener('mouseup', stopPlay);
+            btn.addEventListener('mouseenter', startPlay);
+            btn.addEventListener('mouseleave', stopPlay);
+            
+            btn.addEventListener('touchstart', startPlay, {passive: false});
+            btn.addEventListener('touchend', stopPlay, {passive: false});
+            btn.addEventListener('touchcancel', stopPlay, {passive: false});
 
-            // Touch
-            keyEl.addEventListener('touchstart', startPlay, {passive: false});
-            keyEl.addEventListener('touchend', stopPlay, {passive: false});
-            keyEl.addEventListener('touchcancel', stopPlay, {passive: false});
+            if (n.type === 'white') {
+                // --- ปุ่มขาว ---
+                btn.className = 'key-white';
+                // ใส่ Label
+                btn.innerHTML = `<span class="label">${n.note}</span>`;
+                if(n.isC) {
+                    btn.style.background = "linear-gradient(to right, #e2e2e2 0%, #ffe 100%)"; // ไฮไลท์ตัว C ให้ดูง่าย
+                    btn.querySelector('.label').style.color = "#000";
+                }
+                
+                keyboardEl.appendChild(btn); // ใส่ใน Flex Container โดยตรง
+                whiteKeyIndex++;
+            } else {
+                // --- ปุ่มดำ ---
+                // ต้องคำนวณตำแหน่ง Absolute เพราะมันแทรกอยู่
+                // whiteKeyIndex ตอนนี้ชี้ไปที่ปุ่มขาว *ถัดไป* ที่กำลังจะวาด (หรือเพิ่งวาดเสร็จ)
+                // ใน flex-direction: column-reverse; ปุ่มแรก (F3) อยู่ล่างสุด (index 0)
+                // ปุ่มดำ F#3 อยู่ระหว่าง F3 (index 0) กับ G3 (index 1)
+                // ตำแหน่ง bottom ควรจะอยู่ที่ประมาณ index * (100% / total)
+                
+                btn.className = 'key-black';
+                btn.innerHTML = `<span class="label">${n.note}</span>`;
+                
+                // คำนวณความสูงและความห่าง
+                // ความสูงปุ่มดำ = 60% ของปุ่มขาว
+                // ตำแหน่ง Bottom = (จำนวนปุ่มขาวข้างล่าง * ความสูงปุ่มขาว) - (ครึ่งความสูงปุ่มดำ)
+                
+                const pctPerKey = 100 / totalWhiteKeys;
+                const bottomPos = (whiteKeyIndex * pctPerKey); 
+                const heightVal = pctPerKey * 0.65; // ความหนาของปุ่มดำเทียบกับปุ่มขาว
 
-            keyboardEl.appendChild(keyEl);
+                btn.style.height = `calc(${heightVal}% - 2px)`; // -2px เพื่อเว้นช่องไฟ
+                btn.style.bottom = `calc(${bottomPos}% - ${heightVal/2}%)`;
+
+                keyboardEl.appendChild(btn);
+            }
         });
 
-        // --- Sound Engine ---
-        function playNote(noteName, freq) {
-            if (activeOscillators[noteName]) return; // Already playing
 
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        // --- Audio Functions ---
+        function playNote(note, freq) {
+            if (activeOscillators[note]) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            // 1. Oscillator - Sawtooth for "Reed" sound
             const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            // Melodica Sound: Sawtooth + LowPass
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-            // 2. Filter - Lowpass to dampen the buzz
-            const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(2000, audioCtx.currentTime); 
-            
-            // 3. Envelope Gain - ADSR logic
-            const noteGain = audioCtx.createGain();
-            noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
-            noteGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.05); // Fast Attack
+            filter.frequency.setValueAtTime(1800, audioCtx.currentTime); // เสียงทุ้มๆ หน่อย
 
-            // Connect graph
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.05);
+
             osc.connect(filter);
-            filter.connect(noteGain);
-            noteGain.connect(masterGain);
+            filter.connect(gainNode);
+            gainNode.connect(masterGain);
 
             osc.start();
-
-            activeOscillators[noteName] = { osc, noteGain };
+            activeOscillators[note] = { osc, gainNode };
         }
 
-        function stopNote(noteName) {
-            const active = activeOscillators[noteName];
+        function stopNote(note) {
+            const active = activeOscillators[note];
             if (!active) return;
 
-            // Release
-            const releaseTime = 0.1;
-            active.noteGain.gain.cancelScheduledValues(audioCtx.currentTime);
-            active.noteGain.gain.setValueAtTime(active.noteGain.gain.value, audioCtx.currentTime);
-            active.noteGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + releaseTime);
+            const release = 0.1;
+            active.gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+            active.gainNode.gain.setValueAtTime(active.gainNode.gain.value, audioCtx.currentTime);
+            active.gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + release);
+            active.osc.stop(audioCtx.currentTime + release);
 
-            active.osc.stop(audioCtx.currentTime + releaseTime);
-
-            // Cleanup
             setTimeout(() => {
-                active.osc.disconnect();
-                active.noteGain.disconnect();
-            }, releaseTime * 1000 + 50);
-
-            delete activeOscillators[noteName];
+                active.osc.disconnect(); 
+                delete activeOscillators[note];
+            }, release * 1000 + 50);
         }
 
-        // --- Keyboard Support (PC) ---
-        const keyMap = {};
-        notes.forEach(n => {
-            if (n.key) keyMap[n.key.toLowerCase()] = n;
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (e.repeat || e.ctrlKey || e.metaKey) return;
-            const k = e.key.toLowerCase();
-            if (keyMap[k]) {
-                const n = keyMap[k];
-                const keyEl = Array.from(document.querySelectorAll('div')).find(el => el.dataset.note === n.note);
-                if(keyEl) keyEl.classList.add('active');
-                playNote(n.note, n.freq);
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            const k = e.key.toLowerCase();
-            if (keyMap[k]) {
-                const n = keyMap[k];
-                const keyEl = Array.from(document.querySelectorAll('div')).find(el => el.dataset.note === n.note);
-                if(keyEl) keyEl.classList.remove('active');
-                stopNote(n.note);
-            }
-        });
-
-        // --- Volume Control ---
-        document.getElementById('volumeSlider').addEventListener('input', (e) => {
-            masterGain.gain.value = e.target.value / 100;
-        });
-
-        // --- Recorder Logic ---
+        // --- Recording Logic ---
         const recordBtn = document.getElementById('recordBtn');
-        const recordLed = document.getElementById('recordLed');
-        const recordText = document.getElementById('recordText');
         const downloadLink = document.getElementById('downloadLink');
-
+        
         recordBtn.addEventListener('click', () => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             if (!isRecording) {
-                // Start Recording
+                // Start
                 recordedChunks = [];
                 try {
-                    // Check supported types
-                    const options = MediaRecorder.isTypeSupported('audio/webm') ? { mimeType: 'audio/webm' } : {};
-                    mediaRecorder = new MediaRecorder(dest.stream, options);
-                } catch (e) {
-                    alert('Browser not supporting MediaRecorder fully.');
-                    return;
+                    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+                    mediaRecorder = new MediaRecorder(dest.stream, { mimeType: mime });
+                } catch(e) { 
+                    alert('Recording not supported on this browser'); return; 
                 }
 
-                mediaRecorder.ondataavailable = (evt) => {
-                    if (evt.data.size > 0) recordedChunks.push(evt.data);
-                };
-
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(recordedChunks, { type: 'audio/webm' });
                     const url = URL.createObjectURL(blob);
                     downloadLink.href = url;
-                    downloadLink.download = `melodian-rec-${Date.now()}.webm`;
+                    downloadLink.download = `melodian-vert-${Date.now()}.webm`;
                     downloadLink.style.display = 'flex';
                 };
 
                 mediaRecorder.start();
                 isRecording = true;
-                
-                // UI Update
-                recordLed.classList.add('on');
-                recordBtn.classList.add('recording-anim');
-                recordBtn.classList.add('text-red-600');
-                recordText.textContent = "กำลังบันทึก...";
+                recordBtn.classList.add('recording');
+                document.getElementById('recordText').innerText = "STOP";
                 downloadLink.style.display = 'none';
-
             } else {
-                // Stop Recording
+                // Stop
                 mediaRecorder.stop();
                 isRecording = false;
-
-                // UI Update
-                recordLed.classList.remove('on');
-                recordBtn.classList.remove('recording-anim');
-                recordBtn.classList.remove('text-red-600');
-                recordText.textContent = "บันทึกเสียง";
+                recordBtn.classList.remove('recording');
+                document.getElementById('recordText').innerText = "REC";
             }
         });
-
-        // Auto center scroll on load for aesthetics
-        window.onload = () => {
-            const container = document.getElementById('scrollContainer');
-            container.scrollLeft = 200;
-        };
 
     </script>
 </body>
