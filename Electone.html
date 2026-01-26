@@ -3,173 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Electone Mobile Pro (61 Keys Vertical)</title>
+    <title>Electone Mobile Pro (Strict Split)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Prevent selection and scrolling behaviors for game-like feel */
         body {
             overscroll-behavior: none;
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
             font-family: 'Sarabun', sans-serif;
-            background-color: #1a1a1a;
+            background-color: #111; /* Dark background for the 'void' areas */
         }
 
-        /* Key Styles - Vertical Layout Adjustment */
+        /* Container for the row */
         .key {
             position: relative;
             cursor: pointer;
-            transition: all 0.05s; /* Faster response for many keys */
-            /* Border for vertical stack separation */
-            border-bottom: 1px solid #aaa; 
-            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            /* No border on the container itself, specific borders on keys */
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* --- WHITE KEY (LEFT SIDE ONLY) --- */
         .white-key {
-            /* Horizontal gradient for vertical keys */
-            background: linear-gradient(to right, #ffffff 0%, #eeeeee 100%);
+            /* Strictly 50% width */
+            width: 50%;
+            height: 100%; /* Full height of the assigned slot */
+            
+            /* Visuals */
+            background: linear-gradient(to right, #ffffff 0%, #d4d4d4 100%);
             z-index: 1;
-            width: 100%; /* Full width */
+            
+            /* Borders */
+            border-bottom: 1px solid #999;
+            border-right: 2px solid #000; /* Distinct separation line */
+            box-sizing: border-box;
+            
+            /* Animation */
+            transition: background 0.05s;
         }
 
         .white-key:active, .white-key.active {
-            background: #d4d4d4;
-            transform: translateX(-2px); /* Press effect moves left slightly */
-            box-shadow: inset -2px 0 5px rgba(0,0,0,0.2);
+            background: #bbb; /* Darker when pressed */
+            box-shadow: inset 3px 0 5px rgba(0,0,0,0.3);
         }
 
+        /* --- BLACK KEY (RIGHT SIDE ONLY) --- */
+        /* Note: Black key is a child of the .key div */
         .black-key {
-            /* Vertical key style: shorter width, aligned right */
-            background: linear-gradient(to right, #444 0%, #000 100%);
-            z-index: 2;
+            /* Position: Move to the right half (100% of the 50% parent) */
             position: absolute;
-            right: 0; /* Stick to right edge */
-            width: 60%; /* Short key */
-            height: 60%; /* Height relative to white key, will straddle */
-            top: -30%; /* Shift up to straddle the boundary */
-            border-radius: 4px 0 0 4px;
-            box-shadow: -1px 1px 2px rgba(0,0,0,0.6);
-            border-bottom: 1px solid #222;
+            left: 100%; 
+            width: 100%; /* Fill the right half */
+            
+            /* Height & Vertical Alignment */
+            /* Straddle logic: Top -50% to cover the gap between notes */
+            top: -50%;
+            height: 100%; 
+            
+            /* Visuals */
+            background: linear-gradient(to right, #444 0%, #1a1a1a 100%);
+            z-index: 2; /* On top */
+            
+            /* Borders */
+            border-bottom: 1px solid #333;
+            border-top: 1px solid #555; /* Highlight */
+            border-left: 1px solid #000;
+            box-sizing: border-box;
+            
+            transition: background 0.05s;
         }
 
         .black-key:active, .black-key.active {
             background: #222;
-            width: 58%; /* Visual press effect */
-            box-shadow: inset -2px 0 5px rgba(255,255,255,0.1);
+            box-shadow: inset 3px 0 8px rgba(0,0,0,0.5);
         }
 
-        /* Note Labels - Make smaller for 61 keys */
+        /* --- LABELS --- */
         .note-label {
             position: absolute;
-            left: 4px; /* Align text to left */
             top: 50%;
-            transform: translateY(-50%);
-            text-align: left;
-            font-size: 0.6rem; /* Smaller font */
-            color: #888;
-            pointer-events: none;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem;
             font-weight: bold;
-            opacity: 0.8;
+            pointer-events: none;
         }
+
+        .white-key .note-label {
+            color: #555;
+        }
+
         .black-key .note-label {
-            color: #ccc;
-            left: 4px;
-            font-size: 0.55rem;
+            color: #ddd;
+            text-shadow: 0 1px 2px black;
         }
 
         /* C notes highlight */
         .note-c-highlight {
-            color: #eab308 !important; /* Yellow-500 */
+            color: #d97706 !important; /* Amber-600 */
+            font-size: 0.9rem !important;
         }
 
-        /* Controls Panel */
-        .control-btn {
-            transition: all 0.2s;
-            transform: scale(1);
-        }
-        .control-btn:active {
-            transform: scale(0.95);
+        /* --- CONTROLS UI --- */
+        .wood-grain {
+            background: #271c19;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 8px);
+            border-bottom: 2px solid #000;
         }
         
+        .control-btn { transition: transform 0.1s; }
+        .control-btn:active { transform: scale(0.95); }
+        
         .led {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #444;
-            display: inline-block;
-            margin-right: 6px;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+            width: 6px; height: 6px; border-radius: 50%;
+            background-color: #333; display: inline-block; margin-right: 4px;
         }
-        .led.on {
-            background-color: #ff3333;
-            box-shadow: 0 0 5px #ff3333, inset 0 1px 2px rgba(255,255,255,0.5);
-        }
-        .led.play-on {
-            background-color: #33ff33;
-            box-shadow: 0 0 5px #33ff33, inset 0 1px 2px rgba(255,255,255,0.5);
-        }
-
-        /* Top decorative bar */
-        .wood-grain {
-            background: #3e2723;
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 10px);
-            border-bottom: 4px solid #1a1a1a;
-        }
+        .led.on { background-color: #ef4444; box-shadow: 0 0 4px #ef4444; }
+        .led.play-on { background-color: #22c55e; box-shadow: 0 0 4px #22c55e; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden text-white">
 
-    <!-- Top Bar / Controls -->
-    <div class="wood-grain p-1 flex-none shadow-lg z-10">
-        <div class="flex justify-between items-center max-w-4xl mx-auto px-1">
-            <h1 class="text-sm font-bold text-yellow-500 tracking-wider drop-shadow-md">ELECTONE <span class="text-[10px] text-gray-300 font-normal">61Keys</span></h1>
+    <!-- Top Bar -->
+    <div class="wood-grain p-1 flex-none shadow-lg z-20">
+        <div class="flex justify-between items-center max-w-4xl mx-auto px-2 h-10">
+            <h1 class="text-xs font-bold text-yellow-600 tracking-wider">ELECTONE <span class="text-gray-400 font-normal">Strict Split</span></h1>
             
-            <div class="flex gap-2">
-                <button id="toggleNotes" class="control-btn bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-[10px] font-bold border-b-2 border-gray-900">
-                    แสดงโน้ต
-                </button>
-            </div>
+            <button id="toggleNotes" class="control-btn bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-[10px] border border-gray-600">
+                แสดงโน้ต
+            </button>
         </div>
 
-        <!-- Recording Controls - Compact for vertical space -->
-        <div class="flex justify-center gap-1 mt-1 max-w-4xl mx-auto bg-black/30 p-1 rounded-lg flex-wrap">
-            <button id="recordBtn" class="control-btn flex items-center bg-gray-800 px-2 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center">
-                <span id="recLed" class="led" style="width:6px;height:6px;margin-right:4px;"></span> อัด
+        <div class="flex justify-center gap-2 pb-1 bg-black/20">
+            <button id="recordBtn" class="control-btn flex items-center bg-gray-800 px-3 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center">
+                <span id="recLed" class="led"></span> อัด
             </button>
-            
-            <button id="playBtn" class="control-btn flex items-center bg-gray-800 px-2 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center disabled:opacity-50">
-                <span id="playLed" class="led" style="width:6px;height:6px;margin-right:4px;"></span> ฟัง
+            <button id="playBtn" class="control-btn flex items-center bg-gray-800 px-3 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center disabled:opacity-50">
+                <span id="playLed" class="led"></span> ฟัง
             </button>
-
-            <a id="downloadBtn" class="control-btn flex items-center bg-gray-700 opacity-50 pointer-events-none px-2 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center text-white no-underline">
+            <a id="downloadBtn" class="control-btn flex items-center bg-gray-700 opacity-50 pointer-events-none px-3 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center text-white no-underline">
                 ⬇️ โหลด
             </a>
-            
-            <button id="clearBtn" class="control-btn bg-red-900/50 text-red-300 px-2 py-1 rounded text-[10px] border border-red-900">
+            <button id="clearBtn" class="control-btn bg-red-900/40 text-red-300 px-2 py-1 rounded text-[10px] border border-red-900">
                 ลบ
             </button>
         </div>
     </div>
 
-    <!-- Keyboard Container -->
-    <div class="flex-grow bg-black relative w-full h-full overflow-hidden">
-        <!-- 
-           flex-col-reverse: Places the first element (Lowest Note) at the BOTTOM 
-           h-full: Fills the remaining vertical space
-        -->
+    <!-- Keyboard Area -->
+    <div class="flex-grow bg-[#111] relative w-full h-full overflow-hidden">
+        <!-- Flex Column Reverse: C2 at bottom -->
         <div id="keyboard" class="relative w-full h-full flex flex-col-reverse justify-center mx-auto">
-            <!-- Keys will be generated here by JS -->
+            <!-- Keys generated by JS -->
         </div>
     </div>
 
-    <!-- Volume Warning Overlay -->
-    <div id="startOverlay" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center flex-col p-6 text-center">
-        <div class="text-4xl mb-4">🎹</div>
-        <h2 class="text-2xl font-bold text-white mb-2">พร้อมเล่น Electone</h2>
-        <p class="text-gray-400 mb-6">61 คีย์ (C2-C7)</p>
-        <button id="startBtn" class="bg-yellow-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg hover:bg-yellow-500 transition transform hover:scale-105">
+    <!-- Start Overlay -->
+    <div id="startOverlay" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center flex-col p-6 text-center">
+        <div class="text-5xl mb-4">🎹</div>
+        <h2 class="text-xl font-bold text-white mb-2">พร้อมเล่น Electone</h2>
+        <p class="text-gray-400 text-sm mb-6">61 คีย์ แยกฝั่งขาว-ดำชัดเจน</p>
+        <button id="startBtn" class="bg-yellow-600 text-white font-bold py-3 px-10 rounded-full text-lg shadow-lg hover:bg-yellow-500 active:scale-95 transition">
             เริ่มใช้งาน
         </button>
     </div>
@@ -180,29 +174,23 @@
         let mainGain;
         let compressor;
         const activeOscillators = {}; 
-        
-        // Media Recorder Variables
         let mediaRecorder;
         let audioChunks = [];
         let audioDest;
 
-        // Generate 61 Keys (C2 to C7)
         const notes = [];
         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        const startOctave = 2; // Start at C2
-        const totalKeys = 61; // Standard 61 key layout
+        const startOctave = 2; 
+        const totalKeys = 61; 
 
+        // Generate Note Data
         let currentOctave = startOctave;
-        let noteIndex = 0; // 0 is C
+        let noteIndex = 0; 
         
         for (let i = 0; i < totalKeys; i++) {
             const noteName = noteNames[noteIndex];
-            
-            // Calculate Frequency: A4 = 440Hz. A4 is at MIDI note 69.
-            // MIDI note number = (octave + 1) * 12 + noteIndex
             const midiNote = (currentOctave + 1) * 12 + noteIndex;
             const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
-            
             const type = noteName.includes('#') ? 'black' : 'white';
 
             notes.push({
@@ -223,63 +211,45 @@
             if (audioCtx) return;
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
-            
             mainGain = audioCtx.createGain();
-            mainGain.gain.value = 0.4; // Slightly lower volume for many keys
+            mainGain.gain.value = 0.4; 
 
             compressor = audioCtx.createDynamicsCompressor();
             compressor.threshold.value = -20;
-            compressor.knee.value = 40;
             compressor.ratio.value = 12;
-            compressor.attack.value = 0;
-            compressor.release.value = 0.25;
 
             mainGain.connect(compressor);
-            compressor.connect(audioCtx.destination); // For listening
+            compressor.connect(audioCtx.destination);
 
-            // --- Setup Media Recorder (Audio Export) ---
+            // Setup Recording
             try {
                 audioDest = audioCtx.createMediaStreamDestination();
-                compressor.connect(audioDest); // Connect output to recorder too
-
-                // Check support
+                compressor.connect(audioDest);
+                
                 let options = { mimeType: 'audio/webm' };
                 if (!MediaRecorder.isTypeSupported('audio/webm')) {
                     if (MediaRecorder.isTypeSupported('audio/mp4')) options = { mimeType: 'audio/mp4' };
-                    else options = undefined; // Let browser decide
+                    else options = undefined;
                 }
                 
                 mediaRecorder = new MediaRecorder(audioDest.stream, options);
-
                 mediaRecorder.ondataavailable = (e) => {
                     if (e.data.size > 0) audioChunks.push(e.data);
                 };
-
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
                     const url = URL.createObjectURL(blob);
+                    const btn = document.getElementById('downloadBtn');
+                    btn.href = url;
                     
-                    const downloadBtn = document.getElementById('downloadBtn');
-                    downloadBtn.href = url;
-                    
-                    // Set extension
-                    let ext = 'webm';
-                    if (mediaRecorder.mimeType && mediaRecorder.mimeType.includes('mp4')) ext = 'mp4';
-                    
-                    // Current date string for filename
+                    let ext = (mediaRecorder.mimeType && mediaRecorder.mimeType.includes('mp4')) ? 'mp4' : 'webm';
                     const d = new Date();
-                    const dateStr = `${d.getHours()}${d.getMinutes()}${d.getSeconds()}`;
-                    downloadBtn.download = `electone_rec_${dateStr}.${ext}`;
+                    btn.download = `rec_${d.getHours()}${d.getMinutes()}${d.getSeconds()}.${ext}`;
                     
-                    // Enable button
-                    downloadBtn.classList.remove('opacity-50', 'pointer-events-none', 'bg-gray-700');
-                    downloadBtn.classList.add('bg-green-600', 'hover:bg-green-500', 'animate-pulse');
-                    setTimeout(() => downloadBtn.classList.remove('animate-pulse'), 1000);
+                    btn.classList.remove('opacity-50', 'pointer-events-none', 'bg-gray-700');
+                    btn.classList.add('bg-green-600');
                 };
-
-            } catch (err) {
-                console.error("Recording setup failed", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function playNote(index) {
@@ -295,13 +265,12 @@
             const osc2 = audioCtx.createOscillator();
             osc2.type = 'triangle';
             osc2.frequency.value = freq;
-            osc2.detune.value = 5; 
+            osc2.detune.value = 4; 
 
             const gainNode = audioCtx.createGain();
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 2000; 
-            filter.Q.value = 1;
+            filter.frequency.value = 2500; 
 
             osc1.connect(filter);
             osc2.connect(filter);
@@ -310,16 +279,18 @@
 
             const now = audioCtx.currentTime;
             gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(1, now + 0.05); 
-            gainNode.gain.exponentialRampToValueAtTime(0.7, now + 0.2); 
+            gainNode.gain.linearRampToValueAtTime(1, now + 0.02); 
+            gainNode.gain.exponentialRampToValueAtTime(0.8, now + 0.1); 
 
             osc1.start(now);
             osc2.start(now);
 
             activeOscillators[index] = { osc1, osc2, gainNode };
 
-            const keyElement = document.querySelector(`[data-index="${index}"]`);
-            if (keyElement) keyElement.classList.add('active');
+            // Visual Feedback
+            // Check if it's a white key or black key index
+            const keyEl = document.querySelector(`[data-index="${index}"]`);
+            if (keyEl) keyEl.classList.add('active');
 
             if (isRecording) {
                 recordedEvents.push({ type: 'on', index: index, time: Date.now() - recordingStartTime });
@@ -331,7 +302,7 @@
             if (!active) return;
 
             const now = audioCtx.currentTime;
-            const release = 0.15; 
+            const release = 0.1; 
 
             active.gainNode.gain.cancelScheduledValues(now);
             active.gainNode.gain.setValueAtTime(active.gainNode.gain.value, now);
@@ -342,44 +313,42 @@
 
             delete activeOscillators[index];
 
-            const keyElement = document.querySelector(`[data-index="${index}"]`);
-            if (keyElement) keyElement.classList.remove('active');
+            const keyEl = document.querySelector(`[data-index="${index}"]`);
+            if (keyEl) keyEl.classList.remove('active');
 
             if (isRecording) {
                 recordedEvents.push({ type: 'off', index: index, time: Date.now() - recordingStartTime });
             }
         }
 
-        // --- UI & Controls ---
+        // --- Keyboard Generation ---
         const keyboardEl = document.getElementById('keyboard');
         let showNotes = true;
 
         function renderKeyboard() {
             keyboardEl.innerHTML = '';
             
-            // Filter white keys
+            // Only iterate through white keys to create the "Slots"
             const whiteKeys = notes.map((n, i) => ({...n, originalIndex: i})).filter(n => n.type === 'white');
-            
-            // Vertical Layout: Height is distributed among white keys
-            // With 61 keys (approx 36 white keys), percentage is small
             const heightPercent = 100 / whiteKeys.length;
 
             whiteKeys.forEach((noteData) => {
-                const key = document.createElement('div');
-                key.className = 'key white-key';
-                // Vertical layout: Width is full, Height is calculated
-                key.style.height = `${heightPercent}%`;
-                key.style.width = '100%';
-                key.dataset.index = noteData.originalIndex;
+                // Container (Slot)
+                // Note: We use the white key DIV as the container but restrict its visible width
+                const keyContainer = document.createElement('div');
+                keyContainer.className = 'key white-key'; // It acts as the white key visually too
+                keyContainer.style.height = `${heightPercent}%`;
+                keyContainer.dataset.index = noteData.originalIndex;
                 
+                // Label for White Key
                 const label = document.createElement('div');
                 label.className = `note-label ${noteData.note === 'C' ? 'note-c-highlight' : ''}`;
-                // Only show oct number on C notes to reduce clutter
-                const labelText = noteData.note + (noteData.note === 'C' ? noteData.oct : '');
-                label.innerText = showNotes ? labelText : '';
-                key.appendChild(label);
-                keyboardEl.appendChild(key);
+                label.innerText = showNotes ? (noteData.note + (noteData.note === 'C' ? noteData.oct : '')) : '';
+                keyContainer.appendChild(label);
+                
+                keyboardEl.appendChild(keyContainer);
 
+                // Look ahead for black key
                 const nextNoteIndex = noteData.originalIndex + 1;
                 if (nextNoteIndex < notes.length && notes[nextNoteIndex].type === 'black') {
                     const blackKey = document.createElement('div');
@@ -391,46 +360,69 @@
                     bLabel.innerText = showNotes ? notes[nextNoteIndex].note : '';
                     blackKey.appendChild(bLabel);
                     
-                    // Positioning logic relative to white key
-                    // This puts it between the white keys.
-                    key.appendChild(blackKey);
+                    // Attach to the current slot (White Key Div)
+                    // CSS handles positioning it to the right half
+                    keyContainer.appendChild(blackKey);
                 }
             });
         }
 
+        // --- Interaction ---
         function setupInputs() {
+            // Re-select all keys (both white containers and black children)
+            // Note: querySelectorAll('.key') gets both because both have class 'key'
             const keys = document.querySelectorAll('.key');
+            
+            // Mouse
             keys.forEach(key => {
                 key.addEventListener('mousedown', (e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // Critical: Don't trigger parent white key when clicking black key
                     playNote(parseInt(key.dataset.index));
                 });
-                key.addEventListener('mouseup', () => stopNote(parseInt(key.dataset.index)));
-                key.addEventListener('mouseleave', (e) => { if(e.buttons === 1) stopNote(parseInt(key.dataset.index)); });
+                key.addEventListener('mouseup', (e) => stopNote(parseInt(key.dataset.index)));
+                key.addEventListener('mouseleave', (e) => { 
+                    if(e.buttons === 1) stopNote(parseInt(key.dataset.index)); 
+                });
             });
+
+            // Touch
+            // We use global touch handler on the container to handle sliding
             keyboardEl.addEventListener('touchstart', handleTouch, { passive: false });
             keyboardEl.addEventListener('touchmove', handleTouch, { passive: false });
             keyboardEl.addEventListener('touchend', handleTouchEnd, { passive: false });
         }
 
         let activeTouches = {};
+        
         function handleTouch(e) {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
+                // elementFromPoint will find the top-most element (Black key takes priority via z-index)
                 const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                
                 if (target && target.classList.contains('key')) {
                     const noteIndex = parseInt(target.dataset.index);
+                    
+                    // Logic to handle sliding from one key to another
                     if (activeTouches[touch.identifier] !== undefined && activeTouches[touch.identifier] !== noteIndex) {
                         stopNote(activeTouches[touch.identifier]);
                     }
+                    
                     if (activeTouches[touch.identifier] !== noteIndex) {
                         playNote(noteIndex);
                         activeTouches[touch.identifier] = noteIndex;
                     }
+                } else {
+                    // Touched void (right side with no black key)
+                    if (activeTouches[touch.identifier] !== undefined) {
+                        stopNote(activeTouches[touch.identifier]);
+                        delete activeTouches[touch.identifier];
+                    }
                 }
             }
         }
+
         function handleTouchEnd(e) {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -443,111 +435,77 @@
             }
         }
 
-        // --- Logic: Recording & Download ---
+        // --- Recorder Logic ---
         let isRecording = false;
         let recordingStartTime = 0;
         let recordedEvents = [];
         let playbackTimeouts = [];
 
         const recordBtn = document.getElementById('recordBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
         const playBtn = document.getElementById('playBtn');
         const clearBtn = document.getElementById('clearBtn');
         const recLed = document.getElementById('recLed');
         const playLed = document.getElementById('playLed');
 
         recordBtn.addEventListener('click', () => {
-            if (!audioCtx) initAudio(); // Ensure context is ready
-            
+            if (!audioCtx) initAudio();
             if (isRecording) {
-                // STOP RECORDING
                 isRecording = false;
-                recordBtn.innerHTML = '<span id="recLed" class="led" style="width:6px;height:6px;margin-right:4px;"></span> อัด';
                 recLed.classList.remove('on');
-                
-                // Stop Media Recorder
-                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                    mediaRecorder.stop();
-                }
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
             } else {
-                // START RECORDING
                 isRecording = true;
                 recordedEvents = [];
-                audioChunks = []; // Reset audio buffer
+                audioChunks = [];
                 recordingStartTime = Date.now();
-                
-                recordBtn.innerHTML = '<span id="recLed" class="led on" style="width:6px;height:6px;margin-right:4px;"></span> หยุด';
-                
-                // Disable download until finished
-                downloadBtn.classList.add('opacity-50', 'pointer-events-none', 'bg-gray-700');
-                downloadBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
-                downloadBtn.removeAttribute('href');
-                downloadBtn.removeAttribute('download');
-
-                stopPlayback(); // Stop internal playback if running
-
-                // Start Media Recorder
-                if (mediaRecorder && mediaRecorder.state === 'inactive') {
-                    mediaRecorder.start();
-                }
+                recLed.classList.add('on');
+                stopPlayback();
+                if (mediaRecorder && mediaRecorder.state === 'inactive') mediaRecorder.start();
             }
         });
 
-        // Internal Playback Logic (Optional Preview)
         playBtn.addEventListener('click', () => {
-            if (playbackTimeouts.length > 0) {
-                stopPlayback();
-                return;
-            }
+            if (playbackTimeouts.length > 0) { stopPlayback(); return; }
             if (recordedEvents.length === 0) return;
-
-            playBtn.innerHTML = '<span id="playLed" class="led play-on" style="width:6px;height:6px;margin-right:4px;"></span> หยุด';
-            playLed.classList.add('play-on');
             
-            recordedEvents.forEach(event => {
-                const t = setTimeout(() => {
-                    if (event.type === 'on') playNote(event.index);
-                    else stopNote(event.index);
-                }, event.time);
-                playbackTimeouts.push(t);
+            playLed.classList.add('play-on');
+            recordedEvents.forEach(ev => {
+                playbackTimeouts.push(setTimeout(() => {
+                    if (ev.type === 'on') playNote(ev.index); else stopNote(ev.index);
+                }, ev.time));
             });
-
-            const lastEventTime = recordedEvents[recordedEvents.length - 1].time;
-            const endT = setTimeout(() => stopPlayback(), lastEventTime + 500);
-            playbackTimeouts.push(endT);
+            
+            const lastTime = recordedEvents[recordedEvents.length - 1].time;
+            playbackTimeouts.push(setTimeout(stopPlayback, lastTime + 500));
         });
 
         function stopPlayback() {
-            playbackTimeouts.forEach(t => clearTimeout(t));
+            playbackTimeouts.forEach(clearTimeout);
             playbackTimeouts = [];
-            Object.keys(activeOscillators).forEach(key => stopNote(key));
-            playBtn.innerHTML = '<span id="playLed" class="led" style="width:6px;height:6px;margin-right:4px;"></span> ฟัง';
+            Object.keys(activeOscillators).forEach(stopNote);
+            playLed.classList.remove('play-on');
         }
 
         clearBtn.addEventListener('click', () => {
             stopPlayback();
             recordedEvents = [];
-            audioChunks = [];
-            downloadBtn.classList.add('opacity-50', 'pointer-events-none', 'bg-gray-700');
-            downloadBtn.classList.remove('bg-green-600');
-            downloadBtn.removeAttribute('href');
-            alert('ลบข้อมูลทั้งหมดแล้ว');
+            document.getElementById('downloadBtn').classList.add('opacity-50', 'pointer-events-none');
         });
 
         document.getElementById('toggleNotes').addEventListener('click', () => {
             showNotes = !showNotes;
-            renderKeyboard(); // Re-render to update labels correctly
-            setupInputs(); // Re-attach listeners
+            renderKeyboard();
+            setupInputs();
         });
-
-        renderKeyboard();
-        setupInputs();
 
         document.getElementById('startBtn').addEventListener('click', () => {
             initAudio();
             document.getElementById('startOverlay').style.display = 'none';
         });
 
+        // Initialize
+        renderKeyboard();
+        setupInputs();
     </script>
 </body>
 </html>
