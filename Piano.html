@@ -3,215 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobile Piano Pro (Downloadable)</title>
+    <title>Mobile Piano Pro (Realism + Chords)</title>
     <!-- Tailwind CSS for layout -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&family=Orbitron:wght@500&display=swap');
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: #1a1a1a;
+            background-color: #111;
             touch-action: none;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        .piano-container {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            height: 55vh; /* Adjusted for extra buttons */
-            margin-top: 10px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        /* --- Realistic Chassis Texture --- */
+        .synth-body {
+            background: #222;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.2) 50%, transparent 50%),
+                linear-gradient(90deg, rgba(0,0,0,0.2) 50%, transparent 50%);
+            background-size: 4px 4px; /* Mesh effect */
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
         }
 
-        /* White Keys */
+        .wood-accent {
+            background: #3e2723;
+            background: linear-gradient(to right, #2d1b15, #4e342e, #2d1b15);
+            border-bottom: 2px solid #1a100c;
+        }
+
+        /* --- 3D Keys --- */
+        .piano-bed {
+            background: #000;
+            padding-top: 6px; /* Space for felt */
+            border-top: 8px solid #800000; /* Red Felt */
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
         .key-white {
             flex: 1;
             height: 100%;
-            background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
-            border: 1px solid #ccc;
-            border-radius: 0 0 5px 5px;
+            background: linear-gradient(to bottom, #fff 0%, #eee 85%, #ddd 100%);
+            border: 1px solid #999;
+            border-bottom: 6px solid #bbb; /* Thickness */
+            border-radius: 0 0 4px 4px;
             position: relative;
-            cursor: pointer;
             z-index: 1;
-            transition: background 0.1s, transform 0.05s;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 15px;
-            color: #555;
-            font-weight: 600;
-            font-size: 0.9rem;
-            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.1);
+            box-shadow: inset 2px 0 5px rgba(255,255,255,0.5), inset -2px 0 5px rgba(0,0,0,0.1);
         }
         
         .key-white:active, .key-white.active {
-            background: linear-gradient(to bottom, #f0f0f0 0%, #dcdcdc 100%);
-            transform: scaleY(0.98);
-            transform-origin: top;
-            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.2);
+            background: linear-gradient(to bottom, #eee 0%, #ccc 100%);
+            border-bottom: 2px solid #aaa; /* Pressed down */
+            transform: translateY(4px);
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.2);
         }
 
-        /* Black Keys */
         .key-black {
-            width: 8%;
+            width: 7.5%;
             height: 60%;
-            background: linear-gradient(to bottom, #333 0%, #000 100%);
+            background: linear-gradient(to right, #222, #000, #222);
             position: absolute;
-            z-index: 2;
+            z-index: 20;
+            border-bottom: 8px solid #000;
+            border-left: 2px solid #111;
+            border-right: 2px solid #111;
             border-radius: 0 0 3px 3px;
-            cursor: pointer;
-            transition: background 0.1s, transform 0.05s;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            box-shadow: 3px 5px 5px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.1);
         }
 
         .key-black:active, .key-black.active {
             background: #111;
-            transform: scaleY(0.98);
-            transform-origin: top;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            border-bottom: 2px solid #000;
+            transform: translateY(4px);
+            box-shadow: 1px 2px 3px rgba(0,0,0,0.5);
         }
 
-        .hide-labels .note-label {
+        /* Labels styling */
+        .note-label {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            color: #555;
+            font-size: 0.75rem;
+            pointer-events: none;
+        }
+        .hide-labels .note-label { display: none; }
+
+        /* --- Realistic Buttons (LEDs) --- */
+        .led-btn {
+            background: linear-gradient(to bottom, #444, #222);
+            border: 1px solid #111;
+            box-shadow: 0 2px 0 #000, 0 4px 5px rgba(0,0,0,0.5);
+            border-radius: 4px;
+            transition: all 0.1s;
+            position: relative;
+        }
+        
+        .led-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 0 #000, inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .led-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* LED Light */
+        .led-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #333; /* Off state */
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+
+        .led-btn.active-red .led-light {
+            background-color: #ff3333;
+            box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
+        }
+        
+        .led-btn.active-green .led-light {
+            background-color: #00ff00;
+            box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
+        }
+
+        /* --- Chord Pads --- */
+        .chord-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 4px 2px;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+        }
+        .chord-scroll-container::-webkit-scrollbar {
             display: none;
         }
 
-        .control-btn {
-            transition: all 0.2s;
-        }
-        .control-btn:active {
-            transform: scale(0.95);
+        .chord-pad {
+            flex: 0 0 auto;
+            width: 50px;
+            height: 40px;
+            background: linear-gradient(to bottom, #3b4246, #2a2f32);
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #ddd;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 0 #1a1a1a, 0 4px 4px rgba(0,0,0,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
         }
         
-        /* Disabled state */
-        .control-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+        .chord-pad:active, .chord-pad.active {
+            transform: translateY(3px);
+            box-shadow: 0 0 0 #1a1a1a, inset 0 1px 3px rgba(0,0,0,0.5);
+            background: linear-gradient(to bottom, #2a2f32, #1f2325);
+            color: #61dafb;
+            border-color: #61dafb;
         }
 
-        .recording-dot {
-            width: 12px;
-            height: 12px;
-            background-color: #ef4444;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-            animation: pulse 1s infinite;
+        .digital-screen {
+            font-family: 'Orbitron', monospace;
+            background-color: #2b3a42;
+            color: #61dafb;
+            text-shadow: 0 0 5px rgba(97, 218, 251, 0.5);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+            border: 2px solid #555;
+            border-radius: 4px;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
-        }
     </style>
 </head>
-<body class="h-screen flex flex-col items-center justify-between text-white">
+<body class="h-screen flex flex-col synth-body text-gray-200">
 
-    <!-- Header -->
-    <div class="w-full p-3 bg-gray-900 flex justify-between items-center shadow-md z-10">
-        <div>
-            <h1 class="text-lg font-bold text-yellow-500">🎹 Piano Pro</h1>
-            <div id="statusText" class="text-xs text-gray-400">พร้อมใช้งาน</div>
+    <!-- Top Panel: Brand & Speakers (Reduced Height slightly) -->
+    <div class="h-[15%] flex items-center justify-between px-4 wood-accent shadow-lg z-20 relative">
+        <div class="w-12 h-12 rounded-full bg-black opacity-30 border border-gray-600 shadow-inner"></div>
+        <div class="text-center">
+            <h1 class="text-xl font-bold tracking-widest text-yellow-500" style="font-family: 'Orbitron', sans-serif;">SYNTH<span class="text-white">PRO</span></h1>
         </div>
-        
-        <label class="flex items-center space-x-2 cursor-pointer select-none">
-            <span class="text-xs">โน้ต</span>
-            <div class="relative">
-                <input type="checkbox" id="toggleLabels" class="sr-only" checked>
-                <div class="block bg-gray-600 w-8 h-5 rounded-full"></div>
-                <div class="dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition transform translate-x-3"></div>
-            </div>
-        </label>
+        <div class="w-12 h-12 rounded-full bg-black opacity-30 border border-gray-600 shadow-inner"></div>
     </div>
 
-    <!-- Piano Keys -->
-    <div class="w-full flex-grow flex items-center justify-center bg-gray-800 relative overflow-hidden">
-        <div id="piano" class="piano-container w-full max-w-4xl px-2">
+    <!-- Control Dashboard (Increased Height for Chords) -->
+    <div class="h-[35%] bg-gray-800 border-b-4 border-gray-900 flex flex-col px-4 pt-2 shadow-inner relative z-10">
+        
+        <!-- Row 1: Screen -->
+        <div class="flex justify-center mb-2">
+            <div id="statusScreen" class="digital-screen w-full max-w-sm py-1 px-4 text-center text-xs tracking-wider uppercase">
+                READY TO PLAY
+            </div>
+        </div>
+
+        <!-- Row 2: Main Buttons -->
+        <div class="flex justify-center items-center space-x-3 mb-3">
+            <button id="btnRecord" class="led-btn flex flex-col items-center justify-center w-16 h-14 space-y-1">
+                <div id="ledRecord" class="led-light"></div>
+                <span class="text-[10px] font-bold text-gray-300">REC</span>
+            </button>
+
+            <button id="btnPlay" class="led-btn flex flex-col items-center justify-center w-16 h-14 space-y-1" disabled>
+                <div id="ledPlay" class="led-light"></div>
+                <span class="text-[10px] font-bold text-gray-300">PLAY</span>
+            </button>
+            
+            <button id="btnDownload" class="led-btn flex flex-col items-center justify-center w-16 h-14 space-y-1" disabled>
+                <div id="ledDownload" class="led-light"></div>
+                <span class="text-[10px] font-bold text-gray-300">SAVE</span>
+            </button>
+        </div>
+
+        <!-- Row 3: Chord Pads (Scrollable) -->
+        <div class="flex-grow flex flex-col justify-end pb-2">
+            <div class="flex justify-between items-end mb-1">
+                <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">CHORD PADS</span>
+                
+                <!-- Label Toggle moved here -->
+                <div class="flex items-center space-x-2 cursor-pointer" id="labelToggleBtn">
+                    <span class="text-[9px] uppercase text-gray-500 font-bold">Note Labels</span>
+                    <div class="relative">
+                        <div class="w-6 h-3 bg-gray-900 rounded-full shadow-inner border border-gray-600"></div>
+                        <div id="toggleKnob" class="absolute top-0.5 left-0.5 w-2 h-2 bg-gray-400 rounded-full shadow-md transition-transform translate-x-3 bg-green-500"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="w-full bg-gray-900 rounded p-1 inner-shadow">
+                <div id="chordContainer" class="chord-scroll-container">
+                    <!-- Chord Pads injected by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Piano Bed (Keys) -->
+    <div class="h-[50%] piano-bed flex justify-center items-stretch relative overflow-hidden pb-2 bg-black">
+        <div id="piano" class="w-full h-full flex relative px-1">
             <!-- Keys injected by JS -->
         </div>
     </div>
 
-    <!-- Controls -->
-    <div class="w-full bg-gray-900 p-4 pb-8 flex justify-center space-x-3 shadow-top z-10">
-        
-        <button id="btnRecord" class="control-btn bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-bold flex items-center shadow-lg text-sm sm:text-base">
-            <span id="recordIcon" class="mr-2">●</span> อัดเสียง
-        </button>
-
-        <button id="btnPlay" class="control-btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold flex items-center shadow-lg disabled:bg-gray-700 text-sm sm:text-base" disabled>
-            <span>▶</span>&nbsp; ฟัง
-        </button>
-
-        <button id="btnDownload" class="control-btn bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-bold flex items-center shadow-lg disabled:bg-gray-700 text-sm sm:text-base" disabled>
-            <span>⬇</span>&nbsp; โหลดไฟล์
-        </button>
-
-    </div>
-
-    <!-- Hidden audio element for playback check (optional) -->
-    <audio id="audioPreview" style="display:none;"></audio>
-
+    <!-- Hidden Audio/Logic -->
     <script>
-        // --- Audio System Setup ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = new AudioContext();
         
-        // Master Gain Node (to control overall volume and record output)
         const masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.8;
+        masterGain.gain.value = 0.6; // Lower gain to prevent clipping with chords
         masterGain.connect(audioCtx.destination);
 
-        // Recording Stream Destination
         const dest = audioCtx.createMediaStreamDestination();
-        masterGain.connect(dest); // Connect master output to recorder
+        masterGain.connect(dest);
 
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob = null;
-
-        // Note Data
-        const notes = [
-            { note: 'C',  freq: 261.63, type: 'white', label: 'C' },
-            { note: 'C#', freq: 277.18, type: 'black', pos: 14.3 },
-            { note: 'D',  freq: 293.66, type: 'white', label: 'D' },
-            { note: 'D#', freq: 311.13, type: 'black', pos: 28.6 },
-            { note: 'E',  freq: 329.63, type: 'white', label: 'E' },
-            { note: 'F',  freq: 349.23, type: 'white', label: 'F' },
-            { note: 'F#', freq: 369.99, type: 'black', pos: 57.1 },
-            { note: 'G',  freq: 392.00, type: 'white', label: 'G' },
-            { note: 'G#', freq: 415.30, type: 'black', pos: 71.4 },
-            { note: 'A',  freq: 440.00, type: 'white', label: 'A' },
-            { note: 'A#', freq: 466.16, type: 'black', pos: 85.7 },
-            { note: 'B',  freq: 493.88, type: 'white', label: 'B' },
-            { note: 'C2', freq: 523.25, type: 'white', label: 'C' } 
-        ];
-
-        const pianoEl = document.getElementById('piano');
-        
-        // --- State ---
         let isRecording = false;
-        let recordedNoteEvents = []; // For in-app visual playback
+        let recordedNoteEvents = [];
         let startTime = 0;
         let isPlayingBack = false;
 
-        // --- UI ---
+        // Base C4 frequency = 261.63
+        // Formula: freq = 261.63 * Math.pow(2, index / 12)
+        // Indices: C4=0, C#=1 ... C5=12
+        
+        // Notes Data (Visual Keys)
+        const notes = [
+            { note: 'C',  freq: 261.63, type: 'white', label: 'ด' },
+            { note: 'C#', freq: 277.18, type: 'black', pos: 14.3 },
+            { note: 'D',  freq: 293.66, type: 'white', label: 'ร' },
+            { note: 'D#', freq: 311.13, type: 'black', pos: 28.6 },
+            { note: 'E',  freq: 329.63, type: 'white', label: 'ม' },
+            { note: 'F',  freq: 349.23, type: 'white', label: 'ฟ' },
+            { note: 'F#', freq: 369.99, type: 'black', pos: 57.1 },
+            { note: 'G',  freq: 392.00, type: 'white', label: 'ซ' },
+            { note: 'G#', freq: 415.30, type: 'black', pos: 71.4 },
+            { note: 'A',  freq: 440.00, type: 'white', label: 'ล' },
+            { note: 'A#', freq: 466.16, type: 'black', pos: 85.7 },
+            { note: 'B',  freq: 493.88, type: 'white', label: 'ท' },
+            { note: 'C2', freq: 523.25, type: 'white', label: 'ด' } 
+        ];
+
+        // Helper to get frequency by index (extending beyond visual range)
+        function getFreqByIndex(index) {
+            return 261.63 * Math.pow(2, index / 12);
+        }
+
+        // Chord Definitions (Offsets from C4)
+        // C4=0, C#=1, D=2, Eb=3, E=4, F=5, F#=6, G=7, Ab=8, A=9, Bb=10, B=11, C5=12...
+        const chordData = [
+            { name: "C",  indices: [0, 4, 7] },
+            { name: "Cm", indices: [0, 3, 7] },
+            { name: "D",  indices: [2, 6, 9] },
+            { name: "Dm", indices: [2, 5, 9] },
+            { name: "E",  indices: [4, 8, 11] },
+            { name: "Em", indices: [4, 7, 11] },
+            { name: "F",  indices: [5, 9, 12] },
+            { name: "Fm", indices: [5, 8, 12] },
+            { name: "G",  indices: [7, 11, 14] }, // 14 is D5
+            { name: "Gm", indices: [7, 10, 14] },
+            { name: "A",  indices: [9, 13, 16] }, // 13 is C#5, 16 is E5
+            { name: "Am", indices: [9, 12, 16] }
+        ];
+
+        const pianoEl = document.getElementById('piano');
+        const chordContainer = document.getElementById('chordContainer');
+        const statusScreen = document.getElementById('statusScreen');
+
+        // Buttons
         const btnRecord = document.getElementById('btnRecord');
         const btnPlay = document.getElementById('btnPlay');
         const btnDownload = document.getElementById('btnDownload');
-        const statusText = document.getElementById('statusText');
-        const toggleLabels = document.getElementById('toggleLabels');
+        const ledRecord = document.getElementById('ledRecord');
+        const ledPlay = document.getElementById('ledPlay');
+        const ledDownload = document.getElementById('ledDownload');
 
-        // --- Sound Generation ---
-        function playTone(freq) {
-            // Ensure context is running (fixes "no sound" on mobile)
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        // Toggle Labels
+        const labelToggleBtn = document.getElementById('labelToggleBtn');
+        const toggleKnob = document.getElementById('toggleKnob');
+        let showLabels = true;
+
+        // --- Sound Engine ---
+        function playTone(freq, duration = 1.0) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const osc = audioCtx.createOscillator();
             const noteGain = audioCtx.createGain();
@@ -219,30 +343,43 @@
             osc.type = 'triangle'; 
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-            // ADSR Envelope
             noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
-            noteGain.gain.linearRampToValueAtTime(0.6, audioCtx.currentTime + 0.01);
-            noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+            noteGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02); 
+            noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
-            // Connect: Osc -> NoteGain -> MasterGain -> (Speakers & Recorder)
             osc.connect(noteGain);
             noteGain.connect(masterGain);
 
             osc.start();
-            osc.stop(audioCtx.currentTime + 1.5);
+            osc.stop(audioCtx.currentTime + duration);
         }
 
-        // --- Logic ---
-        function handleNoteTrigger(index) {
-            playTone(notes[index].freq);
-
-            // If recording, save visual event
-            if (isRecording) {
-                const time = Date.now() - startTime;
-                recordedNoteEvents.push({ noteIndex: index, time: time });
-            }
+        function playChord(indices) {
+            indices.forEach(idx => {
+                const freq = getFreqByIndex(idx);
+                playTone(freq, 1.5); // Slightly longer sustain for chords
+                
+                // Visual feedback only if key exists in range (0-12)
+                if (idx <= 12) {
+                    const keyEl = Array.from(pianoEl.children).find(el => parseInt(el.dataset.index) === idx);
+                    if(keyEl) {
+                        keyEl.classList.add('active');
+                        setTimeout(() => keyEl.classList.remove('active'), 200);
+                    }
+                }
+                
+                // Record
+                if (isRecording) {
+                    recordedNoteEvents.push({ 
+                        noteIndex: idx, // store actual index even if > 12
+                        time: Date.now() - startTime,
+                        isChordPart: true 
+                    });
+                }
+            });
         }
 
+        // --- Render Keys ---
         function renderKeys() {
             notes.forEach((n, index) => {
                 const key = document.createElement('div');
@@ -250,21 +387,30 @@
 
                 if (n.type === 'white') {
                     key.className = 'key-white';
-                    key.innerHTML = `<span class="note-label mb-2 pointer-events-none">${n.label}</span>`;
+                    key.innerHTML = `<span class="note-label">${n.label}</span>`;
                     pianoEl.appendChild(key);
                 } else {
                     key.className = 'key-black';
-                    key.style.left = `calc(${n.pos}% - 4%)`;
+                    key.style.left = `calc(${n.pos}% - 3.75%)`; 
                     pianoEl.appendChild(key);
                 }
 
-                // Events
+                // Interactions
                 const start = (e) => {
                     if(e) { e.preventDefault(); e.stopPropagation(); }
                     if (key.classList.contains('active')) return;
                     key.classList.add('active');
-                    handleNoteTrigger(index);
+                    
+                    playTone(n.freq);
+                    
+                    if (isRecording) {
+                        recordedNoteEvents.push({ 
+                            noteIndex: index, 
+                            time: Date.now() - startTime 
+                        });
+                    }
                 };
+
                 const end = (e) => {
                     if(e) e.preventDefault();
                     key.classList.remove('active');
@@ -278,169 +424,166 @@
             });
         }
 
-        // --- Recording System ---
-        function startRecording() {
-            // Check browser support
-            if (!MediaRecorder) {
-                alert("Browser ของคุณไม่รองรับการอัดเสียง");
-                return;
-            }
+        // --- Render Chords ---
+        function renderChords() {
+            chordData.forEach(chord => {
+                const btn = document.createElement('div');
+                btn.className = 'chord-pad';
+                btn.innerText = chord.name;
+                
+                const trigger = (e) => {
+                    if(e) { e.preventDefault(); e.stopPropagation(); }
+                    btn.classList.add('active');
+                    playChord(chord.indices);
+                    updateScreen("CHORD: " + chord.name);
+                };
+                
+                const release = (e) => {
+                    if(e) e.preventDefault();
+                    setTimeout(() => btn.classList.remove('active'), 100);
+                };
 
+                btn.addEventListener('mousedown', trigger);
+                btn.addEventListener('mouseup', release);
+                btn.addEventListener('touchstart', trigger, {passive: false});
+                btn.addEventListener('touchend', release);
+
+                chordContainer.appendChild(btn);
+            });
+        }
+
+        // --- Logic Control ---
+        function updateScreen(text, isError = false) {
+            statusScreen.innerText = text;
+            statusScreen.style.color = isError ? '#ff5555' : '#61dafb';
+        }
+
+        btnRecord.addEventListener('click', () => {
+            if (isPlayingBack) return;
+
+            if (!isRecording) {
+                // Start Rec
+                startRecording();
+            } else {
+                // Stop Rec
+                stopRecording();
+            }
+        });
+
+        function startRecording() {
             audioChunks = [];
             recordedNoteEvents = [];
-            startTime = Date.now();
             
-            // Try different mime types
             let options = { mimeType: 'audio/webm' };
             if (!MediaRecorder.isTypeSupported('audio/webm')) {
                 options = { mimeType: 'audio/mp4' }; 
-                if(!MediaRecorder.isTypeSupported('audio/mp4')) {
-                    options = undefined; // Let browser choose
-                }
+                if(!MediaRecorder.isTypeSupported('audio/mp4')) options = undefined;
             }
 
             try {
                 mediaRecorder = new MediaRecorder(dest.stream, options);
-            } catch (err) {
-                mediaRecorder = new MediaRecorder(dest.stream); // Fallback
+            } catch(e) {
+                mediaRecorder = new MediaRecorder(dest.stream);
             }
 
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) audioChunks.push(event.data);
-            };
-
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
             mediaRecorder.onstop = () => {
                 audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                // Enable download
                 btnDownload.disabled = false;
-                btnPlay.disabled = false; // Enable visual playback
-                statusText.innerText = "บันทึกเสร็จสิ้น พร้อมดาวน์โหลด";
-                statusText.className = "text-green-400";
+                btnPlay.disabled = false;
+                ledDownload.classList.add('active-green'); 
+                updateScreen("SAVED. READY.");
             };
 
             mediaRecorder.start();
             isRecording = true;
-            
-            // UI Update
-            btnRecord.innerHTML = `<span class="recording-dot"></span> หยุด`;
-            btnRecord.classList.replace('bg-red-600', 'bg-gray-600');
-            btnRecord.classList.replace('hover:bg-red-700', 'hover:bg-gray-700');
+            startTime = Date.now();
+
+            btnRecord.classList.add('active-red');
             btnPlay.disabled = true;
             btnDownload.disabled = true;
-            statusText.innerText = "กำลังอัดเสียง...";
-            statusText.className = "text-red-400 font-bold animate-pulse";
+            ledPlay.classList.remove('active-green');
+            ledDownload.classList.remove('active-green');
+            updateScreen("RECORDING...");
         }
 
         function stopRecording() {
-            if(mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            }
+            mediaRecorder.stop();
             isRecording = false;
-
-            // UI Update
-            btnRecord.innerHTML = `<span class="mr-2">●</span> อัดใหม่`;
-            btnRecord.classList.replace('bg-gray-600', 'bg-red-600');
-            btnRecord.classList.replace('hover:bg-gray-700', 'hover:bg-red-700');
+            btnRecord.classList.remove('active-red');
         }
 
-        function downloadRecording() {
-            if (!audioBlob) return;
-            const url = URL.createObjectURL(audioBlob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `piano-recording-${Date.now()}.webm`; // Default to webm
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            statusText.innerText = "ดาวน์โหลดเรียบร้อย!";
-        }
-
-        function playVisualPlayback() {
+        btnPlay.addEventListener('click', () => {
             if (recordedNoteEvents.length === 0) return;
             
-            // NOTE: This plays the synth again for visual feedback
-            // It does NOT play the recorded audio blob (user can download for that)
-            // But we can synchronize it.
-            
             isPlayingBack = true;
-            btnPlay.disabled = true;
+            btnPlay.classList.add('active-green');
             btnRecord.disabled = true;
-            statusText.innerText = "กำลังเล่นทวน...";
+            updateScreen("PLAYING...");
 
             recordedNoteEvents.forEach((event, i) => {
                 setTimeout(() => {
-                    playTone(notes[event.noteIndex].freq);
+                    const freq = getFreqByIndex(event.noteIndex);
+                    playTone(freq, event.isChordPart ? 1.5 : 1.0);
                     
-                    // Visuals
-                    const keyEl = Array.from(pianoEl.children).find(el => parseInt(el.dataset.index) === event.noteIndex);
-                    if(keyEl) {
-                        keyEl.classList.add('active');
-                        setTimeout(() => keyEl.classList.remove('active'), 200);
+                    // Visual Key Press if visible
+                    if (event.noteIndex <= 12) {
+                        const keyEl = Array.from(pianoEl.children).find(el => parseInt(el.dataset.index) === event.noteIndex);
+                        if(keyEl) {
+                            keyEl.classList.add('active');
+                            setTimeout(() => keyEl.classList.remove('active'), 150);
+                        }
                     }
 
                     if (i === recordedNoteEvents.length - 1) {
                         setTimeout(() => {
                             isPlayingBack = false;
-                            btnPlay.disabled = false;
+                            btnPlay.classList.remove('active-green');
                             btnRecord.disabled = false;
-                            statusText.innerText = "พร้อมใช้งาน";
-                            statusText.className = "text-gray-400";
+                            updateScreen("DONE.");
                         }, 500);
                     }
                 }, event.time);
             });
-        }
-
-        // --- Event Listeners ---
-        btnRecord.addEventListener('click', () => {
-            if (isPlayingBack) return;
-            if (!isRecording) startRecording();
-            else stopRecording();
         });
 
-        btnDownload.addEventListener('click', downloadRecording);
-        btnPlay.addEventListener('click', playVisualPlayback);
+        btnDownload.addEventListener('click', () => {
+            if (!audioBlob) return;
+            const url = URL.createObjectURL(audioBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `synth-recording-${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            updateScreen("DOWNLOADED");
+        });
 
-        // Toggle Labels Logic
-        toggleLabels.addEventListener('change', () => {
-            const toggleBg = toggleLabels.nextElementSibling;
-            const dot = toggleBg.nextElementSibling;
-            
-            if (toggleLabels.checked) {
+        // Label Toggle
+        labelToggleBtn.addEventListener('click', () => {
+            showLabels = !showLabels;
+            if (showLabels) {
                 pianoEl.classList.remove('hide-labels');
-                toggleBg.classList.add('bg-green-500');
-                toggleBg.classList.remove('bg-gray-600');
-                dot.classList.add('translate-x-3');
+                toggleKnob.classList.add('translate-x-3', 'bg-green-500');
+                toggleKnob.classList.remove('translate-x-0', 'bg-gray-400');
             } else {
                 pianoEl.classList.add('hide-labels');
-                toggleBg.classList.add('bg-gray-600');
-                toggleBg.classList.remove('bg-green-500');
-                dot.classList.remove('translate-x-3');
+                toggleKnob.classList.remove('translate-x-3', 'bg-green-500');
+                toggleKnob.classList.add('translate-x-0', 'bg-gray-400');
             }
         });
-
-        // Setup visual state for toggle
-        if(toggleLabels.checked) {
-             const toggleBg = toggleLabels.nextElementSibling;
-             const dot = toggleBg.nextElementSibling;
-             toggleBg.classList.add('bg-green-500');
-             toggleBg.classList.remove('bg-gray-600');
-        }
 
         // Init
         renderKeys();
+        renderChords();
         
-        // Mobile "No Sound" Fix: Resume AudioContext on first touch anywhere
+        // Unlocks Audio Context on mobile
         document.body.addEventListener('touchstart', function() {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }, { once: true });
         document.body.addEventListener('click', function() {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }, { once: true });
 
     </script>
