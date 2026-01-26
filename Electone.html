@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Electone Mobile Pro</title>
+    <title>Electone Mobile Pro (Vertical)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Prevent selection and scrolling behaviors for game-like feel */
@@ -16,63 +16,66 @@
             background-color: #1a1a1a;
         }
 
-        /* Key Styles */
+        /* Key Styles - Vertical Layout Adjustment */
         .key {
             position: relative;
             cursor: pointer;
             transition: all 0.1s;
-            border-radius: 0 0 4px 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            /* Border for vertical stack separation */
+            border-bottom: 1px solid #ccc; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
             -webkit-tap-highlight-color: transparent;
         }
 
         .white-key {
-            background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+            /* Horizontal gradient for vertical keys */
+            background: linear-gradient(to right, #ffffff 0%, #f0f0f0 100%);
             z-index: 1;
-            height: 100%;
+            width: 100%; /* Full width */
         }
 
         .white-key:active, .white-key.active {
             background: #e0e0e0;
-            transform: translateY(2px);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            transform: translateX(-2px); /* Press effect moves left slightly */
+            box-shadow: inset -2px 0 5px rgba(0,0,0,0.2);
         }
 
         .black-key {
-            background: linear-gradient(to bottom, #333333 0%, #000000 100%);
+            /* Vertical key style: shorter width, aligned right */
+            background: linear-gradient(to right, #333333 0%, #000000 100%);
             z-index: 2;
             position: absolute;
-            top: 0;
-            height: 60%;
-            width: 60%; /* Relative to white key width slot */
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 0 0 3px 3px;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            right: 0; /* Stick to right edge */
+            width: 55%; /* Short key */
+            height: 60%; /* Height relative to white key, will straddle */
+            top: -30%; /* Shift up to straddle the boundary */
+            border-radius: 4px 0 0 4px;
+            box-shadow: -1px 1px 3px rgba(0,0,0,0.5);
+            border-bottom: 1px solid #222;
         }
 
         .black-key:active, .black-key.active {
             background: #1a1a1a;
-            height: 58%; /* Visual press effect */
-            box-shadow: inset 0 2px 5px rgba(255,255,255,0.1);
+            width: 53%; /* Visual press effect */
+            box-shadow: inset -2px 0 5px rgba(255,255,255,0.1);
         }
 
         /* Note Labels */
         .note-label {
             position: absolute;
-            bottom: 8px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 0.75rem;
+            left: 10px; /* Align text to left */
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: left;
+            font-size: 0.8rem;
             color: #666;
             pointer-events: none;
             font-weight: bold;
         }
         .black-key .note-label {
             color: #ccc;
-            bottom: 4px;
-            font-size: 0.6rem;
+            left: 8px;
+            font-size: 0.7rem;
         }
 
         /* Controls Panel */
@@ -102,7 +105,7 @@
             box-shadow: 0 0 5px #33ff33, inset 0 1px 2px rgba(255,255,255,0.5);
         }
 
-        /* Top decorative bar to look like an Electone */
+        /* Top decorative bar */
         .wood-grain {
             background: #3e2723;
             background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 10px);
@@ -113,42 +116,44 @@
 <body class="h-screen w-screen flex flex-col overflow-hidden text-white">
 
     <!-- Top Bar / Controls -->
-    <div class="wood-grain p-3 flex-none shadow-lg z-10">
+    <div class="wood-grain p-2 flex-none shadow-lg z-10">
         <div class="flex justify-between items-center max-w-4xl mx-auto">
-            <h1 class="text-xl font-bold text-yellow-500 tracking-wider drop-shadow-md">ELECTONE <span class="text-xs text-gray-300 font-normal">Mobile</span></h1>
+            <h1 class="text-lg font-bold text-yellow-500 tracking-wider drop-shadow-md">ELECTONE <span class="text-xs text-gray-300 font-normal">Vertical</span></h1>
             
             <div class="flex gap-2">
-                <button id="toggleNotes" class="control-btn bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-xs font-bold border-b-2 border-gray-900">
+                <button id="toggleNotes" class="control-btn bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs font-bold border-b-2 border-gray-900">
                     แสดงโน้ต
                 </button>
             </div>
         </div>
 
-        <!-- Recording Controls -->
-        <div class="flex justify-center gap-3 mt-3 max-w-4xl mx-auto bg-black/30 p-2 rounded-lg flex-wrap">
-            <button id="recordBtn" class="control-btn flex items-center bg-gray-800 px-4 py-2 rounded text-sm border border-gray-600 min-w-[100px] justify-center">
+        <!-- Recording Controls - Compact for vertical space -->
+        <div class="flex justify-center gap-2 mt-2 max-w-4xl mx-auto bg-black/30 p-1 rounded-lg flex-wrap">
+            <button id="recordBtn" class="control-btn flex items-center bg-gray-800 px-3 py-1 rounded text-xs border border-gray-600 min-w-[80px] justify-center">
                 <span id="recLed" class="led"></span> อัดเสียง
             </button>
             
-            <!-- Playback Button (Internal Preview) -->
-            <button id="playBtn" class="control-btn flex items-center bg-gray-800 px-4 py-2 rounded text-sm border border-gray-600 min-w-[100px] justify-center disabled:opacity-50">
+            <button id="playBtn" class="control-btn flex items-center bg-gray-800 px-3 py-1 rounded text-xs border border-gray-600 min-w-[80px] justify-center disabled:opacity-50">
                 <span id="playLed" class="led"></span> ฟัง
             </button>
 
-            <!-- Download Button -->
-            <a id="downloadBtn" class="control-btn flex items-center bg-gray-700 opacity-50 pointer-events-none px-4 py-2 rounded text-sm border border-gray-600 min-w-[100px] justify-center text-white no-underline">
-                ⬇️ โหลดไฟล์
+            <a id="downloadBtn" class="control-btn flex items-center bg-gray-700 opacity-50 pointer-events-none px-3 py-1 rounded text-xs border border-gray-600 min-w-[80px] justify-center text-white no-underline">
+                ⬇️ โหลด
             </a>
             
-            <button id="clearBtn" class="control-btn bg-red-900/50 text-red-300 px-3 py-2 rounded text-xs border border-red-900">
+            <button id="clearBtn" class="control-btn bg-red-900/50 text-red-300 px-2 py-1 rounded text-xs border border-red-900">
                 ลบ
             </button>
         </div>
     </div>
 
     <!-- Keyboard Container -->
-    <div class="flex-grow bg-black relative flex items-end justify-center pb-2 px-1">
-        <div id="keyboard" class="relative w-full h-full max-h-[60vh] flex justify-center max-w-5xl mx-auto">
+    <div class="flex-grow bg-black relative w-full h-full overflow-hidden">
+        <!-- 
+           flex-col-reverse: Places the first element (Lowest Note) at the BOTTOM 
+           h-full: Fills the remaining vertical space
+        -->
+        <div id="keyboard" class="relative w-full h-full flex flex-col-reverse justify-center mx-auto">
             <!-- Keys will be generated here by JS -->
         </div>
     </div>
@@ -339,13 +344,19 @@
 
         function renderKeyboard() {
             keyboardEl.innerHTML = '';
+            
+            // Filter white keys
             const whiteKeys = notes.map((n, i) => ({...n, originalIndex: i})).filter(n => n.type === 'white');
-            const widthPercent = 100 / whiteKeys.length;
+            
+            // Vertical Layout: Height is distributed among white keys
+            const heightPercent = 100 / whiteKeys.length;
 
             whiteKeys.forEach((noteData) => {
                 const key = document.createElement('div');
                 key.className = 'key white-key';
-                key.style.width = `${widthPercent}%`;
+                // Vertical layout: Width is full, Height is calculated
+                key.style.height = `${heightPercent}%`;
+                key.style.width = '100%';
                 key.dataset.index = noteData.originalIndex;
                 
                 const label = document.createElement('div');
@@ -364,7 +375,14 @@
                     bLabel.className = 'note-label';
                     bLabel.innerText = showNotes ? notes[nextNoteIndex].note : '';
                     blackKey.appendChild(bLabel);
-                    blackKey.style.right = '-30%'; 
+                    
+                    // In vertical layout (column-reverse), 'top' corresponds to visual 'top' relative to the white key container
+                    // But since we want it to straddle between THIS key and the NEXT key (visually ABOVE),
+                    // and the container is column-reverse... 
+                    // Actually, let's keep it simple: relative to the white key div.
+                    // top: -X% moves it upwards (visually towards higher pitch).
+                    // This puts it between the white keys.
+                    
                     key.appendChild(blackKey);
                 }
             });
