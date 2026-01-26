@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobile Piano Pro (Realism + Chords)</title>
-    <!-- Tailwind CSS for layout -->
+    <title>Mobile Piano Glissando</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&family=Orbitron:wght@500&display=swap');
@@ -18,530 +18,372 @@
             -webkit-user-select: none;
         }
 
-        /* --- Realistic Chassis Texture --- */
+        /* --- Chassis --- */
         .synth-body {
             background: #222;
             background-image: 
                 linear-gradient(rgba(0,0,0,0.2) 50%, transparent 50%),
                 linear-gradient(90deg, rgba(0,0,0,0.2) 50%, transparent 50%);
-            background-size: 4px 4px; /* Mesh effect */
+            background-size: 4px 4px;
             box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
         }
 
         .wood-accent {
-            background: #3e2723;
             background: linear-gradient(to right, #2d1b15, #4e342e, #2d1b15);
             border-bottom: 2px solid #1a100c;
         }
 
-        /* --- 3D Keys --- */
+        /* --- Vertical Keys Container --- */
         .piano-bed {
             background: #000;
-            padding-top: 6px; /* Space for felt */
-            border-top: 8px solid #800000; /* Red Felt */
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.8);
+            padding-right: 4px;
+            border-left: 8px solid #800000;
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.8);
             position: relative;
+            flex-direction: column-reverse; /* Low notes at bottom */
+            touch-action: none; /* Critical for drag */
         }
 
+        /* White Keys */
         .key-white {
+            width: 100%;
             flex: 1;
-            height: 100%;
-            background: linear-gradient(to bottom, #fff 0%, #eee 85%, #ddd 100%);
-            border: 1px solid #999;
-            border-bottom: 6px solid #bbb; /* Thickness */
-            border-radius: 0 0 4px 4px;
+            background: linear-gradient(to right, #e0e0e0 0%, #fff 15%, #fff 100%);
+            border-top: 1px solid #999;
+            border-bottom: 1px solid #ccc;
+            border-right: 4px solid #bbb;
+            border-radius: 0 4px 4px 0;
             position: relative;
             z-index: 1;
-            box-shadow: inset 2px 0 5px rgba(255,255,255,0.5), inset -2px 0 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.1);
+            pointer-events: none; /* Let the container handle touch events via elementFromPoint, but we need ID for logic. Actually for elementFromPoint to work, we need pointer-events auto. */
+            pointer-events: auto; 
         }
         
-        .key-white:active, .key-white.active {
-            background: linear-gradient(to bottom, #eee 0%, #ccc 100%);
-            border-bottom: 2px solid #aaa; /* Pressed down */
-            transform: translateY(4px);
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.2);
+        .key-white.active {
+            background: linear-gradient(to right, #ccc 0%, #ddd 100%);
+            border-right: 1px solid #aaa;
+            transform: translateX(-2px);
+            box-shadow: inset -2px 0 5px rgba(0,0,0,0.2);
         }
 
+        /* Black Keys */
         .key-black {
-            width: 7.5%;
-            height: 60%;
-            background: linear-gradient(to right, #222, #000, #222);
+            width: 55%;
+            background: linear-gradient(to bottom, #222, #000, #222);
             position: absolute;
+            left: 0;
             z-index: 20;
-            border-bottom: 8px solid #000;
-            border-left: 2px solid #111;
-            border-right: 2px solid #111;
-            border-radius: 0 0 3px 3px;
-            box-shadow: 3px 5px 5px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.1);
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            border-right: 6px solid #000;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 3px 3px 5px rgba(0,0,0,0.5), inset -2px 0 5px rgba(255,255,255,0.15);
+            pointer-events: auto;
         }
 
-        .key-black:active, .key-black.active {
+        .key-black.active {
             background: #111;
-            border-bottom: 2px solid #000;
-            transform: translateY(4px);
-            box-shadow: 1px 2px 3px rgba(0,0,0,0.5);
+            border-right: 2px solid #000;
+            transform: translateX(-2px);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
         }
 
-        /* Labels styling */
         .note-label {
-            position: absolute;
-            bottom: 15px;
-            width: 100%;
-            text-align: center;
-            color: #555;
+            color: #777;
             font-size: 0.75rem;
-            pointer-events: none;
+            font-weight: 600;
+            pointer-events: none; /* Ignore label clicks */
         }
         .hide-labels .note-label { display: none; }
 
-        /* --- Realistic Buttons (LEDs) --- */
+        /* --- Controls --- */
         .led-btn {
             background: linear-gradient(to bottom, #444, #222);
             border: 1px solid #111;
             box-shadow: 0 2px 0 #000, 0 4px 5px rgba(0,0,0,0.5);
             border-radius: 4px;
             transition: all 0.1s;
-            position: relative;
         }
-        
-        .led-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 0 0 #000, inset 0 2px 5px rgba(0,0,0,0.5);
-        }
+        .led-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #000; }
+        .led-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .led-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* LED Light */
         .led-light {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #333; /* Off state */
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+            width: 8px; height: 8px; border-radius: 50%;
+            background-color: #333; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
             transition: all 0.2s;
         }
-
-        .led-btn.active-red .led-light {
-            background-color: #ff3333;
-            box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
-        }
-        
-        .led-btn.active-green .led-light {
-            background-color: #00ff00;
-            box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
-        }
-
-        /* --- Chord Pads --- */
-        .chord-scroll-container {
-            display: flex;
-            overflow-x: auto;
-            gap: 8px;
-            padding: 4px 2px;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
-        }
-        .chord-scroll-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        .chord-pad {
-            flex: 0 0 auto;
-            width: 50px;
-            height: 40px;
-            background: linear-gradient(to bottom, #3b4246, #2a2f32);
-            border: 1px solid #555;
-            border-radius: 4px;
-            color: #ddd;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 3px 0 #1a1a1a, 0 4px 4px rgba(0,0,0,0.4);
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        
-        .chord-pad:active, .chord-pad.active {
-            transform: translateY(3px);
-            box-shadow: 0 0 0 #1a1a1a, inset 0 1px 3px rgba(0,0,0,0.5);
-            background: linear-gradient(to bottom, #2a2f32, #1f2325);
-            color: #61dafb;
-            border-color: #61dafb;
-        }
+        .led-btn.active-red .led-light { background-color: #ff3333; box-shadow: 0 0 8px #ff0000; }
+        .led-btn.active-green .led-light { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
 
         .digital-screen {
             font-family: 'Orbitron', monospace;
-            background-color: #2b3a42;
-            color: #61dafb;
+            background-color: #2b3a42; color: #61dafb;
             text-shadow: 0 0 5px rgba(97, 218, 251, 0.5);
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
-            border: 2px solid #555;
-            border-radius: 4px;
+            border: 2px solid #555; border-radius: 4px;
         }
-
     </style>
 </head>
-<body class="h-screen flex flex-col synth-body text-gray-200">
+<body class="h-[100dvh] w-full flex flex-col synth-body text-gray-200 overflow-hidden">
 
-    <!-- Top Panel: Brand & Speakers (Reduced Height slightly) -->
-    <div class="h-[15%] flex items-center justify-between px-4 wood-accent shadow-lg z-20 relative">
-        <div class="w-12 h-12 rounded-full bg-black opacity-30 border border-gray-600 shadow-inner"></div>
-        <div class="text-center">
-            <h1 class="text-xl font-bold tracking-widest text-yellow-500" style="font-family: 'Orbitron', sans-serif;">SYNTH<span class="text-white">PRO</span></h1>
-        </div>
-        <div class="w-12 h-12 rounded-full bg-black opacity-30 border border-gray-600 shadow-inner"></div>
+    <!-- Header -->
+    <div class="h-[6%] flex items-center justify-between px-4 wood-accent shadow-lg z-20 shrink-0">
+        <div class="w-6 h-6 rounded-full bg-black opacity-30 border border-gray-600 shadow-inner"></div>
+        <h1 class="text-sm font-bold tracking-widest text-yellow-500" style="font-family: 'Orbitron', sans-serif;">PURE<span class="text-white">KEYS</span> <span class="text-[9px] text-gray-400">GLIDE</span></h1>
+        <div class="w-6 h-6 rounded-full bg-black opacity-30 border border-gray-600 shadow-inner"></div>
     </div>
 
-    <!-- Control Dashboard (Increased Height for Chords) -->
-    <div class="h-[35%] bg-gray-800 border-b-4 border-gray-900 flex flex-col px-4 pt-2 shadow-inner relative z-10">
-        
-        <!-- Row 1: Screen -->
-        <div class="flex justify-center mb-2">
-            <div id="statusScreen" class="digital-screen w-full max-w-sm py-1 px-4 text-center text-xs tracking-wider uppercase">
-                READY TO PLAY
-            </div>
-        </div>
-
-        <!-- Row 2: Main Buttons -->
-        <div class="flex justify-center items-center space-x-3 mb-3">
-            <button id="btnRecord" class="led-btn flex flex-col items-center justify-center w-16 h-14 space-y-1">
-                <div id="ledRecord" class="led-light"></div>
-                <span class="text-[10px] font-bold text-gray-300">REC</span>
-            </button>
-
-            <button id="btnPlay" class="led-btn flex flex-col items-center justify-center w-16 h-14 space-y-1" disabled>
-                <div id="ledPlay" class="led-light"></div>
-                <span class="text-[10px] font-bold text-gray-300">PLAY</span>
-            </button>
-            
-            <button id="btnDownload" class="led-btn flex flex-col items-center justify-center w-16 h-14 space-y-1" disabled>
-                <div id="ledDownload" class="led-light"></div>
-                <span class="text-[10px] font-bold text-gray-300">SAVE</span>
-            </button>
-        </div>
-
-        <!-- Row 3: Chord Pads (Scrollable) -->
-        <div class="flex-grow flex flex-col justify-end pb-2">
-            <div class="flex justify-between items-end mb-1">
-                <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">CHORD PADS</span>
-                
-                <!-- Label Toggle moved here -->
-                <div class="flex items-center space-x-2 cursor-pointer" id="labelToggleBtn">
-                    <span class="text-[9px] uppercase text-gray-500 font-bold">Note Labels</span>
-                    <div class="relative">
-                        <div class="w-6 h-3 bg-gray-900 rounded-full shadow-inner border border-gray-600"></div>
-                        <div id="toggleKnob" class="absolute top-0.5 left-0.5 w-2 h-2 bg-gray-400 rounded-full shadow-md transition-transform translate-x-3 bg-green-500"></div>
-                    </div>
+    <!-- Controls -->
+    <div class="h-[14%] bg-gray-800 border-b-4 border-gray-900 flex flex-col px-3 py-2 shadow-inner relative z-10 shrink-0 justify-center">
+        <div class="flex justify-between items-center h-full gap-4">
+            <!-- Screen -->
+            <div class="flex-grow flex flex-col justify-center max-w-[40%]">
+                <div id="statusScreen" class="digital-screen w-full py-2 px-3 text-[10px] sm:text-xs tracking-wider uppercase truncate text-center">
+                    READY
                 </div>
             </div>
-            
-            <div class="w-full bg-gray-900 rounded p-1 inner-shadow">
-                <div id="chordContainer" class="chord-scroll-container">
-                    <!-- Chord Pads injected by JS -->
+            <!-- Buttons -->
+            <div class="flex space-x-3 items-center justify-center flex-grow">
+                <button id="btnRecord" class="led-btn flex flex-col items-center justify-center w-14 h-12">
+                    <div id="ledRecord" class="led-light mb-1"></div>
+                    <span class="text-[9px] font-bold text-gray-300">REC</span>
+                </button>
+                <button id="btnPlay" class="led-btn flex flex-col items-center justify-center w-14 h-12" disabled>
+                    <div id="ledPlay" class="led-light mb-1"></div>
+                    <span class="text-[9px] font-bold text-gray-300">PLAY</span>
+                </button>
+                <button id="btnDownload" class="led-btn flex flex-col items-center justify-center w-14 h-12" disabled>
+                    <div id="ledDownload" class="led-light mb-1"></div>
+                    <span class="text-[9px] font-bold text-gray-300">SAVE</span>
+                </button>
+            </div>
+            <!-- Toggle -->
+            <div class="flex flex-col items-center cursor-pointer min-w-[30px]" id="labelToggleBtn">
+                <span class="text-[8px] uppercase text-gray-500 font-bold mb-1">Note</span>
+                <div class="relative">
+                    <div class="w-8 h-4 bg-gray-900 rounded-full shadow-inner border border-gray-600"></div>
+                    <div id="toggleKnob" class="absolute top-0.5 left-0.5 w-3 h-3 bg-gray-400 rounded-full shadow-md transition-transform translate-x-4 bg-green-500"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Piano Bed (Keys) -->
-    <div class="h-[50%] piano-bed flex justify-center items-stretch relative overflow-hidden pb-2 bg-black">
-        <div id="piano" class="w-full h-full flex relative px-1">
-            <!-- Keys injected by JS -->
+    <!-- Piano Bed -->
+    <div class="flex-grow flex bg-black relative w-full overflow-hidden">
+        <div id="piano" class="piano-bed w-full h-full flex">
+            <!-- Keys Injected -->
         </div>
     </div>
 
-    <!-- Hidden Audio/Logic -->
     <script>
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = new AudioContext();
         
         const masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.6; // Lower gain to prevent clipping with chords
+        masterGain.gain.value = 0.6;
         masterGain.connect(audioCtx.destination);
-
         const dest = audioCtx.createMediaStreamDestination();
         masterGain.connect(dest);
 
-        let mediaRecorder;
-        let audioChunks = [];
-        let audioBlob = null;
-        let isRecording = false;
-        let recordedNoteEvents = [];
-        let startTime = 0;
-        let isPlayingBack = false;
+        let mediaRecorder, audioChunks = [], audioBlob = null;
+        let isRecording = false, recordedNoteEvents = [], startTime = 0, isPlayingBack = false;
 
-        // Base C4 frequency = 261.63
-        // Formula: freq = 261.63 * Math.pow(2, index / 12)
-        // Indices: C4=0, C#=1 ... C5=12
-        
-        // Notes Data (Visual Keys)
-        const notes = [
-            { note: 'C',  freq: 261.63, type: 'white', label: 'ด' },
-            { note: 'C#', freq: 277.18, type: 'black', pos: 14.3 },
-            { note: 'D',  freq: 293.66, type: 'white', label: 'ร' },
-            { note: 'D#', freq: 311.13, type: 'black', pos: 28.6 },
-            { note: 'E',  freq: 329.63, type: 'white', label: 'ม' },
-            { note: 'F',  freq: 349.23, type: 'white', label: 'ฟ' },
-            { note: 'F#', freq: 369.99, type: 'black', pos: 57.1 },
-            { note: 'G',  freq: 392.00, type: 'white', label: 'ซ' },
-            { note: 'G#', freq: 415.30, type: 'black', pos: 71.4 },
-            { note: 'A',  freq: 440.00, type: 'white', label: 'ล' },
-            { note: 'A#', freq: 466.16, type: 'black', pos: 85.7 },
-            { note: 'B',  freq: 493.88, type: 'white', label: 'ท' },
-            { note: 'C2', freq: 523.25, type: 'white', label: 'ด' } 
-        ];
+        // --- Generate 25 Keys ---
+        const notes = [];
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const thaiLabels = {'C':'ด', 'D':'ร', 'E':'ม', 'F':'ฟ', 'G':'ซ', 'A':'ล', 'B':'ท'};
+        const startOctave = 3, totalKeys = 25, baseFreq = 130.81;
 
-        // Helper to get frequency by index (extending beyond visual range)
-        function getFreqByIndex(index) {
-            return 261.63 * Math.pow(2, index / 12);
+        let whiteKeyCount = 0, whiteKeysTotal = 0;
+        for(let i=0; i<totalKeys; i++) { if(![1, 3, 6, 8, 10].includes(i % 12)) whiteKeysTotal++; }
+        const whiteKeyPercent = 100 / whiteKeysTotal;
+
+        for (let i = 0; i < totalKeys; i++) {
+            const noteIndex = i % 12;
+            const octave = startOctave + Math.floor(i / 12);
+            const name = noteNames[noteIndex];
+            const isBlack = [1, 3, 6, 8, 10].includes(noteIndex);
+            const freq = baseFreq * Math.pow(2, i / 12);
+            let noteData = { id: i, note: name + octave, freq: freq, type: isBlack ? 'black' : 'white', label: thaiLabels[name] || '' };
+            if (isBlack) noteData.pos = (whiteKeyCount * whiteKeyPercent); else whiteKeyCount++;
+            notes.push(noteData);
         }
 
-        // Chord Definitions (Offsets from C4)
-        // C4=0, C#=1, D=2, Eb=3, E=4, F=5, F#=6, G=7, Ab=8, A=9, Bb=10, B=11, C5=12...
-        const chordData = [
-            { name: "C",  indices: [0, 4, 7] },
-            { name: "Cm", indices: [0, 3, 7] },
-            { name: "D",  indices: [2, 6, 9] },
-            { name: "Dm", indices: [2, 5, 9] },
-            { name: "E",  indices: [4, 8, 11] },
-            { name: "Em", indices: [4, 7, 11] },
-            { name: "F",  indices: [5, 9, 12] },
-            { name: "Fm", indices: [5, 8, 12] },
-            { name: "G",  indices: [7, 11, 14] }, // 14 is D5
-            { name: "Gm", indices: [7, 10, 14] },
-            { name: "A",  indices: [9, 13, 16] }, // 13 is C#5, 16 is E5
-            { name: "Am", indices: [9, 12, 16] }
-        ];
-
         const pianoEl = document.getElementById('piano');
-        const chordContainer = document.getElementById('chordContainer');
         const statusScreen = document.getElementById('statusScreen');
-
-        // Buttons
         const btnRecord = document.getElementById('btnRecord');
         const btnPlay = document.getElementById('btnPlay');
         const btnDownload = document.getElementById('btnDownload');
         const ledRecord = document.getElementById('ledRecord');
         const ledPlay = document.getElementById('ledPlay');
         const ledDownload = document.getElementById('ledDownload');
-
-        // Toggle Labels
         const labelToggleBtn = document.getElementById('labelToggleBtn');
         const toggleKnob = document.getElementById('toggleKnob');
         let showLabels = true;
 
-        // --- Sound Engine ---
+        // --- Active Touch Tracking ---
+        const activeTouches = new Map(); // identifier -> noteIndex
+
         function playTone(freq, duration = 1.0) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-
             const osc = audioCtx.createOscillator();
             const noteGain = audioCtx.createGain();
-
             osc.type = 'triangle'; 
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
             noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
             noteGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02); 
             noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-
-            osc.connect(noteGain);
-            noteGain.connect(masterGain);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.connect(noteGain); noteGain.connect(masterGain);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
 
-        function playChord(indices) {
-            indices.forEach(idx => {
-                const freq = getFreqByIndex(idx);
-                playTone(freq, 1.5); // Slightly longer sustain for chords
-                
-                // Visual feedback only if key exists in range (0-12)
-                if (idx <= 12) {
-                    const keyEl = Array.from(pianoEl.children).find(el => parseInt(el.dataset.index) === idx);
-                    if(keyEl) {
-                        keyEl.classList.add('active');
-                        setTimeout(() => keyEl.classList.remove('active'), 200);
-                    }
-                }
-                
-                // Record
-                if (isRecording) {
-                    recordedNoteEvents.push({ 
-                        noteIndex: idx, // store actual index even if > 12
-                        time: Date.now() - startTime,
-                        isChordPart: true 
-                    });
-                }
-            });
+        function triggerNote(index) {
+            const n = notes[index];
+            if (!n) return;
+            
+            // Visual
+            const key = pianoEl.querySelector(`div[data-index="${index}"]`);
+            if (key) key.classList.add('active');
+
+            // Audio
+            playTone(n.freq);
+
+            // Record
+            if (isRecording) recordedNoteEvents.push({ noteIndex: n.id, time: Date.now() - startTime });
         }
 
-        // --- Render Keys ---
+        function releaseNote(index) {
+            const key = pianoEl.querySelector(`div[data-index="${index}"]`);
+            if (key) key.classList.remove('active');
+        }
+
         function renderKeys() {
-            notes.forEach((n, index) => {
+            notes.forEach((n) => {
                 const key = document.createElement('div');
-                key.dataset.index = index;
-
+                key.dataset.index = n.id;
                 if (n.type === 'white') {
                     key.className = 'key-white';
                     key.innerHTML = `<span class="note-label">${n.label}</span>`;
                     pianoEl.appendChild(key);
                 } else {
                     key.className = 'key-black';
-                    key.style.left = `calc(${n.pos}% - 3.75%)`; 
+                    key.style.bottom = `calc(${n.pos}% - 2.25%)`; 
+                    key.style.height = `4.5%`; 
                     pianoEl.appendChild(key);
                 }
+                
+                // Mouse Events (Fallback for Desktop)
+                key.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    triggerNote(n.id);
+                });
+                key.addEventListener('mouseup', () => releaseNote(n.id));
+                key.addEventListener('mouseleave', () => releaseNote(n.id));
+            });
+        }
 
-                // Interactions
-                const start = (e) => {
-                    if(e) { e.preventDefault(); e.stopPropagation(); }
-                    if (key.classList.contains('active')) return;
-                    key.classList.add('active');
-                    
-                    playTone(n.freq);
-                    
-                    if (isRecording) {
-                        recordedNoteEvents.push({ 
-                            noteIndex: index, 
-                            time: Date.now() - startTime 
-                        });
+        // --- Global Touch Handler (Glissando) ---
+        // This replaces individual touch events to allow dragging across keys
+        pianoEl.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Stop scrolling
+            handleTouches(e.changedTouches);
+        }, {passive: false});
+
+        pianoEl.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handleTouches(e.changedTouches);
+        }, {passive: false});
+
+        pianoEl.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            endTouches(e.changedTouches);
+        });
+
+        pianoEl.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            endTouches(e.changedTouches);
+        });
+
+        function handleTouches(touches) {
+            for (let i = 0; i < touches.length; i++) {
+                const touch = touches[i];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (element && element.dataset.index !== undefined) {
+                    const newIndex = parseInt(element.dataset.index);
+                    const oldIndex = activeTouches.get(touch.identifier);
+
+                    if (newIndex !== oldIndex) {
+                        // Finger moved to a new key
+                        if (oldIndex !== undefined) releaseNote(oldIndex);
+                        triggerNote(newIndex);
+                        activeTouches.set(touch.identifier, newIndex);
                     }
-                };
-
-                const end = (e) => {
-                    if(e) e.preventDefault();
-                    key.classList.remove('active');
-                };
-
-                key.addEventListener('mousedown', start);
-                key.addEventListener('mouseup', end);
-                key.addEventListener('mouseleave', end);
-                key.addEventListener('touchstart', start, {passive: false});
-                key.addEventListener('touchend', end);
-            });
+                } else {
+                    // Finger moved off keys
+                    const oldIndex = activeTouches.get(touch.identifier);
+                    if (oldIndex !== undefined) {
+                        releaseNote(oldIndex);
+                        activeTouches.delete(touch.identifier);
+                    }
+                }
+            }
         }
 
-        // --- Render Chords ---
-        function renderChords() {
-            chordData.forEach(chord => {
-                const btn = document.createElement('div');
-                btn.className = 'chord-pad';
-                btn.innerText = chord.name;
-                
-                const trigger = (e) => {
-                    if(e) { e.preventDefault(); e.stopPropagation(); }
-                    btn.classList.add('active');
-                    playChord(chord.indices);
-                    updateScreen("CHORD: " + chord.name);
-                };
-                
-                const release = (e) => {
-                    if(e) e.preventDefault();
-                    setTimeout(() => btn.classList.remove('active'), 100);
-                };
-
-                btn.addEventListener('mousedown', trigger);
-                btn.addEventListener('mouseup', release);
-                btn.addEventListener('touchstart', trigger, {passive: false});
-                btn.addEventListener('touchend', release);
-
-                chordContainer.appendChild(btn);
-            });
+        function endTouches(touches) {
+            for (let i = 0; i < touches.length; i++) {
+                const touch = touches[i];
+                const oldIndex = activeTouches.get(touch.identifier);
+                if (oldIndex !== undefined) {
+                    releaseNote(oldIndex);
+                    activeTouches.delete(touch.identifier);
+                }
+            }
         }
 
-        // --- Logic Control ---
+        // --- Controls Logic ---
         function updateScreen(text, isError = false) {
-            statusScreen.innerText = text;
-            statusScreen.style.color = isError ? '#ff5555' : '#61dafb';
+            statusScreen.innerText = text; statusScreen.style.color = isError ? '#ff5555' : '#61dafb';
         }
 
         btnRecord.addEventListener('click', () => {
             if (isPlayingBack) return;
-
-            if (!isRecording) {
-                // Start Rec
-                startRecording();
-            } else {
-                // Stop Rec
-                stopRecording();
-            }
+            if (!isRecording) startRecording(); else stopRecording();
         });
 
         function startRecording() {
-            audioChunks = [];
-            recordedNoteEvents = [];
-            
+            audioChunks = []; recordedNoteEvents = [];
             let options = { mimeType: 'audio/webm' };
             if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                options = { mimeType: 'audio/mp4' }; 
-                if(!MediaRecorder.isTypeSupported('audio/mp4')) options = undefined;
+                options = { mimeType: 'audio/mp4' }; if(!MediaRecorder.isTypeSupported('audio/mp4')) options = undefined;
             }
-
-            try {
-                mediaRecorder = new MediaRecorder(dest.stream, options);
-            } catch(e) {
-                mediaRecorder = new MediaRecorder(dest.stream);
-            }
-
+            try { mediaRecorder = new MediaRecorder(dest.stream, options); } catch(e) { mediaRecorder = new MediaRecorder(dest.stream); }
             mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
             mediaRecorder.onstop = () => {
                 audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                btnDownload.disabled = false;
-                btnPlay.disabled = false;
-                ledDownload.classList.add('active-green'); 
-                updateScreen("SAVED. READY.");
+                btnDownload.disabled = false; btnPlay.disabled = false; ledDownload.classList.add('active-green'); 
+                updateScreen("SAVED");
             };
-
-            mediaRecorder.start();
-            isRecording = true;
-            startTime = Date.now();
-
-            btnRecord.classList.add('active-red');
-            btnPlay.disabled = true;
-            btnDownload.disabled = true;
-            ledPlay.classList.remove('active-green');
-            ledDownload.classList.remove('active-green');
-            updateScreen("RECORDING...");
+            mediaRecorder.start(); isRecording = true; startTime = Date.now();
+            btnRecord.classList.add('active-red'); btnPlay.disabled = true; btnDownload.disabled = true;
+            ledPlay.classList.remove('active-green'); ledDownload.classList.remove('active-green'); updateScreen("REC...");
         }
 
-        function stopRecording() {
-            mediaRecorder.stop();
-            isRecording = false;
-            btnRecord.classList.remove('active-red');
-        }
+        function stopRecording() { mediaRecorder.stop(); isRecording = false; btnRecord.classList.remove('active-red'); }
 
         btnPlay.addEventListener('click', () => {
             if (recordedNoteEvents.length === 0) return;
-            
-            isPlayingBack = true;
-            btnPlay.classList.add('active-green');
-            btnRecord.disabled = true;
-            updateScreen("PLAYING...");
-
+            isPlayingBack = true; btnPlay.classList.add('active-green'); btnRecord.disabled = true; updateScreen("PLAYING");
             recordedNoteEvents.forEach((event, i) => {
                 setTimeout(() => {
-                    const freq = getFreqByIndex(event.noteIndex);
-                    playTone(freq, event.isChordPart ? 1.5 : 1.0);
-                    
-                    // Visual Key Press if visible
-                    if (event.noteIndex <= 12) {
-                        const keyEl = Array.from(pianoEl.children).find(el => parseInt(el.dataset.index) === event.noteIndex);
-                        if(keyEl) {
-                            keyEl.classList.add('active');
-                            setTimeout(() => keyEl.classList.remove('active'), 150);
-                        }
-                    }
-
+                    triggerNote(event.noteIndex);
+                    setTimeout(() => releaseNote(event.noteIndex), 150);
                     if (i === recordedNoteEvents.length - 1) {
-                        setTimeout(() => {
-                            isPlayingBack = false;
-                            btnPlay.classList.remove('active-green');
-                            btnRecord.disabled = false;
-                            updateScreen("DONE.");
-                        }, 500);
+                        setTimeout(() => { isPlayingBack = false; btnPlay.classList.remove('active-green'); btnRecord.disabled = false; updateScreen("DONE"); }, 500);
                     }
                 }, event.time);
             });
@@ -550,42 +392,20 @@
         btnDownload.addEventListener('click', () => {
             if (!audioBlob) return;
             const url = URL.createObjectURL(audioBlob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `synth-recording-${Date.now()}.webm`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            updateScreen("DOWNLOADED");
+            const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = `synth-${Date.now()}.webm`;
+            document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); updateScreen("DOWNLOADED");
         });
 
-        // Label Toggle
         labelToggleBtn.addEventListener('click', () => {
             showLabels = !showLabels;
-            if (showLabels) {
-                pianoEl.classList.remove('hide-labels');
-                toggleKnob.classList.add('translate-x-3', 'bg-green-500');
-                toggleKnob.classList.remove('translate-x-0', 'bg-gray-400');
-            } else {
-                pianoEl.classList.add('hide-labels');
-                toggleKnob.classList.remove('translate-x-3', 'bg-green-500');
-                toggleKnob.classList.add('translate-x-0', 'bg-gray-400');
-            }
+            if (showLabels) { pianoEl.classList.remove('hide-labels'); toggleKnob.classList.add('translate-x-4', 'bg-green-500'); toggleKnob.classList.remove('translate-x-0', 'bg-gray-400'); } 
+            else { pianoEl.classList.add('hide-labels'); toggleKnob.classList.remove('translate-x-4', 'bg-green-500'); toggleKnob.classList.add('translate-x-0', 'bg-gray-400'); }
         });
 
-        // Init
         renderKeys();
-        renderChords();
         
-        // Unlocks Audio Context on mobile
-        document.body.addEventListener('touchstart', function() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }, { once: true });
-        document.body.addEventListener('click', function() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }, { once: true });
-
+        document.body.addEventListener('touchstart', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
+        document.body.addEventListener('click', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
     </script>
 </body>
 </html>
