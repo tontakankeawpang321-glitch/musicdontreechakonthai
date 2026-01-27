@@ -3,501 +3,450 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ปี่ชวาจำลอง (Virtual Pi Java)</title>
+    <title>ปี่ชวา 14 เสียง (Mobile Fit)</title>
     <style>
-        /* --- การตั้งค่าพื้นฐาน --- */
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap');
+
         :root {
             --wood-dark: #3e2723;
-            --wood-light: #5d4037;
+            --wood-texture: repeating-linear-gradient(45deg, #3e2723, #3e2723 5px, #4e342e 5px, #4e342e 10px);
             --gold: #ffc107;
             --bg-color: #1a1a1a;
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             margin: 0;
             padding: 0;
             background-color: var(--bg-color);
-            color: white;
+            background-image: radial-gradient(circle at center, #2c2c2c 0%, #000000 100%);
             font-family: 'Sarabun', sans-serif;
+            color: white;
+            height: 100vh; /* Full screen height */
+            width: 100vw;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            overflow: hidden; /* ป้องกันการเลื่อนหน้าจอ */
-            touch-action: none; /* ป้องกัน default touch actions ของ browser */
-            user-select: none;
-            -webkit-user-select: none;
+            overflow: hidden; /* No scrolling */
         }
 
-        /* --- แผงควบคุม (ด้านบน) --- */
-        .control-panel {
+        /* Header Area - Keep it small */
+        header {
+            flex: 0 0 auto; /* Don't grow */
             width: 100%;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            z-index: 100;
+            padding: 5px 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(5px);
+            z-index: 10;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .btn-control {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
+        h1 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--gold);
+            white-space: nowrap;
+        }
+
+        .controls {
             display: flex;
-            align-items: center;
             gap: 5px;
         }
 
-        .btn-record { background-color: #e53935; color: white; }
-        .btn-stop { background-color: #757575; color: white; display: none; }
-        .btn-play { background-color: #43a047; color: white; }
-        .btn-download { background-color: #1e88e5; color: white; }
-        
-        .btn-control:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-control:active { transform: scale(0.95); }
-
-        .status-text {
-            position: absolute;
-            top: 60px;
-            font-size: 0.8rem;
-            color: var(--gold);
-            text-shadow: 1px 1px 2px black;
-        }
-
-        /* --- ตัวเครื่องดนตรี (ตรงกลาง) --- */
-        .instrument-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            width: 100%;
-            padding-top: 20px;
-            padding-bottom: 20px;
-            touch-action: none; 
-        }
-
-        /* ส่วนยอด (กำพวด/ลิ้น) */
-        .pi-top {
-            width: 20px;
-            height: 40px;
-            background: linear-gradient(90deg, #d4af37, #fff8e1, #d4af37);
-            border-radius: 5px 5px 0 0;
-            margin-bottom: -5px;
-            z-index: 2;
-        }
-
-        /* ส่วนตัวปี่ (เลาปี่) */
-        .pi-body {
-            width: 60px;
-            flex-grow: 1; /* ยืดตามความสูงจอ */
-            max-height: 70vh;
-            background: linear-gradient(90deg, var(--wood-dark), var(--wood-light), var(--wood-dark));
-            border-radius: 30px;
-            position: relative;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-evenly; /* จัดระยะห่างรูนิ้ว */
-            align-items: center;
-            padding: 20px 0;
-            border: 2px solid #2d1b18;
-        }
-
-        /* ลวดลายข้อต่อ */
-        .pi-ring {
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b);
-            position: absolute;
-        }
-        .ring-top { top: 10px; }
-        .ring-bottom { bottom: 10px; }
-
-        /* ส่วนลำโพง (บานออกด้านล่าง) */
-        .pi-bell {
-            width: 0;
-            height: 0;
-            border-left: 50px solid transparent;
-            border-right: 50px solid transparent;
-            border-top: 80px solid var(--wood-dark);
-            margin-top: -10px;
-            position: relative;
-            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
-        }
-        
-        .pi-bell::after {
-            content: '';
-            position: absolute;
-            top: -80px;
-            left: -40px;
-            width: 80px;
-            height: 20px;
-            background: linear-gradient(90deg, var(--wood-dark), var(--wood-light), var(--wood-dark));
-            opacity: 0.5;
-        }
-
-        /* --- ปุ่มกดโน้ต (รูนิ้ว) --- */
-        .note-hole {
-            width: 45px;
-            height: 45px;
-            background: radial-gradient(circle at 30% 30%, #5d4037, #261612);
-            border-radius: 50%;
-            border: 3px solid #8d6e63;
-            box-shadow: inset 2px 2px 5px black;
+        button {
+            background: #444;
+            border: 1px solid #666;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 0.75rem;
             cursor: pointer;
-            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        button span { font-size: 0.9rem; }
+        button:active { transform: scale(0.95); }
+        button.record-btn.recording { background: #d32f2f; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* Instrument Area - Take remaining space */
+        .instrument-container {
+            flex: 1 1 auto;
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: transform 0.05s, background 0.05s; /* ทำให้ตอบสนองไวขึ้น */
+            position: relative;
+            padding: 10px 0;
+            overflow: hidden;
         }
 
-        /* สร้าง Hitbox ที่ใหญ่ขึ้นแบบมองไม่เห็น เพื่อให้กดง่ายและลากต่อนิ้วง่าย */
-        .note-hole::before {
-            content: '';
-            position: absolute;
-            top: -15px;
-            bottom: -15px;
-            left: -15px;
-            right: -15px;
-            border-radius: 50%;
-            z-index: 10;
+        /* The Instrument Structure */
+        .pi-java {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%; /* Fill container */
+            width: 80px; /* Slimmer for elegance */
         }
 
-        .note-hole::after {
-            content: attr(data-note);
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
+        /* Reed & Bell - Smaller relative height */
+        .reed { 
+            flex: 0 0 20px; 
+            width: 10px; 
+            background: #d7ccc8; 
+            border-radius: 4px 4px 0 0; 
+            z-index: 2; 
+        }
+        
+        .bell {
+            flex: 0 0 50px;
+            width: 90px;
+            background: var(--wood-dark);
+            background-image: var(--wood-texture);
+            clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%);
+            margin-top: -2px;
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.8);
+        }
+
+        /* Body Tube - The main part */
+        .body-tube {
+            flex: 1 1 auto; /* Grow to fill space */
+            width: 45px;
+            background: var(--wood-dark);
+            background-image: var(--wood-texture);
+            border-radius: 8px;
+            box-shadow: inset 3px 0 10px rgba(0,0,0,0.8), 3px 3px 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly; /* Distribute 14 holes evenly */
+            align-items: center;
+            padding: 5px 0;
+            position: relative;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid rgba(0,0,0,0.5);
+        }
+
+        /* Decorative Rings */
+        .ring {
+            width: 50px; height: 3px;
+            background: linear-gradient(90deg, #ffd700, #ffeb3b, #ffd700);
+            position: absolute; border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
             pointer-events: none;
         }
+        .ring.top { top: 5px; }
+        .ring.bottom { bottom: 5px; }
 
-        /* เอฟเฟกต์ตอนกด (Active State) */
-        .note-hole.active {
-            background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
-            border-color: #fff;
-            transform: scale(0.90); /* ยุบลงเล็กน้อย */
-            box-shadow: 0 0 15px var(--gold);
-        }
-        
-        .note-hole.active::after {
-            color: #000;
-            font-weight: bold;
+        /* Holes Configuration */
+        .hole-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1; /* Each hole gets equal vertical space */
+            max-height: 40px; /* Don't get too tall on huge screens */
         }
 
+        .hole {
+            /* Responsive size: dependent on viewport height but capped */
+            width: 5.5vh; 
+            height: 5.5vh;
+            max-width: 32px;
+            max-height: 32px;
+            min-width: 20px;
+            min-height: 20px;
+            
+            background: radial-gradient(circle at 35% 35%, #333, #000);
+            border-radius: 50%;
+            border: 2px solid #5d4037;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+
+        /* Note Labels - Small & Subtle */
+        .hole::after {
+            content: attr(data-note);
+            position: absolute;
+            right: -30px; /* To the right */
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.4);
+            font-size: 0.7rem;
+            pointer-events: none;
+            font-weight: 300;
+        }
+
+        .hole.active {
+            background: radial-gradient(circle at 35% 35%, #a1887f, #4e342e); /* Finger color */
+            border-color: #ffd700;
+            transform: scale(0.92);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Visual Feedback Display */
+        .note-display {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            z-index: 0;
+            white-space: nowrap;
+        }
+        .note-display.playing {
+            color: rgba(255, 193, 7, 0.2);
+            text-shadow: 0 0 30px rgba(255,193,7,0.3);
+        }
+
+        /* Start Overlay */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 500;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; padding: 20px; text-align: center;
+        }
     </style>
 </head>
 <body>
 
-    <!-- แผงควบคุม -->
-    <div class="control-panel">
-        <button id="btnRecord" class="btn-control btn-record">
-            <span>🔴</span> อัดเสียง
-        </button>
-        <button id="btnStop" class="btn-control btn-stop">
-            <span>⏹</span> หยุด
-        </button>
-        <button id="btnPlayRecord" class="btn-control btn-play" disabled>
-            <span>▶</span> ฟังที่อัด
-        </button>
-        <button id="btnDownload" class="btn-control btn-download" disabled>
-            <span>⬇</span> โหลด
+    <div id="start-overlay">
+        <h1 style="color:var(--gold); font-size: 2rem; margin-bottom:10px;">ปี่ชวา 14 เสียง</h1>
+        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">แตะเพื่อเริ่ม (Full Range C5-B6)</p>
+        <button onclick="initAudio()" style="font-size:1.1rem; padding:12px 30px; background:var(--gold); color:black; border:none; border-radius:30px; font-weight: bold;">
+            เริ่มเล่น
         </button>
     </div>
 
-    <div id="status" class="status-text">พร้อมใช้งาน (กรุณาใส่ลิงก์เสียงในโค้ด)</div>
-
-    <!-- ตัวเครื่องดนตรี -->
-    <div class="instrument-container">
-        <div class="pi-top"></div>
-        
-        <div class="pi-body">
-            <div class="pi-ring ring-top"></div>
-            
-            <!-- รูนิ้ว เรียงจากบนลงล่าง -->
-            <div class="note-hole" data-note="High" data-index="7"></div>
-            <div class="note-hole" data-note="Ti" data-index="6"></div>
-            <div class="note-hole" data-note="La" data-index="5"></div>
-            <div class="note-hole" data-note="Sol" data-index="4"></div>
-            <div class="note-hole" data-note="Fa" data-index="3"></div>
-            <div class="note-hole" data-note="Mi" data-index="2"></div>
-            <div class="note-hole" data-note="Re" data-index="1"></div>
-            <div class="note-hole" data-note="Do" data-index="0"></div>
-
-            <div class="pi-ring ring-bottom"></div>
+    <header>
+        <h1>ปี่ชวา</h1>
+        <div class="controls">
+            <button id="recordBtn" class="record-btn" onclick="toggleRecording()"><span>🔴</span> อัด</button>
+            <button id="playBtn" class="play-btn" onclick="playRecording()" disabled><span>▶️</span> ฟัง</button>
+            <button id="downloadBtn" class="download-btn" onclick="downloadRecording()" disabled><span>⬇️</span> เซฟ</button>
         </div>
+    </header>
 
-        <div class="pi-bell"></div>
+    <div class="instrument-container">
+        <div class="note-display" id="mainNoteDisplay"></div>
+        
+        <div class="pi-java">
+            <div class="reed"></div>
+            
+            <div class="body-tube">
+                <div class="ring top"></div>
+                
+                <!-- 14 Holes: High Pitch (Top) to Low Pitch (Bottom) -->
+                <!-- Range: B6 down to C5 -->
+                
+                <div class="hole-container"><div class="hole" data-note="B6" data-semitone="23" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="A6" data-semitone="21" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="G6" data-semitone="19" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="F6" data-semitone="17" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="E6" data-semitone="16" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="D6" data-semitone="14" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="C6" data-semitone="12" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                
+                <!-- Lower Octave -->
+                <div class="hole-container"><div class="hole" data-note="B5" data-semitone="11" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="A5" data-semitone="9"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="G5" data-semitone="7"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="F5" data-semitone="5"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="E5" data-semitone="4"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="D5" data-semitone="2"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="C5" data-semitone="0"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+
+                <div class="ring bottom"></div>
+            </div>
+
+            <div class="bell"></div>
+        </div>
     </div>
 
     <script>
-        // ==========================================
-        // --- ส่วนใส่ลิงก์เสียง (USER CONFIG) ---
-        // ==========================================
-        const audioConfig = [
-            "", // เสียงที่ 1 (โด / Low)
-            "", // เสียงที่ 2 (เร)
-            "", // เสียงที่ 3 (มี)
-            "", // เสียงที่ 4 (ฟา)
-            "", // เสียงที่ 5 (ซอล)
-            "", // เสียงที่ 6 (ลา)
-            "", // เสียงที่ 7 (ที)
-            ""  // เสียงที่ 8 (โด สูง / High)
-        ];
-
-        // ==========================================
-        // --- ระบบ Audio Engine ---
-        // ==========================================
-        let audioContext;
-        let audioBuffers = [];
-        let mediaStreamDestination;
+        let audioCtx;
+        let masterGain;
+        let activeSources = {};
+        
+        // Recorder Variables
         let mediaRecorder;
-        let audioChunks = [];
-        let recordedBlob;
-        let isRecording = false;
-        const statusEl = document.getElementById('status');
+        let recordedChunks = [];
+        let audioDestination;
+        let audioBlob, audioUrl;
+        let playbackAudio = new Audio();
 
-        async function initAudio() {
-            if (!audioContext) {
+        const mainNoteDisplay = document.getElementById('mainNoteDisplay');
+
+        function initAudio() {
+            if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContext();
-                mediaStreamDestination = audioContext.createMediaStreamDestination();
-                await loadSounds();
-            }
-            if (audioContext.state === 'suspended') {
-                await audioContext.resume();
-            }
-        }
-
-        async function loadSounds() {
-            statusEl.innerText = "กำลังโหลดเสียง...";
-            const loadPromises = audioConfig.map(async (url, index) => {
-                if (!url) return null;
-                try {
-                    const response = await fetch(url);
-                    const arrayBuffer = await response.arrayBuffer();
-                    return await audioContext.decodeAudioData(arrayBuffer);
-                } catch (error) {
-                    console.error(`Error loading sound ${index}:`, error);
-                    return null;
-                }
-            });
-
-            audioBuffers = await Promise.all(loadPromises);
-            const loadedCount = audioBuffers.filter(b => b !== null).length;
-            if (loadedCount === 0) {
-                statusEl.innerText = "ยังไม่ได้ใส่ไฟล์เสียง (ใช้งานได้เฉพาะกราฟิก)";
-            } else {
-                statusEl.innerText = `โหลดเสียงเสร็จสิ้น (${loadedCount}/${audioConfig.length})`;
-            }
-        }
-
-        // ฟังก์ชันเล่นเสียง (อย่างเดียว ไม่เกี่ยวกับภาพ)
-        function playSound(index) {
-            initAudio(); 
-
-            if (audioContext && audioBuffers[index]) {
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[index];
-                source.connect(audioContext.destination);
+                audioCtx = new AudioContext();
                 
-                if (mediaStreamDestination) {
-                    source.connect(mediaStreamDestination);
-                }
-                source.start(0);
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.4; // Slightly lower master volume due to many notes
+                masterGain.connect(audioCtx.destination);
+                
+                audioDestination = audioCtx.createMediaStreamDestination();
+                masterGain.connect(audioDestination);
             }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('start-overlay').style.display = 'none';
         }
 
-        // ==========================================
-        // --- ระบบจัดการสัมผัส (Robust Touch System) ---
-        // ==========================================
-        
-        // เก็บสถานะว่านิ้วไหน (Touch ID) กำลังกดโน้ตไหนอยู่ล่าสุด
-        // เพื่อใช้ป้องกันการเล่นเสียงซ้ำถ้านิ้วยังแช่อยู่ที่เดิม แต่ยอมให้เล่นใหม่ถ้าย้ายรู
-        const activeTouches = {}; 
-
-        function handleTouch(e) {
-            e.preventDefault(); // ป้องกันการซูมหรือเลื่อนจอ
-
-            // เซ็ตเก็บรายชื่อรูโน้ตที่ถูกกดในขณะนี้ (เพื่อแสดงผลกราฟิก)
-            const currentTouchedIndices = new Set();
-
-            // วนลูปตรวจสอบทุกนิ้วที่สัมผัสจอ
-            for (let i = 0; i < e.touches.length; i++) {
-                const touch = e.touches[i];
-                const element = document.elementFromPoint(touch.clientX, touch.clientY);
-
-                if (element && element.classList.contains('note-hole')) {
-                    const index = parseInt(element.getAttribute('data-index'));
-                    
-                    // เพิ่มโน้ตนี้เข้าไปในรายการ "กำลังถูกกด" เพื่อแสดงไฟ
-                    currentTouchedIndices.add(index);
-
-                    // ตรวจสอบ Logic การเล่นเสียง:
-                    // ถ้านิ้วนี้ (ID นี้) ยังไม่เคยบันทึกว่ากดปุ่มนี้มาก่อน (คือเพิ่งเลื่อนมาโดน หรือเพิ่งกดลงไป)
-                    if (activeTouches[touch.identifier] !== index) {
-                        playSound(index);
-                        activeTouches[touch.identifier] = index; // จำไว้ว่านิ้วนี้กดปุ่มนี้แล้ว
-                    }
-                } else {
-                    // ถ้านิ้วนี้ไม่ได้อยู่บนรูโน้ต (ลากออกไปพื้นที่ว่าง)
-                    // ให้ลบสถานะออก เพื่อให้เวลากลับมาโดนรูใหม่ จะได้เล่นเสียงได้อีก
-                    delete activeTouches[touch.identifier];
-                }
-            }
-
-            // อัปเดตการแสดงผล (Visual Update)
-            // เช็คปุ่มทั้งหมด ถ้าปุ่มไหนอยู่ในรายการที่ถูกกด ให้เปิดไฟ, ถ้าไม่อยู่ ให้ปิดไฟ
-            document.querySelectorAll('.note-hole').forEach(hole => {
-                const index = parseInt(hole.getAttribute('data-index'));
-                if (currentTouchedIndices.has(index)) {
-                    hole.classList.add('active');
-                } else {
-                    hole.classList.remove('active');
-                }
-            });
-        }
-
-        // เมื่อยกนิ้วขึ้นทั้งหมด
-        function handleTouchEnd(e) {
-            e.preventDefault();
+        // --- SYNTHESIS ENGINE ---
+        function playNote(element) {
+            if (!audioCtx) initAudio();
+            const note = element.getAttribute('data-note');
             
-            // ลบ Touch ID ที่ยกออกไปแล้วออกจากระบบจำ
-            // เพื่อไม่ให้ค้าง (Memory cleanup)
-            const currentTouchIds = new Set();
-            for (let i = 0; i < e.touches.length; i++) {
-                currentTouchIds.add(e.touches[i].identifier);
-            }
+            // Prevent duplicate triggers for the same note
+            if (activeSources[note]) return;
 
-            for (const id in activeTouches) {
-                if (!currentTouchIds.has(parseInt(id))) {
-                    delete activeTouches[id];
-                }
-            }
+            element.classList.add('active');
+            mainNoteDisplay.innerText = note;
+            mainNoteDisplay.classList.add('playing');
 
-            // เรียก handleTouch อีกรอบเพื่อเคลียร์ไฟปุ่มที่นิ้วยกออกไปแล้ว
-            handleTouch(e); 
+            const now = audioCtx.currentTime;
+            
+            // Calculate Freq (Base C5 = 523.25)
+            const semitone = parseInt(element.getAttribute('data-semitone'));
+            const freq = 523.25 * Math.pow(2, semitone / 12);
+
+            // Oscillators
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sawtooth'; // The reedy buzz
+            osc1.frequency.setValueAtTime(freq, now);
+
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'square'; // The hollow body
+            osc2.frequency.setValueAtTime(freq, now);
+            osc2.detune.value = 8;
+
+            // Filter (Formant)
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1800; // Adjusted formant
+            filter.Q.value = 0.7;
+
+            // Vibrato
+            const lfo = audioCtx.createOscillator();
+            lfo.frequency.value = 5.5;
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 6;
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.frequency);
+            lfoGain.connect(osc2.frequency);
+
+            // Envelope
+            const ampGain = audioCtx.createGain();
+            ampGain.gain.setValueAtTime(0, now);
+            ampGain.gain.linearRampToValueAtTime(1, now + 0.03);
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(ampGain);
+            ampGain.connect(masterGain);
+
+            lfo.start(now);
+            osc1.start(now);
+            osc2.start(now);
+
+            activeSources[note] = { osc1, osc2, lfo, ampGain };
         }
 
-        const instrumentContainer = document.querySelector('.instrument-container');
-        
-        // ใช้ Touch Events แบบ Full-Screen Container เพื่อความลื่นไหล
-        instrumentContainer.addEventListener('touchstart', handleTouch, { passive: false });
-        instrumentContainer.addEventListener('touchmove', handleTouch, { passive: false }); // สำคัญมากสำหรับการลาก (Glissando)
-        instrumentContainer.addEventListener('touchend', handleTouchEnd);
-        instrumentContainer.addEventListener('touchcancel', handleTouchEnd);
+        function stopNote(element) {
+            const note = element.getAttribute('data-note');
+            element.classList.remove('active');
+            mainNoteDisplay.classList.remove('playing');
 
-        // รองรับ Mouse สำหรับทดสอบบนคอม (คลิก+ลาก)
-        let isMouseDown = false;
-        instrumentContainer.addEventListener('mousedown', (e) => {
-            isMouseDown = true;
-            // สร้าง Mock Touch Object
-            const mockEvent = {
-                preventDefault: () => {},
-                touches: [{ identifier: 999, clientX: e.clientX, clientY: e.clientY }]
-            };
-            handleTouch(mockEvent);
-        });
-        
-        window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown) return;
-            const mockEvent = {
-                preventDefault: () => {},
-                touches: [{ identifier: 999, clientX: e.clientX, clientY: e.clientY }]
-            };
-            handleTouch(mockEvent);
-        });
+            if (activeSources[note]) {
+                const { osc1, osc2, lfo, ampGain } = activeSources[note];
+                const now = audioCtx.currentTime;
+                
+                ampGain.gain.cancelScheduledValues(now);
+                ampGain.gain.setValueAtTime(ampGain.gain.value, now);
+                ampGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
-        window.addEventListener('mouseup', (e) => {
-            isMouseDown = false;
-             const mockEvent = {
-                preventDefault: () => {},
-                touches: []
-            };
-            handleTouchEnd(mockEvent);
-        });
+                osc1.stop(now + 0.15);
+                osc2.stop(now + 0.15);
+                lfo.stop(now + 0.15);
 
-
-        // ==========================================
-        // --- ระบบอัดเสียง ---
-        // ==========================================
-        const btnRecord = document.getElementById('btnRecord');
-        const btnStop = document.getElementById('btnStop');
-        const btnPlayRecord = document.getElementById('btnPlayRecord');
-        const btnDownload = document.getElementById('btnDownload');
-
-        btnRecord.addEventListener('click', async () => {
-            await initAudio();
-            audioChunks = [];
-            
-            if (!mediaStreamDestination) {
-                statusEl.innerText = "Error: Audio Context not ready";
-                return;
+                setTimeout(() => { delete activeSources[note]; }, 200);
             }
+        }
 
-            try {
-                const options = MediaRecorder.isTypeSupported('audio/webm') ? { mimeType: 'audio/webm' } : undefined;
-                mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, options);
+        // --- Recorder Functions ---
+        function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const playBtn = document.getElementById('playBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
 
-                mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
-                mediaRecorder.onstop = () => {
-                    recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    btnPlayRecord.disabled = false;
-                    btnDownload.disabled = false;
-                    statusEl.innerText = "บันทึกเสร็จสิ้น";
-                };
-
-                mediaRecorder.start();
-                isRecording = true;
-                btnRecord.style.display = 'none';
-                btnStop.style.display = 'flex';
-                statusEl.innerText = "กำลังบันทึก... 🔴";
-                btnPlayRecord.disabled = true;
-                btnDownload.disabled = true;
-
-            } catch (e) {
-                statusEl.innerText = "ไม่สามารถบันทึกได้";
-            }
-        });
-
-        btnStop.addEventListener('click', () => {
-            if (mediaRecorder && isRecording) {
+            if (recordBtn.classList.contains('recording')) {
                 mediaRecorder.stop();
-                isRecording = false;
-                btnRecord.style.display = 'flex';
-                btnStop.style.display = 'none';
-            }
-        });
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '<span>🔴</span> อัด';
+            } else {
+                if (!audioCtx) initAudio();
+                recordedChunks = [];
+                let options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/mp4' };
+                
+                try {
+                    mediaRecorder = new MediaRecorder(audioDestination.stream, options);
+                } catch(e) {
+                    mediaRecorder = new MediaRecorder(audioDestination.stream);
+                }
 
-        btnPlayRecord.addEventListener('click', () => {
-            if (recordedBlob) {
-                const audioUrl = URL.createObjectURL(recordedBlob);
-                const playbackAudio = new Audio(audioUrl);
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    audioUrl = URL.createObjectURL(audioBlob);
+                    playBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                };
+                mediaRecorder.start();
+                recordBtn.classList.add('recording');
+                recordBtn.innerHTML = '<span>⏹</span> หยุด';
+                playBtn.disabled = true;
+                downloadBtn.disabled = true;
+            }
+        }
+
+        function playRecording() {
+            if (audioUrl) {
+                playbackAudio.src = audioUrl;
                 playbackAudio.play();
-                statusEl.innerText = "กำลังเล่นเสียงที่อัด... ▶";
             }
-        });
+        }
 
-        btnDownload.addEventListener('click', () => {
-            if (recordedBlob) {
-                const url = URL.createObjectURL(recordedBlob);
+        function downloadRecording() {
+            if (audioUrl) {
                 const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = 'my_pi_java_song.webm';
+                a.href = audioUrl;
+                const date = new Date();
+                a.download = `pi-java-14notes-${date.getTime()}.webm`;
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
             }
-        });
-
+        }
     </script>
 </body>
 </html>
