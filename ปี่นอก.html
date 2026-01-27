@@ -3,523 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtual Pi Nok (Sample Player)</title>
+    <title>ปี่นอก (Full Screen)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
 
-        :root {
-            --wood-dark: #2d1e15;
-            --wood-light: #8d6e63;
-            --gold: #ffc107;
-            --gold-shadow: #b28704;
-            --bg-color: #121212;
-            --btn-active: #ff5722;
-        }
+        /* ป้องกันการเด้งของหน้าจอ */
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-color);
-            color: white;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #050505;
+            overflow: hidden; /* ห้ามเลื่อน */
+            overscroll-behavior: none;
+            height: 100dvh; /* ใช้ dynamic viewport height */
+            width: 100vw;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none; /* ป้องกันการเลือกข้อความบนมือถือ */
-            touch-action: none; /* ป้องกันการซูมหรือเลื่อนหน้าจอ */
+            padding: 0;
+            margin: 0;
         }
 
-        /* ส่วนควบคุมด้านบน */
-        .controls {
+        /* พื้นหลังลายไม้ - ปรับสีให้เหมือนไม้ชิงชัน/พะยูง (เข้มอมแดง) */
+        .wood-texture {
+            background: linear-gradient(90deg, 
+                #1a0b05 0%, 
+                #3e2723 15%, 
+                #5d4037 45%, 
+                #4e342e 50%, 
+                #5d4037 55%, 
+                #3e2723 85%, 
+                #1a0b05 100%);
+            box-shadow: inset 0 0 60px #000, 5px 0 25px rgba(0,0,0,0.6);
+            border-radius: 20px 20px 0 0; 
+            position: absolute;
+            top: 0; bottom: 0;
             width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+            max-width: 320px;
+            z-index: 0;
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+        }
+
+        /* ลายเสี้ยนไม้บางๆ */
+        .wood-texture::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            opacity: 0.3;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        /* Grid Container */
+        #hole-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; 
+            grid-template-rows: repeat(7, 1fr); 
+            gap: 2px 8vw; /* ขยับห่างนิดหน่อยเพื่อให้รูดูเด่น */
+            padding: 2vh 5vw; 
+            justify-items: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            max-width: 340px;
             z-index: 10;
         }
 
-        .btn-control {
-            background: #444;
-            color: white;
-            border: 1px solid #666;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-        }
-
-        .btn-control:active {
-            transform: scale(0.95);
-        }
-
-        .btn-record.recording {
-            background: #d32f2f;
-            color: white;
-            animation: pulse 1.0s infinite;
-        }
-
-        .btn-play.playing {
-            background: #388e3c;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
-        }
-
-        /* ตัวเครื่องดนตรี */
-        .instrument-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        /* รูนิ้วกด - ดีไซน์ใหม่ให้เหมือนรูเจาะไม้ */
+        .hole {
             width: 100%;
-            position: relative;
-        }
-
-        .pi-body {
-            width: 140px; /* ขนาดความกว้างเลาปี่ */
-            height: 95%;
-            background: linear-gradient(90deg, #1a0f0a 0%, #4e342e 30%, #6d4c41 50%, #4e342e 70%, #1a0f0a 100%);
-            border-radius: 70px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-evenly; /* จัดระยะห่างรูให้เท่ากัน */
-            padding: 20px 0;
-            position: relative;
-            border: 2px solid #3e2723;
-        }
-
-        /* แหวนรัดปี่ (ตกแต่ง) */
-        .ring {
-            width: 100%;
-            height: 8px;
-            background: linear-gradient(90deg, #b28704, #ffe082, #b28704);
-            position: absolute;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        .ring-top { top: 40px; }
-        .ring-bottom { bottom: 40px; }
-        .ring-mid-1 { top: 35%; height: 4px; }
-        .ring-mid-2 { top: 65%; height: 4px; }
-
-        /* รูนิ้ว/ปุ่มกด */
-        .note-btn {
-            width: 75px;
-            height: 75px;
-            background: radial-gradient(circle at 35% 35%, #5d4037, #1a0f0a);
+            height: 100%;
+            max-width: 58px; 
+            max-height: 58px;
+            aspect-ratio: 1/1; 
             border-radius: 50%;
-            border: 2px solid #3e2723;
+            
+            /* พื้นหลังเป็นรูมืดๆ เหมือนเจาะลงไป */
+            background: radial-gradient(circle at 70% 70%, #2a1b15 0%, #000 60%);
+            
+            /* ขอบรูนูนขึ้นมานิดหน่อย */
+            border: 2px solid #4e342e; 
+            box-shadow: 
+                inset 3px 3px 6px #000, /* เงาด้านในเพื่อให้ดูลึก */
+                inset -1px -1px 2px rgba(255,255,255,0.1), /* แสงจับขอบรูด้านใน */
+                0 1px 2px rgba(255,255,255,0.05); /* แสงจับขอบนูนด้านนอก */
+            
+            transition: transform 0.05s ease-out;
             position: relative;
-            cursor: pointer;
-            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.9), 0 4px 6px rgba(0,0,0,0.6);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 26px;
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.3);
-            transition: transform 0.05s, box-shadow 0.05s;
-            -webkit-tap-highlight-color: transparent; /* ลบสีไฮไลท์เวลาแตะบน Android */
+            color: rgba(255,255,255,0.4);
+            font-size: 0.9rem;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .note-btn.active {
-            background: radial-gradient(circle at 35% 35%, #ff7043, #d84315);
-            transform: scale(0.92);
-            box-shadow: 0 0 20px var(--btn-active);
-            color: white;
-            border-color: #ffab91;
+        /* ปรับสีขอบเล็กน้อยสำหรับเสียงสูงเพื่อให้แยกแยะง่ายขึ้น แต่ยังคงความสมจริง */
+        .hole.high-pitch {
+            border-color: #6d4c41; /* ขอบสีอ่อนกว่านิดหน่อย */
         }
 
-        .note-label {
-            position: absolute;
-            left: -65px;
-            font-size: 16px;
-            color: var(--gold);
-            text-shadow: 1px 1px 2px black;
-            opacity: 0.8;
-            width: 55px;
-            text-align: right;
-            font-weight: normal;
+        /* Active State: นิ้วปิดรูสนิท */
+        .hole.active {
+            transform: scale(0.96); 
+            background: #000; /* มืดสนิท */
+            border-color: #8d6e63; /* ขอบสว่างขึ้นเหมือนโดนกด */
+            box-shadow: 
+                inset 0 0 15px #000,
+                0 0 8px rgba(255, 167, 38, 0.3); /* เรืองแสงสีส้มจางๆ */
+            color: rgba(255,255,255,0.9);
         }
+
+        .vibrating { animation: shake 0.2s infinite; }
         
-        /* หน้าจอเริ่มต้น */
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-            text-align: center;
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(0.5px); }
+            75% { transform: translateX(-0.5px); }
+            100% { transform: translateX(0); }
         }
-
-        #start-btn {
-            margin-top: 30px;
-            padding: 15px 50px;
-            font-size: 22px;
-            background: var(--gold);
-            color: #3e2723;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 30px rgba(255, 193, 7, 0.4);
-        }
-
-        .status-text {
-            position: fixed;
-            bottom: 20px;
-            font-size: 14px;
-            color: #888;
-            pointer-events: none;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 10px;
-            border-radius: 10px;
-        }
-
     </style>
 </head>
-<body>
+<body class="bg-gray-900 text-white">
 
-    <!-- Start Screen -->
-    <div id="start-overlay">
-        <h1>ปี่นอก จำลอง</h1>
-        <p style="color: #aaa; margin-bottom: 5px;">ระบบไฟล์เสียง (Sample Based)</p>
-        <p style="font-size: 12px; color: #666;">(กรุณาใส่ลิงก์ไฟล์เสียงในโค้ดก่อนเล่น)</p>
-        <button id="start-btn">โหลดและเริ่มเล่น</button>
-    </div>
+    <!-- Header -->
+    <div class="flex-none w-full px-4 pt-3 pb-2 z-20 bg-gray-900/90 backdrop-blur-sm border-b border-gray-800">
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-lg font-bold text-amber-500 leading-none" style="text-shadow: 0 0 5px rgba(245, 158, 11, 0.3);">ปี่นอกจำลอง</h1>
+            <div id="status" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full">พร้อมใช้งาน</div>
+        </div>
 
-    <!-- Controls -->
-    <div class="controls">
-        <button class="btn-control" id="btn-record">🔴 อัดเสียง</button>
-        <button class="btn-control" id="btn-stop" disabled>⏹ หยุด</button>
-        <button class="btn-control" id="btn-play" disabled>▶ ฟัง</button>
-        <button class="btn-control" id="btn-download" disabled>⬇ เซฟ</button>
-    </div>
-
-    <!-- Instrument -->
-    <div class="instrument-container">
-        <div class="pi-body">
-            <div class="ring ring-top"></div>
-            <div class="ring ring-mid-1"></div>
-            <div class="ring ring-mid-2"></div>
-            <div class="ring ring-bottom"></div>
-
-            <!-- Notes: เรียงจากเสียงสูง (บน) ไปต่ำ (ล่าง) -->
-            <div class="note-btn" data-note="C6" data-label="ดํ"><span class="note-label">High Do</span>ดํ</div>
-            <div class="note-btn" data-note="B5" data-label="ท"><span class="note-label">Ti</span>ท</div>
-            <div class="note-btn" data-note="A5" data-label="ล"><span class="note-label">La</span>ล</div>
-            <div class="note-btn" data-note="G5" data-label="ซ"><span class="note-label">Sol</span>ซ</div>
-            <div class="note-btn" data-note="F5" data-label="ฟ"><span class="note-label">Fa</span>ฟ</div>
-            <div class="note-btn" data-note="E5" data-label="ม"><span class="note-label">Mi</span>ม</div>
-            <div class="note-btn" data-note="D5" data-label="ร"><span class="note-label">Re</span>ร</div>
-            <div class="note-btn" data-note="C5" data-label="ด"><span class="note-label">Do</span>ด</div>
+        <!-- Controls Row -->
+        <div class="flex gap-3 h-8 mb-1">
+            <button id="recordBtn" class="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg flex justify-center items-center gap-2 active:scale-95 transition-all border border-gray-700">
+                <i class="fas fa-microphone text-xs text-gray-400"></i>
+                <span class="text-xs font-medium">อัดเสียง</span>
+            </button>
+            <button id="playBtn" disabled class="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg flex justify-center items-center gap-2 opacity-50 transition-all border border-gray-700">
+                <i class="fas fa-play text-xs text-green-500"></i>
+                <span class="text-xs font-medium">เล่น</span>
+            </button>
+            <button id="downloadBtn" disabled class="flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg flex justify-center items-center gap-2 opacity-50 transition-all border border-gray-700">
+                <i class="fas fa-download text-xs text-blue-500"></i>
+                <span class="text-xs font-medium">โหลด</span>
+            </button>
+        </div>
+        
+        <!-- Labels -->
+        <div class="flex justify-between px-12 text-[9px] font-bold text-gray-600 uppercase tracking-widest mt-1">
+            <span>เสียงปกติ</span>
+            <span class="text-amber-700">เสียงสูง</span>
         </div>
     </div>
 
-    <div class="status-text" id="status-display">รอโหลดระบบเสียง...</div>
+    <!-- Instrument Body -->
+    <div class="flex-grow relative w-full flex justify-center overflow-hidden bg-black">
+        <!-- พื้นหลังสีดำจางๆ ด้านข้าง -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)] z-10 pointer-events-none"></div>
+        
+        <div id="instrument-body" class="wood-texture"></div>
+        
+        <!-- Grid ปุ่มกด -->
+        <div id="hole-container">
+            <!-- Buttons Generated by JS -->
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-md">
+        <div class="w-16 h-16 bg-gradient-to-br from-amber-700 to-amber-900 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-amber-900/20 border border-amber-800">
+            <i class="fas fa-music text-2xl text-amber-100"></i>
+        </div>
+        <h2 class="text-xl font-bold mb-3 text-white">ปี่นอกจำลอง</h2>
+        <p class="text-gray-400 text-sm mb-8 leading-relaxed">
+            ดีไซน์ไม้และรูเจาะเสมือนจริง<br>
+            <span class="text-xs text-gray-500">(กรุณาใส่ลิงก์ไฟล์เสียงในโค้ดเพื่อเริ่มเล่น)</span>
+        </p>
+        <button id="start-btn" class="bg-amber-700 hover:bg-amber-600 text-white font-bold py-3 px-10 text-sm rounded-full shadow-lg shadow-amber-900/50 active:scale-95 transition-all">
+            เริ่มใช้งาน
+        </button>
+    </div>
 
     <script>
-        // ========================================================
-        // ส่วนตั้งค่าไฟล์เสียง (Sound Configuration) - แก้ไขตรงนี้
-        // ========================================================
-        // นำ URL ของไฟล์ .mp3 หรือ .wav มาใส่ในเครื่องหมายคำพูด ''
-        // ตัวอย่าง: 'C5': 'https://example.com/sound_do.mp3',
-        
-        const NOTE_URLS = {
-            'C5': '', // เสียง ด (Do)
-            'D5': '', // เสียง ร (Re)
-            'E5': '', // เสียง ม (Mi)
-            'F5': '', // เสียง ฟ (Fa)
-            'G5': '', // เสียง ซ (Sol)
-            'A5': '', // เสียง ล (La)
-            'B5': '', // เสียง ท (Ti)
-            'C6': ''  // เสียง ดํ (High Do)
+        // ==========================================
+        // 1. ใส่ลิงก์เสียงที่นี่ (14 ช่อง)
+        // ==========================================
+        const soundLinks = {
+            // ซ้าย: ปกติ (บนลงล่าง)
+            "L1": "pee/do.wav", "L2": "pee/re.wav", "L3": "pee/mee.wav", "L4": "pee/fa.wav", "L5": "pee/so.wav", "L6": "pee/la.wav", "L7": "pee/Tee.wav",
+            // ขวา: สูง (บนลงล่าง)
+            "H1": "pee/dosod.wav", "H2": "pee/reso.wav", "H3": "pee/meeso.wav", "H4": "pee/faso.wav", "H5": "pee/sonso.wav", "H6": "pee/laso.wav", "H7": "pee/Tso.wav"
         };
 
-        // ========================================================
-        // Audio Engine (Sample Based)
-        // ========================================================
+        const labels = ["ด", "ร", "ม", "ฟ", "ซ", "ล", "ท"];
+
+        // ==========================================
+        // 2. Audio Engine
+        // ==========================================
         let audioCtx;
         let masterGain;
-        let destination;
+        let audioBuffers = {};
+        let activeSources = {}; 
         
-        const audioBuffers = {}; // เก็บข้อมูลเสียงที่โหลดแล้ว
-        const activeSources = {}; // เก็บเสียงที่กำลังเล่นอยู่
+        let mediaDest, mediaRecorder;
+        let audioChunks = [], recordedAudioUrl = null, isRecording = false;
 
-        async function initAudio() {
-            if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
-                
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.9; // ความดังหลัก
+        const holeContainer = document.getElementById('hole-container');
+        const instrumentBody = document.getElementById('instrument-body');
+        const statusEl = document.getElementById('status');
 
-                // สร้าง Destination สำหรับการอัดเสียง
-                const dest = audioCtx.createMediaStreamDestination();
-                destination = dest;
-
-                // ต่อเสียงออกทั้งลำโพง และ ตัวอัดเสียง
-                masterGain.connect(audioCtx.destination);
-                masterGain.connect(dest);
-
-                await loadSamples();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        // สร้างปุ่ม 14 ปุ่ม (7 แถว)
+        for (let i = 0; i < 7; i++) {
+            createHole(`L${i+1}`, labels[i], 'normal-pitch');
+            createHole(`H${i+1}`, labels[i] + "ํ", 'high-pitch');
         }
 
-        async function loadSamples() {
-            updateStatus("กำลังดาวน์โหลดไฟล์เสียง...");
+        function createHole(id, text, typeClass) {
+            const btn = document.createElement('div');
+            btn.className = `hole ${typeClass}`;
+            btn.innerHTML = `<span class="pointer-events-none">${text}</span>`;
+            btn.dataset.id = id;
+
+            // Event Listeners สำหรับการกด
+            const startPlay = (e) => {
+                if (e.cancelable) e.preventDefault();
+                playSound(id, btn);
+            };
+            const stopPlay = (e) => {
+                if (e.cancelable) e.preventDefault();
+                stopSound(id, btn);
+            };
+
+            btn.addEventListener('touchstart', startPlay, { passive: false });
+            btn.addEventListener('touchend', stopPlay);
+            btn.addEventListener('mousedown', startPlay);
+            btn.addEventListener('mouseup', stopPlay);
+            btn.addEventListener('mouseleave', stopPlay);
+
+            holeContainer.appendChild(btn);
+        }
+
+        // เริ่มระบบเสียง
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            initAudio();
+            document.getElementById('overlay').classList.add('hidden');
+            await loadSounds();
+        });
+
+        function initAudio() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AC();
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.8;
             
-            // เช็คว่าผู้ใช้ใส่ลิงก์หรือยัง
-            let linkCount = 0;
-            for (let key in NOTE_URLS) {
-                if (NOTE_URLS[key] !== '') linkCount++;
-            }
-
-            if (linkCount === 0) {
-                updateStatus("ไม่พบไฟล์เสียง (กรุณาใส่ลิงก์ในโค้ด)");
-                alert("คำแนะนำ: ยังไม่ได้ใส่ไฟล์เสียง\nกรุณาแก้โค้ดโดยนำลิงก์ .mp3/.wav มาใส่ในตัวแปร NOTE_URLS");
-                return;
-            }
-
-            const promises = Object.entries(NOTE_URLS).map(async ([note, url]) => {
-                if (!url) return; 
-                try {
-                    const response = await fetch(url);
-                    const arrayBuffer = await response.arrayBuffer();
-                    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                    audioBuffers[note] = audioBuffer;
-                } catch (e) {
-                    console.error(`โหลดเสียง ${note} ไม่สำเร็จ:`, e);
-                }
-            });
-
-            await Promise.all(promises);
-            updateStatus("พร้อมเล่น (โหลดเสร็จสิ้น)");
+            mediaDest = audioCtx.createMediaStreamDestination();
+            masterGain.connect(audioCtx.destination);
+            masterGain.connect(mediaDest);
         }
 
-        function playNote(note) {
-            if (!audioCtx || !audioBuffers[note]) return;
+        async function loadSounds() {
+            statusEl.innerText = "กำลังโหลด...";
+            const keys = Object.keys(soundLinks);
+            
+            await Promise.all(keys.map(async (key) => {
+                const url = soundLinks[key];
+                if (url) {
+                    try {
+                        const res = await fetch(url);
+                        const buff = await res.arrayBuffer();
+                        audioBuffers[key] = await audioCtx.decodeAudioData(buff);
+                    } catch (e) { console.warn("Error loading sound:", key); }
+                }
+            }));
+            statusEl.innerText = "พร้อมใช้งาน";
+        }
 
-            // หยุดเสียงเก่าถ้ากดซ้ำ (เพื่อไม่ให้เสียงตีกันมั่วเกินไป)
-            if (activeSources[note]) {
-                try { stopNote(note); } catch(e){}
+        function playSound(id, btn) {
+            if (!audioCtx || !audioBuffers[id]) return;
+
+            if (activeSources[id]) {
+                try { activeSources[id].source.stop(); } catch(e){}
             }
 
             const source = audioCtx.createBufferSource();
-            source.buffer = audioBuffers[note];
-            
-            // สร้าง Envelope (การเฟดเสียง) เพื่อกันเสียงกระชาก
-            const noteGain = audioCtx.createGain();
-            noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
-            noteGain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.05); // Attack เร็วๆ
+            source.buffer = audioBuffers[id];
+            source.loop = true;
 
-            // ต่อสายสัญญาณ
-            source.connect(noteGain);
-            noteGain.connect(masterGain);
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.05);
 
-            // ตั้งค่าให้เล่นวน (Loop) หรือไม่
-            // ถ้าไฟล์เสียงสั้นและอยากให้ลากยาวได้ ให้เอา comment ออกบรรทัดล่าง
-            // source.loop = true; 
-
+            source.connect(gain);
+            gain.connect(masterGain);
             source.start(0);
-            
-            // เก็บ reference ไว้สั่งหยุด
-            activeSources[note] = { source, noteGain };
 
-            source.onended = () => {
-                delete activeSources[note];
-            };
+            activeSources[id] = { source, gain };
+
+            // Visual Feedback
+            btn.classList.add('active');
+            instrumentBody.classList.add('vibrating');
         }
 
-        function stopNote(note) {
-            if (!activeSources[note]) return;
-
-            const { source, noteGain } = activeSources[note];
-            const t = audioCtx.currentTime;
-
-            // Fade out เสียงก่อนหยุด (Release) 
-            noteGain.gain.cancelScheduledValues(t);
-            noteGain.gain.setValueAtTime(noteGain.gain.value, t);
-            noteGain.gain.linearRampToValueAtTime(0, t + 0.15); // ปล่อยเสียง 0.15 วินาที
-
-            source.stop(t + 0.15);
-            
-            // ลบออกจากรายการเล่นทันที
-            delete activeSources[note];
-        }
-
-        // ========================================================
-        // Recording System
-        // ========================================================
-        let mediaRecorder;
-        let audioChunks = [];
-        let audioBlob = null;
-        let audioUrl = null;
-        let recordedAudio = new Audio();
-
-        const btnRecord = document.getElementById('btn-record');
-        const btnStop = document.getElementById('btn-stop');
-        const btnPlay = document.getElementById('btn-play');
-        const btnDownload = document.getElementById('btn-download');
-        const statusDisplay = document.getElementById('status-display');
-
-        function updateStatus(text) {
-            statusDisplay.textContent = text;
-        }
-
-        btnRecord.addEventListener('click', () => {
-            if (!destination) {
-                alert("กรุณากด 'โหลดและเริ่มเล่น' ก่อน");
-                return;
-            }
-            audioChunks = [];
-            
-            // เลือก Codec ที่ดีที่สุดที่ Browser รองรับ
-            let options = { mimeType: 'audio/webm' };
-            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-                options = { mimeType: 'audio/webm;codecs=opus' };
-            }
-
-            mediaRecorder = new MediaRecorder(destination.stream, options);
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) audioChunks.push(e.data);
-            };
-            
-            mediaRecorder.onstop = () => {
-                audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
-                audioUrl = URL.createObjectURL(audioBlob);
-                recordedAudio.src = audioUrl;
+        function stopSound(id, btn) {
+            const item = activeSources[id];
+            if (item) {
+                const { source, gain } = item;
+                const t = audioCtx.currentTime;
                 
-                btnPlay.disabled = false;
-                btnDownload.disabled = false;
-                updateStatus("บันทึกเสร็จสิ้น");
+                gain.gain.cancelScheduledValues(t);
+                gain.gain.setValueAtTime(gain.gain.value, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                
+                setTimeout(() => { try { source.stop(); } catch(e){} }, 100);
+                delete activeSources[id];
+            }
+
+            // Remove Active Class
+            btn.classList.remove('active');
+            if (Object.keys(activeSources).length === 0) {
+                instrumentBody.classList.remove('vibrating');
+            }
+        }
+
+        // ==========================================
+        // 3. ระบบอัดเสียง (Recording)
+        // ==========================================
+        const recordBtn = document.getElementById('recordBtn');
+        const playBtn = document.getElementById('playBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        recordBtn.addEventListener('click', () => isRecording ? stopRec() : startRec());
+
+        function startRec() {
+            if (!audioCtx) initAudio();
+            audioChunks = [];
+            const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+            mediaRecorder = new MediaRecorder(mediaDest.stream, { mimeType: mime });
+            
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunks, { type: mime });
+                recordedAudioUrl = URL.createObjectURL(blob);
+                playBtn.disabled = false;
+                downloadBtn.disabled = false;
+                playBtn.classList.remove('opacity-50');
+                downloadBtn.classList.remove('opacity-50');
+                statusEl.innerText = "บันทึกแล้ว";
             };
 
             mediaRecorder.start();
-            btnRecord.classList.add('recording');
-            btnRecord.disabled = true;
-            btnStop.disabled = false;
-            btnPlay.disabled = true;
-            btnDownload.disabled = true;
-            updateStatus("กำลังบันทึก...");
-        });
+            isRecording = true;
+            
+            recordBtn.classList.replace('bg-gray-800', 'bg-red-900');
+            recordBtn.classList.replace('border-gray-700', 'border-red-900');
+            recordBtn.innerHTML = `<i class="fas fa-stop text-red-500 text-xs"></i><span class="text-xs font-medium text-red-400">หยุด</span>`;
+        }
 
-        btnStop.addEventListener('click', () => {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                btnRecord.classList.remove('recording');
-                btnRecord.disabled = false;
-                btnStop.disabled = true;
-            } else if (!recordedAudio.paused) {
-                recordedAudio.pause();
-                recordedAudio.currentTime = 0;
-                btnPlay.classList.remove('playing');
-                updateStatus("พร้อมเล่น");
+        function stopRec() {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordBtn.classList.replace('bg-red-900', 'bg-gray-800');
+            recordBtn.classList.replace('border-red-900', 'border-gray-700');
+            recordBtn.innerHTML = `<i class="fas fa-microphone text-xs text-gray-400"></i><span class="text-xs font-medium">อัดเสียง</span>`;
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (recordedAudioUrl) {
+                const audio = new Audio(recordedAudioUrl);
+                audio.play();
             }
         });
 
-        btnPlay.addEventListener('click', () => {
-            if (audioUrl) {
-                recordedAudio.play();
-                btnPlay.classList.add('playing');
-                btnStop.disabled = false;
-                updateStatus("กำลังเล่นเสียงที่อัดไว้...");
-                
-                recordedAudio.onended = () => {
-                    btnPlay.classList.remove('playing');
-                    btnStop.disabled = true;
-                    updateStatus("เล่นจบแล้ว");
-                };
-            }
-        });
-
-        btnDownload.addEventListener('click', () => {
-            if (audioUrl) {
+        downloadBtn.addEventListener('click', () => {
+            if (recordedAudioUrl) {
                 const a = document.createElement('a');
-                a.href = audioUrl;
-                const date = new Date();
-                a.download = `PiNok-Audio-${date.getTime()}.webm`;
+                a.href = recordedAudioUrl;
+                a.download = `Pi_Nok_${Date.now()}.webm`;
                 a.click();
             }
         });
-
-        // ========================================================
-        // UI Interaction (Touch & Mouse)
-        // ========================================================
-        const startOverlay = document.getElementById('start-overlay');
-        const startBtn = document.getElementById('start-btn');
-        const noteButtons = document.querySelectorAll('.note-btn');
-
-        startBtn.addEventListener('click', () => {
-            initAudio();
-            startOverlay.style.opacity = '0';
-            setTimeout(() => startOverlay.remove(), 500);
-        });
-
-        noteButtons.forEach(btn => {
-            const note = btn.dataset.note;
-
-            // Touch Events (Mobile)
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // กันเลื่อนหน้าจอ
-                btn.classList.add('active');
-                playNote(note);
-            }, {passive: false});
-
-            btn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                btn.classList.remove('active');
-                stopNote(note);
-            });
-
-            // Mouse Events (PC)
-            btn.addEventListener('mousedown', () => {
-                btn.classList.add('active');
-                playNote(note);
-            });
-
-            btn.addEventListener('mouseup', () => {
-                btn.classList.remove('active');
-                stopNote(note);
-            });
-            
-            btn.addEventListener('mouseleave', () => {
-                if (btn.classList.contains('active')) {
-                    btn.classList.remove('active');
-                    stopNote(note);
-                }
-            });
-        });
-
-        // ป้องกันคลิกขวา (Context Menu) เพื่อความเหมือนแอป
-        window.oncontextmenu = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
-        };
 
     </script>
 </body>
