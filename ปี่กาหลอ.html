@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ปี่กาหลอจำลอง (Virtual Pi Kaho)</title>
+    <title>ปี่กาหลอสังเคราะห์ (Synth Pi Kaho)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,351 +11,535 @@
         
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: #2d3748; /* Dark theme */
+            background-color: #1a202c;
             color: white;
-            touch-action: manipulation; /* ป้องกันการซูมด้วยนิ้ว */
-            overflow: hidden; /* ป้องกันการเลื่อนหน้าจอ */
+            touch-action: none; /* ปิดการสัมผัสพื้นหลังเพื่อไม่ให้เลื่อน */
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* ดีไซน์ตัวปี่ */
-        .pi-body {
-            background: linear-gradient(90deg, #3e2723, #5d4037, #3e2723);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.5);
-            border-radius: 50px;
+        /* ลายไม้ตัวปี่ */
+        .pi-container {
+            background: linear-gradient(180deg, #3E2723 0%, #5D4037 50%, #3E2723 100%);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
+            border-left: 4px solid #8D6E63;
+            border-right: 4px solid #281815;
             position: relative;
+            border-radius: 20px;
         }
 
-        /* รูนิ้วกด (Key Holes) */
+        /* ปุ่มโน้ต */
         .note-btn {
-            width: 60px;
-            height: 60px;
+            background: radial-gradient(circle at 30% 30%, #D7CCC8, #A1887F);
+            border: 4px solid #3E2723;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.5);
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #d7ccc8, #8d6e63);
-            border: 4px solid #3e2723;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.3);
-            transition: all 0.1s;
-            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            color: #3e2723;
-            font-size: 1.2rem;
-            user-select: none;
-            -webkit-user-select: none;
-            cursor: pointer; /* เพิ่ม cursor pointer */
-            -webkit-tap-highlight-color: transparent; /* ลบสี highlight เดิมของมือถือ */
+            color: #3E2723;
+            font-weight: 900;
+            font-size: 1.1rem;
+            transition: transform 0.05s, background 0.1s;
+            position: relative;
+            z-index: 10;
         }
 
         .note-btn:active, .note-btn.active {
-            transform: scale(0.95);
-            background: radial-gradient(circle at 30% 30%, #5d4037, #3e2723); /* สีเข้มขึ้นเมื่อกด */
-            color: #d7ccc8;
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.6);
+            background: radial-gradient(circle at 30% 30%, #8D6E63, #4E342E);
+            transform: scale(0.92);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
+            color: #EFEBE9;
+            border-color: #281815;
         }
 
-        /* ปุ่มควบคุม (Record/Play) */
-        .control-btn {
-            transition: all 0.2s;
+        /* เอฟเฟกต์แสงตอนกด */
+        .note-btn.active::after {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #FFD700;
+            opacity: 0.6;
+            z-index: -1;
         }
-        .control-btn:active {
-            transform: scale(0.95);
+
+        /* แถบเลื่อน (Scrollbar) แต่งเองสำหรับรายการที่บันทึก */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
         }
-        .recording-pulse {
-            animation: pulse-red 1.5s infinite;
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #4A5568;
+            border-radius: 4px;
         }
-        @keyframes pulse-red {
+
+        .pulse-red {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-between p-4 bg-gray-900">
+<body class="h-screen w-screen flex flex-col">
 
     <!-- ส่วนหัว -->
-    <div class="w-full text-center py-2 z-10">
-        <h1 class="text-xl font-bold text-yellow-500 tracking-wider">ปี่กาหลอจำลอง</h1>
-        <p class="text-xs text-gray-400">Virtual Pi Kaho</p>
-    </div>
-
-    <!-- ตัวเครื่องดนตรี (แนวตั้ง) -->
-    <div class="flex-grow flex items-center justify-center w-full max-w-sm relative">
-        <!-- ตัวถังปี่ -->
-        <div class="pi-body w-24 h-[95%] absolute flex flex-col items-center justify-between py-8">
-            <!-- ลวดลายหัวท้าย -->
-            <div class="w-full h-2 bg-yellow-600 absolute top-4 opacity-50"></div>
-            <div class="w-full h-2 bg-yellow-600 absolute bottom-4 opacity-50"></div>
-        </div>
-
-        <!-- ปุ่มกดเรียงแนวตั้ง -->
-        <!-- แก้ไข: เพิ่ม id ให้แต่ละปุ่มเพื่อให้ JS เรียกใช้ได้ถูกต้องไม่สับสนลำดับ -->
-        <div class="z-10 flex flex-col gap-3 h-[90%] justify-center">
-            <!-- ปุ่มโน้ต 7-1 (สูงไปต่ำ) -->
-            <button id="btn-6" class="note-btn" onpointerdown="playNote(6)" onpointerup="stopNote(6)" onpointerleave="stopNote(6)">ที</button>
-            <button id="btn-5" class="note-btn" onpointerdown="playNote(5)" onpointerup="stopNote(5)" onpointerleave="stopNote(5)">ลา</button>
-            <button id="btn-4" class="note-btn" onpointerdown="playNote(4)" onpointerup="stopNote(4)" onpointerleave="stopNote(4)">ซอล</button>
-            <button id="btn-3" class="note-btn" onpointerdown="playNote(3)" onpointerup="stopNote(3)" onpointerleave="stopNote(3)">ฟา</button>
-            <button id="btn-2" class="note-btn" onpointerdown="playNote(2)" onpointerup="stopNote(2)" onpointerleave="stopNote(2)">มี</button>
-            <button id="btn-1" class="note-btn" onpointerdown="playNote(1)" onpointerup="stopNote(1)" onpointerleave="stopNote(1)">เร</button>
-            <button id="btn-0" class="note-btn" onpointerdown="playNote(0)" onpointerup="stopNote(0)" onpointerleave="stopNote(0)">โด</button>
-        </div>
-    </div>
-
-    <!-- แผงควบคุมการอัดเสียง -->
-    <div class="w-full max-w-md bg-gray-800 rounded-2xl p-4 mt-4 shadow-lg border border-gray-700">
-        <div class="flex justify-between items-center mb-2">
-            <span id="status-text" class="text-xs text-gray-400">พร้อมใช้งาน</span>
-            <span id="timer" class="text-sm font-mono text-yellow-500">00:00</span>
+    <div class="bg-gray-900 p-3 shadow-lg flex justify-between items-center z-20 shrink-0">
+        <div>
+            <h1 class="text-lg font-bold text-yellow-500"><i class="fas fa-music mr-2"></i>ปี่กาหลอ (Synth)</h1>
+            <p class="text-[10px] text-gray-400">14 เสียง • สมจริง • บันทึกได้</p>
         </div>
         
-        <div class="grid grid-cols-4 gap-2">
-            <!-- ปุ่มอัดเสียง -->
-            <button id="recordBtn" onclick="toggleRecording()" class="control-btn bg-red-600 hover:bg-red-700 text-white rounded-xl p-3 flex flex-col items-center">
-                <i class="fas fa-circle text-lg mb-1"></i>
-                <span class="text-[10px]">อัดเสียง</span>
+        <!-- ส่วนควบคุมการอัด -->
+        <div class="flex gap-2">
+            <div id="recording-ui" class="hidden flex items-center gap-2 bg-gray-800 px-3 py-1 rounded-full border border-red-500/50">
+                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <span id="rec-timer" class="text-xs font-mono text-red-400">00:00</span>
+            </div>
+            
+            <button id="btn-record" onclick="toggleRecord()" class="bg-red-600 hover:bg-red-700 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95">
+                <i class="fas fa-circle text-xs"></i>
             </button>
+            
+            <button onclick="toggleSavedList()" class="bg-blue-600 hover:bg-blue-700 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95 relative">
+                <i class="fas fa-save text-xs"></i>
+                <span id="saved-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
+            </button>
+        </div>
+    </div>
 
-            <!-- ปุ่มเล่นเสียงที่อัด -->
-            <button id="playRecordBtn" onclick="playRecording()" disabled class="control-btn bg-gray-600 text-white rounded-xl p-3 flex flex-col items-center disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fas fa-play text-lg mb-1"></i>
-                <span class="text-[10px]">ฟัง</span>
-            </button>
+    <!-- พื้นที่เครื่องดนตรี (Auto flex) -->
+    <div class="flex-grow flex justify-center items-center p-2 overflow-hidden bg-gray-800 relative">
+        
+        <!-- พื้นหลังลายไม้ -->
+        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.4\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'3\'/%3E%3C/g%3E%3C/svg%3E');"></div>
 
-            <!-- ปุ่มหยุด -->
-            <button onclick="stopPlayback()" class="control-btn bg-gray-700 hover:bg-gray-600 text-white rounded-xl p-3 flex flex-col items-center">
-                <i class="fas fa-stop text-lg mb-1"></i>
-                <span class="text-[10px]">หยุด</span>
-            </button>
+        <!-- ตัวปี่ -->
+        <div class="pi-container w-full max-w-md h-full flex flex-col justify-center items-center py-4 relative">
+            
+            <!-- รูระบายเสียง (ตกแต่ง) -->
+            <div class="absolute top-2 w-16 h-4 bg-black/30 rounded-full mb-2"></div>
+            
+            <!-- Grid ปุ่มกด 2 คอลัมน์ -->
+            <div class="grid grid-cols-2 gap-x-12 gap-y-3 w-full px-8 h-full items-center justify-items-center" id="keys-container">
+                <!-- ปุ่มจะถูกสร้างด้วย JS -->
+            </div>
 
-            <!-- ปุ่มดาวน์โหลด -->
-            <button id="downloadBtn" onclick="downloadRecording()" disabled class="control-btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-3 flex flex-col items-center disabled:opacity-30 disabled:cursor-not-allowed">
-                <i class="fas fa-download text-lg mb-1"></i>
-                <span class="text-[10px]">โหลด</span>
-            </button>
+            <div class="absolute bottom-2 w-20 h-20 bg-gradient-to-t from-black/40 to-transparent rounded-full -mb-10 blur-xl"></div>
+        </div>
+    </div>
+
+    <!-- Modal รายการที่บันทึก (Overlay) -->
+    <div id="saved-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex flex-col justify-end sm:justify-center items-center transition-opacity duration-300">
+        <div class="bg-gray-800 w-full max-w-md h-[70vh] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col border border-gray-700">
+            
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-2xl">
+                <h2 class="text-lg font-bold text-white"><i class="fas fa-list mr-2"></i>เพลงที่บันทึกไว้</h2>
+                <button onclick="toggleSavedList()" class="text-gray-400 hover:text-white p-2"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="saved-list" class="flex-grow overflow-y-auto p-4 space-y-2 custom-scroll">
+                <div class="text-center text-gray-500 mt-10 text-sm">ยังไม่มีการบันทึก</div>
+            </div>
+
+            <!-- ส่วนควบคุมไฟล์ล่าสุด (Download) -->
+            <div id="last-record-panel" class="p-4 bg-gray-900 border-t border-gray-700 hidden">
+                <div class="text-xs text-gray-400 mb-2">ไฟล์เสียงล่าสุด (อัดสด)</div>
+                <div class="flex gap-2">
+                    <button id="btn-dl-audio" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i> โหลดไฟล์เสียง
+                    </button>
+                    <button id="btn-save-local" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-lg text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> เมมในเครื่อง
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 1. ตั้งค่าไฟล์เสียงที่นี่ (CONFIGURATION)
+        // 1. การตั้งค่าเสียง (Sound Synthesis)
         // ==========================================
         
-        // ใส่ลิงค์ไฟล์เสียงจริง (.mp3, .wav) ในช่อง 'url'
-        const notesConfig = [
-            { note: "Do",  url: "" }, // โน้ตตัวที่ 1 (ล่างสุด)
-            { note: "Re",  url: "" },
-            { note: "Mi",  url: "" },
-            { note: "Fa",  url: "" },
-            { note: "Sol", url: "" },
-            { note: "La",  url: "" },
-            { note: "Ti",  url: "" }  // โน้ตตัวที่ 7 (บนสุด)
+        // ความถี่โน้ต (สเกลไทยประยุกต์/สากล) ไล่จากต่ำไปสูง
+        // 2 คอลัมน์ x 7 แถว = 14 โน้ต
+        const frequencies = [
+            261.63, // 0: Do (C4)
+            293.66, // 1: Re (D4)
+            329.63, // 2: Mi (E4)
+            349.23, // 3: Fa (F4)
+            392.00, // 4: Sol (G4)
+            440.00, // 5: La (A4)
+            493.88, // 6: Ti (B4)
+            523.25, // 7: Do (C5)
+            587.33, // 8: Re (D5)
+            659.25, // 9: Mi (E5)
+            698.46, // 10: Fa (F5)
+            783.99, // 11: Sol (G5)
+            880.00, // 12: La (A5)
+            987.77  // 13: Ti (B5)
         ];
 
-        // ==========================================
-        // 2. ระบบเสียง (AUDIO ENGINE)
-        // ==========================================
-        
-        let audioContext;
-        let audioBuffers = [];
-        let gainNode;
-        let destStream; // สำหรับอัดเสียง
-        
-        // ตัวแปรสำหรับการอัดเสียง
-        let mediaRecorder;
-        let recordedChunks = [];
-        let audioBlob = null;
-        let audioUrl = null;
-        let isRecording = false;
-        let recordingStartTime;
-        let timerInterval;
+        const noteNames = ["โด", "เร", "มี", "ฟา", "ซอล", "ลา", "ที", "โดํ", "เรํ", "มีํ", "ฟาํ", "ซอลํ", "ลาํ", "ทีํ"];
 
-        // เริ่มต้น AudioContext เมื่อมีการคลิกครั้งแรก (Browser Policy)
-        async function initAudio() {
-            if (audioContext) return;
+        // สร้างปุ่ม 14 ปุ่ม (ซ้าย-ขวา สลับกัน หรือ เรียงตามแถว)
+        // เพื่อให้เล่นง่ายบนมือถือ เราจะเรียงซิกแซก: ซ้าย(ต่ำ) -> ขวา(สูง) ขึ้นไปเรื่อยๆ
+        const keysContainer = document.getElementById('keys-container');
+        
+        // เราจะสร้างปุ่มย้อนกลับ (สูงอยู่บน ต่ำอยู่ล่าง)
+        // แต่ index 0 คือเสียงต่ำสุด
+        // จัด layout: แถวล่างสุดคือ index 0,1 แถวถัดไป 2,3 ...
+        
+        let html = '';
+        for (let row = 6; row >= 0; row--) {
+            // ซ้าย (เลขคู่)
+            const idxLeft = row * 2;
+            // ขวา (เลขคี่)
+            const idxRight = row * 2 + 1;
+            
+            html += `
+                <button id="btn-${idxLeft}" class="note-btn w-16 h-16 sm:w-20 sm:h-20" 
+                    onpointerdown="pressNote(${idxLeft})" 
+                    onpointerup="releaseNote(${idxLeft})" 
+                    onpointerleave="releaseNote(${idxLeft})">
+                    ${noteNames[idxLeft]}
+                </button>
+                <button id="btn-${idxRight}" class="note-btn w-16 h-16 sm:w-20 sm:h-20" 
+                    onpointerdown="pressNote(${idxRight})" 
+                    onpointerup="releaseNote(${idxRight})" 
+                    onpointerleave="releaseNote(${idxRight})">
+                    ${noteNames[idxRight]}
+                </button>
+            `;
+        }
+        keysContainer.innerHTML = html;
 
+
+        // ==========================================
+        // 2. Audio Engine (Web Audio API)
+        // ==========================================
+        let audioCtx;
+        let masterGain;
+        let recordDest; // สำหรับอัดเสียง
+        const activeOscillators = {};
+
+        function initAudio() {
+            if (audioCtx) return;
             const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioContext = new AudioContext();
+            audioCtx = new AudioContext();
             
-            // สร้าง Destination สำหรับอัดเสียง (ต่อพ่วงกับลำโพง)
-            destStream = audioContext.createMediaStreamDestination();
+            // Master Volume
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.6; // ลดความดังรวม
             
-            // Main Gain Node (Volume หลัก)
-            gainNode = audioContext.createGain();
-            gainNode.gain.value = 1.0;
+            // Destination สำหรับอัดเสียง
+            recordDest = audioCtx.createMediaStreamDestination();
             
-            // ต่อ Gain -> ลำโพง และ Gain -> เครื่องอัด
-            gainNode.connect(audioContext.destination);
-            gainNode.connect(destStream);
-
-            loadSounds();
+            // ต่อ Master -> ลำโพง
+            masterGain.connect(audioCtx.destination);
+            // ต่อ Master -> เครื่องอัด
+            masterGain.connect(recordDest);
         }
 
-        // โหลดไฟล์เสียง
-        async function loadSounds() {
-            const statusText = document.getElementById('status-text');
-            statusText.innerText = "กำลังโหลดเสียง...";
+        function createVoice(freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
 
-            const loadPromises = notesConfig.map(async (config, index) => {
-                if (!config.url) return null; // ข้ามถ้าไม่มีลิงค์
-                try {
-                    const response = await fetch(config.url);
-                    const arrayBuffer = await response.arrayBuffer();
-                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    audioBuffers[index] = audioBuffer;
-                } catch (e) {
-                    console.warn(`โหลดเสียง ${config.note} ไม่สำเร็จ:`, e);
-                }
-            });
+            // ปรับแต่งเสียงปี่ (Sawtooth + Lowpass Filter)
+            osc.type = 'sawtooth'; 
+            osc.frequency.value = freq;
 
-            await Promise.all(loadPromises);
-            statusText.innerText = "พร้อมเล่น (แตะหน้าจอเพื่อเริ่ม)";
+            // Filter จำลองท่อปี่ (ลดเสียงแหลมบาดหู)
+            filter.type = 'lowpass';
+            filter.frequency.value = 2000;
+            filter.Q.value = 2; // Resonance
+
+            // Envelope (ADSR)
+            const now = audioCtx.currentTime;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(1, now + 0.05); // Attack เร็ว
+
+            // Routing: Osc -> Filter -> Gain -> Master
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+
+            osc.start();
+            return { osc, gain };
         }
 
-        // ฟังก์ชันเล่นโน้ต
-        function playNote(index) {
-            if (!audioContext) initAudio();
-            if (audioContext.state === 'suspended') audioContext.resume();
+        // ==========================================
+        // 3. Logic การเล่นและอัด (Recording Logic)
+        // ==========================================
+        
+        let isRecording = false;
+        let startTime = 0;
+        let recordedEvents = []; // เก็บโน้ต: {note, time, type} สำหรับ LocalStorage
+        
+        // MediaRecorder สำหรับไฟล์เสียงจริง
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlobURL = null;
 
-            // Visual Effect: เปลี่ยนมาใช้ getElementById เพื่อระบุปุ่มให้ถูกต้องแน่นอน
+        function pressNote(index) {
+            if (!audioCtx) initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            // 1. Visual
             const btn = document.getElementById(`btn-${index}`);
-            if (btn) btn.classList.add('active');
+            if(btn) btn.classList.add('active');
 
-            // Play Sound
-            if (audioBuffers[index]) {
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[index];
-                
-                // สร้าง Gain แยกสำหรับแต่ละโน้ตเพื่อให้เสียง Fade out ได้สวยงามถ้าต้องการ
-                const noteGain = audioContext.createGain();
-                noteGain.gain.setValueAtTime(1, audioContext.currentTime);
-                
-                source.connect(noteGain);
-                noteGain.connect(gainNode); // ต่อเข้า Main Mix
-                
-                source.start(0);
-            } else {
-                console.log(`Play Note Index: ${index} (No Audio File)`);
+            // 2. Audio
+            if (activeOscillators[index]) return; // ป้องกันกดซ้ำ
+            const voice = createVoice(frequencies[index]);
+            activeOscillators[index] = voice;
+
+            // 3. Record Event
+            if (isRecording) {
+                recordedEvents.push({
+                    time: Date.now() - startTime,
+                    note: index,
+                    type: 'on'
+                });
             }
         }
 
-        // ฟังก์ชันปล่อยนิ้ว
-        function stopNote(index) {
-            // Visual Effect: เปลี่ยนมาใช้ getElementById เช่นกัน
+        function releaseNote(index) {
+            // 1. Visual
             const btn = document.getElementById(`btn-${index}`);
-            if (btn) btn.classList.remove('active');
+            if(btn) btn.classList.remove('active');
+
+            // 2. Audio
+            const voice = activeOscillators[index];
+            if (voice) {
+                const now = audioCtx.currentTime;
+                // Release: ค่อยๆ เบาเสียงลง
+                voice.gain.gain.cancelScheduledValues(now);
+                voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+                voice.gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                voice.osc.stop(now + 0.1);
+                delete activeOscillators[index];
+            }
+
+            // 3. Record Event
+            if (isRecording) {
+                recordedEvents.push({
+                    time: Date.now() - startTime,
+                    note: index,
+                    type: 'off'
+                });
+            }
         }
 
         // ==========================================
-        // 3. ระบบอัดเสียง (RECORDER)
+        // 4. ระบบจัดการการอัด (Recording Manager)
         // ==========================================
 
-        function toggleRecording() {
-            if (!audioContext) initAudio();
+        let recInterval;
 
-            if (isRecording) {
-                stopRecording();
-            } else {
+        function toggleRecord() {
+            if (!isRecording) {
                 startRecording();
+            } else {
+                stopRecording();
             }
         }
 
         function startRecording() {
-            recordedChunks = [];
-            audioBlob = null;
-            
-            let options = { mimeType: 'audio/webm' };
-            if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                options = { mimeType: 'audio/mp4' }; // Fallback for Safari
-            }
-            
-            try {
-                mediaRecorder = new MediaRecorder(destStream.stream, options);
-            } catch (e) {
-                alert("Browser ของคุณไม่รองรับการอัดเสียงผ่าน Web Audio");
-                return;
-            }
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
-                audioUrl = URL.createObjectURL(audioBlob);
-                
-                document.getElementById('playRecordBtn').disabled = false;
-                document.getElementById('playRecordBtn').classList.replace('bg-gray-600', 'bg-green-600');
-                document.getElementById('downloadBtn').disabled = false;
-                
-                document.getElementById('status-text').innerText = "อัดเสียงเสร็จสิ้น";
-            };
-
-            mediaRecorder.start();
+            if (!audioCtx) initAudio();
             isRecording = true;
+            startTime = Date.now();
+            recordedEvents = [];
+            audioChunks = [];
+
+            // เริ่ม MediaRecorder (อัดไฟล์เสียง)
+            const options = MediaRecorder.isTypeSupported('audio/webm') ? { mimeType: 'audio/webm' } : { mimeType: 'audio/mp4' };
+            mediaRecorder = new MediaRecorder(recordDest.stream, options);
             
-            document.getElementById('recordBtn').classList.add('recording-pulse');
-            document.getElementById('recordBtn').innerHTML = '<i class="fas fa-stop text-lg mb-1"></i><span class="text-[10px]">จบการอัด</span>';
-            document.getElementById('status-text').innerText = "กำลังอัดเสียง...";
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                audioBlobURL = URL.createObjectURL(blob);
+                
+                // แสดงแผงจัดการหลังอัดเสร็จ
+                document.getElementById('last-record-panel').classList.remove('hidden');
+                openSavedModal(); // เปิดหน้าต่างทันทีเพื่อให้เซฟ
+            };
             
-            recordingStartTime = Date.now();
-            timerInterval = setInterval(updateTimer, 1000);
+            mediaRecorder.start();
+
+            // UI Updates
+            document.getElementById('btn-record').innerHTML = '<i class="fas fa-stop"></i>';
+            document.getElementById('btn-record').classList.add('pulse-red');
+            document.getElementById('recording-ui').classList.remove('hidden');
+            
+            // Timer
+            const timerEl = document.getElementById('rec-timer');
+            recInterval = setInterval(() => {
+                const s = Math.floor((Date.now() - startTime) / 1000);
+                const min = String(Math.floor(s/60)).padStart(2,'0');
+                const sec = String(s%60).padStart(2,'0');
+                timerEl.innerText = `${min}:${sec}`;
+            }, 1000);
         }
 
         function stopRecording() {
-            mediaRecorder.stop();
             isRecording = false;
-            
-            document.getElementById('recordBtn').classList.remove('recording-pulse');
-            document.getElementById('recordBtn').innerHTML = '<i class="fas fa-circle text-lg mb-1"></i><span class="text-[10px]">อัดเสียง</span>';
-            clearInterval(timerInterval);
+            mediaRecorder.stop();
+            clearInterval(recInterval);
+
+            // UI Updates
+            document.getElementById('btn-record').innerHTML = '<i class="fas fa-circle text-xs"></i>';
+            document.getElementById('btn-record').classList.remove('pulse-red');
+            document.getElementById('recording-ui').classList.add('hidden');
         }
 
-        let playbackAudio = new Audio();
-        
-        function playRecording() {
-            if (!audioUrl) return;
-            playbackAudio.src = audioUrl;
-            playbackAudio.play();
-            document.getElementById('status-text').innerText = "กำลังเล่นไฟล์ที่อัด...";
-            playbackAudio.onended = () => {
-                document.getElementById('status-text').innerText = "เล่นจบแล้ว";
-            };
-        }
-
-        function stopPlayback() {
-            if (!playbackAudio.paused) {
-                playbackAudio.pause();
-                playbackAudio.currentTime = 0;
-            }
-            if (isRecording) {
-                toggleRecording(); 
-            }
-            document.getElementById('status-text').innerText = "หยุดแล้ว";
-        }
-
-        function downloadRecording() {
-            if (!audioUrl) return;
+        // ปุ่มดาวน์โหลดไฟล์เสียง (.webm)
+        document.getElementById('btn-dl-audio').onclick = () => {
+            if (!audioBlobURL) return;
             const a = document.createElement('a');
-            a.href = audioUrl;
-            a.download = `pi-kaho-recording-${new Date().getTime()}.webm`;
-            document.body.appendChild(a);
+            a.href = audioBlobURL;
+            a.download = `pi_kaho_${Date.now()}.webm`;
             a.click();
-            document.body.removeChild(a);
-        }
-
-        function updateTimer() {
-            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
-            const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const s = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('timer').innerText = `${m}:${s}`;
-        }
-
-        window.oncontextmenu = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
         };
+
+        // ปุ่มบันทึกเข้า Local Storage (บันทึกเป็นโน้ต JSON)
+        document.getElementById('btn-save-local').onclick = () => {
+            if (recordedEvents.length === 0) {
+                alert("ไม่มีข้อมูลโน้ตให้บันทึก");
+                return;
+            }
+            const name = prompt("ตั้งชื่อเพลงของคุณ:", `เพลงที่ ${loadSavedSongs().length + 1}`);
+            if (name) {
+                const song = {
+                    id: Date.now(),
+                    name: name,
+                    date: new Date().toLocaleString('th-TH'),
+                    events: recordedEvents,
+                    duration: document.getElementById('rec-timer').innerText
+                };
+                saveSongToLocal(song);
+                renderSavedList();
+                document.getElementById('last-record-panel').classList.add('hidden'); // ซ่อนแผงหลังบันทึกเสร็จ
+            }
+        };
+
+        // ==========================================
+        // 5. Local Storage Manager
+        // ==========================================
+
+        function loadSavedSongs() {
+            const data = localStorage.getItem('piKahoSongs');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveSongToLocal(song) {
+            const songs = loadSavedSongs();
+            songs.push(song);
+            localStorage.setItem('piKahoSongs', JSON.stringify(songs));
+            updateBadge();
+        }
+
+        function deleteSong(id) {
+            if(!confirm('ต้องการลบเพลงนี้ใช่ไหม?')) return;
+            let songs = loadSavedSongs();
+            songs = songs.filter(s => s.id !== id);
+            localStorage.setItem('piKahoSongs', JSON.stringify(songs));
+            renderSavedList();
+            updateBadge();
+        }
+
+        // เล่นเพลงจาก JSON (Playback Synth)
+        function playSong(id) {
+            if (!audioCtx) initAudio();
+            const songs = loadSavedSongs();
+            const song = songs.find(s => s.id === id);
+            if (!song) return;
+
+            // เปลี่ยนไอคอนปุ่มเล่น
+            const btnIcon = document.getElementById(`icon-play-${id}`);
+            if(btnIcon) btnIcon.className = "fas fa-spinner fa-spin";
+
+            song.events.forEach(evt => {
+                setTimeout(() => {
+                    if (evt.type === 'on') {
+                        pressNote(evt.note);
+                    } else {
+                        releaseNote(evt.note);
+                    }
+                }, evt.time);
+            });
+
+            // คืนค่าไอคอนเมื่อเล่นจบ (โดยประมาณ)
+            const lastEvent = song.events[song.events.length - 1];
+            setTimeout(() => {
+                if(btnIcon) btnIcon.className = "fas fa-play";
+            }, lastEvent ? lastEvent.time + 500 : 0);
+        }
+
+        function renderSavedList() {
+            const list = document.getElementById('saved-list');
+            const songs = loadSavedSongs();
+            
+            if (songs.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-500 mt-10 text-sm">ยังไม่มีการบันทึก</div>';
+                return;
+            }
+
+            list.innerHTML = songs.map(song => `
+                <div class="bg-gray-700 p-3 rounded-xl flex justify-between items-center group">
+                    <div>
+                        <div class="font-bold text-yellow-500 text-sm">${song.name}</div>
+                        <div class="text-[10px] text-gray-400">${song.date} • ${song.duration} นาที</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="playSong(${song.id})" class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center hover:bg-green-500">
+                            <i id="icon-play-${song.id}" class="fas fa-play text-xs"></i>
+                        </button>
+                        <button onclick="deleteSong(${song.id})" class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center hover:bg-red-500 text-gray-300">
+                            <i class="fas fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            updateBadge();
+        }
+
+        function updateBadge() {
+            const count = loadSavedSongs().length;
+            const badge = document.getElementById('saved-badge');
+            badge.innerText = count;
+            badge.classList.toggle('hidden', count === 0);
+        }
+
+        // UI Helpers
+        const modal = document.getElementById('saved-modal');
+        function toggleSavedList() {
+            if (modal.classList.contains('hidden')) {
+                renderSavedList();
+                openSavedModal();
+            } else {
+                closeSavedModal();
+            }
+        }
+        function openSavedModal() {
+            modal.classList.remove('hidden');
+        }
+        function closeSavedModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Init
+        updateBadge();
+
+        // Prevent Context Menu
+        window.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); return false; };
+
     </script>
 </body>
 </html>
