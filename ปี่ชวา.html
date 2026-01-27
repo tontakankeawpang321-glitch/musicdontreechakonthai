@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ปี่ชวา 14 เสียง (Mobile Fit)</title>
+    <title>ปี่ชวา โน้ตไทย 14 เสียง</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap');
 
@@ -28,17 +28,16 @@
             background-image: radial-gradient(circle at center, #2c2c2c 0%, #000000 100%);
             font-family: 'Sarabun', sans-serif;
             color: white;
-            height: 100vh; /* Full screen height */
+            height: 100vh;
             width: 100vw;
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow: hidden; /* No scrolling */
+            overflow: hidden;
         }
 
-        /* Header Area - Keep it small */
         header {
-            flex: 0 0 auto; /* Don't grow */
+            flex: 0 0 auto;
             width: 100%;
             padding: 5px 10px;
             text-align: center;
@@ -58,10 +57,7 @@
             white-space: nowrap;
         }
 
-        .controls {
-            display: flex;
-            gap: 5px;
-        }
+        .controls { display: flex; gap: 5px; }
 
         button {
             background: #444;
@@ -82,7 +78,7 @@
         button.record-btn.recording { background: #d32f2f; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* Instrument Area - Take remaining space */
+        /* Instrument Area */
         .instrument-container {
             flex: 1 1 auto;
             width: 100%;
@@ -100,14 +96,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100%; /* Fill container */
-            width: 80px; /* Slimmer for elegance */
+            height: 100%;
+            width: 150px; /* Wider for 2 columns */
         }
 
-        /* Reed & Bell - Smaller relative height */
         .reed { 
             flex: 0 0 20px; 
-            width: 10px; 
+            width: 14px; 
             background: #d7ccc8; 
             border-radius: 4px 4px 0 0; 
             z-index: 2; 
@@ -115,61 +110,58 @@
         
         .bell {
             flex: 0 0 50px;
-            width: 90px;
+            width: 140px; /* Wider bell */
             background: var(--wood-dark);
             background-image: var(--wood-texture);
-            clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%);
+            clip-path: polygon(15% 0, 85% 0, 100% 100%, 0% 100%);
             margin-top: -2px;
             box-shadow: inset 0 -5px 10px rgba(0,0,0,0.8);
         }
 
-        /* Body Tube - The main part */
         .body-tube {
-            flex: 1 1 auto; /* Grow to fill space */
-            width: 45px;
+            flex: 1 1 auto;
+            width: 110px; /* Wider tube to fit 2 columns */
             background: var(--wood-dark);
             background-image: var(--wood-texture);
-            border-radius: 8px;
-            box-shadow: inset 3px 0 10px rgba(0,0,0,0.8), 3px 3px 10px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-evenly; /* Distribute 14 holes evenly */
-            align-items: center;
-            padding: 5px 0;
+            border-radius: 10px;
+            box-shadow: inset 5px 0 15px rgba(0,0,0,0.8), 5px 3px 10px rgba(0,0,0,0.5);
+            
+            /* GRID LAYOUT FOR 2 COLUMNS */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-content: space-evenly;
+            justify-items: center;
+            
+            padding: 15px 5px; /* Padding for rings */
             position: relative;
             border-left: 1px solid rgba(255,255,255,0.1);
             border-right: 1px solid rgba(0,0,0,0.5);
         }
 
-        /* Decorative Rings */
         .ring {
-            width: 50px; height: 3px;
+            width: 116px; height: 4px;
             background: linear-gradient(90deg, #ffd700, #ffeb3b, #ffd700);
             position: absolute; border-radius: 2px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.5);
             pointer-events: none;
+            z-index: 5;
         }
         .ring.top { top: 5px; }
         .ring.bottom { bottom: 5px; }
 
-        /* Holes Configuration */
         .hole-container {
             width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex: 1; /* Each hole gets equal vertical space */
-            max-height: 40px; /* Don't get too tall on huge screens */
         }
 
         .hole {
-            /* Responsive size: dependent on viewport height but capped */
-            width: 5.5vh; 
-            height: 5.5vh;
-            max-width: 32px;
-            max-height: 32px;
-            min-width: 20px;
-            min-height: 20px;
+            width: 6vh; 
+            height: 6vh;
+            max-width: 45px; max-height: 45px;
+            min-width: 30px; min-height: 30px;
             
             background: radial-gradient(circle at 35% 35%, #333, #000);
             border-radius: 50%;
@@ -177,30 +169,42 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.6);
             cursor: pointer;
             position: relative;
-            transition: transform 0.1s, border-color 0.1s;
+            transition: transform 0.1s;
         }
 
-        /* Note Labels - Small & Subtle */
+        /* Smart Label Positioning */
         .hole::after {
             content: attr(data-note);
             position: absolute;
-            right: -30px; /* To the right */
             top: 50%;
             transform: translateY(-50%);
             color: rgba(255,255,255,0.4);
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             pointer-events: none;
-            font-weight: 300;
+            font-weight: 500;
+        }
+
+        /* Left Column (Odd Grid Items) -> Label on Left */
+        .hole-container:nth-of-type(odd) .hole::after {
+            right: auto;
+            left: -30px;
+            text-align: right;
+        }
+
+        /* Right Column (Even Grid Items) -> Label on Right */
+        .hole-container:nth-of-type(even) .hole::after {
+            left: auto;
+            right: -30px;
+            text-align: left;
         }
 
         .hole.active {
-            background: radial-gradient(circle at 35% 35%, #a1887f, #4e342e); /* Finger color */
+            background: radial-gradient(circle at 35% 35%, #a1887f, #4e342e);
             border-color: #ffd700;
             transform: scale(0.92);
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
         }
 
-        /* Visual Feedback Display */
         .note-display {
             position: absolute;
             top: 50%; left: 50%;
@@ -210,14 +214,12 @@
             color: rgba(255, 255, 255, 0.05);
             pointer-events: none;
             z-index: 0;
-            white-space: nowrap;
         }
         .note-display.playing {
             color: rgba(255, 193, 7, 0.2);
             text-shadow: 0 0 30px rgba(255,193,7,0.3);
         }
 
-        /* Start Overlay */
         #start-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 500;
@@ -229,8 +231,8 @@
 <body>
 
     <div id="start-overlay">
-        <h1 style="color:var(--gold); font-size: 2rem; margin-bottom:10px;">ปี่ชวา 14 เสียง</h1>
-        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">แตะเพื่อเริ่ม (Full Range C5-B6)</p>
+        <h1 style="color:var(--gold); font-size: 2rem; margin-bottom:10px;">ปี่ชวา โน้ตไทย</h1>
+        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">กด 2 มือ (ซ้าย-ขวา)<br>ด - ทํ (14 เสียง)</p>
         <button onclick="initAudio()" style="font-size:1.1rem; padding:12px 30px; background:var(--gold); color:black; border:none; border-radius:30px; font-weight: bold;">
             เริ่มเล่น
         </button>
@@ -254,25 +256,35 @@
             <div class="body-tube">
                 <div class="ring top"></div>
                 
-                <!-- 14 Holes: High Pitch (Top) to Low Pitch (Bottom) -->
-                <!-- Range: B6 down to C5 -->
+                <!-- 2-Column Grid (Left-Right Zigzag) -->
                 
-                <div class="hole-container"><div class="hole" data-note="B6" data-semitone="23" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="A6" data-semitone="21" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="G6" data-semitone="19" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="F6" data-semitone="17" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="E6" data-semitone="16" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="D6" data-semitone="14" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="C6" data-semitone="12" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                
-                <!-- Lower Octave -->
-                <div class="hole-container"><div class="hole" data-note="B5" data-semitone="11" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="A5" data-semitone="9"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="G5" data-semitone="7"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="F5" data-semitone="5"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="E5" data-semitone="4"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="D5" data-semitone="2"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
-                <div class="hole-container"><div class="hole" data-note="C5" data-semitone="0"  ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <!-- Row 1 -->
+                <div class="hole-container"><div class="hole" data-note="ทํ" data-semitone="23" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="ลํ" data-semitone="21" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+
+                <!-- Row 2 -->
+                <div class="hole-container"><div class="hole" data-note="ซํ" data-semitone="19" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="ฟํ" data-semitone="17" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+
+                <!-- Row 3 -->
+                <div class="hole-container"><div class="hole" data-note="มํ" data-semitone="16" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="รํ" data-semitone="14" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+
+                <!-- Row 4 -->
+                <div class="hole-container"><div class="hole" data-note="ดํ" data-semitone="12" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="ท" data-semitone="11" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+
+                <!-- Row 5 -->
+                <div class="hole-container"><div class="hole" data-note="ล" data-semitone="9" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="ซ" data-semitone="7" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+
+                <!-- Row 6 -->
+                <div class="hole-container"><div class="hole" data-note="ฟ" data-semitone="5" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="ม" data-semitone="4" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+
+                <!-- Row 7 -->
+                <div class="hole-container"><div class="hole" data-note="ร" data-semitone="2" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
+                <div class="hole-container"><div class="hole" data-note="ด" data-semitone="0" ontouchstart="playNote(this)" onmousedown="playNote(this)" ontouchend="stopNote(this)" onmouseup="stopNote(this)" onmouseleave="stopNote(this)"></div></div>
 
                 <div class="ring bottom"></div>
             </div>
@@ -286,7 +298,6 @@
         let masterGain;
         let activeSources = {};
         
-        // Recorder Variables
         let mediaRecorder;
         let recordedChunks = [];
         let audioDestination;
@@ -301,7 +312,7 @@
                 audioCtx = new AudioContext();
                 
                 masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.4; // Slightly lower master volume due to many notes
+                masterGain.gain.value = 0.4;
                 masterGain.connect(audioCtx.destination);
                 
                 audioDestination = audioCtx.createMediaStreamDestination();
@@ -315,8 +326,6 @@
         function playNote(element) {
             if (!audioCtx) initAudio();
             const note = element.getAttribute('data-note');
-            
-            // Prevent duplicate triggers for the same note
             if (activeSources[note]) return;
 
             element.classList.add('active');
@@ -324,28 +333,23 @@
             mainNoteDisplay.classList.add('playing');
 
             const now = audioCtx.currentTime;
-            
-            // Calculate Freq (Base C5 = 523.25)
             const semitone = parseInt(element.getAttribute('data-semitone'));
             const freq = 523.25 * Math.pow(2, semitone / 12);
 
-            // Oscillators
             const osc1 = audioCtx.createOscillator();
-            osc1.type = 'sawtooth'; // The reedy buzz
+            osc1.type = 'sawtooth';
             osc1.frequency.setValueAtTime(freq, now);
 
             const osc2 = audioCtx.createOscillator();
-            osc2.type = 'square'; // The hollow body
+            osc2.type = 'square';
             osc2.frequency.setValueAtTime(freq, now);
             osc2.detune.value = 8;
 
-            // Filter (Formant)
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'bandpass';
-            filter.frequency.value = 1800; // Adjusted formant
+            filter.frequency.value = 1800;
             filter.Q.value = 0.7;
 
-            // Vibrato
             const lfo = audioCtx.createOscillator();
             lfo.frequency.value = 5.5;
             const lfoGain = audioCtx.createGain();
@@ -354,7 +358,6 @@
             lfoGain.connect(osc1.frequency);
             lfoGain.connect(osc2.frequency);
 
-            // Envelope
             const ampGain = audioCtx.createGain();
             ampGain.gain.setValueAtTime(0, now);
             ampGain.gain.linearRampToValueAtTime(1, now + 0.03);
@@ -441,7 +444,7 @@
                 const a = document.createElement('a');
                 a.href = audioUrl;
                 const date = new Date();
-                a.download = `pi-java-14notes-${date.getTime()}.webm`;
+                a.download = `pi-java-2cols-${date.getTime()}.webm`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
