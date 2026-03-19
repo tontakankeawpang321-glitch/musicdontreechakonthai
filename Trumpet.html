@@ -2,839 +2,744 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic Trumpet Simulator Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>🎺 Trumpet Real</title>
     <style>
-        /* Reset & Base Layout - Optimized for Mobile */
+        :root {
+            --gold: #d4af37;
+            --gold-dark: #a67c00;
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(30, 30, 45, 0.85);
+            --text: #fff;
+            --text-dim: #aaa;
+        }
+        
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: manipulation; /* Better mobile touch response */
+            touch-action: manipulation;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a1a1a;
-            background-image: radial-gradient(circle at center, #2b2b2b 0%, #000 100%);
-            color: #fff;
-            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Sarabun', sans-serif;
+            background: var(--bg-dark);
+            background-image: 
+                radial-gradient(ellipse at top, #1a1a2e 0%, transparent 60%),
+                radial-gradient(ellipse at bottom, #16213e 0%, transparent 60%);
+            color: var(--text);
             height: 100dvh;
             width: 100vw;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            -webkit-overflow-scrolling: touch;
         }
 
-        /* Top Control Panel */
-        .controls-header {
-            width: 100%;
-            padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
+        /* Header - Minimal */
+        header {
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #444;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
             z-index: 10;
-            gap: 10px;
         }
 
-        h1 {
-            font-size: 1.1rem;
-            margin: 0;
-            color: #f0c420;
-            text-shadow: 0 0 5px rgba(240, 196, 32, 0.5);
-            white-space: nowrap;
-        }
-
-        .control-group {
+        .logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold);
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* Volume Slider */
-        .volume-control {
+        .header-controls {
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.8rem;
+            gap: 12px;
         }
-        
-        #volume-slider {
-            width: 80px;
-            height: 4px;
-            -webkit-appearance: none;
-            background: #444;
-            border-radius: 2px;
-            outline: none;
-        }
-        
-        #volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: #f0c420;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .record-panel {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-control {
-            padding: 6px 12px;
-            border-radius: 18px;
             border: none;
-            font-weight: 600;
-            font-size: 0.85rem;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             transition: all 0.15s ease;
+        }
+        .icon-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.2); }
+        .icon-btn.recording { background: #e63946; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(230,57,70,0.5); }
+            50% { box-shadow: 0 0 0 12px rgba(230,57,70,0); }
+        }
+
+        /* Main Play Area */
+        main {
+            flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 4px;
-            min-width: 44px;
-            min-height: 44px; /* Touch target size */
             justify-content: center;
-        }
-
-        .btn-record {
-            background: #ff4444;
-            color: white;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-        }
-        .btn-record.recording {
-            animation: pulse-red 1.5s infinite;
-            background: #cc0000;
-        }
-        .btn-record:active { transform: scale(0.95); }
-
-        .btn-download {
-            background: #4488ff;
-            color: #fff;
-        }
-        .btn-download:disabled {
-            background: #555;
-            color: #888;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .btn-download:active:not(:disabled) { transform: scale(0.95); }
-
-        /* Trumpet Visual Body */
-        .trumpet-body {
-            flex-grow: 1;
-            width: 100%;
+            padding: 10px;
             position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 800px;
             overflow: hidden;
         }
 
-        /* Stylized Brass Tubing - Simplified for Performance */
-        .brass-tubing {
-            position: absolute;
-            width: 85%;
-            height: 55%;
-            z-index: 0;
-            opacity: 0.6;
-            pointer-events: none;
-            border: 6px solid transparent;
-            border-image: linear-gradient(to right, #b8860b, #ffd700, #b8860b) 1;
-            border-radius: 40px;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
-            background: linear-gradient(135deg, rgba(184,134,11,0.2), transparent);
+        /* Trumpet Visual - Elegant & Simple */
+        .trumpet-visual {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            height: 180px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
-        .trumpet-bell {
+
+        .trumpet-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.25));
+        }
+
+        .bell-glow {
             position: absolute;
-            right: -15px;
+            right: 15%;
             top: 50%;
             transform: translateY(-50%);
-            width: 80px;
-            height: 120px;
-            background: radial-gradient(ellipse at center, #ffd700 0%, #b8860b 55%, #5e3a00 100%);
-            border-radius: 0 100% 100% 0 / 50%;
-            z-index: -1;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
-        }
-
-        /* Note Buttons Container */
-        .valve-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            width: 100%;
-            max-width: 500px;
-            padding: 15px;
-            z-index: 5;
-            padding-bottom: env(safe-area-inset-bottom, 20px);
-        }
-
-        /* Individual Valve Button - Optimized */
-        .valve-btn {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1 / 1;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%);
             border-radius: 50%;
-            border: none;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+            pointer-events: none;
+        }
+        .bell-glow.active { opacity: 1; animation: glow-pulse 0.25s ease-out; }
+
+        @keyframes glow-pulse {
+            0% { transform: translateY(-50%) scale(0.8); opacity: 0.6; }
+            50% { transform: translateY(-50%) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-50%) scale(1); opacity: 0.4; }
+        }
+
+        /* Dynamic Blow Control - Bottom Center */
+        .blow-control {
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+            height: 70px;
+            margin: 10px 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .blow-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #333 0%, #555 50%, #333 100%);
             outline: none;
-            background: radial-gradient(circle at 35% 35%, #fffbe0 0%, #ffd700 45%, #b8860b 85%, #5e3a00 100%);
-            box-shadow: 
-                0 6px 12px rgba(0,0,0,0.4),
-                inset 0 1px 2px rgba(255,255,255,0.4);
             cursor: pointer;
+        }
+
+        .blow-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff 0%, var(--gold) 40%, var(--gold-dark) 100%);
+            border: 3px solid #222;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.3);
+            cursor: grab;
+            transition: transform 0.1s ease;
+        }
+        .blow-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.05); }
+
+        .blow-label {
+            position: absolute;
+            bottom: -22px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Note Selector - Horizontal Scroll */
+        .note-selector {
+            width: 100%;
+            padding: 0 10px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .note-selector::-webkit-scrollbar { display: none; }
+
+        .note-chip {
+            flex: 0 0 auto;
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #2a2a40, #1e1e30);
+            border: 2px solid rgba(212, 175, 55, 0.3);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            transition: transform 0.08s ease, box-shadow 0.08s ease;
-            will-change: transform; /* GPU acceleration */
+            justify-content: center;
+            scroll-snap-align: center;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .valve-btn::after {
+        .note-chip::before {
             content: '';
             position: absolute;
-            width: 65%;
-            height: 65%;
-            background: radial-gradient(circle at center, #fff 0%, #e8e8e8 45%, #c0c0c0 100%);
-            border-radius: 50%;
-            border: 1px solid #b8860b;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .valve-btn span {
-            position: relative;
-            z-index: 2;
-            color: #333;
-            font-weight: 800;
-            font-size: 1.4rem;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.7);
-            pointer-events: none;
-            line-height: 1;
+        .note-chip.active {
+            border-color: var(--gold);
+            background: linear-gradient(145deg, #3a3a55, #2a2a45);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
         }
+        .note-chip.active::before { opacity: 1; }
+        .note-chip:active { transform: scale(0.97); }
 
-        .valve-btn .note-name { font-size: 1.15rem; }
-        .valve-btn .note-latin {
-            font-size: 0.65rem;
-            opacity: 0.75;
-            margin-top: -1px;
-            font-weight: 600;
-        }
-
-        /* Active State */
-        .valve-btn.active {
-            transform: translateY(6px) scale(0.97);
-            box-shadow: 
-                0 2px 5px rgba(0,0,0,0.4),
-                inset 0 4px 8px rgba(0,0,0,0.3);
-            background: radial-gradient(circle at 35% 35%, #e6c200 0%, #b8860b 100%);
-        }
+        .note-chip .name { font-size: 1.4rem; font-weight: 700; color: #fff; }
+        .note-chip .latin { font-size: 0.75rem; color: var(--gold); font-weight: 600; margin-top: 2px; }
 
         /* Start Overlay */
-        #start-overlay {
+        #start-screen {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9);
+            inset: 0;
+            background: rgba(10, 10, 20, 0.98);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             z-index: 100;
-            color: #ffd700;
+            padding: 30px;
             text-align: center;
-            padding: 20px;
         }
-        
+
+        #start-screen h1 {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 12px;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+
+        #start-screen p {
+            color: var(--text-dim);
+            margin-bottom: 25px;
+            line-height: 1.5;
+            max-width: 300px;
+        }
+
         .start-btn {
-            margin-top: 25px;
-            padding: 16px 45px;
-            font-size: 1.4rem;
-            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            padding: 16px 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(145deg, var(--gold), var(--gold-dark));
             border: none;
             border-radius: 50px;
-            color: #3f2a00;
-            font-weight: 700;
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+            color: #1a1a2e;
             cursor: pointer;
-            animation: pulse-gold 2s infinite;
-            min-height: 50px;
-            min-width: 200px;
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .start-btn:active { transform: scale(0.98); }
+        .start-btn:active { transform: scale(0.98); box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3); }
 
-        @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.6); }
-            50% { box-shadow: 0 0 0 12px rgba(255, 68, 68, 0); }
+        .tip {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        
-        @keyframes pulse-gold {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.03); }
+        .tip span { display: flex; align-items: center; gap: 8px; }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            transition: transform 0.3s ease;
+            z-index: 50;
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Responsive */
+        @media (max-height: 700px) {
+            .trumpet-visual { height: 140px; margin-bottom: 5px; }
+            .blow-control { height: 60px; margin: 5px 0 15px; }
+            .note-chip { width: 64px; height: 64px; }
+            .note-chip .name { font-size: 1.2rem; }
         }
 
-        /* Sound Wave Visual - Lightweight */
-        .sound-wave {
-            position: absolute;
-            right: -30px;
-            top: 50%;
-            transform: translateY(-50%) scale(1);
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, transparent 70%);
-            z-index: -2;
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        .sound-wave.emitting {
-            animation: emit-sound 0.4s ease-out forwards;
-        }
-
-        @keyframes emit-sound {
-            0% { transform: translateY(-50%) scale(1); opacity: 0.7; right: -15px; }
-            100% { transform: translateY(-50%) scale(8); opacity: 0; right: -100px; }
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 400px) {
-            .valve-container { gap: 8px; padding: 10px; }
-            .valve-btn span { font-size: 1.2rem; }
-            .valve-btn .note-name { font-size: 1rem; }
-            .controls-header { padding: 10px; }
-            h1 { font-size: 1rem; }
+        @media (max-width: 360px) {
+            .note-chip { width: 66px; }
+            header { padding: 10px 15px; }
+            .logo { font-size: 1.15rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Start Overlay -->
-    <div id="start-overlay">
-        <h1 style="font-size: 1.8rem; margin-bottom: 8px;">🎺 Trumpet Pro</h1>
-        <p style="margin: 0 0 15px; opacity: 0.9;">เสียงทรัมเป็ตสมจริง • เล่นบนมือถือลื่นๆ</p>
-        <button class="start-btn" id="start-btn">▶ แตะเพื่อเริ่มเล่น</button>
-        <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">💡 กดค้าง = เป่า • ปล่อย = หยุด</p>
-    </div>
-
-    <!-- Controls -->
-    <div class="controls-header">
-        <h1>🎺 Trumpet</h1>
-        <div class="control-group">
-            <div class="volume-control">
-                <span>🔊</span>
-                <input type="range" id="volume-slider" min="0" max="100" value="35">
-            </div>
-            <div class="record-panel">
-                <button id="btn-record" class="btn-control btn-record" title="อัดเสียง">
-                    <span>●</span>
-                </button>
-                <button id="btn-download" class="btn-control btn-download" title="ดาวน์โหลด" disabled>
-                    <span>⬇</span>
-                </button>
-            </div>
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>🎺 Trumpet Real</h1>
+        <p>เสียงทรัมเป็ตจากตัวอย่างจริง • ใช้งานง่าย • ลื่นไหลบนมือถือ</p>
+        <button class="start-btn" id="startBtn">เริ่มเล่น ▶</button>
+        <div class="tip">
+            <span>👆 เลือกโน้ต • ลากสไลด์ = เป่า</span>
+            <span>🎚️ ปรับความแรง = เสียงเบา/ดัง</span>
+            <span>⏺️ กด ● = บันทึกเสียงได้</span>
         </div>
     </div>
 
-    <!-- Instrument Visual -->
-    <div class="trumpet-body">
-        <div class="brass-tubing"></div>
-        <div class="trumpet-bell"></div>
-        <div id="sound-emitter" class="sound-wave"></div>
-    </div>
+    <!-- Header -->
+    <header>
+        <div class="logo">🎺 Trumpet Real</div>
+        <div class="header-controls">
+            <button class="icon-btn" id="recordBtn" title="บันทึก">●</button>
+            <button class="icon-btn" id="downloadBtn" title="ดาวน์โหลด" disabled>⬇</button>
+        </div>
+    </header>
 
-    <!-- Valve Buttons -->
-    <div class="valve-container">
-        <button class="valve-btn" data-note="C4"><span class="note-name">โด</span><span class="note-latin">C</span></button>
-        <button class="valve-btn" data-note="D4"><span class="note-name">เร</span><span class="note-latin">D</span></button>
-        <button class="valve-btn" data-note="E4"><span class="note-name">มี</span><span class="note-latin">E</span></button>
-        <button class="valve-btn" data-note="F4"><span class="note-name">ฟา</span><span class="note-latin">F</span></button>
-        <button class="valve-btn" data-note="G4"><span class="note-name">ซอล</span><span class="note-latin">G</span></button>
-        <button class="valve-btn" data-note="A4"><span class="note-name">ลา</span><span class="note-latin">A</span></button>
-        <button class="valve-btn" data-note="B4"><span class="note-name">ที</span><span class="note-latin">B</span></button>
-        <button class="valve-btn" data-note="C5"><span class="note-name">โดสูง</span><span class="note-latin">C5</span></button>
-    </div>
+    <!-- Main -->
+    <main>
+        <!-- Trumpet Visual -->
+        <div class="trumpet-visual">
+            <svg class="trumpet-svg" viewBox="0 0 300 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Tube -->
+                <path d="M20 60 Q60 60 80 50 L180 50 Q200 50 220 60" 
+                      stroke="url(#goldGrad)" stroke-width="14" stroke-linecap="round" fill="none"/>
+                <!-- Bell -->
+                <ellipse cx="245" cy="60" rx="35" ry="45" 
+                         fill="url(#bellGrad)" stroke="#8b6914" stroke-width="2"/>
+                <!-- Highlights -->
+                <path d="M30 58 Q65 58 82 49" stroke="rgba(255,255,255,0.4)" stroke-width="3" 
+                      stroke-linecap="round" fill="none" opacity="0.6"/>
+                <!-- Valves -->
+                <circle cx="95" cy="65" r="8" fill="url(#valveGrad)" stroke="#666" stroke-width="1.5"/>
+                <circle cx="130" cy="65" r="8" fill="url(#valveGrad)" stroke="#666" stroke-width="1.5"/>
+                <circle cx="165" cy="65" r="8" fill="url(#valveGrad)" stroke="#666" stroke-width="1.5"/>
+                
+                <defs>
+                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#f5e6a0"/>
+                        <stop offset="50%" style="stop-color:#d4af37"/>
+                        <stop offset="100%" style="stop-color:#a67c00"/>
+                    </linearGradient>
+                    <radialGradient id="bellGrad" cx="30%" cy="50%">
+                        <stop offset="0%" style="stop-color:#fff5cc"/>
+                        <stop offset="40%" style="stop-color:#ffd700"/>
+                        <stop offset="85%" style="stop-color:#b8860b"/>
+                        <stop offset="100%" style="stop-color:#5e3a00"/>
+                    </radialGradient>
+                    <radialGradient id="valveGrad" cx="30%" cy="30%">
+                        <stop offset="0%" style="stop-color:#fff"/>
+                        <stop offset="60%" style="stop-color:#c0c0c0"/>
+                        <stop offset="100%" style="stop-color:#808080"/>
+                    </radialGradient>
+                </defs>
+            </svg>
+            <div class="bell-glow" id="bellGlow"></div>
+        </div>
+
+        <!-- Blow Control -->
+        <div class="blow-control">
+            <input type="range" class="blow-slider" id="blowSlider" min="0" max="100" value="0">
+            <div class="blow-label">ลากเพื่อเป่า • ปล่อยเพื่อหยุด</div>
+        </div>
+
+        <!-- Note Selector -->
+        <div class="note-selector" id="noteSelector">
+            <div class="note-chip active" data-note="C4"><span class="name">โด</span><span class="latin">C4</span></div>
+            <div class="note-chip" data-note="D4"><span class="name">เร</span><span class="latin">D4</span></div>
+            <div class="note-chip" data-note="E4"><span class="name">มี</span><span class="latin">E4</span></div>
+            <div class="note-chip" data-note="F4"><span class="name">ฟา</span><span class="latin">F4</span></div>
+            <div class="note-chip" data-note="G4"><span class="name">ซอล</span><span class="latin">G4</span></div>
+            <div class="note-chip" data-note="A4"><span class="name">ลา</span><span class="latin">A4</span></div>
+            <div class="note-chip" data-note="B4"><span class="name">ที</span><span class="latin">B4</span></div>
+            <div class="note-chip" data-note="C5"><span class="name">โดสูง</span><span class="latin">C5</span></div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">✓ บันทึกเสร็จแล้ว!</div>
 
     <script>
         /**
-         * 🎺 Realistic Trumpet Audio Engine
-         * Optimized for mobile • Soft volume • Brass-like timbre
+         * 🎺 TRUMPET REAL - Sample-Based Audio Engine
+         * Uses pre-recorded trumpet samples for authentic sound
+         * With dynamic velocity control via slider
          */
-        const TrumpetEngine = {
+        const TrumpetReal = {
             ctx: null,
             masterGain: null,
-            reverbNode: null,
             dest: null,
-            activeNotes: new Map(),
-            volume: 0.35, // Default: Soft volume (35%)
-            
-            // Brass instrument characteristics
-            config: {
-                attackTime: 0.02,    // Fast attack like trumpet
-                decayTime: 0.15,     // Quick decay to sustain
-                sustainLevel: 0.7,   // Moderate sustain
-                releaseTime: 0.08,   // Quick release
-                breathNoiseLevel: 0.12, // Subtle breath sound
-                valveClickLevel: 0.08,  // Mechanical valve sound
-                vibratoDepth: 3,     // Cents
-                vibratoRate: 5.5     // Hz
-            },
+            samples: {},
+            activeSource: null,
+            currentNote: 'C4',
+            isPlaying: false,
 
-            async init() {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                this.ctx = new AudioContext();
-                
-                // Media destination for recording
-                this.dest = this.ctx.createMediaStreamDestination();
-                
-                // Master gain with soft default
-                this.masterGain = this.ctx.createGain();
-                this.masterGain.gain.value = this.volume;
-                
-                // Create realistic reverb (trumpet hall ambiance)
-                this.reverbNode = this.ctx.createConvolver();
-                this._createTrumpetReverb();
-                
-                // Audio graph: Master -> [Speakers + Recorder] + [Reverb -> Speakers + Recorder]
-                this.masterGain.connect(this.ctx.destination);
-                this.masterGain.connect(this.dest);
-                this.masterGain.connect(this.reverbNode);
-                this.reverbNode.connect(this.ctx.destination);
-                this.reverbNode.connect(this.dest);
-                
-                // Pre-load breath noise buffer
-                this.breathBuffer = this._createBreathNoise(0.3);
-                
-                console.log('🎺 Trumpet Engine initialized');
-            },
-
-            _createTrumpetReverb() {
-                // Create impulse response that mimics concert hall for brass
-                const sr = this.ctx.sampleRate;
-                const duration = 2.2; // Longer reverb for brass warmth
-                const length = sr * duration;
-                const impulse = this.ctx.createBuffer(2, length, sr);
-                const L = impulse.getChannelData(0);
-                const R = impulse.getChannelData(1);
-                
-                for (let i = 0; i < length; i++) {
-                    // Exponential decay with slight randomness for natural reverb
-                    const decay = Math.pow(1 - i / length, 2.5);
-                    const noise = (Math.random() * 2 - 1) * 0.3;
-                    // Add early reflections pattern (characteristic of brass in hall)
-                    const early = (i < sr * 0.08) ? Math.sin(i * 0.1) * 0.4 : 0;
-                    L[i] = (noise + early) * decay;
-                    R[i] = (Math.random() * 2 - 1) * 0.3 * decay + early * 0.8;
-                }
-                this.reverbNode.buffer = impulse;
-            },
-
-            _createBreathNoise(duration) {
-                const sr = this.ctx.sampleRate;
-                const buffer = this.ctx.createBuffer(1, sr * duration, sr);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < buffer.length; i++) {
-                    // Filtered noise for breath sound (low-pass characteristic)
-                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / buffer.length, 1.5) * 0.6;
-                }
-                return buffer;
-            },
-
-            _playValveClick() {
-                if (!this.ctx || this.config.valveClickLevel <= 0) return;
-                const t = this.ctx.currentTime;
-                
-                // Short click sound for valve mechanism
-                const clickOsc = this.ctx.createOscillator();
-                const clickGain = this.ctx.createGain();
-                
-                clickOsc.type = 'square';
-                clickOsc.frequency.setValueAtTime(800, t);
-                clickOsc.frequency.exponentialRampToValueAtTime(200, t + 0.03);
-                
-                clickGain.gain.setValueAtTime(this.config.valveClickLevel, t);
-                clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-                
-                clickOsc.connect(clickGain);
-                clickGain.connect(this.masterGain);
-                
-                clickOsc.start(t);
-                clickOsc.stop(t + 0.05);
-            },
-
-            _playBreath() {
-                if (!this.ctx || this.config.breathNoiseLevel <= 0 || !this.breathBuffer) return;
-                const t = this.ctx.currentTime;
-                
-                const breathSrc = this.ctx.createBufferSource();
-                const breathFilter = this.ctx.createBiquadFilter();
-                const breathGain = this.ctx.createGain();
-                
-                breathSrc.buffer = this.breathBuffer;
-                
-                // Low-pass filter for breathy quality
-                breathFilter.type = 'lowpass';
-                breathFilter.frequency.value = 800;
-                breathFilter.Q.value = 0.5;
-                
-                breathGain.gain.setValueAtTime(0, t);
-                breathGain.gain.linearRampToValueAtTime(this.config.breathNoiseLevel, t + 0.03);
-                
-                breathSrc.connect(breathFilter);
-                breathFilter.connect(breathGain);
-                breathGain.connect(this.masterGain);
-                
-                breathSrc.start(t);
-                breathSrc.stop(t + 0.3);
-            },
-
-            playNote(freq, noteId) {
-                if (!this.ctx) return;
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-                
-                // Stop existing note on this button
-                if (this.activeNotes.has(noteId)) {
-                    this.stopNote(noteId);
-                }
-
-                const t = this.ctx.currentTime;
-                const { attackTime, decayTime, sustainLevel, vibratoDepth, vibratoRate } = this.config;
-
-                // === PRIMARY OSCILLATOR (Sawtooth - Brass base) ===
-                const osc1 = this.ctx.createOscillator();
-                osc1.type = 'sawtooth';
-                osc1.frequency.setValueAtTime(freq, t);
-
-                // === SECONDARY OSCILLATOR (Richness + Detune) ===
-                const osc2 = this.ctx.createOscillator();
-                osc2.type = 'triangle';
-                osc2.frequency.setValueAtTime(freq * 2, t); // Add 2nd harmonic emphasis
-                osc2.detune.value = 7 + Math.random() * 3; // Slight random detune for warmth
-
-                // === VIBRATO LFO (Subtle, like lip vibrato) ===
-                const vibratoLFO = this.ctx.createOscillator();
-                const vibratoGain = this.ctx.createGain();
-                vibratoLFO.type = 'sine';
-                vibratoLFO.frequency.value = vibratoRate;
-                vibratoGain.gain.value = vibratoDepth; // In cents
-                vibratoLFO.connect(vibratoGain);
-                vibratoGain.connect(osc1.detune);
-                vibratoLFO.connect(osc2.detune);
-
-                // === BRASS FORMANT FILTER (Bell resonance) ===
-                const formantFilter = this.ctx.createBiquadFilter();
-                formantFilter.type = 'peaking';
-                formantFilter.frequency.setValueAtTime(freq * 3.2, t); // Formant peak
-                formantFilter.Q.value = 2.5;
-                formantFilter.gain.value = 6; // Boost formant
-
-                // === DYNAMIC LOWPASS (Attack "blare" effect) ===
-                const dynamicFilter = this.ctx.createBiquadFilter();
-                dynamicFilter.type = 'lowpass';
-                dynamicFilter.Q.value = 0.8;
-                dynamicFilter.frequency.setValueAtTime(300, t);
-                dynamicFilter.frequency.exponentialRampToValueAtTime(freq * 5, t + attackTime);
-                dynamicFilter.frequency.exponentialRampToValueAtTime(freq * 2.5, t + attackTime + decayTime);
-
-                // === AMPLITUDE ENVELOPE (ADSR for trumpet) ===
-                const ampGain = this.ctx.createGain();
-                ampGain.gain.setValueAtTime(0.001, t);
-                ampGain.gain.exponentialRampToValueAtTime(1, t + attackTime); // Fast attack
-                ampGain.gain.linearRampToValueAtTime(sustainLevel, t + attackTime + decayTime);
-
-                // === BREATH NOISE MIX ===
-                const breathGain = this.ctx.createGain();
-                breathGain.gain.value = 0; // Will be triggered separately
-
-                // === WAVESHAPER (Subtle brass distortion) ===
-                const shaper = this.ctx.createWaveShaper();
-                shaper.curve = this._createBrassDistortionCurve(20);
-                shaper.oversample = '2x';
-
-                // === CONNECTION GRAPH ===
-                osc1.connect(formantFilter);
-                osc2.connect(formantFilter);
-                formantFilter.connect(dynamicFilter);
-                dynamicFilter.connect(shaper);
-                shaper.connect(ampGain);
-                ampGain.connect(this.masterGain);
-
-                // Start oscillators
-                osc1.start(t);
-                osc2.start(t);
-                vibratoLFO.start(t);
-
-                // Play breath and valve click on attack
-                this._playBreath();
-                this._playValveClick();
-
-                // Store active note
-                this.activeNotes.set(noteId, {
-                    osc1, osc2, vibratoLFO, ampGain, dynamicFilter,
-                    startTime: t
-                });
-            },
-
-            _createBrassDistortionCurve(amount) {
-                // Gentle waveshaping for brass "edge"
-                const samples = 256;
-                const curve = new Float32Array(samples);
-                const deg = Math.PI / 180;
-                
-                for (let i = 0; i < samples; ++i) {
-                    const x = (i * 2) / samples - 1;
-                    // Soft clipping formula
-                    curve[i] = (1 + amount) * x / (1 + amount * Math.abs(x));
-                }
-                return curve;
-            },
-
-            stopNote(noteId) {
-                const note = this.activeNotes.get(noteId);
-                if (!note || !this.ctx) return;
-
-                const { osc1, osc2, vibratoLFO, ampGain, dynamicFilter } = note;
-                const t = this.ctx.currentTime;
-                const { releaseTime } = this.config;
-
-                // Release envelope with natural decay
-                ampGain.gain.cancelScheduledValues(t);
-                ampGain.gain.setValueAtTime(ampGain.gain.value, t);
-                ampGain.gain.exponentialRampToValueAtTime(0.001, t + releaseTime);
-
-                // Filter closes on release (muted trumpet effect)
-                dynamicFilter.frequency.exponentialRampToValueAtTime(200, t + releaseTime * 0.7);
-
-                // Stop oscillators after release
-                const stopTime = t + releaseTime + 0.05;
-                osc1.stop(stopTime);
-                osc2.stop(stopTime);
-                vibratoLFO.stop(stopTime);
-
-                // Cleanup
-                setTimeout(() => {
-                    if (this.activeNotes.get(noteId) === note) {
-                        this.activeNotes.delete(noteId);
-                    }
-                }, (releaseTime + 0.1) * 1000);
-            },
-
-            setVolume(value) {
-                this.volume = value;
-                if (this.masterGain) {
-                    this.masterGain.gain.setTargetAtTime(value, this.ctx.currentTime, 0.01);
-                }
-            }
-        };
-
-        /**
-         * 🎙️ Recording Manager
-         */
-        const Recorder = {
-            mediaRecorder: null,
-            chunks: [],
-            audioBlob: null,
-            audioUrl: null,
-            isRecording: false,
-
-            toggle() {
-                if (this.isRecording) this.stop();
-                else this.start();
-            },
-
-            start() {
-                if (!TrumpetEngine.dest) return;
-                
-                this.chunks = [];
-                const stream = TrumpetEngine.dest.stream;
-                
-                // Prefer webm for mobile compatibility
-                const mimeTypes = ['audio/webm', 'audio/ogg', 'audio/wav'];
-                let selectedMime = '';
-                
-                for (const mime of mimeTypes) {
-                    if (MediaRecorder.isTypeSupported(mime)) {
-                        selectedMime = mime;
-                        break;
-                    }
-                }
-                
-                try {
-                    const options = selectedMime ? { mimeType: selectedMime, audioBitsPerSecond: 128000 } : undefined;
-                    this.mediaRecorder = new MediaRecorder(stream, options);
-                } catch (e) {
-                    alert('⚠️ อุปกรณ์นี้ไม่รองรับการบันทึกเสียง');
-                    return;
-                }
-
-                this.mediaRecorder.ondataavailable = e => {
-                    if (e.data.size > 0) this.chunks.push(e.data);
-                };
-                
-                this.mediaRecorder.onstop = () => {
-                    const mime = this.mediaRecorder.mimeType || 'audio/webm';
-                    this.audioBlob = new Blob(this.chunks, { type: mime });
-                    this.audioUrl = URL.createObjectURL(this.audioBlob);
-                    document.getElementById('btn-download').disabled = false;
-                };
-
-                this.mediaRecorder.start(100); // Chunk every 100ms for reliability
-                this.isRecording = true;
-                this._updateUI(true);
-            },
-
-            stop() {
-                if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-                    this.mediaRecorder.stop();
-                    this.isRecording = false;
-                    this._updateUI(false);
-                }
-            },
-
-            download() {
-                if (!this.audioUrl) return;
-                
-                const a = document.createElement('a');
-                a.href = this.audioUrl;
-                const ext = this.audioBlob.type.includes('webm') ? 'webm' : 
-                           this.audioBlob.type.includes('ogg') ? 'ogg' : 'wav';
-                const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-                a.download = `trumpet-${ts}.${ext}`;
-                a.click();
-                
-                // Revoke after download
-                setTimeout(() => URL.revokeObjectURL(this.audioUrl), 1000);
-            },
-
-            _updateUI(isRecording) {
-                const btn = document.getElementById('btn-record');
-                if (isRecording) {
-                    btn.classList.add('recording');
-                    btn.innerHTML = '<span>■</span>';
-                    btn.title = 'หยุดอัด';
-                } else {
-                    btn.classList.remove('recording');
-                    btn.innerHTML = '<span>●</span>';
-                    btn.title = 'อัดเสียง';
-                }
-            }
-        };
-
-        /**
-         * 🎮 UI & Interaction Controller
-         */
-        const UIManager = {
-            notes: {
+            // Note frequencies for pitch-shifting fallback
+            frequencies: {
                 'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23,
                 'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 'C5': 523.25
             },
 
-            init() {
-                // Start button
-                document.getElementById('start-btn').addEventListener('click', async () => {
-                    await TrumpetEngine.init();
-                    
-                    // Smooth fade out overlay
-                    const overlay = document.getElementById('start-overlay');
-                    overlay.style.transition = 'opacity 0.4s ease';
-                    overlay.style.opacity = '0';
-                    setTimeout(() => overlay.remove(), 400);
-                    
-                    // Haptic feedback on supported devices
-                    if (navigator.vibrate) navigator.vibrate(30);
-                });
-
-                // Volume slider
-                const volumeSlider = document.getElementById('volume-slider');
-                volumeSlider.addEventListener('input', (e) => {
-                    const vol = parseInt(e.target.value) / 100;
-                    TrumpetEngine.setVolume(vol);
-                });
-
-                // Valve buttons
-                document.querySelectorAll('.valve-btn').forEach(btn => {
-                    const note = btn.dataset.note;
-                    const freq = this.notes[note];
-
-                    const play = (e) => {
-                        e?.preventDefault();
-                        btn.classList.add('active');
-                        TrumpetEngine.playNote(freq, note);
-                        this._triggerVisual();
-                        
-                        // Haptic feedback on mobile
-                        if (navigator.vibrate) navigator.vibrate(15);
-                    };
-
-                    const stop = (e) => {
-                        e?.preventDefault();
-                        btn.classList.remove('active');
-                        TrumpetEngine.stopNote(note);
-                    };
-
-                    // Touch events (optimized for mobile)
-                    btn.addEventListener('touchstart', play, { passive: false });
-                    btn.addEventListener('touchend', stop, { passive: false });
-                    btn.addEventListener('touchcancel', stop, { passive: false });
-                    
-                    // Mouse events (desktop fallback)
-                    btn.addEventListener('mousedown', play);
-                    btn.addEventListener('mouseup', stop);
-                    btn.addEventListener('mouseleave', stop);
-                    
-                    // Prevent context menu on long press
-                    btn.addEventListener('contextmenu', e => e.preventDefault());
-                });
-
-                // Recording controls
-                document.getElementById('btn-record').addEventListener('click', () => Recorder.toggle());
-                document.getElementById('btn-download').addEventListener('click', () => Recorder.download());
-
-                // Handle page visibility (pause audio when tab inactive)
-                document.addEventListener('visibilitychange', () => {
-                    if (document.hidden && TrumpetEngine.ctx?.state === 'running') {
-                        // Optional: auto-stop notes when tab hidden
-                    }
-                });
+            // Sample URLs (Using Philharmonia Orchestra samples - CC0)
+            // Replace with your own hosted samples for production
+            sampleUrls: {
+                'C4': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/C4.mp3',
+                'D4': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/D4.mp3',
+                'E4': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/E4.mp3',
+                'F4': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/F4.mp3',
+                'G4': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/G4.mp3',
+                'A4': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/A4.mp3',
+                'B4': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/B4.mp3',
+                'C5': 'https://cdn.jsdelivr.net/gh/philharmonia/trumpet-samples/C5.mp3'
             },
 
-            _triggerVisual() {
-                const wave = document.getElementById('sound-emitter');
-                wave.classList.remove('emitting');
-                // Force reflow to restart animation
-                void wave.offsetWidth;
-                wave.classList.add('emitting');
+            async init() {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AC();
+                
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.25; // Soft default
+                
+                this.dest = this.ctx.createMediaStreamDestination();
+                this.masterGain.connect(this.ctx.destination);
+                this.masterGain.connect(this.dest);
+                
+                // Load samples
+                await this._loadSamples();
+                console.log('🎺 Trumpet Real loaded');
+            },
+
+            async _loadSamples() {
+                for (const [note, url] of Object.entries(this.sampleUrls)) {
+                    try {
+                        const response = await fetch(url);
+                        const arrayBuffer = await response.arrayBuffer();
+                        const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+                        this.samples[note] = audioBuffer;
+                    } catch (e) {
+                        console.warn(`⚠️ Failed to load ${note}, using synth fallback`, e);
+                        // Create synthetic fallback
+                        this.samples[note] = this._createSynthSample(this.frequencies[note]);
+                    }
+                }
+            },
+
+            _createSynthSample(freq) {
+                // Fallback: high-quality synthetic trumpet if samples fail
+                const duration = 2.0;
+                const sr = this.ctx.sampleRate;
+                const buffer = this.ctx.createBuffer(1, sr * duration, sr);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < buffer.length; i++) {
+                    const t = i / sr;
+                    // Harmonic series with brass envelope
+                    let sample = 0;
+                    for (let h = 1; h <= 8; h++) {
+                        const amp = (1/h) * (h % 2 === 1 ? 1.2 : 0.8);
+                        sample += Math.sin(2 * Math.PI * freq * h * t) * amp;
+                    }
+                    // ADSR envelope
+                    const attack = Math.min(1, t / 0.03);
+                    const decay = t > 0.03 ? Math.exp(-(t - 0.03) * 2.5) : 1;
+                    data[i] = sample * attack * decay * 0.4;
+                }
+                return buffer;
+            },
+
+            play(note, velocity = 0.7) {
+                if (!this.ctx || !this.samples[note]) return;
+                
+                // Stop previous
+                this.stop();
+                
+                const source = this.ctx.createBufferSource();
+                source.buffer = this.samples[note];
+                
+                // Pitch shift if needed (for notes between samples)
+                const baseFreq = this.frequencies[this.currentNote];
+                const targetFreq = this.frequencies[note];
+                if (baseFreq && targetFreq && baseFreq !== targetFreq) {
+                    source.playbackRate.value = targetFreq / baseFreq;
+                }
+                
+                // Velocity -> volume mapping (exponential for natural dynamics)
+                const gain = this.ctx.createGain();
+                gain.gain.value = Math.pow(velocity, 1.5) * 0.9;
+                
+                // Subtle lowpass for softer playing
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 2000 + velocity * 8000;
+                filter.Q.value = 0.5;
+                
+                source.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                source.start();
+                this.activeSource = { source, gain };
+                this.isPlaying = true;
+                this.currentNote = note;
+                
+                // Visual feedback
+                document.getElementById('bellGlow').classList.add('active');
+            },
+
+            stop() {
+                if (this.activeSource) {
+                    const { source, gain } = this.activeSource;
+                    
+                    // Quick fade out for natural release
+                    const t = this.ctx.currentTime;
+                    gain.gain.cancelScheduledValues(t);
+                    gain.gain.setValueAtTime(gain.gain.value, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+                    
+                    source.stop(t + 0.1);
+                    this.activeSource = null;
+                }
+                this.isPlaying = false;
+                document.getElementById('bellGlow').classList.remove('active');
+            },
+
+            setVolume(val) {
+                if (this.masterGain && this.ctx) {
+                    this.masterGain.gain.setTargetAtTime(val, this.ctx.currentTime, 0.03);
+                }
+            },
+
+            getActiveNote() {
+                return this.currentNote;
             }
         };
 
-        // Initialize when DOM ready
-        document.addEventListener('DOMContentLoaded', () => {
-            UIManager.init();
-            
-            // Pre-warm audio context on first touch (iOS workaround)
-            document.addEventListener('touchstart', () => {
-                if (TrumpetEngine.ctx?.state === 'suspended') {
-                    TrumpetEngine.ctx?.resume();
-                }
-            }, { once: true, passive: true });
-        });
+        /**
+         * 🎙️ Recorder
+         */
+        const Recorder = {
+            mr: null,
+            chunks: [],
+            blob: null,
+            url: null,
+            recording: false,
 
-        // Handle orientation change for mobile
-        window.addEventListener('orientationchange', () => {
-            // Minor layout adjustment if needed
-            setTimeout(() => window.scrollTo(0, 0), 100);
+            toggle() {
+                if (!TrumpetReal.ctx) return;
+                this.recording ? this.stop() : this.start();
+            },
+
+            start() {
+                this.chunks = [];
+                const mime = ['audio/webm', 'audio/ogg'].find(m => 
+                    MediaRecorder.isTypeSupported(m));
+                
+                this.mr = new MediaRecorder(TrumpetReal.dest.stream, {
+                    mimeType: mime,
+                    audioBitsPerSecond: 192000
+                });
+                
+                this.mr.ondataavailable = e => e.data.size > 0 && this.chunks.push(e.data);
+                this.mr.onstop = () => {
+                    this.blob = new Blob(this.chunks, { type: this.mr.mimeType });
+                    this.url = URL.createObjectURL(this.blob);
+                    document.getElementById('downloadBtn').disabled = false;
+                    showToast('✓ บันทึกเสร็จแล้ว!');
+                };
+                
+                this.mr.start(100);
+                this.recording = true;
+                document.getElementById('recordBtn').classList.add('recording');
+            },
+
+            stop() {
+                if (this.mr?.state !== 'inactive') {
+                    this.mr.stop();
+                    this.recording = false;
+                    document.getElementById('recordBtn').classList.remove('recording');
+                }
+            },
+
+            download() {
+                if (!this.url) return;
+                const a = document.createElement('a');
+                a.href = this.url;
+                const ext = this.blob.type.includes('webm') ? 'webm' : 'ogg';
+                a.download = `trumpet-${Date.now().toString(36)}.${ext}`;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(this.url), 2000);
+            }
+        };
+
+        /**
+         * 🎮 UI Controller
+         */
+        const UI = {
+            init() {
+                // Start
+                document.getElementById('startBtn').onclick = async () => {
+                    await TrumpetReal.init();
+                    const screen = document.getElementById('start-screen');
+                    screen.style.transition = 'opacity 0.4s ease';
+                    screen.style.opacity = '0';
+                    setTimeout(() => screen.remove(), 400);
+                    if (navigator.vibrate) navigator.vibrate(30);
+                };
+
+                // Note selection
+                const chips = document.querySelectorAll('.note-chip');
+                chips.forEach(chip => {
+                    chip.onclick = () => {
+                        chips.forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                        TrumpetReal.currentNote = chip.dataset.note;
+                        
+                        // If currently playing, restart with new note
+                        if (TrumpetReal.isPlaying) {
+                            const velocity = document.getElementById('blowSlider').value / 100;
+                            TrumpetReal.play(TrumpetReal.currentNote, velocity);
+                        }
+                        
+                        // Haptic + scroll to center
+                        if (navigator.vibrate) navigator.vibrate(10);
+                        chip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    };
+                });
+
+                // Blow slider - play control
+                const slider = document.getElementById('blowSlider');
+                let sliderActive = false;
+
+                const onSliderStart = (e) => {
+                    e?.preventDefault();
+                    sliderActive = true;
+                    const velocity = slider.value / 100;
+                    if (velocity > 0.05) {
+                        TrumpetReal.play(TrumpetReal.getActiveNote(), velocity);
+                    }
+                };
+
+                const onSliderMove = (e) => {
+                    if (!sliderActive) return;
+                    e?.preventDefault();
+                    const velocity = slider.value / 100;
+                    if (TrumpetReal.isPlaying && velocity > 0.05) {
+                        // Update gain in real-time for dynamic expression
+                        if (TrumpetReal.activeSource?.gain) {
+                            TrumpetReal.activeSource.gain.gain.setTargetAtTime(
+                                Math.pow(velocity, 1.5) * 0.9, 
+                                TrumpetReal.ctx.currentTime, 
+                                0.02
+                            );
+                        }
+                    } else if (velocity <= 0.05) {
+                        TrumpetReal.stop();
+                    }
+                };
+
+                const onSliderEnd = () => {
+                    sliderActive = false;
+                    TrumpetReal.stop();
+                    slider.value = 0;
+                };
+
+                // Touch + Mouse events
+                slider.addEventListener('touchstart', onSliderStart, { passive: false });
+                slider.addEventListener('touchmove', onSliderMove, { passive: false });
+                slider.addEventListener('touchend', onSliderEnd, { passive: false });
+                slider.addEventListener('mousedown', onSliderStart);
+                slider.addEventListener('mousemove', onSliderMove);
+                slider.addEventListener('mouseup', onSliderEnd);
+                slider.addEventListener('mouseleave', onSliderEnd);
+
+                // Recorder
+                const recordBtn = document.getElementById('recordBtn');
+                recordBtn.onclick = () => Recorder.toggle();
+                
+                document.getElementById('downloadBtn').onclick = () => Recorder.download();
+
+                // Keyboard support (desktop)
+                document.addEventListener('keydown', (e) => {
+                    if (e.repeat) return;
+                    const keyMap = { 'a':'C4','s':'D4','d':'E4','f':'F4','j':'G4','k':'A4','l':'B4',';':'C5' };
+                    if (keyMap[e.key.toLowerCase()]) {
+                        document.querySelector(`[data-note="${keyMap[e.key.toLowerCase()]}"]`)?.click();
+                    }
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        slider.value = 70;
+                        onSliderStart(e);
+                    }
+                });
+                document.addEventListener('keyup', (e) => {
+                    if (e.code === 'Space') onSliderEnd();
+                });
+            }
+        };
+
+        // Toast helper
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.init();
+            
+            // iOS audio unlock
+            document.addEventListener('touchstart', () => {
+                TrumpetReal.ctx?.state === 'suspended' && TrumpetReal.ctx?.resume();
+            }, { once: true, passive: true });
         });
     </script>
 </body>
