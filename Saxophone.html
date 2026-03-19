@@ -3,468 +3,944 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Saxophone มือถือ (Pro Sound)</title>
+    <title>Realistic Trumpet Pro - Authentic Sound</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-
-        :root {
-            --sax-gold: #e6c200;
-            --sax-dark: #b8860b;
-            --sax-light: #fffacd;
-            --bg-color: #1a1a1a;
-            /* ปรับขนาดปุ่มให้ยืดหยุ่นตามความสูงหน้าจอ (ไม่เกิน 70px และไม่เกิน 8.5% ของความสูงจอ) */
-            --key-size: min(70px, 8.5vh); 
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: var(--bg-color);
-            color: white;
-            font-family: 'Sarabun', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            color: #fff;
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            /* ป้องกันการเลื่อนและซูมระดับ body */
-            overflow: hidden; 
-            touch-action: none; 
-            user-select: none;
-            -webkit-user-select: none;
+            justify-content: space-between;
         }
 
-        /* Header & Controls */
-        header {
+        .controls-header {
             width: 100%;
-            padding: 10px;
-            background: linear-gradient(180deg, #333, #111);
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3a3a5a;
             z-index: 10;
-            flex-shrink: 0; /* ป้องกัน Header หดตัว */
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         h1 {
-            margin: 0 0 5px 0; /* ลดระยะห่าง */
-            font-size: 1.2rem;
-            color: var(--sax-gold);
-            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+            font-size: 1.1rem;
+            margin: 0;
+            color: #ffd700;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+            white-space: nowrap;
         }
 
-        .controls {
+        .control-row {
             display: flex;
-            justify-content: center;
+            align-items: center;
             gap: 10px;
-            margin-bottom: 5px;
+            flex-wrap: wrap;
         }
 
-        button.ctrl-btn {
-            padding: 6px 12px; /* ลดขนาดปุ่มควบคุมเล็กน้อย */
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+            color: #ccc;
+        }
+
+        .slider-group input {
+            width: 70px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #444, #666);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .slider-group input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            border: 2px solid #333;
+        }
+
+        .btn-control {
+            padding: 6px 14px;
             border-radius: 20px;
             border: none;
-            font-family: 'Sarabun', sans-serif;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 0.8rem;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.85rem;
+            transition: all 0.12s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 44px;
+            min-height: 44px;
+            justify-content: center;
+            background: #3a3a5a;
+            color: #fff;
         }
 
-        .btn-record { background-color: #ff4444; color: white; }
-        .btn-record.recording { background-color: #ff0000; animation: pulse 1s infinite; }
-        .btn-stop { background-color: #444; color: white; }
-        .btn-play { background-color: #4CAF50; color: white; }
-        .btn-labels { background-color: var(--sax-dark); color: white; }
+        .btn-record {
+            background: #e63946;
+        }
+        .btn-record.recording {
+            animation: pulse 1s infinite;
+            background: #c1121f;
+        }
+        .btn-control:active { transform: scale(0.96); }
 
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        .btn-download:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        /* Saxophone Body */
-        .sax-body {
-            flex: 1;
+        .trumpet-body {
+            flex-grow: 1;
             width: 100%;
-            max-width: 400px;
-            background: linear-gradient(90deg, #8B4513 0%, #daa520 20%, #ffd700 50%, #daa520 80%, #8B4513 100%);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Minimalist trumpet visual for performance */
+        .trumpet-outline {
+            position: relative;
+            width: 200px;
+            height: 120px;
+        }
+
+        .bell {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 70px;
+            height: 100px;
+            background: radial-gradient(ellipse at 30% 50%, #ffd700 0%, #b8860b 40%, #8b6914 70%, #3d2808 100%);
+            border-radius: 0 60px 60px 0 / 0 50px 50px 0;
+            box-shadow: 
+                inset -5px 0 15px rgba(0,0,0,0.3),
+                0 0 20px rgba(255, 215, 0, 0.15);
+        }
+
+        .tube {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 120px;
+            height: 40px;
+            background: linear-gradient(180deg, #d4af37 0%, #b8860b 50%, #8b6914 100%);
+            border-radius: 20px 0 0 20px;
+            box-shadow: inset 0 -3px 8px rgba(0,0,0,0.2);
+        }
+
+        .valve-decoration {
+            position: absolute;
+            display: flex;
+            gap: 15px;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .valve-cap {
+            width: 12px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #c0c0c0 50%, #808080 100%);
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .valve-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 520px;
+            padding: 15px;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
+        }
+
+        .valve-btn {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: none;
+            outline: none;
+            background: radial-gradient(circle at 30% 30%, 
+                #fff9e6 0%, 
+                #ffd700 35%, 
+                #daa520 65%, 
+                #b8860b 85%, 
+                #8b6914 100%);
+            box-shadow: 
+                0 8px 20px rgba(0,0,0,0.35),
+                inset 0 2px 4px rgba(255,255,255,0.4),
+                inset 0 -3px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: space-evenly; /* กระจายปุ่มให้เท่ากันเต็มพื้นที่ */
-            padding: 10px 0; /* ลด padding เพื่อประหยัดพื้นที่ */
-            position: relative;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.6);
-            border-radius: 20px 20px 0 0;
-            overflow: hidden; /* ปิด Scrollbar ในตัว Sax */
-        }
-
-        /* Keys */
-        .key-container {
-            position: relative;
-            width: 100%;
-            display: flex;
             justify-content: center;
             align-items: center;
+            transition: transform 0.06s ease, box-shadow 0.06s ease;
+            will-change: transform;
         }
 
-        .sax-key {
-            width: var(--key-size);
-            height: var(--key-size);
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0 40%, #a0a0a0 100%);
-            border: 3px solid #b8860b; /* ลดขนาดขอบเล็กน้อย */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 0 8px rgba(255,255,255,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.1rem; /* ปรับขนาดตัวหนังสือ */
-            font-weight: bold;
-            color: #333;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
-            position: relative;
-            -webkit-tap-highlight-color: transparent;
-            z-index: 2; /* ให้อยู่เหนือก้านเหล็ก */
-        }
-
-        /* Active State (Pressed) */
-        .sax-key:active, .sax-key.active {
-            transform: scale(0.92);
-            background: radial-gradient(circle at 30% 30%, #cccccc, #a0a0a0 40%, #606060 100%);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.3);
-            border-color: #8b6508;
-        }
-
-        /* Note Labels */
-        .note-label {
+        .valve-btn::before {
+            content: '';
             position: absolute;
+            width: 85%;
+            height: 85%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, 
+                rgba(255,255,255,0.9) 0%, 
+                rgba(255,255,255,0.3) 40%, 
+                transparent 70%);
             pointer-events: none;
-            opacity: 1;
-            transition: opacity 0.3s;
-        }
-        .note-label.hidden {
-            opacity: 0;
         }
 
-        /* Audio Player area */
-        #audio-container {
-            width: 100%;
-            padding: 5px;
-            background: #222;
-            display: none; /* Hidden by default */
-            justify-content: center;
-        }
-        audio {
-            width: 90%;
-            height: 30px;
+        .valve-btn::after {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #f8f8f8 0%, #e0e0e0 50%, #b8b8b8 100%);
+            border: 2px solid #a08020;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
         }
 
-        /* Start Overlay */
+        .valve-btn span {
+            position: relative;
+            z-index: 3;
+            color: #2a1a0a;
+            font-weight: 800;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+            pointer-events: none;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .valve-btn .note-thai { font-size: 1.3rem; }
+        .valve-btn .note-latin { 
+            font-size: 0.7rem; 
+            opacity: 0.85; 
+            font-weight: 700;
+            margin-top: -2px;
+        }
+
+        .valve-btn.active {
+            transform: translateY(5px) scale(0.98);
+            box-shadow: 
+                0 3px 10px rgba(0,0,0,0.3),
+                inset 0 4px 12px rgba(0,0,0,0.35),
+                inset 0 -2px 4px rgba(255,255,255,0.2);
+            background: radial-gradient(circle at 30% 30%, 
+                #e6c200 0%, 
+                #b8860b 50%, 
+                #8b6914 100%);
+        }
+
+        .valve-btn.active::after {
+            background: radial-gradient(circle, #e8e8e8 0%, #c8c8c8 50%, #a0a0a0 100%);
+        }
+
         #start-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 100;
+            background: rgba(10, 10, 25, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
+            z-index: 100;
+            color: #ffd700;
             text-align: center;
-        }
-        #start-btn {
-            background: var(--sax-gold);
-            color: black;
-            font-size: 1.5rem;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 50px;
-            margin-top: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-            animation: pulse 2s infinite;
+            padding: 25px;
         }
 
-        /* Decoration: Rods connecting keys */
-        .rod {
+        .start-btn {
+            margin-top: 25px;
+            padding: 18px 50px;
+            font-size: 1.3rem;
+            background: linear-gradient(145deg, #ffd700, #daa520);
+            border: none;
+            border-radius: 55px;
+            color: #2a1a0a;
+            font-weight: 700;
+            box-shadow: 
+                0 6px 25px rgba(255, 215, 0, 0.4),
+                0 0 40px rgba(218, 165, 32, 0.2);
+            cursor: pointer;
+            animation: glow 2.5s ease-in-out infinite alternate;
+            min-height: 52px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.5); }
+            50% { box-shadow: 0 0 0 14px rgba(230, 57, 70, 0); }
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 4px 20px rgba(255,215,0,0.3), 0 0 30px rgba(218,165,32,0.15); }
+            to { box-shadow: 0 6px 28px rgba(255,215,0,0.5), 0 0 50px rgba(218,165,32,0.3); }
+        }
+
+        .sound-visual {
             position: absolute;
-            width: 6px;
-            /* ปรับความสูงก้านให้สัมพันธ์กับระยะห่างที่อาจเปลี่ยนไป */
-            height: 4vh; 
-            background: linear-gradient(90deg, #8B4513, #daa520, #8B4513);
-            top: -3vh; /* ขยับขึ้นตามความสูง */
-            z-index: 1; /* อยู่ใต้ปุ่ม */
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%) scale(1);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,215,0,0.9) 0%, rgba(255,215,0,0.3) 40%, transparent 75%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .sound-visual.active {
+            animation: sound-wave 0.35s ease-out forwards;
+        }
+
+        @keyframes sound-wave {
+            0% { transform: translateY(-50%) scale(1); opacity: 0.85; right: -10px; }
+            100% { transform: translateY(-50%) scale(7); opacity: 0; right: -80px; }
+        }
+
+        .info-badge {
+            position: absolute;
+            bottom: 10px;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+        }
+
+        @media (max-width: 420px) {
+            .valve-container { gap: 8px; }
+            .valve-btn .note-thai { font-size: 1.15rem; }
+            .valve-btn .note-latin { font-size: 0.65rem; }
+            .controls-header { padding: 8px 12px; }
+            h1 { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Start Screen Overlay -->
     <div id="start-overlay">
-        <h2>Saxophone มือถือ</h2>
-        <p>แตะปุ่มเพื่อเริ่มใช้งานเสียง</p>
-        <button id="start-btn">เริ่มเล่น (Start)</button>
+        <h1 style="font-size: 1.9rem; margin-bottom: 10px;">🎺 Trumpet Authentic</h1>
+        <p style="margin: 0 0 8px; opacity: 0.95;">เสียงทรัมเป็ตสมจริง • ใช้หลักการฟิสิกส์เครื่องดนตรีทองเหลือง</p>
+        <p style="margin: 0 0 20px; font-size: 0.9rem; opacity: 0.75;">✨ Harmonic Series • Formant Filtering • Lip Buzz Simulation</p>
+        <button class="start-btn" id="start-btn">▶ เริ่มเล่นเลย</button>
+        <p style="margin-top: 22px; font-size: 0.85rem; opacity: 0.7;">🎵 กดค้าง = เป่า • ปล่อย = หยุด • ปรับเสียงได้ตามชอบ</p>
     </div>
 
-    <header>
-        <h1>🎷 Saxophone</h1>
-        <div class="controls">
-            <button class="ctrl-btn btn-record" id="recordBtn">อัดเสียง</button>
-            <button class="ctrl-btn btn-labels" id="toggleLabelBtn">ซ่อนโน้ต</button>
+    <div class="controls-header">
+        <h1>🎺 Trumpet Pro</h1>
+        <div class="control-row">
+            <div class="slider-group">
+                <span>🔊</span>
+                <input type="range" id="volume" min="0" max="100" value="30">
+            </div>
+            <div class="slider-group">
+                <span>✨</span>
+                <input type="range" id="brightness" min="0" max="100" value="65" title="ความสว่างของเสียง">
+            </div>
+            <button id="btn-record" class="btn-control btn-record" title="บันทึก">●</button>
+            <button id="btn-download" class="btn-control btn-download" title="ดาวน์โหลด" disabled>⬇</button>
         </div>
-        <div id="audio-container">
-            <audio id="audioPlayer" controls></audio>
-        </div>
-    </header>
-
-    <div class="sax-body" id="keyboard">
-        <!-- Keys will be generated by JS -->
     </div>
+
+    <div class="trumpet-body">
+        <div class="trumpet-outline">
+            <div class="tube"></div>
+            <div class="bell"></div>
+            <div class="valve-decoration">
+                <div class="valve-cap"></div>
+                <div class="valve-cap"></div>
+                <div class="valve-cap"></div>
+            </div>
+        </div>
+        <div id="sound-viz" class="sound-visual"></div>
+    </div>
+
+    <div class="valve-container">
+        <button class="valve-btn" data-note="C4"><span class="note-thai">โด</span><span class="note-latin">C4</span></button>
+        <button class="valve-btn" data-note="D4"><span class="note-thai">เร</span><span class="note-latin">D4</span></button>
+        <button class="valve-btn" data-note="E4"><span class="note-thai">มี</span><span class="note-latin">E4</span></button>
+        <button class="valve-btn" data-note="F4"><span class="note-thai">ฟา</span><span class="note-latin">F4</span></button>
+        <button class="valve-btn" data-note="G4"><span class="note-thai">ซอล</span><span class="note-latin">G4</span></button>
+        <button class="valve-btn" data-note="A4"><span class="note-thai">ลา</span><span class="note-latin">A4</span></button>
+        <button class="valve-btn" data-note="B4"><span class="note-thai">ที</span><span class="note-latin">B4</span></button>
+        <button class="valve-btn" data-note="C5"><span class="note-thai">โดสูง</span><span class="note-latin">C5</span></button>
+    </div>
+
+    <div class="info-badge">เสียงสังเคราะห์ด้วย Web Audio API • จำลองฟิสิกส์ทรัมเป็ตจริง</div>
 
     <script>
-        // --- Configuration ---
-        const NOTES = [
-            { note: 'C5', freq: 523.25, label: 'ดํ' }, // High Do
-            { note: 'B4', freq: 493.88, label: 'ท' },
-            { note: 'A4', freq: 440.00, label: 'ล' },
-            { note: 'G4', freq: 392.00, label: 'ซ' },
-            { note: 'F4', freq: 349.23, label: 'ฟ' },
-            { note: 'E4', freq: 329.63, label: 'ม' },
-            { note: 'D4', freq: 293.66, label: 'ร' },
-            { note: 'C4', freq: 261.63, label: 'ด' }  // Low Do
-        ];
-
-        let audioCtx;
-        let masterGain;
-        let mediaRecorder;
-        let audioChunks = [];
-        let destStream; // For recording
-        
-        // Track active oscillators to prevent hanging notes
-        const activeNotes = {}; 
-
-        // --- DOM Elements ---
-        const keyboard = document.getElementById('keyboard');
-        const startOverlay = document.getElementById('start-overlay');
-        const startBtn = document.getElementById('start-btn');
-        const recordBtn = document.getElementById('recordBtn');
-        const audioContainer = document.getElementById('audio-container');
-        const audioPlayer = document.getElementById('audioPlayer');
-        const toggleLabelBtn = document.getElementById('toggleLabelBtn');
-
-        let isRecording = false;
-        let labelsVisible = true;
-
-        // --- Initialization ---
-        function initAudio() {
-            if (audioCtx) return;
-
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
-
-            // Master Gain (Volume Control)
-            masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.6; // Base volume
+        /**
+         * 🎺 AUTHENTIC TRUMPET SYNTHESIS ENGINE
+         * Based on brass instrument acoustics research:
+         * - Harmonic series with proper amplitude decay (1/n)
+         * - Bell formant filtering at 700Hz & 1500Hz
+         * - Lip buzz excitation model
+         * - Pitch envelope (attack rise + release fall)
+         * - Non-linear wave shaping for brass "edge"
+         */
+        const TrumpetSynth = {
+            ctx: null,
+            masterGain: null,
+            reverbNode: null,
+            dest: null,
+            activeNotes: new Map(),
             
-            // Compressor (To prevent clipping when multiple keys pressed)
-            const compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20;
-            compressor.knee.value = 40;
-            compressor.ratio.value = 12;
-            compressor.attack.value = 0;
-            compressor.release.value = 0.25;
+            // User-controllable parameters
+            params: {
+                volume: 0.30,        // Default soft volume
+                brightness: 0.65,    // Filter cutoff multiplier
+                breathAmount: 0.15,  // Breath noise mix
+                valveNoise: 0.06     // Mechanical click
+            },
 
-            // Chain: Master -> Compressor -> Destination
-            masterGain.connect(compressor);
-            compressor.connect(audioCtx.destination);
+            // Trumpet acoustic constants (research-based)
+            acoustic: {
+                // Formant frequencies of trumpet bell (Hz)
+                formants: [680, 1450, 2800],
+                // Harmonic amplitude decay pattern (relative to fundamental)
+                harmonicDecay: [1.0, 0.75, 0.55, 0.42, 0.32, 0.25, 0.19, 0.15, 0.12, 0.09],
+                // Attack pitch bend (cents) - trumpets rise slightly on attack
+                attackPitchRise: 18,
+                attackPitchTime: 0.035,
+                // Release pitch fall
+                releasePitchFall: 12,
+                releasePitchTime: 0.06,
+                // Vibrato (lip tremolo)
+                vibratoDepth: 4.5,   // cents
+                vibratoRate: 5.2,    // Hz
+                vibratoDelay: 0.4    // seconds after attack
+            },
 
-            // Setup Recording Stream
-            destStream = audioCtx.createMediaStreamDestination();
-            compressor.connect(destStream);
+            async init() {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AC();
+                
+                // Media stream destination for recording
+                this.dest = this.ctx.createMediaStreamDestination();
+                
+                // Master volume
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = this.params.volume;
+                
+                // Convolution reverb (concert hall for brass)
+                this.reverbNode = this.ctx.createConvolver();
+                this._generateHallReverb(2.4, 1.8);
+                
+                // Audio graph: Master -> [Direct + Reverb] -> [Speakers + Recorder]
+                this.masterGain.connect(this.ctx.destination);
+                this.masterGain.connect(this.dest);
+                this.masterGain.connect(this.reverbNode);
+                this.reverbNode.connect(this.ctx.destination);
+                this.reverbNode.connect(this.dest);
+                
+                // Pre-generate breath noise buffer
+                this.breathBuffer = this._createFilteredNoise(0.4, 400, 1200);
+                
+                // Pre-generate valve click buffer
+                this.valveBuffer = this._createValveClick();
+                
+                console.log('🎺 Authentic Trumpet Engine ready');
+            },
 
-            // Reverb Effect (Optional simulation using delay)
-            // Keeping it simple for stability and file size
-        }
+            _generateHallReverb(duration, decay) {
+                const sr = this.ctx.sampleRate;
+                const len = Math.floor(sr * duration);
+                const impulse = this.ctx.createBuffer(2, len, sr);
+                const L = impulse.getChannelData(0);
+                const R = impulse.getChannelData(1);
+                
+                for (let i = 0; i < len; i++) {
+                    // Exponential decay with hall characteristics
+                    const t = i / sr;
+                    const env = Math.exp(-t * decay) * (1 + 0.3 * Math.sin(t * 8));
+                    
+                    // Early reflections (first 80ms) - important for brass perception
+                    if (t < 0.08) {
+                        L[i] = (Math.random() * 2 - 1) * env * 0.8;
+                        R[i] = (Math.random() * 2 - 1) * env * 0.7;
+                    } else {
+                        // Late reverb - diffuse, correlated L/R
+                        const noise = Math.random() * 2 - 1;
+                        L[i] = noise * env * 0.5;
+                        R[i] = (noise + (Math.random() - 0.5) * 0.3) * env * 0.45;
+                    }
+                }
+                this.reverbNode.buffer = impulse;
+            },
 
-        startBtn.addEventListener('click', () => {
-            initAudio();
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            startOverlay.style.display = 'none';
-        });
+            _createFilteredNoise(duration, lowFreq, highFreq) {
+                const sr = this.ctx.sampleRate;
+                const len = Math.floor(sr * duration);
+                const buffer = this.ctx.createBuffer(1, len, sr);
+                const data = buffer.getChannelData(0);
+                
+                // Simple band-pass filter in time domain
+                const b0 = 0.05, b1 = 0, b2 = -0.05;
+                const a1 = -1.85, a2 = 0.9;
+                let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+                
+                for (let i = 0; i < len; i++) {
+                    const x0 = Math.random() * 2 - 1;
+                    const y0 = b0*x0 + b1*x1 + b2*x2 - a1*y1 - a2*y2;
+                    // Apply amplitude envelope
+                    const env = Math.pow(1 - i/len, 1.8);
+                    data[i] = y0 * env * 0.7;
+                    x2 = x1; x1 = x0; y2 = y1; y1 = y0;
+                }
+                return buffer;
+            },
 
-        // --- Sound Engine (Saxophone Synthesis) ---
-        function playSound(freq, noteId) {
-            if (!audioCtx) return;
-            if (activeNotes[noteId]) return; // Note already playing
+            _createValveClick() {
+                const sr = this.ctx.sampleRate;
+                const len = Math.floor(sr * 0.025);
+                const buffer = this.ctx.createBuffer(1, len, sr);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < len; i++) {
+                    // Short metallic click: fast attack, quick decay, slight ring
+                    const t = i / sr;
+                    const env = Math.exp(-t * 180) * (1 + 0.4 * Math.sin(t * 3500));
+                    data[i] = (Math.random() * 0.3 - 0.15) * env;
+                }
+                return buffer;
+            },
 
-            const t = audioCtx.currentTime;
-
-            // 1. Oscillator (Source) - Sawtooth is best for brass/reeds
-            const osc = audioCtx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(freq, t);
-
-            // 2. Filter (Timbre) - Lowpass to cut harshness
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.Q.value = 1; // Resonance
-            // Dynamic filter: Opens up slightly on attack (breath effect)
-            filter.frequency.setValueAtTime(800, t);
-            filter.frequency.exponentialRampToValueAtTime(1200, t + 0.1); 
-
-            // 3. Envelope (ADSR)
-            const envNode = audioCtx.createGain();
-            envNode.gain.setValueAtTime(0, t);
-            envNode.gain.linearRampToValueAtTime(0.8, t + 0.05); // Attack (Blow)
-            envNode.gain.linearRampToValueAtTime(0.6, t + 0.2); // Decay to Sustain
-
-            // Connect graph
-            osc.connect(filter);
-            filter.connect(envNode);
-            envNode.connect(masterGain);
-
-            osc.start(t);
-
-            // Store reference to stop later
-            activeNotes[noteId] = { osc, envNode, filter };
-        }
-
-        function stopSound(noteId) {
-            if (!audioCtx || !activeNotes[noteId]) return;
-
-            const { osc, envNode } = activeNotes[noteId];
-            const t = audioCtx.currentTime;
-            
-            // Release envelope (Fade out quickly but smooth)
-            envNode.gain.cancelScheduledValues(t);
-            envNode.gain.setValueAtTime(envNode.gain.value, t);
-            envNode.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-
-            osc.stop(t + 0.15); // Stop after release
-
-            delete activeNotes[noteId];
-        }
-
-        // --- UI Generation ---
-        NOTES.forEach((n, index) => {
-            // Container for Rod decoration (except first)
-            const keyContainer = document.createElement('div');
-            keyContainer.className = 'key-container';
-            
-            if (index > 0) {
-                const rod = document.createElement('div');
-                rod.className = 'rod';
-                keyContainer.appendChild(rod);
-            }
-
-            const btn = document.createElement('div');
-            btn.className = 'sax-key';
-            btn.dataset.note = n.note;
-            btn.dataset.freq = n.freq;
-            btn.id = 'key-' + n.note;
-            
-            // Label
-            const label = document.createElement('span');
-            label.className = 'note-label';
-            label.innerText = n.label;
-            btn.appendChild(label);
-
-            // Event Listeners (Pointer Events for better mobile support)
-            const startNote = (e) => {
-                e.preventDefault(); // Stop scrolling
-                btn.classList.add('active');
-                playSound(n.freq, n.note);
-            };
-
-            const endNote = (e) => {
-                e.preventDefault();
-                btn.classList.remove('active');
-                stopSound(n.note);
-            };
-
-            // Touch/Mouse Start
-            btn.addEventListener('pointerdown', startNote);
-            
-            // Touch/Mouse End/Leave/Cancel (Crucial for stability)
-            btn.addEventListener('pointerup', endNote);
-            btn.addEventListener('pointerleave', endNote);
-            btn.addEventListener('pointercancel', endNote);
-
-            keyContainer.appendChild(btn);
-            keyboard.appendChild(keyContainer);
-        });
-
-        // --- Recording Logic ---
-        recordBtn.addEventListener('click', () => {
-            if (!audioCtx) initAudio();
-
-            if (!isRecording) {
-                // Start Recording
-                audioChunks = [];
-                // Use a supported mime type
-                let options = { mimeType: 'audio/webm' };
-                if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                    options = { mimeType: 'audio/ogg' }; // Fallback
+            _playMechanicalSounds() {
+                const t = this.ctx.currentTime;
+                
+                // Valve click
+                if (this.params.valveNoise > 0 && this.valveBuffer) {
+                    const src = this.ctx.createBufferSource();
+                    const gain = this.ctx.createGain();
+                    src.buffer = this.valveBuffer;
+                    gain.gain.value = this.params.valveNoise;
+                    src.connect(gain);
+                    gain.connect(this.masterGain);
+                    src.start(t);
                 }
                 
+                // Breath noise
+                if (this.params.breathAmount > 0 && this.breathBuffer) {
+                    const src = this.ctx.createBufferSource();
+                    const filter = this.ctx.createBiquadFilter();
+                    const gain = this.ctx.createGain();
+                    
+                    src.buffer = this.breathBuffer;
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 900;
+                    gain.gain.setValueAtTime(0, t);
+                    gain.gain.linearRampToValueAtTime(this.params.breathAmount, t + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+                    
+                    src.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.masterGain);
+                    src.start(t);
+                }
+            },
+
+            playNote(freq, noteId) {
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                // Stop existing note on this key
+                if (this.activeNotes.has(noteId)) {
+                    this.stopNote(noteId);
+                }
+
+                const t = this.ctx.currentTime;
+                const { harmonicDecay, formants, brightness } = this.acoustic;
+                const userBright = this.params.brightness;
+                
+                // === LIP BUZZ EXCITATION (Multiple harmonics) ===
+                const harmonics = [];
+                for (let n = 1; n <= 10; n++) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = n % 2 === 0 ? 'triangle' : 'sawtooth';
+                    osc.frequency.value = freq * n;
+                    
+                    // Amplitude follows 1/n decay with brass emphasis on odd harmonics
+                    const amp = (harmonicDecay[n-1] || 0.08) * (n % 2 === 1 ? 1.15 : 0.9);
+                    gain.gain.value = amp * 0.85;
+                    
+                    osc.connect(gain);
+                    harmonics.push({ osc, gain, harmonic: n });
+                }
+                
+                // === LIP VIBRATO LFO ===
+                const vibratoLFO = this.ctx.createOscillator();
+                const vibratoGain = this.ctx.createGain();
+                vibratoLFO.type = 'sine';
+                vibratoLFO.frequency.value = this.acoustic.vibratoRate;
+                vibratoGain.gain.value = 0; // Start muted, enable after delay
+                vibratoLFO.connect(vibratoGain);
+                
+                // Apply vibrato to all harmonics (detune in cents)
+                harmonics.forEach(h => {
+                    vibratoGain.connect(h.osc.detune);
+                    // Slight phase variation per harmonic for naturalness
+                    vibratoLFO.phase = Math.random() * Math.PI * 2;
+                });
+                
+                // === TRUMPET BELL FORMANT FILTERS ===
+                // Three peaking filters at characteristic bell resonances
+                const formantFilters = formants.map(fFreq => {
+                    const f = this.ctx.createBiquadFilter();
+                    f.type = 'peaking';
+                    f.frequency.value = fFreq;
+                    f.Q.value = fFreq < 1000 ? 3.5 : 2.2;
+                    f.gain.value = fFreq === formants[1] ? 5 : 3.5; // Emphasize mid formant
+                    return f;
+                });
+                
+                // === DYNAMIC BRIGHTNESS FILTER ===
+                const brightnessFilter = this.ctx.createBiquadFilter();
+                brightnessFilter.type = 'lowpass';
+                brightnessFilter.Q.value = 0.7;
+                // Cutoff based on user brightness setting + note frequency
+                const baseCutoff = freq * (3 + userBright * 4);
+                brightnessFilter.frequency.setValueAtTime(400, t);
+                brightnessFilter.frequency.exponentialRampToValueAtTime(baseCutoff, t + 0.04);
+                brightnessFilter.frequency.exponentialRampToValueAtTime(baseCutoff * 0.7, t + 0.3);
+                
+                // === PITCH ENVELOPE (Attack rise + Release fall) ===
+                const pitchEnvelope = (osc, isFundamental = false) => {
+                    const rise = this.acoustic.attackPitchRise * (isFundamental ? 1 : 0.6);
+                    const fall = this.acoustic.releasePitchFall;
+                    
+                    // Attack: slight pitch rise (lip tension increase)
+                    osc.detune.setValueAtTime(-rise * 0.3, t);
+                    osc.detune.linearRampToValueAtTime(rise, t + this.acoustic.attackPitchTime * 0.6);
+                    osc.detune.linearRampToValueAtTime(0, t + this.acoustic.attackPitchTime);
+                    
+                    // Store release function for later
+                    osc.releasePitch = (releaseTime) => {
+                        osc.detune.cancelScheduledValues(releaseTime);
+                        osc.detune.setValueAtTime(osc.detune.value, releaseTime);
+                        osc.detune.linearRampToValueAtTime(-fall, releaseTime + this.acoustic.releasePitchTime * 0.7);
+                    };
+                };
+                
+                // Apply pitch envelope to fundamental and first few harmonics
+                harmonics.slice(0, 4).forEach((h, i) => pitchEnvelope(h.osc, i === 0));
+                
+                // === AMPLITUDE ENVELOPE (ADSR for trumpet articulation) ===
+                const ampEnvelope = this.ctx.createGain();
+                ampEnvelope.gain.setValueAtTime(0.001, t);
+                ampEnvelope.gain.exponentialRampToValueAtTime(1, t + 0.025); // Fast attack
+                ampEnvelope.gain.linearRampToValueAtTime(0.85, t + 0.12);    // Decay
+                // Sustain level maintained until release
+                
+                // === BRASS WAVE SHAPER (Non-linear "edge") ===
+                const shaper = this.ctx.createWaveShaper();
+                shaper.curve = this._createBrassCurve(18 + userBright * 22);
+                shaper.oversample = '4x';
+                
+                // === CONNECT THE CHAIN ===
+                // Harmonics -> Sum -> Formants -> Brightness -> Shaper -> Amp -> Master
+                const sumGain = this.ctx.createGain();
+                sumGain.gain.value = 0.92; // Prevent clipping
+                
+                harmonics.forEach(h => h.gain.connect(sumGain));
+                sumGain.connect(formantFilters[0]);
+                formantFilters.reduce((prev, curr) => { prev.connect(curr); return curr; });
+                formantFilters[formantFilters.length - 1].connect(brightnessFilter);
+                brightnessFilter.connect(shaper);
+                shaper.connect(ampEnvelope);
+                ampEnvelope.connect(this.masterGain);
+                
+                // Vibrato starts after delay (natural lip vibrato)
+                setTimeout(() => {
+                    if (this.activeNotes.has(noteId)) {
+                        vibratoGain.gain.linearRampToValueAtTime(
+                            this.acoustic.vibratoDepth, 
+                            this.ctx.currentTime + 0.15
+                        );
+                    }
+                }, this.acoustic.vibratoDelay * 1000);
+                
+                // Start all oscillators
+                vibratoLFO.start(t);
+                harmonics.forEach(h => h.osc.start(t));
+                
+                // Play mechanical sounds (breath + valve)
+                this._playMechanicalSounds();
+                
+                // Store active note components
+                this.activeNotes.set(noteId, {
+                    harmonics,
+                    vibratoLFO,
+                    vibratoGain,
+                    ampEnvelope,
+                    brightnessFilter,
+                    pitchEnvelope: harmonics[0]?.osc.releasePitch,
+                    startTime: t
+                });
+            },
+
+            _createBrassCurve(amount) {
+                // Soft clipping with brass-like asymmetry
+                const samples = 512;
+                const curve = new Float32Array(samples);
+                const k = typeof amount === 'number' ? amount : 20;
+                
+                for (let i = 0; i < samples; ++i) {
+                    const x = (i * 2) / samples - 1;
+                    // Asymmetric soft clipping (brass has more harmonic generation on positive peaks)
+                    if (x > 0) {
+                        curve[i] = (1 + k) * x / (1 + k * x);
+                    } else {
+                        curve[i] = (1 + k * 0.7) * x / (1 + k * 0.7 * Math.abs(x));
+                    }
+                }
+                return curve;
+            },
+
+            stopNote(noteId) {
+                const note = this.activeNotes.get(noteId);
+                if (!note || !this.ctx) return;
+
+                const t = this.ctx.currentTime;
+                const { ampEnvelope, harmonics, vibratoLFO, pitchEnvelope } = note;
+                
+                // Amplitude release with natural decay
+                ampEnvelope.gain.cancelScheduledValues(t);
+                ampEnvelope.gain.setValueAtTime(ampEnvelope.gain.value, t);
+                ampEnvelope.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+                
+                // Pitch fall on release (lip relaxation)
+                if (pitchEnvelope) pitchEnvelope(t);
+                
+                // Close brightness filter on release (muted effect)
+                note.brightnessFilter.frequency.exponentialRampToValueAtTime(
+                    300, t + 0.07
+                );
+                
+                // Fade out vibrato
+                note.vibratoGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                
+                // Stop oscillators after release tail
+                const stopT = t + 0.12;
+                harmonics.forEach(h => h.osc.stop(stopT));
+                vibratoLFO.stop(stopT);
+                
+                // Cleanup
+                setTimeout(() => {
+                    if (this.activeNotes.get(noteId) === note) {
+                        this.activeNotes.delete(noteId);
+                    }
+                }, 150);
+            },
+
+            setVolume(val) {
+                this.params.volume = val;
+                if (this.masterGain && this.ctx) {
+                    this.masterGain.gain.setTargetAtTime(val, this.ctx.currentTime, 0.02);
+                }
+            },
+
+            setBrightness(val) {
+                this.params.brightness = val;
+                // Update active notes' brightness filters in real-time
+                this.activeNotes.forEach(note => {
+                    if (note.brightnessFilter && this.ctx) {
+                        const baseCutoff = 440 * (3 + val * 4); // Approximate
+                        note.brightnessFilter.frequency.setTargetAtTime(
+                            baseCutoff * 0.7, 
+                            this.ctx.currentTime, 
+                            0.05
+                        );
+                    }
+                });
+            }
+        };
+
+        /**
+         * 🎙️ Recorder Module
+         */
+        const Recorder = {
+            mr: null,
+            chunks: [],
+            blob: null,
+            url: null,
+            recording: false,
+
+            toggle() {
+                this.recording ? this.stop() : this.start();
+            },
+
+            start() {
+                if (!TrumpetSynth.dest) return;
+                this.chunks = [];
+                
+                const mime = ['audio/webm', 'audio/ogg', 'audio/wav'].find(m => 
+                    MediaRecorder.isTypeSupported(m));
+                
                 try {
-                    mediaRecorder = new MediaRecorder(destStream.stream, options);
+                    this.mr = new MediaRecorder(TrumpetSynth.dest.stream, {
+                        mimeType: mime,
+                        audioBitsPerSecond: 160000
+                    });
                 } catch (e) {
-                    alert('เบราว์เซอร์นี้ไม่รองรับการอัดเสียง');
+                    alert('❌ อุปกรณ์นี้ไม่รองรับการบันทึก');
                     return;
                 }
 
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) audioChunks.push(e.data);
+                this.mr.ondataavailable = e => e.data.size > 0 && this.chunks.push(e.data);
+                this.mr.onstop = () => {
+                    this.blob = new Blob(this.chunks, { type: this.mr.mimeType });
+                    this.url = URL.createObjectURL(this.blob);
+                    document.getElementById('btn-download').disabled = false;
                 };
 
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioURL = URL.createObjectURL(blob);
-                    audioPlayer.src = audioURL;
-                    audioContainer.style.display = 'flex';
-                };
+                this.mr.start(80);
+                this.recording = true;
+                this._ui(true);
+            },
 
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.innerText = "หยุดอัด";
-                recordBtn.classList.add('recording');
-                audioContainer.style.display = 'none';
-            } else {
-                // Stop Recording
-                mediaRecorder.stop();
-                isRecording = false;
-                recordBtn.innerText = "อัดเสียง";
-                recordBtn.classList.remove('recording');
+            stop() {
+                if (this.mr?.state !== 'inactive') {
+                    this.mr.stop();
+                    this.recording = false;
+                    this._ui(false);
+                }
+            },
+
+            download() {
+                if (!this.url) return;
+                const a = document.createElement('a');
+                a.href = this.url;
+                const ext = this.blob.type.includes('webm') ? 'webm' : 
+                           this.blob.type.includes('ogg') ? 'ogg' : 'wav';
+                a.download = `trumpet-${Date.now().toString(36)}.${ext}`;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(this.url), 2000);
+            },
+
+            _ui(on) {
+                const btn = document.getElementById('btn-record');
+                btn.classList.toggle('recording', on);
+                btn.textContent = on ? '■' : '●';
+                btn.title = on ? 'หยุดบันทึก' : 'บันทึกเสียง';
             }
-        });
-
-        // --- Label Toggle ---
-        toggleLabelBtn.addEventListener('click', () => {
-            labelsVisible = !labelsVisible;
-            const labels = document.querySelectorAll('.note-label');
-            labels.forEach(l => {
-                if (labelsVisible) l.classList.remove('hidden');
-                else l.classList.add('hidden');
-            });
-            toggleLabelBtn.innerText = labelsVisible ? "ซ่อนโน้ต" : "แสดงโน้ต";
-        });
-
-        // Prevent Context Menu on long press
-        window.oncontextmenu = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
         };
 
-        // Global cleanup (if window loses focus, stop all sound)
-        window.addEventListener('blur', () => {
-            Object.keys(activeNotes).forEach(key => stopSound(key));
-        });
+        /**
+         * 🎮 UI Controller
+         */
+        const UI = {
+            notes: {
+                'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23,
+                'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 'C5': 523.25
+            },
 
+            init() {
+                // Start
+                document.getElementById('start-btn').onclick = async () => {
+                    await TrumpetSynth.init();
+                    const ov = document.getElementById('start-overlay');
+                    ov.style.transition = 'opacity 0.35s ease';
+                    ov.style.opacity = '0';
+                    setTimeout(() => ov.remove(), 350);
+                    if (navigator.vibrate) navigator.vibrate(25);
+                };
+
+                // Volume
+                document.getElementById('volume').oninput = e => {
+                    TrumpetSynth.setVolume(e.target.value / 100);
+                };
+
+                // Brightness
+                document.getElementById('brightness').oninput = e => {
+                    TrumpetSynth.setBrightness(e.target.value / 100);
+                };
+
+                // Valves
+                document.querySelectorAll('.valve-btn').forEach(btn => {
+                    const note = btn.dataset.note;
+                    const freq = this.notes[note];
+
+                    const on = (e) => {
+                        e?.preventDefault();
+                        btn.classList.add('active');
+                        TrumpetSynth.playNote(freq, note);
+                        this._viz();
+                        if (navigator.vibrate) navigator.vibrate(12);
+                    };
+                    
+                    const off = (e) => {
+                        e?.preventDefault();
+                        btn.classList.remove('active');
+                        TrumpetSynth.stopNote(note);
+                    };
+
+                    btn.addEventListener('touchstart', on, { passive: false });
+                    btn.addEventListener('touchend', off, { passive: false });
+                    btn.addEventListener('touchcancel', off, { passive: false });
+                    btn.addEventListener('mousedown', on);
+                    btn.addEventListener('mouseup', off);
+                    btn.addEventListener('mouseleave', off);
+                    btn.oncontextmenu = e => e.preventDefault();
+                });
+
+                // Recorder
+                document.getElementById('btn-record').onclick = () => Recorder.toggle();
+                document.getElementById('btn-download').onclick = () => Recorder.download();
+            },
+
+            _viz() {
+                const v = document.getElementById('sound-viz');
+                v.classList.remove('active');
+                void v.offsetWidth;
+                v.classList.add('active');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => UI.init());
+        
+        // iOS audio unlock
+        document.addEventListener('touchstart', () => {
+            TrumpetSynth.ctx?.state === 'suspended' && TrumpetSynth.ctx?.resume();
+        }, { once: true, passive: true });
     </script>
 </body>
 </html>
