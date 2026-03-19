@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic Trumpet Simulator</title>
+    <title>Realistic Trumpet Simulator Pro</title>
     <style>
-        /* Reset & Base Layout */
+        /* Reset & Base Layout - Optimized for Mobile */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none; /* Prevent scrolling/zooming */
+            touch-action: manipulation; /* Better mobile touch response */
         }
 
         body {
@@ -20,64 +20,104 @@
             background-color: #1a1a1a;
             background-image: radial-gradient(circle at center, #2b2b2b 0%, #000 100%);
             color: #fff;
-            font-family: 'Sarabun', sans-serif;
-            height: 100dvh; /* Dynamic viewport height */
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100dvh;
             width: 100vw;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Top Control Panel */
         .controls-header {
             width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #444;
             z-index: 10;
+            gap: 10px;
         }
 
         h1 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin: 0;
-            color: #f0c420; /* Gold text */
+            color: #f0c420;
             text-shadow: 0 0 5px rgba(240, 196, 32, 0.5);
+            white-space: nowrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Volume Slider */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
+        
+        #volume-slider {
+            width: 80px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #444;
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #f0c420;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .record-panel {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
         .btn-control {
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 6px 12px;
+            border-radius: 18px;
             border: none;
-            font-weight: bold;
-            font-size: 0.9rem;
+            font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s ease;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            min-width: 44px;
+            min-height: 44px; /* Touch target size */
+            justify-content: center;
         }
 
         .btn-record {
             background: #ff4444;
             color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
         }
         .btn-record.recording {
             animation: pulse-red 1.5s infinite;
             background: #cc0000;
         }
+        .btn-record:active { transform: scale(0.95); }
 
         .btn-download {
             background: #4488ff;
@@ -87,7 +127,9 @@
             background: #555;
             color: #888;
             cursor: not-allowed;
+            opacity: 0.6;
         }
+        .btn-download:active:not(:disabled) { transform: scale(0.95); }
 
         /* Trumpet Visual Body */
         .trumpet-body {
@@ -98,120 +140,114 @@
             justify-content: center;
             align-items: center;
             perspective: 800px;
+            overflow: hidden;
         }
 
-        /* Stylized Brass Tubing Background */
+        /* Stylized Brass Tubing - Simplified for Performance */
         .brass-tubing {
             position: absolute;
-            width: 90%;
-            height: 60%;
+            width: 85%;
+            height: 55%;
             z-index: 0;
-            opacity: 0.8;
+            opacity: 0.6;
             pointer-events: none;
-            border: 8px solid transparent;
-            border-image: linear-gradient(to right, #b8860b, #ffd700, #b8860b, #8b4500) 1;
-            border-radius: 50px;
-            box-shadow: 
-                inset 0 0 20px rgba(0,0,0,0.5),
-                0 0 15px rgba(255, 215, 0, 0.2);
-            /* Complex gradient to simulate metal pipes */
-            background: 
-                linear-gradient(90deg, transparent 48%, #aa7700 49%, #ffd700 50%, #aa7700 51%, transparent 52%),
-                linear-gradient(180deg, transparent 40%, rgba(184, 134, 11, 0.3) 50%, transparent 60%);
+            border: 6px solid transparent;
+            border-image: linear-gradient(to right, #b8860b, #ffd700, #b8860b) 1;
+            border-radius: 40px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+            background: linear-gradient(135deg, rgba(184,134,11,0.2), transparent);
         }
         
-        /* The Bell */
         .trumpet-bell {
             position: absolute;
-            right: -20px;
+            right: -15px;
             top: 50%;
             transform: translateY(-50%);
-            width: 100px;
-            height: 150px;
-            background: radial-gradient(ellipse at center, #ffd700 0%, #b8860b 60%, #5e3a00 100%);
+            width: 80px;
+            height: 120px;
+            background: radial-gradient(ellipse at center, #ffd700 0%, #b8860b 55%, #5e3a00 100%);
             border-radius: 0 100% 100% 0 / 50%;
             z-index: -1;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
         }
 
-        /* Note Buttons Container (The "Valves") */
+        /* Note Buttons Container */
         .valve-container {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 2 rows of 4 */
-            gap: 12px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
             width: 100%;
-            max-width: 600px;
-            padding: 20px;
+            max-width: 500px;
+            padding: 15px;
             z-index: 5;
-            padding-bottom: 40px; /* Safe area for bottom swipe */
+            padding-bottom: env(safe-area-inset-bottom, 20px);
         }
 
-        /* Individual Valve Button */
+        /* Individual Valve Button - Optimized */
         .valve-btn {
             position: relative;
             width: 100%;
-            aspect-ratio: 1 / 1; /* Circle */
+            aspect-ratio: 1 / 1;
             border-radius: 50%;
             border: none;
             outline: none;
-            background: radial-gradient(circle at 30% 30%, #fffbe0 0%, #ffd700 40%, #b8860b 80%, #5e3a00 100%);
+            background: radial-gradient(circle at 35% 35%, #fffbe0 0%, #ffd700 45%, #b8860b 85%, #5e3a00 100%);
             box-shadow: 
-                0 8px 10px rgba(0,0,0,0.5),
-                inset 0 2px 3px rgba(255,255,255,0.5);
+                0 6px 12px rgba(0,0,0,0.4),
+                inset 0 1px 2px rgba(255,255,255,0.4);
             cursor: pointer;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: transform 0.08s ease, box-shadow 0.08s ease;
+            will-change: transform; /* GPU acceleration */
         }
 
-        /* Mother of Pearl inlay look */
         .valve-btn::after {
             content: '';
             position: absolute;
-            width: 70%;
-            height: 70%;
-            background: radial-gradient(circle at center, #fff 0%, #eee 40%, #ccc 100%);
+            width: 65%;
+            height: 65%;
+            background: radial-gradient(circle at center, #fff 0%, #e8e8e8 45%, #c0c0c0 100%);
             border-radius: 50%;
-            border: 2px solid #b8860b;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid #b8860b;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
         }
 
         .valve-btn span {
             position: relative;
             z-index: 2;
             color: #333;
-            font-weight: 900;
-            font-size: 1.5rem;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+            font-weight: 800;
+            font-size: 1.4rem;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.7);
             pointer-events: none;
+            line-height: 1;
         }
 
-        .valve-btn .note-name {
-            font-size: 1.2rem;
-        }
-        
+        .valve-btn .note-name { font-size: 1.15rem; }
         .valve-btn .note-latin {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-top: -2px;
+            font-size: 0.65rem;
+            opacity: 0.75;
+            margin-top: -1px;
+            font-weight: 600;
         }
 
-        /* Active State (Pressed) */
+        /* Active State */
         .valve-btn.active {
-            transform: translateY(10px) scale(0.95);
+            transform: translateY(6px) scale(0.97);
             box-shadow: 
-                0 2px 4px rgba(0,0,0,0.5),
-                inset 0 5px 10px rgba(0,0,0,0.4);
-            background: radial-gradient(circle at 30% 30%, #e6c200 0%, #b8860b 100%);
+                0 2px 5px rgba(0,0,0,0.4),
+                inset 0 4px 8px rgba(0,0,0,0.3);
+            background: radial-gradient(circle at 35% 35%, #e6c200 0%, #b8860b 100%);
         }
 
-        /* Overlay for "Click to Start" */
+        /* Start Overlay */
         #start-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -219,261 +255,392 @@
             z-index: 100;
             color: #ffd700;
             text-align: center;
+            padding: 20px;
         }
         
         .start-btn {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 1.5rem;
+            margin-top: 25px;
+            padding: 16px 45px;
+            font-size: 1.4rem;
             background: linear-gradient(to bottom, #ffd700, #b8860b);
             border: none;
             border-radius: 50px;
             color: #3f2a00;
-            font-weight: bold;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            font-weight: 700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
             cursor: pointer;
             animation: pulse-gold 2s infinite;
+            min-height: 50px;
+            min-width: 200px;
         }
+        .start-btn:active { transform: scale(0.98); }
 
         @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.6); }
+            50% { box-shadow: 0 0 0 12px rgba(255, 68, 68, 0); }
         }
         
         @keyframes pulse-gold {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
         }
 
-        /* Visual Feedback when playing */
+        /* Sound Wave Visual - Lightweight */
         .sound-wave {
             position: absolute;
-            right: -50px;
+            right: -30px;
             top: 50%;
-            transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
+            transform: translateY(-50%) scale(1);
+            width: 15px;
+            height: 15px;
             border-radius: 50%;
-            background: rgba(255, 215, 0, 0.5);
+            background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, transparent 70%);
             z-index: -2;
             opacity: 0;
+            pointer-events: none;
         }
         
         .sound-wave.emitting {
-            animation: emit-sound 0.5s linear;
+            animation: emit-sound 0.4s ease-out forwards;
         }
 
         @keyframes emit-sound {
-            0% { transform: translateY(-50%) scale(1); opacity: 0.8; right: -20px; }
-            100% { transform: translateY(-50%) scale(10); opacity: 0; right: -150px; }
+            0% { transform: translateY(-50%) scale(1); opacity: 0.7; right: -15px; }
+            100% { transform: translateY(-50%) scale(8); opacity: 0; right: -100px; }
         }
 
+        /* Responsive Adjustments */
+        @media (max-width: 400px) {
+            .valve-container { gap: 8px; padding: 10px; }
+            .valve-btn span { font-size: 1.2rem; }
+            .valve-btn .note-name { font-size: 1rem; }
+            .controls-header { padding: 10px; }
+            h1 { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Start Overlay (Required for AudioContext) -->
+    <!-- Start Overlay -->
     <div id="start-overlay">
-        <h1 style="font-size: 2rem; margin-bottom: 10px;">Trumpet Pro</h1>
-        <p>จำลองเสียงทรัมเป็ตสมจริง</p>
-        <button class="start-btn" id="start-btn">แตะเพื่อเริ่มเล่น</button>
+        <h1 style="font-size: 1.8rem; margin-bottom: 8px;">🎺 Trumpet Pro</h1>
+        <p style="margin: 0 0 15px; opacity: 0.9;">เสียงทรัมเป็ตสมจริง • เล่นบนมือถือลื่นๆ</p>
+        <button class="start-btn" id="start-btn">▶ แตะเพื่อเริ่มเล่น</button>
+        <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">💡 กดค้าง = เป่า • ปล่อย = หยุด</p>
     </div>
 
     <!-- Controls -->
     <div class="controls-header">
         <h1>🎺 Trumpet</h1>
-        <div class="record-panel">
-            <button id="btn-record" class="btn-control btn-record">
-                <span>●</span> อัดเสียง
-            </button>
-            <button id="btn-download" class="btn-control btn-download" disabled>
-                <span>⬇</span> ดาวน์โหลด
-            </button>
+        <div class="control-group">
+            <div class="volume-control">
+                <span>🔊</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="35">
+            </div>
+            <div class="record-panel">
+                <button id="btn-record" class="btn-control btn-record" title="อัดเสียง">
+                    <span>●</span>
+                </button>
+                <button id="btn-download" class="btn-control btn-download" title="ดาวน์โหลด" disabled>
+                    <span>⬇</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Instrument Graphic Area -->
+    <!-- Instrument Visual -->
     <div class="trumpet-body">
         <div class="brass-tubing"></div>
         <div class="trumpet-bell"></div>
         <div id="sound-emitter" class="sound-wave"></div>
-        <!-- Decorative Valves pipes -->
-        <div style="position: absolute; width: 60px; height: 120px; border-left: 10px solid #775500; border-right: 10px solid #775500; left: 30%;"></div>
-        <div style="position: absolute; width: 60px; height: 120px; border-left: 10px solid #775500; border-right: 10px solid #775500; left: 50%; transform: translateX(-50%);"></div>
-        <div style="position: absolute; width: 60px; height: 120px; border-left: 10px solid #775500; border-right: 10px solid #775500; right: 30%;"></div>
     </div>
 
-    <!-- Interactive Valves (Note Buttons) -->
+    <!-- Valve Buttons -->
     <div class="valve-container">
-        <!-- Low Register -->
-        <button class="valve-btn" data-note="C4">
-            <span class="note-name">โด</span>
-            <span class="note-latin">C</span>
-        </button>
-        <button class="valve-btn" data-note="D4">
-            <span class="note-name">เร</span>
-            <span class="note-latin">D</span>
-        </button>
-        <button class="valve-btn" data-note="E4">
-            <span class="note-name">มี</span>
-            <span class="note-latin">E</span>
-        </button>
-        <button class="valve-btn" data-note="F4">
-            <span class="note-name">ฟา</span>
-            <span class="note-latin">F</span>
-        </button>
-        
-        <!-- High Register -->
-        <button class="valve-btn" data-note="G4">
-            <span class="note-name">ซอล</span>
-            <span class="note-latin">G</span>
-        </button>
-        <button class="valve-btn" data-note="A4">
-            <span class="note-name">ลา</span>
-            <span class="note-latin">A</span>
-        </button>
-        <button class="valve-btn" data-note="B4">
-            <span class="note-name">ที</span>
-            <span class="note-latin">B</span>
-        </button>
-        <button class="valve-btn" data-note="C5">
-            <span class="note-name">โดสูง</span>
-            <span class="note-latin">C5</span>
-        </button>
+        <button class="valve-btn" data-note="C4"><span class="note-name">โด</span><span class="note-latin">C</span></button>
+        <button class="valve-btn" data-note="D4"><span class="note-name">เร</span><span class="note-latin">D</span></button>
+        <button class="valve-btn" data-note="E4"><span class="note-name">มี</span><span class="note-latin">E</span></button>
+        <button class="valve-btn" data-note="F4"><span class="note-name">ฟา</span><span class="note-latin">F</span></button>
+        <button class="valve-btn" data-note="G4"><span class="note-name">ซอล</span><span class="note-latin">G</span></button>
+        <button class="valve-btn" data-note="A4"><span class="note-name">ลา</span><span class="note-latin">A</span></button>
+        <button class="valve-btn" data-note="B4"><span class="note-name">ที</span><span class="note-latin">B</span></button>
+        <button class="valve-btn" data-note="C5"><span class="note-name">โดสูง</span><span class="note-latin">C5</span></button>
     </div>
 
     <script>
         /**
-         * Trumpet Audio Engine
-         * Uses Web Audio API to synthesize a brass-like sound
+         * 🎺 Realistic Trumpet Audio Engine
+         * Optimized for mobile • Soft volume • Brass-like timbre
          */
-        const AudioEngine = {
+        const TrumpetEngine = {
             ctx: null,
             masterGain: null,
             reverbNode: null,
-            dest: null, // For recording
-            activeOscillators: {},
+            dest: null,
+            activeNotes: new Map(),
+            volume: 0.35, // Default: Soft volume (35%)
+            
+            // Brass instrument characteristics
+            config: {
+                attackTime: 0.02,    // Fast attack like trumpet
+                decayTime: 0.15,     // Quick decay to sustain
+                sustainLevel: 0.7,   // Moderate sustain
+                releaseTime: 0.08,   // Quick release
+                breathNoiseLevel: 0.12, // Subtle breath sound
+                valveClickLevel: 0.08,  // Mechanical valve sound
+                vibratoDepth: 3,     // Cents
+                vibratoRate: 5.5     // Hz
+            },
 
-            init() {
+            async init() {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 this.ctx = new AudioContext();
                 
-                // Destination for output (Speaker + Recorder)
+                // Media destination for recording
                 this.dest = this.ctx.createMediaStreamDestination();
                 
-                // Master Gain
+                // Master gain with soft default
                 this.masterGain = this.ctx.createGain();
-                this.masterGain.gain.value = 0.6;
+                this.masterGain.gain.value = this.volume;
                 
-                // Reverb (Convolver)
+                // Create realistic reverb (trumpet hall ambiance)
                 this.reverbNode = this.ctx.createConvolver();
-                this.createImpulseResponse(1.5, 1.5, false); // Length, Decay, Reverse
-
-                // Chain: Master -> Reverb -> (Speakers & Recorder)
-                // Also: Master -> (Speakers & Recorder) (Dry signal)
+                this._createTrumpetReverb();
+                
+                // Audio graph: Master -> [Speakers + Recorder] + [Reverb -> Speakers + Recorder]
                 this.masterGain.connect(this.ctx.destination);
                 this.masterGain.connect(this.dest);
-                
                 this.masterGain.connect(this.reverbNode);
                 this.reverbNode.connect(this.ctx.destination);
                 this.reverbNode.connect(this.dest);
+                
+                // Pre-load breath noise buffer
+                this.breathBuffer = this._createBreathNoise(0.3);
+                
+                console.log('🎺 Trumpet Engine initialized');
             },
 
-            // Create a simple reverb impulse
-            createImpulseResponse(duration, decay, reverse) {
-                const sampleRate = this.ctx.sampleRate;
-                const length = sampleRate * duration;
-                const impulse = this.ctx.createBuffer(2, length, sampleRate);
-                const left = impulse.getChannelData(0);
-                const right = impulse.getChannelData(1);
-
+            _createTrumpetReverb() {
+                // Create impulse response that mimics concert hall for brass
+                const sr = this.ctx.sampleRate;
+                const duration = 2.2; // Longer reverb for brass warmth
+                const length = sr * duration;
+                const impulse = this.ctx.createBuffer(2, length, sr);
+                const L = impulse.getChannelData(0);
+                const R = impulse.getChannelData(1);
+                
                 for (let i = 0; i < length; i++) {
-                    let n = reverse ? length - i : i;
-                    // Exponential decay noise
-                    left[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-                    right[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+                    // Exponential decay with slight randomness for natural reverb
+                    const decay = Math.pow(1 - i / length, 2.5);
+                    const noise = (Math.random() * 2 - 1) * 0.3;
+                    // Add early reflections pattern (characteristic of brass in hall)
+                    const early = (i < sr * 0.08) ? Math.sin(i * 0.1) * 0.4 : 0;
+                    L[i] = (noise + early) * decay;
+                    R[i] = (Math.random() * 2 - 1) * 0.3 * decay + early * 0.8;
                 }
                 this.reverbNode.buffer = impulse;
+            },
+
+            _createBreathNoise(duration) {
+                const sr = this.ctx.sampleRate;
+                const buffer = this.ctx.createBuffer(1, sr * duration, sr);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < buffer.length; i++) {
+                    // Filtered noise for breath sound (low-pass characteristic)
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / buffer.length, 1.5) * 0.6;
+                }
+                return buffer;
+            },
+
+            _playValveClick() {
+                if (!this.ctx || this.config.valveClickLevel <= 0) return;
+                const t = this.ctx.currentTime;
+                
+                // Short click sound for valve mechanism
+                const clickOsc = this.ctx.createOscillator();
+                const clickGain = this.ctx.createGain();
+                
+                clickOsc.type = 'square';
+                clickOsc.frequency.setValueAtTime(800, t);
+                clickOsc.frequency.exponentialRampToValueAtTime(200, t + 0.03);
+                
+                clickGain.gain.setValueAtTime(this.config.valveClickLevel, t);
+                clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+                
+                clickOsc.connect(clickGain);
+                clickGain.connect(this.masterGain);
+                
+                clickOsc.start(t);
+                clickOsc.stop(t + 0.05);
+            },
+
+            _playBreath() {
+                if (!this.ctx || this.config.breathNoiseLevel <= 0 || !this.breathBuffer) return;
+                const t = this.ctx.currentTime;
+                
+                const breathSrc = this.ctx.createBufferSource();
+                const breathFilter = this.ctx.createBiquadFilter();
+                const breathGain = this.ctx.createGain();
+                
+                breathSrc.buffer = this.breathBuffer;
+                
+                // Low-pass filter for breathy quality
+                breathFilter.type = 'lowpass';
+                breathFilter.frequency.value = 800;
+                breathFilter.Q.value = 0.5;
+                
+                breathGain.gain.setValueAtTime(0, t);
+                breathGain.gain.linearRampToValueAtTime(this.config.breathNoiseLevel, t + 0.03);
+                
+                breathSrc.connect(breathFilter);
+                breathFilter.connect(breathGain);
+                breathGain.connect(this.masterGain);
+                
+                breathSrc.start(t);
+                breathSrc.stop(t + 0.3);
             },
 
             playNote(freq, noteId) {
                 if (!this.ctx) return;
                 if (this.ctx.state === 'suspended') this.ctx.resume();
-
-                // Stop existing note if playing (Monophonic feel per button, though polyphonic capability)
-                if (this.activeOscillators[noteId]) {
+                
+                // Stop existing note on this button
+                if (this.activeNotes.has(noteId)) {
                     this.stopNote(noteId);
                 }
 
                 const t = this.ctx.currentTime;
+                const { attackTime, decayTime, sustainLevel, vibratoDepth, vibratoRate } = this.config;
 
-                // 1. Oscillators
-                // Sawtooth is the base for brass
-                const osc = this.ctx.createOscillator();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(freq, t);
+                // === PRIMARY OSCILLATOR (Sawtooth - Brass base) ===
+                const osc1 = this.ctx.createOscillator();
+                osc1.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(freq, t);
 
-                // Add a second oscillator for richness (slightly detuned)
+                // === SECONDARY OSCILLATOR (Richness + Detune) ===
                 const osc2 = this.ctx.createOscillator();
                 osc2.type = 'triangle';
-                osc2.frequency.setValueAtTime(freq, t);
-                osc2.detune.value = 5; // Slight detune
+                osc2.frequency.setValueAtTime(freq * 2, t); // Add 2nd harmonic emphasis
+                osc2.detune.value = 7 + Math.random() * 3; // Slight random detune for warmth
 
-                // 2. Filter (Lowpass) - The "Wah" / "Blare" effect of brass
-                // Opens up quickly on attack
-                const filter = this.ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.Q.value = 1; // Resonance
-                filter.frequency.setValueAtTime(400, t);
-                filter.frequency.exponentialRampToValueAtTime(freq * 4, t + 0.05); // Attack brightness
-                filter.frequency.exponentialRampToValueAtTime(freq * 2, t + 0.4); // Decay brightness
+                // === VIBRATO LFO (Subtle, like lip vibrato) ===
+                const vibratoLFO = this.ctx.createOscillator();
+                const vibratoGain = this.ctx.createGain();
+                vibratoLFO.type = 'sine';
+                vibratoLFO.frequency.value = vibratoRate;
+                vibratoGain.gain.value = vibratoDepth; // In cents
+                vibratoLFO.connect(vibratoGain);
+                vibratoGain.connect(osc1.detune);
+                vibratoLFO.connect(osc2.detune);
 
-                // 3. Amplitude Envelope (ADSR)
-                const gainNode = this.ctx.createGain();
-                gainNode.gain.setValueAtTime(0, t);
-                gainNode.gain.linearRampToValueAtTime(0.8, t + 0.05); // Attack
-                gainNode.gain.linearRampToValueAtTime(0.6, t + 0.2); // Decay to sustain
-                
-                // Connections
-                osc.connect(filter);
-                osc2.connect(filter); // Mix triangle in
-                filter.connect(gainNode);
-                gainNode.connect(this.masterGain);
+                // === BRASS FORMANT FILTER (Bell resonance) ===
+                const formantFilter = this.ctx.createBiquadFilter();
+                formantFilter.type = 'peaking';
+                formantFilter.frequency.setValueAtTime(freq * 3.2, t); // Formant peak
+                formantFilter.Q.value = 2.5;
+                formantFilter.gain.value = 6; // Boost formant
 
-                osc.start(t);
+                // === DYNAMIC LOWPASS (Attack "blare" effect) ===
+                const dynamicFilter = this.ctx.createBiquadFilter();
+                dynamicFilter.type = 'lowpass';
+                dynamicFilter.Q.value = 0.8;
+                dynamicFilter.frequency.setValueAtTime(300, t);
+                dynamicFilter.frequency.exponentialRampToValueAtTime(freq * 5, t + attackTime);
+                dynamicFilter.frequency.exponentialRampToValueAtTime(freq * 2.5, t + attackTime + decayTime);
+
+                // === AMPLITUDE ENVELOPE (ADSR for trumpet) ===
+                const ampGain = this.ctx.createGain();
+                ampGain.gain.setValueAtTime(0.001, t);
+                ampGain.gain.exponentialRampToValueAtTime(1, t + attackTime); // Fast attack
+                ampGain.gain.linearRampToValueAtTime(sustainLevel, t + attackTime + decayTime);
+
+                // === BREATH NOISE MIX ===
+                const breathGain = this.ctx.createGain();
+                breathGain.gain.value = 0; // Will be triggered separately
+
+                // === WAVESHAPER (Subtle brass distortion) ===
+                const shaper = this.ctx.createWaveShaper();
+                shaper.curve = this._createBrassDistortionCurve(20);
+                shaper.oversample = '2x';
+
+                // === CONNECTION GRAPH ===
+                osc1.connect(formantFilter);
+                osc2.connect(formantFilter);
+                formantFilter.connect(dynamicFilter);
+                dynamicFilter.connect(shaper);
+                shaper.connect(ampGain);
+                ampGain.connect(this.masterGain);
+
+                // Start oscillators
+                osc1.start(t);
                 osc2.start(t);
+                vibratoLFO.start(t);
 
-                // Store reference to stop later
-                this.activeOscillators[noteId] = { osc, osc2, gainNode, filter };
+                // Play breath and valve click on attack
+                this._playBreath();
+                this._playValveClick();
+
+                // Store active note
+                this.activeNotes.set(noteId, {
+                    osc1, osc2, vibratoLFO, ampGain, dynamicFilter,
+                    startTime: t
+                });
+            },
+
+            _createBrassDistortionCurve(amount) {
+                // Gentle waveshaping for brass "edge"
+                const samples = 256;
+                const curve = new Float32Array(samples);
+                const deg = Math.PI / 180;
+                
+                for (let i = 0; i < samples; ++i) {
+                    const x = (i * 2) / samples - 1;
+                    // Soft clipping formula
+                    curve[i] = (1 + amount) * x / (1 + amount * Math.abs(x));
+                }
+                return curve;
             },
 
             stopNote(noteId) {
-                if (!this.activeOscillators[noteId]) return;
+                const note = this.activeNotes.get(noteId);
+                if (!note || !this.ctx) return;
 
-                const { osc, osc2, gainNode } = this.activeOscillators[noteId];
+                const { osc1, osc2, vibratoLFO, ampGain, dynamicFilter } = note;
                 const t = this.ctx.currentTime;
+                const { releaseTime } = this.config;
 
-                // Release envelope
-                gainNode.gain.cancelScheduledValues(t);
-                gainNode.gain.setValueAtTime(gainNode.gain.value, t);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.1); // Quick release
+                // Release envelope with natural decay
+                ampGain.gain.cancelScheduledValues(t);
+                ampGain.gain.setValueAtTime(ampGain.gain.value, t);
+                ampGain.gain.exponentialRampToValueAtTime(0.001, t + releaseTime);
 
-                osc.stop(t + 0.15);
-                osc2.stop(t + 0.15);
+                // Filter closes on release (muted trumpet effect)
+                dynamicFilter.frequency.exponentialRampToValueAtTime(200, t + releaseTime * 0.7);
 
-                // Clean up memory
+                // Stop oscillators after release
+                const stopTime = t + releaseTime + 0.05;
+                osc1.stop(stopTime);
+                osc2.stop(stopTime);
+                vibratoLFO.stop(stopTime);
+
+                // Cleanup
                 setTimeout(() => {
-                    if (this.activeOscillators[noteId] && this.activeOscillators[noteId].osc === osc) {
-                        delete this.activeOscillators[noteId];
+                    if (this.activeNotes.get(noteId) === note) {
+                        this.activeNotes.delete(noteId);
                     }
-                }, 200);
+                }, (releaseTime + 0.1) * 1000);
+            },
+
+            setVolume(value) {
+                this.volume = value;
+                if (this.masterGain) {
+                    this.masterGain.gain.setTargetAtTime(value, this.ctx.currentTime, 0.01);
+                }
             }
         };
 
         /**
-         * Recording Logic
+         * 🎙️ Recording Manager
          */
         const Recorder = {
             mediaRecorder: null,
@@ -482,52 +649,57 @@
             audioUrl: null,
             isRecording: false,
 
-            toggleRecord() {
-                if (this.isRecording) {
-                    this.stop();
-                } else {
-                    this.start();
-                }
+            toggle() {
+                if (this.isRecording) this.stop();
+                else this.start();
             },
 
             start() {
-                if (!AudioEngine.dest) return;
+                if (!TrumpetEngine.dest) return;
+                
                 this.chunks = [];
-                // Use the MediaStreamDestination from AudioEngine
+                const stream = TrumpetEngine.dest.stream;
+                
+                // Prefer webm for mobile compatibility
+                const mimeTypes = ['audio/webm', 'audio/ogg', 'audio/wav'];
+                let selectedMime = '';
+                
+                for (const mime of mimeTypes) {
+                    if (MediaRecorder.isTypeSupported(mime)) {
+                        selectedMime = mime;
+                        break;
+                    }
+                }
+                
                 try {
-                    // Try to use webm for better compatibility on Android/Chrome
-                    const options = MediaRecorder.isTypeSupported('audio/webm') ? { mimeType: 'audio/webm' } : undefined;
-                    this.mediaRecorder = new MediaRecorder(AudioEngine.dest.stream, options);
+                    const options = selectedMime ? { mimeType: selectedMime, audioBitsPerSecond: 128000 } : undefined;
+                    this.mediaRecorder = new MediaRecorder(stream, options);
                 } catch (e) {
-                    alert("อุปกรณ์นี้ไม่รองรับการอัดเสียงผ่าน Web Audio");
+                    alert('⚠️ อุปกรณ์นี้ไม่รองรับการบันทึกเสียง');
                     return;
                 }
 
-                this.mediaRecorder.ondataavailable = (e) => this.chunks.push(e.data);
-                this.mediaRecorder.onstop = (e) => {
-                    const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
-                    this.audioBlob = new Blob(this.chunks, { 'type' : mimeType });
+                this.mediaRecorder.ondataavailable = e => {
+                    if (e.data.size > 0) this.chunks.push(e.data);
+                };
+                
+                this.mediaRecorder.onstop = () => {
+                    const mime = this.mediaRecorder.mimeType || 'audio/webm';
+                    this.audioBlob = new Blob(this.chunks, { type: mime });
                     this.audioUrl = URL.createObjectURL(this.audioBlob);
-                    
-                    const btnDownload = document.getElementById('btn-download');
-                    btnDownload.disabled = false;
-                    btnDownload.innerHTML = '<span>⬇</span> ดาวน์โหลด';
+                    document.getElementById('btn-download').disabled = false;
                 };
 
-                this.mediaRecorder.start();
+                this.mediaRecorder.start(100); // Chunk every 100ms for reliability
                 this.isRecording = true;
-                updateRecordUI(true);
-                
-                // Disable download while recording
-                const btnDownload = document.getElementById('btn-download');
-                btnDownload.disabled = true;
+                this._updateUI(true);
             },
 
             stop() {
                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                     this.mediaRecorder.stop();
                     this.isRecording = false;
-                    updateRecordUI(false);
+                    this._updateUI(false);
                 }
             },
 
@@ -535,106 +707,135 @@
                 if (!this.audioUrl) return;
                 
                 const a = document.createElement('a');
-                a.style.display = 'none';
                 a.href = this.audioUrl;
-                
-                // Determine extension based on mime type
-                const extension = (this.audioBlob.type.includes('ogg')) ? 'ogg' : 'webm';
-                
-                const date = new Date();
-                const timeStr = `${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`;
-                a.download = `trumpet-solo-${timeStr}.${extension}`;
-                
-                document.body.appendChild(a);
+                const ext = this.audioBlob.type.includes('webm') ? 'webm' : 
+                           this.audioBlob.type.includes('ogg') ? 'ogg' : 'wav';
+                const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                a.download = `trumpet-${ts}.${ext}`;
                 a.click();
                 
-                // Cleanup
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                }, 100);
+                // Revoke after download
+                setTimeout(() => URL.revokeObjectURL(this.audioUrl), 1000);
+            },
+
+            _updateUI(isRecording) {
+                const btn = document.getElementById('btn-record');
+                if (isRecording) {
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<span>■</span>';
+                    btn.title = 'หยุดอัด';
+                } else {
+                    btn.classList.remove('recording');
+                    btn.innerHTML = '<span>●</span>';
+                    btn.title = 'อัดเสียง';
+                }
             }
         };
 
         /**
-         * UI Interactions
+         * 🎮 UI & Interaction Controller
          */
-        const notes = {
-            'C4': 261.63,
-            'D4': 293.66,
-            'E4': 329.63,
-            'F4': 349.23,
-            'G4': 392.00,
-            'A4': 440.00,
-            'B4': 493.88,
-            'C5': 523.25
+        const UIManager = {
+            notes: {
+                'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23,
+                'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 'C5': 523.25
+            },
+
+            init() {
+                // Start button
+                document.getElementById('start-btn').addEventListener('click', async () => {
+                    await TrumpetEngine.init();
+                    
+                    // Smooth fade out overlay
+                    const overlay = document.getElementById('start-overlay');
+                    overlay.style.transition = 'opacity 0.4s ease';
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 400);
+                    
+                    // Haptic feedback on supported devices
+                    if (navigator.vibrate) navigator.vibrate(30);
+                });
+
+                // Volume slider
+                const volumeSlider = document.getElementById('volume-slider');
+                volumeSlider.addEventListener('input', (e) => {
+                    const vol = parseInt(e.target.value) / 100;
+                    TrumpetEngine.setVolume(vol);
+                });
+
+                // Valve buttons
+                document.querySelectorAll('.valve-btn').forEach(btn => {
+                    const note = btn.dataset.note;
+                    const freq = this.notes[note];
+
+                    const play = (e) => {
+                        e?.preventDefault();
+                        btn.classList.add('active');
+                        TrumpetEngine.playNote(freq, note);
+                        this._triggerVisual();
+                        
+                        // Haptic feedback on mobile
+                        if (navigator.vibrate) navigator.vibrate(15);
+                    };
+
+                    const stop = (e) => {
+                        e?.preventDefault();
+                        btn.classList.remove('active');
+                        TrumpetEngine.stopNote(note);
+                    };
+
+                    // Touch events (optimized for mobile)
+                    btn.addEventListener('touchstart', play, { passive: false });
+                    btn.addEventListener('touchend', stop, { passive: false });
+                    btn.addEventListener('touchcancel', stop, { passive: false });
+                    
+                    // Mouse events (desktop fallback)
+                    btn.addEventListener('mousedown', play);
+                    btn.addEventListener('mouseup', stop);
+                    btn.addEventListener('mouseleave', stop);
+                    
+                    // Prevent context menu on long press
+                    btn.addEventListener('contextmenu', e => e.preventDefault());
+                });
+
+                // Recording controls
+                document.getElementById('btn-record').addEventListener('click', () => Recorder.toggle());
+                document.getElementById('btn-download').addEventListener('click', () => Recorder.download());
+
+                // Handle page visibility (pause audio when tab inactive)
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && TrumpetEngine.ctx?.state === 'running') {
+                        // Optional: auto-stop notes when tab hidden
+                    }
+                });
+            },
+
+            _triggerVisual() {
+                const wave = document.getElementById('sound-emitter');
+                wave.classList.remove('emitting');
+                // Force reflow to restart animation
+                void wave.offsetWidth;
+                wave.classList.add('emitting');
+            }
         };
 
-        function updateRecordUI(isRecording) {
-            const btn = document.getElementById('btn-record');
-            if (isRecording) {
-                btn.classList.add('recording');
-                btn.innerHTML = '<span>■</span> หยุดอัด';
-            } else {
-                btn.classList.remove('recording');
-                btn.innerHTML = '<span>●</span> อัดเสียง';
-            }
-        }
-
-        function triggerVisual(noteId) {
-            const soundWave = document.getElementById('sound-emitter');
-            // Reset animation
-            soundWave.classList.remove('emitting');
-            void soundWave.offsetWidth; // trigger reflow
-            soundWave.classList.add('emitting');
-        }
-
-        // Setup Event Listeners
+        // Initialize when DOM ready
         document.addEventListener('DOMContentLoaded', () => {
-            const startOverlay = document.getElementById('start-overlay');
-            const startBtn = document.getElementById('start-btn');
-            const btns = document.querySelectorAll('.valve-btn');
-
-            // Initialize Audio on user gesture
-            startBtn.addEventListener('click', () => {
-                AudioEngine.init();
-                startOverlay.style.opacity = '0';
-                setTimeout(() => startOverlay.remove(), 500);
-            });
-
-            // Note Buttons Interaction
-            btns.forEach(btn => {
-                const note = btn.dataset.note;
-                const freq = notes[note];
-
-                const startPlay = (e) => {
-                    e.preventDefault(); // Prevent ghost clicks
-                    btn.classList.add('active');
-                    AudioEngine.playNote(freq, note);
-                    triggerVisual();
-                };
-
-                const stopPlay = (e) => {
-                    e.preventDefault();
-                    btn.classList.remove('active');
-                    AudioEngine.stopNote(note);
-                };
-
-                // Touch Events (Mobile)
-                btn.addEventListener('touchstart', startPlay, { passive: false });
-                btn.addEventListener('touchend', stopPlay, { passive: false });
-                btn.addEventListener('touchcancel', stopPlay, { passive: false });
-
-                // Mouse Events (Desktop)
-                btn.addEventListener('mousedown', startPlay);
-                btn.addEventListener('mouseup', stopPlay);
-                btn.addEventListener('mouseleave', stopPlay);
-            });
-
-            // Recording Controls
-            document.getElementById('btn-record').addEventListener('click', () => Recorder.toggleRecord());
-            document.getElementById('btn-download').addEventListener('click', () => Recorder.download());
+            UIManager.init();
+            
+            // Pre-warm audio context on first touch (iOS workaround)
+            document.addEventListener('touchstart', () => {
+                if (TrumpetEngine.ctx?.state === 'suspended') {
+                    TrumpetEngine.ctx?.resume();
+                }
+            }, { once: true, passive: true });
         });
 
+        // Handle orientation change for mobile
+        window.addEventListener('orientationchange', () => {
+            // Minor layout adjustment if needed
+            setTimeout(() => window.scrollTo(0, 0), 100);
+        });
     </script>
 </body>
 </html>
