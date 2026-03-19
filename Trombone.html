@@ -1,467 +1,536 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtual Trombone</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* ป้องกันการเลือกข้อความและการเลื่อนหน้าจอ */
-        body {
-            overscroll-behavior: none;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            overflow: hidden;
-            background: #1a1a1a;
-            font-family: 'Sarabun', sans-serif;
-            height: 100dvh; /* ใช้ dvh เพื่อให้เต็มจอจริงบนมือถือ */
-            width: 100vw;
-        }
-
-        /* เอฟเฟกต์สีทองเหลือง */
-        .brass-gradient {
-            background: linear-gradient(90deg, #b8860b 0%, #ffd700 40%, #ffec8b 50%, #ffd700 60%, #b8860b 100%);
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 2px 2px 5px rgba(0,0,0,0.3);
-            border-radius: 999px;
-        }
-
-        .bell-gradient {
-            background: radial-gradient(circle at 30% 30%, #ffec8b, #ffd700, #b8860b, #5c4305);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        /* พื้นที่สำหรับสไลด์ - ปรับให้ยืดหยุ่น */
-        #slide-track-container {
-            position: relative;
-            flex-grow: 1; /* ยืดเต็มพื้นที่ที่เหลือ */
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            overflow: hidden; 
-        }
-
-        /* ตัวสไลด์ที่ขยับได้ */
-        #slide-group {
-            width: 160px;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            /* ความสูงจะถูกจัดการโดย JS เพื่อให้สัมพันธ์กับแทร็ก */
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* เส้นบอกตำแหน่งโน้ต */
-        .note-marker {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            border-top: 1px dashed rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.8rem;
-            pointer-events: none;
-            padding-top: 2px;
-            left: 0;
-        }
-        
-        .active-note {
-            color: #ffd700;
-            font-weight: bold;
-            text-shadow: 0 0 5px #ffd700;
-            opacity: 1;
-        }
-
-        /* ปุ่มกด */
-        .control-btn {
-            transition: all 0.2s;
-        }
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-        .recording {
-            animation: pulse-red 1.5s infinite;
-        }
-        
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        /* แถบแสดงสถานะเสียง */
-        #visualizer {
-            height: 4px;
-            width: 100%;
-            background: #333;
-            margin-top: 5px;
-        }
-        #volume-bar {
-            height: 100%;
-            width: 0%;
-            background: #ffd700;
-            transition: width 0.1s;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bass Trombone</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#e8c84a;--gold-dark:#9a7a1a;
+  --bg:#0a0a0c;--surface:#141418;--surface2:#1e1e26;
+  --red:#e85555;--blue:#4a90e8;--text:#e0e0e0;--dim:#555;
+}
+html,body{
+  height:100%;width:100%;overflow:hidden;
+  background:var(--bg);color:var(--text);
+  font-family:'Oswald',sans-serif;
+  touch-action:none;user-select:none;
+  -webkit-user-select:none;overscroll-behavior:none;
+}
+#app{display:flex;flex-direction:column;height:100dvh;width:100vw}
+#topbar{
+  flex:none;background:var(--surface);
+  border-bottom:1px solid #1e1e26;
+  padding:10px 14px 8px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.top-row{display:flex;align-items:center;gap:10px}
+.brand{font-size:1rem;font-weight:700;letter-spacing:2px;color:var(--gold);flex:none}
+#note-display{
+  flex:1;text-align:center;font-family:'Share Tech Mono',monospace;font-size:1.6rem;
+  color:var(--gold);background:var(--surface2);border:1px solid var(--gold-dark);
+  border-radius:8px;padding:4px 0;transition:all .12s;letter-spacing:2px;
+}
+#note-display.on{background:var(--gold-dark);color:#fff;box-shadow:0 0 16px rgba(232,200,74,.4)}
+#vu{display:flex;gap:2px;height:22px;align-items:flex-end;flex:none}
+.vb{width:5px;min-height:3px;border-radius:2px;background:#222}
+.btn-row{display:flex;gap:8px}
+.big-btn{
+  flex:1;height:48px;border-radius:10px;border:2px solid transparent;
+  font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;
+}
+.big-btn:active{transform:scale(.95)}
+.btn-rec{border-color:var(--red);color:var(--red)}
+.btn-rec.on{background:var(--red);color:#fff;box-shadow:0 0 14px rgba(232,85,85,.5)}
+.btn-stop{border-color:#777;color:#aaa}
+.btn-dl{border-color:var(--blue);color:var(--blue)}
+.btn-dl:disabled{opacity:.3}
+.rdot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.btn-rec.on .rdot{animation:rb 1s infinite}
+@keyframes rb{0%,100%{opacity:1}50%{opacity:.2}}
+.oct-fx-row{display:flex;gap:8px}
+.seg-group{display:flex;border-radius:8px;overflow:hidden;border:1px solid #2a2a2a;flex:1}
+.seg-btn{
+  flex:1;height:42px;background:var(--surface2);border:none;border-right:1px solid #2a2a2a;
+  color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.72rem;font-weight:700;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;letter-spacing:1px;
+}
+.seg-btn:last-child{border-right:none}
+.seg-btn.on{background:rgba(232,200,74,.15);color:var(--gold)}
+.fx-group{display:flex;border-radius:8px;overflow:hidden;border:1px solid #2a2a2a}
+.fx-btn{
+  width:56px;height:42px;background:var(--surface2);border:none;border-right:1px solid #2a2a2a;
+  color:var(--dim);font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:700;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;
+  letter-spacing:1px;text-transform:uppercase;
+}
+.fx-btn:last-child{border-right:none}
+.fx-btn.on{background:rgba(232,200,74,.13);color:var(--gold)}
+#play-area{
+  flex:1;position:relative;overflow:hidden;
+  background:linear-gradient(to bottom,#090909 0%,#111116 50%,#090909 100%);
+}
+.zone{position:absolute;left:0;right:0;display:flex;align-items:center}
+.zone-line{flex:1;height:1px;background:rgba(232,200,74,.08);transition:background .1s,box-shadow .1s}
+.zone.active .zone-line{background:var(--gold);box-shadow:0 0 12px rgba(232,200,74,.45)}
+.zone-label{
+  position:absolute;right:16px;font-family:'Share Tech Mono',monospace;font-size:.72rem;
+  color:rgba(232,200,74,.3);pointer-events:none;white-space:nowrap;transition:color .1s;
+  transform:translateY(-50%);top:50%;
+}
+.zone.active .zone-label{color:var(--gold)}
+.zone-pos{
+  position:absolute;left:16px;font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  color:rgba(232,200,74,.18);pointer-events:none;transform:translateY(-50%);top:50%;transition:color .1s;
+}
+.zone.active .zone-pos{color:rgba(232,200,74,.6)}
+#thumb{
+  position:absolute;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,#fff8dc,#e8c84a,#9a7a1a);border:3px solid #b5891e;
+  box-shadow:0 4px 22px rgba(0,0,0,.7),0 0 0 8px rgba(232,200,74,.06);
+  pointer-events:none;opacity:0;transition:opacity .18s;will-change:transform;top:50%;z-index:10;
+}
+#thumb.show{opacity:1}
+#thumb::after{
+  content:'';position:absolute;inset:10px;border-radius:50%;
+  background:radial-gradient(circle at 38% 38%,rgba(255,255,220,.35),transparent);
+}
+#glow{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 35%,rgba(180,140,30,.08),transparent 65%);
+  opacity:0;transition:opacity .2s;
+}
+#glow.on{opacity:1}
+#big-pos{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-family:'Share Tech Mono',monospace;font-size:7rem;font-weight:700;
+  color:rgba(232,200,74,.03);pointer-events:none;line-height:1;transition:color .1s;
+}
+#big-pos.lit{color:rgba(232,200,74,.09)}
+#hint{
+  position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  font-size:.62rem;letter-spacing:2px;color:rgba(255,255,255,.15);
+  pointer-events:none;text-align:center;line-height:2;transition:opacity .5s;
+}
+</style>
 </head>
-<body class="flex flex-col bg-gray-900 text-white">
-
-    <!-- ส่วนหัวและปุ่มควบคุม -->
-    <header class="flex-none p-3 bg-gray-800 shadow-lg z-50 flex flex-col gap-2">
-        <div class="flex justify-between items-center">
-            <h1 class="text-lg font-bold text-yellow-400 flex items-center gap-2">🎺 Trombone Pro</h1>
-            <div id="status-text" class="text-xs text-gray-400">พร้อมใช้งาน</div>
-        </div>
-        
-        <!-- แถบปุ่ม -->
-        <div class="flex gap-2 justify-center">
-            <button id="btn-record" class="control-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex-1 flex items-center justify-center gap-1">
-                <span>🔴</span> อัดเสียง
-            </button>
-            <button id="btn-stop" class="control-btn bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex-1 hidden">
-                <span>⏹️</span> หยุด
-            </button>
-            <button id="btn-download" class="control-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1" disabled>
-                <span>⬇️</span> ดาวน์โหลด
-            </button>
-        </div>
-        <div id="visualizer"><div id="volume-bar"></div></div>
-    </header>
-
-    <!-- พื้นที่เล่นดนตรี (Main Interface) -->
-    <main class="flex-1 relative bg-gradient-to-b from-gray-900 to-gray-800 flex flex-col items-center overflow-hidden" id="play-area">
-        
-        <!-- ตัวเครื่องทรอมโบน (ส่วนบน - ปากแตร) -->
-        <div class="flex-none w-full flex justify-center z-30 pointer-events-none pt-2 pb-4">
-            <div class="relative">
-                <div class="w-24 h-24 rounded-full bell-gradient flex items-center justify-center border-4 border-yellow-700 shadow-2xl">
-                    <div class="w-16 h-16 rounded-full bg-black opacity-80 shadow-inner"></div>
-                </div>
-                <!-- ท่อเชื่อม -->
-                <div class="absolute top-8 left-[-30px] w-16 h-3 brass-gradient transform -rotate-12"></div>
-                <div class="absolute top-16 left-8 w-3 h-16 brass-gradient"></div>
-            </div>
-        </div>
-
-        <!-- รางสไลด์ (พื้นที่รับสัมผัส - ยืดหยุ่นตามพื้นที่เหลือ) -->
-        <div id="slide-track-container" class="w-full max-w-md cursor-pointer touch-none z-40 relative">
-            
-            <!-- พื้นหลังเป็นเส้นบอกตำแหน่ง -->
-            <div class="absolute inset-0 w-full h-full pointer-events-none" id="grid-lines"></div>
-
-            <!-- ตัวสไลด์ (ขยับตามนิ้ว) -->
-            <div id="slide-group">
-                <!-- มือจับสไลด์ (Crossbar) -->
-                <div id="handle-bar" class="absolute top-0 w-full h-4 brass-gradient z-20 shadow-lg rounded-full"></div>
-                
-                <!-- ท่อสไลด์ซ้าย -->
-                <div class="absolute top-2 left-2 w-3 h-[800px] brass-gradient z-10"></div>
-                <!-- ท่อสไลด์ขวา -->
-                <div class="absolute top-2 right-2 w-3 h-[800px] brass-gradient z-10"></div>
-                
-                <!-- ส่วนโค้งล่างสุดของสไลด์ (U-curve) - ซ่อนอยู่ข้างล่าง -->
-                <div class="absolute left-2 w-[144px] h-16 brass-gradient z-10 rounded-b-full border-t-0 transform translate-y-[-100%]" style="bottom: -800px;"></div>
-            </div>
-            
-        </div>
-        
-        <!-- แสดงโน้ตปัจจุบัน -->
-        <div id="current-note" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/70 px-4 py-1 rounded-full text-xl font-bold text-yellow-400 border border-yellow-500 z-50 pointer-events-none opacity-0 transition-opacity">
-            --
-        </div>
-    </main>
-
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="top-row">
+      <div class="brand">🎺 BASS TROMBONE</div>
+      <div id="note-display">——</div>
+      <div id="vu">
+        <div class="vb" id="v0"></div><div class="vb" id="v1"></div>
+        <div class="vb" id="v2"></div><div class="vb" id="v3"></div>
+        <div class="vb" id="v4"></div><div class="vb" id="v5"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="big-btn btn-rec" id="btn-rec"><div class="rdot"></div>REC</button>
+      <button class="big-btn btn-stop" id="btn-stop" style="display:none">⏹ STOP</button>
+      <button class="big-btn btn-dl" id="btn-dl" disabled>⬇ SAVE</button>
+    </div>
+    <div class="oct-fx-row">
+      <div class="seg-group" id="oct-group">
+        <button class="seg-btn" data-r="high">HIGH</button>
+        <button class="seg-btn on" data-r="mid">MID</button>
+        <button class="seg-btn" data-r="low">LOW</button>
+      </div>
+      <div class="fx-group">
+        <button class="fx-btn on" id="btn-vib">VIB</button>
+        <button class="fx-btn" id="btn-mute">MUTE</button>
+      </div>
+    </div>
+  </div>
+  <div id="play-area">
+    <div id="glow"></div>
+    <div id="big-pos">—</div>
+    <div id="thumb"></div>
+    <div id="hint">TOUCH &amp; DRAG<br>▲ HIGH · LOW ▼</div>
+  </div>
+</div>
 <script>
-    /**
-     * TROMBONE AUDIO ENGINE
-     */
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
-    let masterGain;
-    let oscillator;
-    let filter;
-    let lfo;
-    let isPlaying = false;
-    
-    // Recording vars
-    let dest;
-    let mediaRecorder;
-    let chunks = [];
-    let audioBlob;
-    let audioUrl;
-    // เอาตัวแปรเล่นเสียงออก (recordedAudio)
+// ── NOTE TABLES ─────────────────────────────────────────────────────────
+const HARMONICS = {
+  low: [
+    {pos:1,note:"Bb1",freq:58.27},{pos:2,note:"A1",freq:55.00},
+    {pos:3,note:"Ab1",freq:51.91},{pos:4,note:"G1",freq:49.00},
+    {pos:5,note:"Gb1",freq:46.25},{pos:6,note:"F1",freq:43.65},
+    {pos:7,note:"E1", freq:41.20}
+  ],
+  mid: [
+    {pos:1,note:"Bb2",freq:116.54},{pos:2,note:"A2",freq:110.00},
+    {pos:3,note:"Ab2",freq:103.83},{pos:4,note:"G2",freq:98.00},
+    {pos:5,note:"Gb2",freq:92.50}, {pos:6,note:"F2",freq:87.31},
+    {pos:7,note:"E2", freq:82.41}
+  ],
+  high: [
+    {pos:1,note:"Bb3",freq:233.08},{pos:2,note:"A3",freq:220.00},
+    {pos:3,note:"Ab3",freq:207.65},{pos:4,note:"G3",freq:196.00},
+    {pos:5,note:"Gb3",freq:185.00},{pos:6,note:"F3",freq:174.61},
+    {pos:7,note:"E3", freq:164.81}
+  ]
+};
+let reg = 'mid';
 
-    // Frequency Config
-    const MAX_FREQ = 233.08; // Bb3
-    const MIN_FREQ = 82.41;  // E2
-    
-    const POSITIONS = [
-        { pos: 1, note: "Bb", freq: 233.08 },
-        { pos: 2, note: "A",  freq: 220.00 },
-        { pos: 3, note: "Ab", freq: 207.65 },
-        { pos: 4, note: "G",  freq: 196.00 },
-        { pos: 5, note: "Gb", freq: 185.00 },
-        { pos: 6, note: "F",  freq: 174.61 },
-        { pos: 7, note: "E",  freq: 164.81 }
-    ];
+// ── AUDIO ENGINE ──────────────────────────────────────────────────────────
+// Uses ScriptProcessorNode (synchronous, works everywhere)
+// Physical model: waveguide tube + lip reed
+const AC = window.AudioContext || window.webkitAudioContext;
+let ctx = null, masterGain, recDest, spNode;
+let isOn = false, vibon = true, muteon = false;
+let currentFreq = 110;
+let mrec, mchunks = [], murl;
 
-    function initAudio() {
-        if (audioCtx) return;
-        audioCtx = new AudioContext();
-        masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0;
-        
-        filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 2000;
-        filter.Q.value = 1;
+// Physical model state
+const ST = {
+  // Tube delay line (max ~30 Hz = ~1470 samples at 44100)
+  buf: null, bufLen: 0, writePos: 0,
+  // Lip reed
+  lipDisp: 0, lipVel: 0,
+  // One-pole bell reflection filter
+  bellZ: 0,
+  // Radiation HP filter
+  radZ: 0,
+  // Output DC blocker
+  dcZ: 0,
+  // Params (smoothed)
+  freq: 110, targetFreq: 110,
+  pressure: 0, targetPressure: 0,
+  vibDepth: 0, targetVibDepth: 0,
+  vibPhase: 0,
+  muteMode: false,
+  sr: 44100,
+  warmup: 0
+};
 
-        dest = audioCtx.createMediaStreamDestination();
-        masterGain.connect(audioCtx.destination);
-        masterGain.connect(dest);
+function initAudio() {
+  if (ctx) return;
+  ctx = new AC();
+  ST.sr  = ctx.sampleRate;
+  ST.bufLen = Math.ceil(ST.sr / 30) * 2 + 8; // room for lowest freq
+  ST.buf = new Float32Array(ST.bufLen);
+
+  // ScriptProcessorNode: bufferSize 256 for low latency
+  spNode = ctx.createScriptProcessor(256, 0, 1);
+  spNode.onaudioprocess = processAudio;
+
+  // Post-processing EQ & dynamics
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.value = 30; hp.Q.value = 0.5;
+
+  // Warmth boost for bass trombone body
+  const eq1 = ctx.createBiquadFilter();
+  eq1.type = 'peaking'; eq1.frequency.value = 150; eq1.Q.value = 0.9; eq1.gain.value = 5;
+
+  // Presence
+  const eq2 = ctx.createBiquadFilter();
+  eq2.type = 'peaking'; eq2.frequency.value = 700; eq2.Q.value = 2.2; eq2.gain.value = 3;
+
+  // Cut harshness above 3kHz
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 3000; lp.Q.value = 0.6;
+
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.ratio.value = 3;
+  comp.attack.value = 0.004; comp.release.value = 0.25;
+
+  masterGain = ctx.createGain();
+  masterGain.gain.value = 0.9;
+
+  // Reverb: two short delay taps
+  const dly1 = ctx.createDelay(0.08); dly1.delayTime.value = 0.016;
+  const dly2 = ctx.createDelay(0.12); dly2.delayTime.value = 0.036;
+  const fb1  = ctx.createGain(); fb1.gain.value = 0.14;
+  const fb2  = ctx.createGain(); fb2.gain.value = 0.10;
+  const wet  = ctx.createGain(); wet.gain.value = 0.09;
+  const dry  = ctx.createGain(); dry.gain.value = 1.0;
+
+  spNode.connect(hp);
+  hp.connect(eq1); eq1.connect(eq2); eq2.connect(lp);
+  lp.connect(dry);  dry.connect(comp);
+  lp.connect(dly1); dly1.connect(fb1); fb1.connect(dly1);
+  lp.connect(dly2); dly2.connect(fb2); fb2.connect(dly2);
+  dly1.connect(wet); dly2.connect(wet); wet.connect(comp);
+  comp.connect(masterGain);
+  masterGain.connect(ctx.destination);
+
+  recDest = ctx.createMediaStreamDestination();
+  masterGain.connect(recDest);
+}
+
+// ── THE PHYSICAL MODEL (runs every 256 samples) ───────────────────────────
+function processAudio(e) {
+  const out = e.outputBuffer.getChannelData(0);
+  const s   = ST;
+  const sr  = s.sr;
+
+  for (let i = 0; i < out.length; i++) {
+    // ── Smooth all params ──────────────────────────────────────────────
+    s.freq     = s.freq     * 0.9994 + s.targetFreq     * 0.0006;
+    s.pressure = s.pressure * 0.9988 + s.targetPressure * 0.0012;
+    s.vibDepth = s.vibDepth * 0.9996 + s.targetVibDepth * 0.0004;
+
+    // ── Vibrato LFO ───────────────────────────────────────────────────
+    s.vibPhase += (2 * Math.PI * 4.8) / sr;
+    if (s.vibPhase > 2 * Math.PI) s.vibPhase -= 2 * Math.PI;
+    const freq = s.freq + Math.sin(s.vibPhase) * s.vibDepth;
+
+    // ── Read delayed tube signal (fractional delay) ────────────────────
+    // Delay length = round-trip time in tube = sr / freq
+    const delayLen = sr / freq;
+    const readIdx  = s.writePos - delayLen;
+    const ri0 = Math.floor(readIdx);
+    const frac = readIdx - ri0;
+    const idx0 = ((ri0 % s.bufLen) + s.bufLen) % s.bufLen;
+    const idx1 = ((ri0 + 1) % s.bufLen + s.bufLen) % s.bufLen;
+    const tubeSig = s.buf[idx0] * (1 - frac) + s.buf[idx1] * frac;
+
+    // ── Bell reflection filter (one-pole LP) ──────────────────────────
+    // Only low harmonics reflect back into tube; highs radiate out
+    const bellFc = Math.min(freq * 5, sr * 0.44);
+    const bAlpha = 1 - Math.exp(-2 * Math.PI * bellFc / sr);
+    s.bellZ += bAlpha * (tubeSig - s.bellZ);
+    const reflected = s.bellZ * (s.muteMode ? 0.70 : 0.87);
+
+    // ── Lip reed model (nonlinear spring-mass) ────────────────────────
+    // Pressure difference across lips drives a Bernoulli flow
+    const pressureDiff = s.pressure - reflected;
+    // Lip opening (0 = closed, 1 = fully open)
+    const lipOpen = Math.max(0.0, Math.min(1.0, s.lipDisp + 0.5));
+    // Bernoulli: flow = sign(ΔP) * sqrt(|ΔP|) * opening
+    const pSign = pressureDiff >= 0 ? 1 : -1;
+    const flow  = pSign * Math.sqrt(Math.abs(pressureDiff)) * lipOpen * 0.32;
+
+    // Lip mechanics: spring (stiffness) + damping + pressure drive
+    const lipOmega = 2 * Math.PI * freq * 1.015 / sr;
+    s.lipVel  += -(lipOmega * lipOmega) * s.lipDisp   // spring
+                 - 2 * 0.45 * lipOmega  * s.lipVel    // damping
+                 + pressureDiff * 50;                  // pressure drive
+    s.lipVel  *= 0.9998;                              // tiny energy loss
+    s.lipDisp += s.lipVel / sr;
+    s.lipDisp  = Math.tanh(s.lipDisp * 2.2) * 0.42;  // soft limit
+
+    // ── Write back into tube delay line ───────────────────────────────
+    s.writePos = (s.writePos + 1) % s.bufLen;
+    s.buf[s.writePos] = flow + reflected;
+
+    // ── Radiation: high-pass differentiator ──────────────────────────
+    // Bell radiates high freqs more → first-difference approximation
+    const radiated = tubeSig - 0.84 * s.radZ;
+    s.radZ = tubeSig;
+
+    // ── DC blocker ────────────────────────────────────────────────────
+    const dcIn  = radiated * 1.5;
+    const dcOut = dcIn - s.dcZ + 0.995 * (s.dcZ - (s.dcZ !== 0 ? s.dcPrev || 0 : 0));
+    s.dcPrev = dcIn;
+    s.dcZ    = dcIn;
+
+    // Simple DC block: y[n] = x[n] - x[n-1] + 0.995*y[n-1]
+    let sample = radiated * 1.5;
+    sample = Math.max(-0.95, Math.min(0.95, sample));
+
+    // Warmup ramp (prevents click on cold start)
+    if (s.warmup < 256) { sample *= s.warmup / 256; s.warmup++; }
+
+    out[i] = sample;
+  }
+}
+
+// ── PLAY / STOP ───────────────────────────────────────────────────────────
+function play(freq) {
+  initAudio();
+  if (ctx.state === 'suspended') ctx.resume();
+  currentFreq = freq;
+  ST.targetFreq = freq;
+
+  if (!isOn) {
+    ST.warmup = 0;  // restart warmup on each new note for clean attack
+    ST.targetPressure = muteon ? 0.34 : 0.60;
+    masterGain.gain.setTargetAtTime(0.9, ctx.currentTime, 0.02);
+
+    // Vibrato onset delay (realistic: players start vib after ~0.3s)
+    if (vibon) {
+      setTimeout(() => {
+        if (isOn) ST.targetVibDepth = freq * 0.006;
+      }, 280);
     }
 
-    function startTone(frequency) {
-        if (!audioCtx) initAudio();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+    isOn = true;
+    vuAnim(ST.targetPressure);
+    document.getElementById('glow').classList.add('on');
+    document.getElementById('note-display').classList.add('on');
+    document.getElementById('hint').style.opacity = '0';
+  }
+}
 
-        if (!oscillator) {
-            oscillator = audioCtx.createOscillator();
-            oscillator.type = 'sawtooth';
-            
-            lfo = audioCtx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.value = 4;
-            const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = 2;
-            
-            lfo.connect(lfoGain);
-            lfoGain.connect(oscillator.frequency);
-            lfo.start();
+function pitch(freq) {
+  if (!isOn) return;
+  currentFreq = freq;
+  ST.targetFreq = freq;
+  if (vibon) ST.targetVibDepth = freq * 0.006;
+}
 
-            oscillator.connect(filter);
-            filter.connect(masterGain);
-            oscillator.start();
-        }
+function stop() {
+  if (!isOn) return;
+  // Reduce mouth pressure → tube oscillation decays naturally
+  ST.targetPressure = 0;
+  ST.targetVibDepth = 0;
+  isOn = false;
+  document.getElementById('glow').classList.remove('on');
+  document.getElementById('note-display').classList.remove('on');
+  document.getElementById('note-display').textContent = '——';
+  document.getElementById('big-pos').textContent = '—';
+  document.getElementById('big-pos').classList.remove('lit');
+  clearZones();
+}
 
-        oscillator.frequency.setTargetAtTime(frequency, audioCtx.currentTime, 0.05);
-        filter.frequency.setTargetAtTime(frequency * 8, audioCtx.currentTime, 0.1);
+// ── ZONES ─────────────────────────────────────────────────────────────────
+let zones = [];
+function buildZones() {
+  const area = document.getElementById('play-area');
+  area.querySelectorAll('.zone').forEach(z => z.remove());
+  const H = area.clientHeight, pos = HARMONICS[reg], n = pos.length;
+  zones = [];
+  pos.forEach((p, i) => {
+    const yPct = 6 + (i / (n-1)) * 86;
+    const yPx  = H * yPct / 100;
+    const half = H * (86 / (n-1)) / 100 / 2;
+    const z = document.createElement('div'); z.className = 'zone';
+    z.style.top = (yPx - half) + 'px'; z.style.height = (half * 2) + 'px';
+    const line = document.createElement('div'); line.className = 'zone-line';
+    const lbl  = document.createElement('div'); lbl.className  = 'zone-label'; lbl.textContent = p.note;
+    const num  = document.createElement('div'); num.className  = 'zone-pos';   num.textContent = p.pos;
+    z.appendChild(line); z.appendChild(lbl); z.appendChild(num);
+    area.insertBefore(z, document.getElementById('thumb'));
+    zones.push({ el: z, y: yPx, ...p });
+  });
+}
+function clearZones() { zones.forEach(z => z.el.classList.remove('active')); }
 
-        if (!isPlaying) {
-            masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-            masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.1);
-            isPlaying = true;
-            updateVisualizer(0.8);
-        }
-    }
+// ── TOUCH ─────────────────────────────────────────────────────────────────
+const playArea = document.getElementById('play-area');
+const thumb    = document.getElementById('thumb');
+let touching = false;
 
-    function stopTone() {
-        if (!isPlaying || !masterGain) return;
-        masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-        masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
-        masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
-        
-        isPlaying = false;
-        updateVisualizer(0);
-        document.getElementById('current-note').style.opacity = '0';
-    }
-    
-    function changePitch(frequency) {
-        if (oscillator && isPlaying) {
-             oscillator.frequency.setTargetAtTime(frequency, audioCtx.currentTime, 0.02);
-             filter.frequency.setTargetAtTime(frequency * 6, audioCtx.currentTime, 0.05);
-        }
-    }
+function handle(e, isStart) {
+  e.preventDefault();
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const rect    = playArea.getBoundingClientRect();
+  const H       = rect.height;
+  const clampY  = Math.max(0, Math.min(H, clientY - rect.top));
 
-    /**
-     * DYNAMIC UI & INTERACTION
-     * Calculates dimensions based on actual screen size
-     */
-    const slideContainer = document.getElementById('slide-track-container');
-    const slideGroup = document.getElementById('slide-group');
-    const noteDisplay = document.getElementById('current-note');
-    const gridLines = document.getElementById('grid-lines');
-    
-    // Dynamic Dimensions
-    let trackRect;
-    let trackHeight;
-    let startY;
-    let stepHeight;
+  thumb.style.top = clampY + 'px';
+  thumb.classList.add('show');
 
-    function updateDimensions() {
-        // Clear old grid lines
-        gridLines.innerHTML = '';
-        
-        // Get actual dimensions of the container
-        trackRect = slideContainer.getBoundingClientRect();
-        trackHeight = trackRect.height - 40; // Leave some padding at bottom
-        startY = trackRect.top;
-        stepHeight = trackHeight / 7;
+  let best = null, bestD = Infinity;
+  zones.forEach(z => { const d = Math.abs(clampY - z.y); if (d < bestD) { bestD = d; best = z; } });
 
-        // Create Grid Lines based on new height
-        POSITIONS.forEach((pos, index) => {
-            const line = document.createElement('div');
-            line.className = 'note-marker';
-            // Calculate relative top position
-            const topPos = (index * stepHeight) + 10; // +10px padding top
-            line.style.top = topPos + 'px';
-            line.innerHTML = `<span class="bg-gray-800 px-1 rounded text-xs opacity-70">${pos.pos}</span>`;
-            line.id = `marker-${index}`;
-            gridLines.appendChild(line);
-            
-            // Store relative Y for calculation
-            pos.relativeY = topPos; 
-        });
-    }
+  const pos  = HARMONICS[reg];
+  const lnH  = Math.log(pos[0].freq);
+  const lnL  = Math.log(pos[pos.length-1].freq);
+  const minY = H * 0.06, maxY = H * 0.92;
+  const ratio = (clampY - minY) / (maxY - minY);
+  const freq  = Math.exp(lnH - Math.max(0, Math.min(1, ratio)) * (lnH - lnL));
 
-    // Call initially and on resize
-    window.addEventListener('load', updateDimensions);
-    window.addEventListener('resize', updateDimensions);
-    // Call after a slight delay to ensure layout is settled on mobile
-    setTimeout(updateDimensions, 100);
+  clearZones();
+  if (best) {
+    best.el.classList.add('active');
+    document.getElementById('note-display').textContent = best.note;
+    document.getElementById('big-pos').textContent = best.pos;
+    document.getElementById('big-pos').classList.add('lit');
+  }
+  if (isStart) play(freq); else pitch(freq);
+}
 
-    function handleInput(e) {
-        e.preventDefault();
-        
-        let clientY;
-        if(e.type.includes('touch')) {
-            clientY = e.touches[0].clientY;
-        } else {
-            clientY = e.clientY;
-        }
+playArea.addEventListener('touchstart',  e => { touching = true; buildZones(); handle(e, true);  }, { passive: false });
+playArea.addEventListener('touchmove',   e => { if (touching) handle(e, false); },                  { passive: false });
+playArea.addEventListener('touchend',    e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, { passive: false });
+playArea.addEventListener('touchcancel', e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, { passive: false });
+playArea.addEventListener('mousedown',   e => { touching = true; buildZones(); handle(e, true); });
+document.addEventListener('mousemove',   e => { if (touching) handle(e, false); });
+document.addEventListener('mouseup',     e => { if (touching) { touching = false; thumb.classList.remove('show'); stop(); } });
 
-        // Calculate position relative to container
-        // Y relative to the start of the track
-        let relativeY = clientY - startY;
-
-        // Clamp values
-        const minY = 0;
-        const maxY = trackHeight;
-        let clampedY = Math.max(minY, Math.min(maxY, relativeY));
-        
-        // Move visual slide
-        slideGroup.style.transform = `translate(-50%, ${clampedY}px)`;
-
-        // Calculate Frequency
-        const percentage = clampedY / trackHeight;
-        const freq = MAX_FREQ - (percentage * (MAX_FREQ - MIN_FREQ));
-        
-        // Find closest note
-        let closestNote = "";
-        
-        POSITIONS.forEach((p, i) => {
-             const marker = document.getElementById(`marker-${i}`);
-             if(marker) marker.classList.remove('active-note');
-             
-             // Check distance
-             const dist = Math.abs(clampedY - p.relativeY);
-             if (dist < (stepHeight / 2)) {
-                 if(marker) marker.classList.add('active-note');
-                 closestNote = p.note;
-             }
-        });
-
-        if (closestNote) {
-            noteDisplay.innerText = closestNote;
-            noteDisplay.style.opacity = '1';
-        }
-
-        if (e.type === 'touchstart' || e.type === 'mousedown') {
-            startTone(freq);
-        } else {
-            changePitch(freq);
-        }
-    }
-
-    function handleEnd(e) {
-        e.preventDefault();
-        stopTone();
-    }
-
-    // Event Listeners
-    slideContainer.addEventListener('mousedown', handleInput);
-    document.addEventListener('mousemove', (e) => {
-        if (isPlaying) handleInput(e);
+// ── VU ─────────────────────────────────────────────────────────────────────
+let vuRaf;
+function vuAnim(vol) {
+  cancelAnimationFrame(vuRaf);
+  const bars = [0,1,2,3,4,5].map(i => document.getElementById('v' + i));
+  let v = vol;
+  function frame() {
+    v = v * 0.88 + (isOn ? vol + Math.random() * .08 : 0) * .12;
+    bars.forEach((b, i) => {
+      const thr = i / bars.length;
+      const h   = v > thr ? Math.min(22, (v - thr) * 75) : 3;
+      b.style.height     = h + 'px';
+      b.style.background = i < 3 ? '#5ab85a' : i < 5 ? '#e8c84a' : '#e85555';
     });
-    document.addEventListener('mouseup', handleEnd);
+    if (isOn || v > .01) vuRaf = requestAnimationFrame(frame);
+  }
+  vuRaf = requestAnimationFrame(frame);
+}
 
-    slideContainer.addEventListener('touchstart', handleInput, {passive: false});
-    slideContainer.addEventListener('touchmove', handleInput, {passive: false});
-    slideContainer.addEventListener('touchend', handleEnd);
-    slideContainer.addEventListener('touchcancel', handleEnd);
+// ── OCTAVE ─────────────────────────────────────────────────────────────────
+document.getElementById('oct-group').addEventListener('click', e => {
+  const btn = e.target.closest('.seg-btn'); if (!btn) return;
+  reg = btn.dataset.r;
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('on', b === btn));
+  buildZones();
+});
 
-    // Recording Logic (Updated for Download)
-    const btnRecord = document.getElementById('btn-record');
-    const btnStop = document.getElementById('btn-stop');
-    const btnDownload = document.getElementById('btn-download');
-    const statusText = document.getElementById('status-text');
+// ── FX ─────────────────────────────────────────────────────────────────────
+document.getElementById('btn-vib').addEventListener('click', () => {
+  vibon = !vibon;
+  document.getElementById('btn-vib').classList.toggle('on', vibon);
+  ST.targetVibDepth = (isOn && vibon) ? currentFreq * 0.006 : 0;
+});
+document.getElementById('btn-mute').addEventListener('click', () => {
+  muteon = !muteon;
+  document.getElementById('btn-mute').classList.toggle('on', muteon);
+  ST.muteMode = muteon;
+  if (isOn) ST.targetPressure = muteon ? 0.34 : 0.60;
+});
 
-    btnRecord.onclick = () => {
-        initAudio();
-        chunks = [];
-        mediaRecorder = new MediaRecorder(dest.stream);
-        
-        mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-        mediaRecorder.onstop = () => {
-            audioBlob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-            audioUrl = URL.createObjectURL(audioBlob);
-            
-            // เปิดให้กดปุ่มดาวน์โหลดได้
-            btnDownload.disabled = false;
-            statusText.innerText = "บันทึกเสร็จสิ้น กดดาวน์โหลดได้เลย";
-        };
+// ── RECORDING ──────────────────────────────────────────────────────────────
+const bRec  = document.getElementById('btn-rec');
+const bStop = document.getElementById('btn-stop');
+const bDl   = document.getElementById('btn-dl');
 
-        mediaRecorder.start();
-        btnRecord.classList.add('hidden');
-        btnStop.classList.remove('hidden');
-        
-        // ปิดปุ่มดาวน์โหลดระหว่างอัด
-        btnDownload.disabled = true; 
-        
-        statusText.innerText = "กำลังบันทึก...";
-        statusText.classList.add('text-red-500', 'animate-pulse');
-    };
+bRec.addEventListener('click', () => {
+  initAudio();
+  if (ctx.state === 'suspended') ctx.resume();
+  mchunks = [];
+  mrec = new MediaRecorder(recDest.stream);
+  mrec.ondataavailable = e => mchunks.push(e.data);
+  mrec.onstop = () => {
+    murl = URL.createObjectURL(new Blob(mchunks, { type: 'audio/ogg; codecs=opus' }));
+    bDl.disabled = false;
+  };
+  mrec.start();
+  bRec.classList.add('on'); bRec.style.display = 'none'; bStop.style.display = '';
+});
+bStop.addEventListener('click', () => {
+  if (mrec && mrec.state === 'recording') mrec.stop();
+  bStop.style.display = 'none'; bRec.style.display = ''; bRec.classList.remove('on');
+});
+bDl.addEventListener('click', () => {
+  if (!murl) return;
+  const a = document.createElement('a'); a.href = murl;
+  a.download = 'bass_trombone_' + Date.now() + '.ogg';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => document.body.removeChild(a), 100);
+});
 
-    btnStop.onclick = () => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-            btnStop.classList.add('hidden');
-            btnRecord.classList.remove('hidden');
-            statusText.classList.remove('text-red-500', 'animate-pulse');
-        }
-    };
-
-    // ฟังก์ชันดาวน์โหลดไฟล์
-    btnDownload.onclick = () => {
-        if (audioUrl) {
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = audioUrl;
-            // ตั้งชื่อไฟล์พร้อมเวลาปัจจุบัน
-            a.download = 'trombone_recording_' + new Date().getTime() + '.ogg';
-            document.body.appendChild(a);
-            a.click();
-            
-            // Cleanup
-            setTimeout(() => {
-                document.body.removeChild(a);
-                // ไม่ revoke ทันทีเพื่อให้กดโหลดซ้ำได้ถ้าต้องการ แต่ถ้าจะเคลียร์เมมโมรี่ค่อยทำทีหลัง
-            }, 100);
-            
-            statusText.innerText = "ดาวน์โหลดเรียบร้อย";
-        }
-    };
-    
-    function updateVisualizer(volume) {
-        const bar = document.getElementById('volume-bar');
-        if(bar) bar.style.width = (volume * 100) + '%';
-        if (volume > 0.01) {
-            requestAnimationFrame(() => updateVisualizer(volume * 0.95));
-        }
-    }
-
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.addEventListener('load', buildZones);
+window.addEventListener('resize', buildZones);
+setTimeout(buildZones, 100);
 </script>
 </body>
 </html>
