@@ -34,8 +34,6 @@ html,body{
   border-radius:8px;padding:4px 0;transition:all .12s;letter-spacing:2px;
 }
 #note-display.on{background:var(--gold-dark);color:#fff;box-shadow:0 0 16px rgba(232,200,74,.4)}
-#vu{display:flex;gap:2px;height:22px;align-items:flex-end;flex:none}
-.vb{width:5px;min-height:3px;border-radius:2px;background:#222}
 .btn-row{display:flex;gap:8px}
 .big-btn{
   flex:1;height:48px;border-radius:10px;border:2px solid transparent;
@@ -46,7 +44,7 @@ html,body{
 }
 .big-btn:active{transform:scale(.95)}
 .btn-rec{border-color:var(--red);color:var(--red)}
-.btn-rec.on{background:var(--red);color:#fff;box-shadow:0 0 14px rgba(232,85,85,.5)}
+.btn-rec.on{background:var(--red);color:#fff}
 .btn-stop{border-color:#777;color:#aaa}
 .btn-dl{border-color:var(--blue);color:var(--blue)}
 .btn-dl:disabled{opacity:.3}
@@ -71,11 +69,12 @@ html,body{
 }
 .fx-btn:last-child{border-right:none}
 .fx-btn.on{background:rgba(232,200,74,.13);color:var(--gold)}
+
 #play-area{
   flex:1;position:relative;overflow:hidden;
   background:linear-gradient(to bottom,#090909 0%,#111116 50%,#090909 100%);
 }
-.zone{position:absolute;left:0;right:0;display:flex;align-items:center}
+.zone{position:absolute;left:0;right:0;display:flex;align-items:center;cursor:pointer}
 .zone-line{flex:1;height:1px;background:rgba(232,200,74,.08);transition:background .1s,box-shadow .1s}
 .zone.active .zone-line{background:var(--gold);box-shadow:0 0 12px rgba(232,200,74,.45)}
 .zone-label{
@@ -115,7 +114,7 @@ html,body{
 #hint{
   position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
   font-size:.62rem;letter-spacing:2px;color:rgba(255,255,255,.15);
-  pointer-events:none;text-align:center;line-height:2;transition:opacity .5s;
+  pointer-events:none;text-align:center;line-height:2;
 }
 </style>
 </head>
@@ -125,11 +124,6 @@ html,body{
     <div class="top-row">
       <div class="brand">🎺 BASS TROMBONE</div>
       <div id="note-display">——</div>
-      <div id="vu">
-        <div class="vb" id="v0"></div><div class="vb" id="v1"></div>
-        <div class="vb" id="v2"></div><div class="vb" id="v3"></div>
-        <div class="vb" id="v4"></div><div class="vb" id="v5"></div>
-      </div>
     </div>
     <div class="btn-row">
       <button class="big-btn btn-rec" id="btn-rec"><div class="rdot"></div>REC</button>
@@ -156,7 +150,7 @@ html,body{
   </div>
 </div>
 <script>
-// ── NOTE TABLES ─────────────────────────────────────────────────────────
+// ── NOTE TABLES ──────────────────────────────────────────────────────────
 const HARMONICS = {
   low: [
     {pos:1,note:"Bb1",freq:58.27},{pos:2,note:"A1",freq:55.00},
@@ -179,191 +173,150 @@ const HARMONICS = {
 };
 let reg = 'mid';
 
-// ── AUDIO ENGINE ──────────────────────────────────────────────────────────
-// Uses ScriptProcessorNode (synchronous, works everywhere)
-// Physical model: waveguide tube + lip reed
+// ── AUDIO ─────────────────────────────────────────────────────────────────
+// Strategy: OscillatorNode additive synthesis
+// Bass trombone tone = mostly odd harmonics + warm filter
+// NO ScriptProcessor, NO Worklet — pure Web Audio graph
 const AC = window.AudioContext || window.webkitAudioContext;
-let ctx = null, masterGain, recDest, spNode;
+let ctx = null, masterOut, recDest;
+let oscNodes = [];   // active oscillators
+let envNode  = null; // master gain envelope
+let lfoOsc   = null, lfoGain = null;
 let isOn = false, vibon = true, muteon = false;
 let currentFreq = 110;
 let mrec, mchunks = [], murl;
 
-// Physical model state
-const ST = {
-  // Tube delay line (max ~30 Hz = ~1470 samples at 44100)
-  buf: null, bufLen: 0, writePos: 0,
-  // Lip reed
-  lipDisp: 0, lipVel: 0,
-  // One-pole bell reflection filter
-  bellZ: 0,
-  // Radiation HP filter
-  radZ: 0,
-  // Output DC blocker
-  dcZ: 0,
-  // Params (smoothed)
-  freq: 110, targetFreq: 110,
-  pressure: 0, targetPressure: 0,
-  vibDepth: 0, targetVibDepth: 0,
-  vibPhase: 0,
-  muteMode: false,
-  sr: 44100,
-  warmup: 0
-};
+// Bass trombone harmonic amplitudes (spectral profile)
+// Strong fundamental + 2nd, rolling off — warm/dark character
+const H_AMPS = [1.00, 0.75, 0.50, 0.28, 0.15, 0.08, 0.04, 0.02];
+//               f1    f2    f3    f4    f5    f6    f7    f8
 
-function initAudio() {
+function buildGraph() {
+  // Build once, reuse
   if (ctx) return;
   ctx = new AC();
-  ST.sr  = ctx.sampleRate;
-  ST.bufLen = Math.ceil(ST.sr / 30) * 2 + 8; // room for lowest freq
-  ST.buf = new Float32Array(ST.bufLen);
 
-  // ScriptProcessorNode: bufferSize 256 for low latency
-  spNode = ctx.createScriptProcessor(256, 0, 1);
-  spNode.onaudioprocess = processAudio;
+  // Master envelope gain (controls on/off + volume)
+  envNode = ctx.createGain();
+  envNode.gain.value = 0;
 
-  // Post-processing EQ & dynamics
+  // Waveshaper: soft-clip for brass "bite"
+  // tanh curve — adds harmonics naturally like a brass mouthpiece
+  const shaper = ctx.createWaveShaper();
+  const n = 512, curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2 / n) - 1;
+    curve[i] = Math.tanh(2.5 * x) / Math.tanh(2.5);
+  }
+  shaper.curve = curve;
+  shaper.oversample = '2x';
+
+  // HP filter — remove sub-bass mud
   const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass'; hp.frequency.value = 30; hp.Q.value = 0.5;
+  hp.type = 'highpass'; hp.frequency.value = 40; hp.Q.value = 0.7;
 
-  // Warmth boost for bass trombone body
+  // EQ1: Bass body boost ~150 Hz
   const eq1 = ctx.createBiquadFilter();
-  eq1.type = 'peaking'; eq1.frequency.value = 150; eq1.Q.value = 0.9; eq1.gain.value = 5;
+  eq1.type = 'peaking'; eq1.frequency.value = 150; eq1.Q.value = 0.9; eq1.gain.value = 6;
 
-  // Presence
+  // EQ2: Presence ~600 Hz
   const eq2 = ctx.createBiquadFilter();
-  eq2.type = 'peaking'; eq2.frequency.value = 700; eq2.Q.value = 2.2; eq2.gain.value = 3;
+  eq2.type = 'peaking'; eq2.frequency.value = 600; eq2.Q.value = 2.0; eq2.gain.value = 3;
 
-  // Cut harshness above 3kHz
-  const lp = ctx.createBiquadFilter();
-  lp.type = 'lowpass'; lp.frequency.value = 3000; lp.Q.value = 0.6;
+  // EQ3: Cut harshness — bass trombone is dark
+  const eq3 = ctx.createBiquadFilter();
+  eq3.type = 'lowpass'; eq3.frequency.value = 3500; eq3.Q.value = 0.5;
 
+  // Compressor
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -18; comp.ratio.value = 3;
-  comp.attack.value = 0.004; comp.release.value = 0.25;
+  comp.threshold.value = -16; comp.ratio.value = 3;
+  comp.attack.value = 0.004; comp.release.value = 0.22;
 
-  masterGain = ctx.createGain();
-  masterGain.gain.value = 0.9;
+  // Short room reverb (2 delay taps)
+  const dly1 = ctx.createDelay(0.1); dly1.delayTime.value = 0.018;
+  const dly2 = ctx.createDelay(0.15); dly2.delayTime.value = 0.040;
+  const fb1 = ctx.createGain(); fb1.gain.value = 0.14;
+  const fb2 = ctx.createGain(); fb2.gain.value = 0.10;
+  const wet = ctx.createGain(); wet.gain.value = 0.10;
+  const dry = ctx.createGain(); dry.gain.value = 1.0;
 
-  // Reverb: two short delay taps
-  const dly1 = ctx.createDelay(0.08); dly1.delayTime.value = 0.016;
-  const dly2 = ctx.createDelay(0.12); dly2.delayTime.value = 0.036;
-  const fb1  = ctx.createGain(); fb1.gain.value = 0.14;
-  const fb2  = ctx.createGain(); fb2.gain.value = 0.10;
-  const wet  = ctx.createGain(); wet.gain.value = 0.09;
-  const dry  = ctx.createGain(); dry.gain.value = 1.0;
+  masterOut = ctx.createGain(); masterOut.gain.value = 0.88;
 
-  spNode.connect(hp);
-  hp.connect(eq1); eq1.connect(eq2); eq2.connect(lp);
-  lp.connect(dry);  dry.connect(comp);
-  lp.connect(dly1); dly1.connect(fb1); fb1.connect(dly1);
-  lp.connect(dly2); dly2.connect(fb2); fb2.connect(dly2);
-  dly1.connect(wet); dly2.connect(wet); wet.connect(comp);
-  comp.connect(masterGain);
-  masterGain.connect(ctx.destination);
+  // Wire: envNode → shaper → hp → eq1 → eq2 → eq3 → dry+reverb → comp → masterOut → dest
+  envNode.connect(shaper);
+  shaper.connect(hp); hp.connect(eq1); eq1.connect(eq2); eq2.connect(eq3);
+  eq3.connect(dry);  dry.connect(comp);
+  eq3.connect(dly1); dly1.connect(fb1); fb1.connect(dly1); dly1.connect(wet);
+  eq3.connect(dly2); dly2.connect(fb2); fb2.connect(dly2); dly2.connect(wet);
+  wet.connect(comp);
+  comp.connect(masterOut);
+  masterOut.connect(ctx.destination);
 
   recDest = ctx.createMediaStreamDestination();
-  masterGain.connect(recDest);
+  masterOut.connect(recDest);
+
+  // LFO for vibrato
+  lfoOsc  = ctx.createOscillator();
+  lfoOsc.type = 'sine'; lfoOsc.frequency.value = 4.8;
+  lfoGain = ctx.createGain(); lfoGain.gain.value = 0;
+  lfoOsc.connect(lfoGain); lfoOsc.start();
+
+  // Create oscillators for each harmonic (persistent, always running at ~0 gain)
+  oscNodes = H_AMPS.map((amp, i) => {
+    const h = i + 1;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = currentFreq * h;
+    const g = ctx.createGain();
+    g.gain.value = 0; // start silent
+    lfoGain.connect(osc.frequency); // vibrato modulates all oscs
+    osc.connect(g);
+    g.connect(envNode);
+    osc.start();
+    return { osc, gain: g, harmonic: h, baseAmp: amp };
+  });
 }
 
-// ── THE PHYSICAL MODEL (runs every 256 samples) ───────────────────────────
-function processAudio(e) {
-  const out = e.outputBuffer.getChannelData(0);
-  const s   = ST;
-  const sr  = s.sr;
-
-  for (let i = 0; i < out.length; i++) {
-    // ── Smooth all params ──────────────────────────────────────────────
-    s.freq     = s.freq     * 0.9994 + s.targetFreq     * 0.0006;
-    s.pressure = s.pressure * 0.9988 + s.targetPressure * 0.0012;
-    s.vibDepth = s.vibDepth * 0.9996 + s.targetVibDepth * 0.0004;
-
-    // ── Vibrato LFO ───────────────────────────────────────────────────
-    s.vibPhase += (2 * Math.PI * 4.8) / sr;
-    if (s.vibPhase > 2 * Math.PI) s.vibPhase -= 2 * Math.PI;
-    const freq = s.freq + Math.sin(s.vibPhase) * s.vibDepth;
-
-    // ── Read delayed tube signal (fractional delay) ────────────────────
-    // Delay length = round-trip time in tube = sr / freq
-    const delayLen = sr / freq;
-    const readIdx  = s.writePos - delayLen;
-    const ri0 = Math.floor(readIdx);
-    const frac = readIdx - ri0;
-    const idx0 = ((ri0 % s.bufLen) + s.bufLen) % s.bufLen;
-    const idx1 = ((ri0 + 1) % s.bufLen + s.bufLen) % s.bufLen;
-    const tubeSig = s.buf[idx0] * (1 - frac) + s.buf[idx1] * frac;
-
-    // ── Bell reflection filter (one-pole LP) ──────────────────────────
-    // Only low harmonics reflect back into tube; highs radiate out
-    const bellFc = Math.min(freq * 5, sr * 0.44);
-    const bAlpha = 1 - Math.exp(-2 * Math.PI * bellFc / sr);
-    s.bellZ += bAlpha * (tubeSig - s.bellZ);
-    const reflected = s.bellZ * (s.muteMode ? 0.70 : 0.87);
-
-    // ── Lip reed model (nonlinear spring-mass) ────────────────────────
-    // Pressure difference across lips drives a Bernoulli flow
-    const pressureDiff = s.pressure - reflected;
-    // Lip opening (0 = closed, 1 = fully open)
-    const lipOpen = Math.max(0.0, Math.min(1.0, s.lipDisp + 0.5));
-    // Bernoulli: flow = sign(ΔP) * sqrt(|ΔP|) * opening
-    const pSign = pressureDiff >= 0 ? 1 : -1;
-    const flow  = pSign * Math.sqrt(Math.abs(pressureDiff)) * lipOpen * 0.32;
-
-    // Lip mechanics: spring (stiffness) + damping + pressure drive
-    const lipOmega = 2 * Math.PI * freq * 1.015 / sr;
-    s.lipVel  += -(lipOmega * lipOmega) * s.lipDisp   // spring
-                 - 2 * 0.45 * lipOmega  * s.lipVel    // damping
-                 + pressureDiff * 50;                  // pressure drive
-    s.lipVel  *= 0.9998;                              // tiny energy loss
-    s.lipDisp += s.lipVel / sr;
-    s.lipDisp  = Math.tanh(s.lipDisp * 2.2) * 0.42;  // soft limit
-
-    // ── Write back into tube delay line ───────────────────────────────
-    s.writePos = (s.writePos + 1) % s.bufLen;
-    s.buf[s.writePos] = flow + reflected;
-
-    // ── Radiation: high-pass differentiator ──────────────────────────
-    // Bell radiates high freqs more → first-difference approximation
-    const radiated = tubeSig - 0.84 * s.radZ;
-    s.radZ = tubeSig;
-
-    // ── DC blocker ────────────────────────────────────────────────────
-    const dcIn  = radiated * 1.5;
-    const dcOut = dcIn - s.dcZ + 0.995 * (s.dcZ - (s.dcZ !== 0 ? s.dcPrev || 0 : 0));
-    s.dcPrev = dcIn;
-    s.dcZ    = dcIn;
-
-    // Simple DC block: y[n] = x[n] - x[n-1] + 0.995*y[n-1]
-    let sample = radiated * 1.5;
-    sample = Math.max(-0.95, Math.min(0.95, sample));
-
-    // Warmup ramp (prevents click on cold start)
-    if (s.warmup < 256) { sample *= s.warmup / 256; s.warmup++; }
-
-    out[i] = sample;
-  }
+function setOscFreqs(freq, tau) {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  const sm = tau ?? 0.04;
+  oscNodes.forEach(({ osc, harmonic }) => {
+    osc.frequency.setTargetAtTime(freq * harmonic, t, sm);
+  });
 }
 
-// ── PLAY / STOP ───────────────────────────────────────────────────────────
+function setOscGains(on) {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  const vol = muteon ? 0.45 : 0.80;
+  oscNodes.forEach(({ gain, baseAmp }) => {
+    gain.gain.setTargetAtTime(on ? baseAmp * vol * 0.18 : 0, t, 0.02);
+  });
+}
+
 function play(freq) {
-  initAudio();
+  buildGraph();
   if (ctx.state === 'suspended') ctx.resume();
   currentFreq = freq;
-  ST.targetFreq = freq;
+  setOscFreqs(freq, 0.04);
 
   if (!isOn) {
-    ST.warmup = 0;  // restart warmup on each new note for clean attack
-    ST.targetPressure = muteon ? 0.34 : 0.60;
-    masterGain.gain.setTargetAtTime(0.9, ctx.currentTime, 0.02);
+    setOscGains(true);
+    // Envelope: attack
+    const t = ctx.currentTime;
+    envNode.gain.cancelScheduledValues(t);
+    envNode.gain.setValueAtTime(0, t);
+    envNode.gain.linearRampToValueAtTime(1.1, t + 0.05);
+    envNode.gain.setTargetAtTime(1.0, t + 0.05, 0.06);
 
-    // Vibrato onset delay (realistic: players start vib after ~0.3s)
+    // Vibrato: delayed onset
     if (vibon) {
-      setTimeout(() => {
-        if (isOn) ST.targetVibDepth = freq * 0.006;
-      }, 280);
+      lfoGain.gain.setValueAtTime(0, t);
+      lfoGain.gain.setTargetAtTime(freq * 0.005, t + 0.28, 0.10);
     }
 
     isOn = true;
-    vuAnim(ST.targetPressure);
     document.getElementById('glow').classList.add('on');
     document.getElementById('note-display').classList.add('on');
     document.getElementById('hint').style.opacity = '0';
@@ -373,15 +326,19 @@ function play(freq) {
 function pitch(freq) {
   if (!isOn) return;
   currentFreq = freq;
-  ST.targetFreq = freq;
-  if (vibon) ST.targetVibDepth = freq * 0.006;
+  setOscFreqs(freq, 0.03);
+  if (vibon) lfoGain.gain.setTargetAtTime(freq * 0.005, ctx.currentTime, 0.05);
 }
 
 function stop() {
   if (!isOn) return;
-  // Reduce mouth pressure → tube oscillation decays naturally
-  ST.targetPressure = 0;
-  ST.targetVibDepth = 0;
+  const t = ctx.currentTime;
+  envNode.gain.cancelScheduledValues(t);
+  envNode.gain.setValueAtTime(envNode.gain.value, t);
+  envNode.gain.linearRampToValueAtTime(0, t + 0.28);
+  lfoGain.gain.setTargetAtTime(0, t, 0.03);
+  // Fade individual osc gains too
+  setOscGains(false);
   isOn = false;
   document.getElementById('glow').classList.remove('on');
   document.getElementById('note-display').classList.remove('on');
@@ -449,32 +406,13 @@ function handle(e, isStart) {
   if (isStart) play(freq); else pitch(freq);
 }
 
-playArea.addEventListener('touchstart',  e => { touching = true; buildZones(); handle(e, true);  }, { passive: false });
-playArea.addEventListener('touchmove',   e => { if (touching) handle(e, false); },                  { passive: false });
-playArea.addEventListener('touchend',    e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, { passive: false });
-playArea.addEventListener('touchcancel', e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, { passive: false });
+playArea.addEventListener('touchstart',  e => { touching = true; buildZones(); handle(e, true);  }, {passive:false});
+playArea.addEventListener('touchmove',   e => { if (touching) handle(e, false); },                  {passive:false});
+playArea.addEventListener('touchend',    e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, {passive:false});
+playArea.addEventListener('touchcancel', e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, {passive:false});
 playArea.addEventListener('mousedown',   e => { touching = true; buildZones(); handle(e, true); });
 document.addEventListener('mousemove',   e => { if (touching) handle(e, false); });
 document.addEventListener('mouseup',     e => { if (touching) { touching = false; thumb.classList.remove('show'); stop(); } });
-
-// ── VU ─────────────────────────────────────────────────────────────────────
-let vuRaf;
-function vuAnim(vol) {
-  cancelAnimationFrame(vuRaf);
-  const bars = [0,1,2,3,4,5].map(i => document.getElementById('v' + i));
-  let v = vol;
-  function frame() {
-    v = v * 0.88 + (isOn ? vol + Math.random() * .08 : 0) * .12;
-    bars.forEach((b, i) => {
-      const thr = i / bars.length;
-      const h   = v > thr ? Math.min(22, (v - thr) * 75) : 3;
-      b.style.height     = h + 'px';
-      b.style.background = i < 3 ? '#5ab85a' : i < 5 ? '#e8c84a' : '#e85555';
-    });
-    if (isOn || v > .01) vuRaf = requestAnimationFrame(frame);
-  }
-  vuRaf = requestAnimationFrame(frame);
-}
 
 // ── OCTAVE ─────────────────────────────────────────────────────────────────
 document.getElementById('oct-group').addEventListener('click', e => {
@@ -488,13 +426,12 @@ document.getElementById('oct-group').addEventListener('click', e => {
 document.getElementById('btn-vib').addEventListener('click', () => {
   vibon = !vibon;
   document.getElementById('btn-vib').classList.toggle('on', vibon);
-  ST.targetVibDepth = (isOn && vibon) ? currentFreq * 0.006 : 0;
+  if (ctx && lfoGain) lfoGain.gain.setTargetAtTime((isOn && vibon) ? currentFreq * 0.005 : 0, ctx.currentTime, 0.1);
 });
 document.getElementById('btn-mute').addEventListener('click', () => {
   muteon = !muteon;
   document.getElementById('btn-mute').classList.toggle('on', muteon);
-  ST.muteMode = muteon;
-  if (isOn) ST.targetPressure = muteon ? 0.34 : 0.60;
+  if (isOn) setOscGains(true);
 });
 
 // ── RECORDING ──────────────────────────────────────────────────────────────
@@ -503,15 +440,12 @@ const bStop = document.getElementById('btn-stop');
 const bDl   = document.getElementById('btn-dl');
 
 bRec.addEventListener('click', () => {
-  initAudio();
+  buildGraph();
   if (ctx.state === 'suspended') ctx.resume();
   mchunks = [];
   mrec = new MediaRecorder(recDest.stream);
   mrec.ondataavailable = e => mchunks.push(e.data);
-  mrec.onstop = () => {
-    murl = URL.createObjectURL(new Blob(mchunks, { type: 'audio/ogg; codecs=opus' }));
-    bDl.disabled = false;
-  };
+  mrec.onstop = () => { murl = URL.createObjectURL(new Blob(mchunks, {type:'audio/ogg; codecs=opus'})); bDl.disabled = false; };
   mrec.start();
   bRec.classList.add('on'); bRec.style.display = 'none'; bStop.style.display = '';
 });
