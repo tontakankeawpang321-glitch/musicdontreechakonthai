@@ -52,7 +52,7 @@
         .wot-pipe.active {
             transform: scale(0.92);
             filter: brightness(1.2);
-            box-shadow: 0 0 20px #ffcc00;
+            box-shadow: 0 0 25px #ffcc00;
             border-color: #ffb300;
         }
 
@@ -129,16 +129,35 @@
 <body class="h-screen w-screen flex flex-col items-center justify-between overflow-hidden">
 
     <!-- Header / Info -->
-    <header class="w-full p-4 flex justify-between items-center bg-yellow-900/10 backdrop-blur-sm z-20">
-        <div>
+    <header class="w-full p-4 flex flex-col sm:flex-row gap-3 justify-between items-center bg-yellow-900/10 backdrop-blur-sm z-20">
+        <div class="text-center sm:text-left">
             <h1 class="text-2xl font-bold text-yellow-900 drop-shadow-sm">โหวดอีสาน (Wot)</h1>
-            <p class="text-xs text-yellow-800">กดท่อค้าง • รูดตรงกลางเพื่อให้เสียงต่อเนื่อง</p>
+            <p class="text-xs text-yellow-800">กดท่อค้าง • รูดตรงกลางเพื่อเสียงต่อเนื่อง • เลือกเพลงเพื่อเล่นตัวโน้ตอัตโนมัติ</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap justify-center items-center gap-2">
             <!-- ปุ่มโน้ตซ่อนไว้ (hidden) เพื่อไม่ให้แสดงตามคำสั่งของผู้ใช้ แต่คง Element ไว้เพื่อป้องกันสคริปต์พัง -->
             <button id="toggle-notes-btn" class="hidden bg-white/80 text-yellow-900 p-2 rounded-full shadow-md hover:bg-white transition flex items-center justify-center w-10 h-10 border border-yellow-200" title="แสดง/ซ่อนโน้ต">
                 <i class="ph-fill ph-text-t"></i>
             </button>
+
+            <!-- กล่องเลือกเพลงฝึกเล่น -->
+            <div class="relative inline-block">
+                <select id="song-select" class="bg-yellow-800 text-white text-xs md:text-sm pl-3 pr-8 py-2 rounded-full shadow-md hover:bg-yellow-900 transition outline-none cursor-pointer border border-yellow-600 appearance-none">
+                    <option value="" disabled selected>🎵 เลือกเพลงเล่นอัตโนมัติ</option>
+                    <option value="toei-khong">ลายเต้ยโขง</option>
+                    <option value="pong-lang">ลายโปงลาง</option>
+                    <option value="sutsanaen">ลายสุดสะแนน</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-white">
+                    <i class="ph ph-caret-down text-xs"></i>
+                </div>
+            </div>
+
+            <!-- ปุ่มหยุดเพลงเล่นอัตโนมัติ -->
+            <button id="btn-stop-song" class="hidden bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-10 h-10 border border-red-500" title="หยุดเพลง">
+                <i class="ph-fill ph-stop-circle text-lg animate-pulse"></i>
+            </button>
+
             <button id="start-audio-btn" class="bg-yellow-700 text-white px-4 py-2 rounded-full shadow-lg text-sm hover:bg-yellow-800 transition animate-pulse">
                 🔊 เปิดเสียง
             </button>
@@ -219,6 +238,36 @@
             { note: "A5", label: "ลํ", freq: 880.00, size: 48 }  // La High
         ];
 
+        // --- เพลงสำหรับเล่นอัตโนมัติ (Song Library) ---
+        const songs = {
+            "toei-khong": [
+                { index: 2, dur: 350 }, { index: 2, dur: 350 }, { index: 3, dur: 350 }, { index: 4, dur: 350 },
+                { index: 5, dur: 350 }, { index: 4, dur: 350 }, { index: 3, dur: 350 }, { index: 2, dur: 700 },
+                { index: 1, dur: 350 }, { index: 2, dur: 350 }, { index: 3, dur: 350 }, { index: 2, dur: 350 },
+                { index: 1, dur: 350 }, { index: 0, dur: 700 },
+                { index: 1, dur: 350 }, { index: 2, dur: 350 }, { index: 1, dur: 350 }, { index: 0, dur: 350 },
+                { index: 4, dur: 350 }, { index: 0, dur: 700 },
+                { index: 1, dur: 350 }, { index: 2, dur: 350 }, { index: 3, dur: 350 }, { index: 4, dur: 350 },
+                { index: 3, dur: 350 }, { index: 2, dur: 350 }, { index: 1, dur: 350 }, { index: 2, dur: 700 }
+            ],
+            "pong-lang": [
+                { index: 0, dur: 280 }, { index: 1, dur: 280 }, { index: 2, dur: 280 }, { index: 3, dur: 280 }, { index: 4, dur: 560 },
+                { index: 0, dur: 280 }, { index: 1, dur: 280 }, { index: 2, dur: 280 }, { index: 3, dur: 280 }, { index: 4, dur: 560 },
+                { index: 5, dur: 280 }, { index: 4, dur: 280 }, { index: 3, dur: 280 }, { index: 2, dur: 280 },
+                { index: 1, dur: 280 }, { index: 0, dur: 280 }, { index: 1, dur: 280 }, { index: 2, dur: 280 },
+                { index: 3, dur: 280 }, { index: 4, dur: 560 },
+                { index: 5, dur: 280 }, { index: 6, dur: 280 }, { index: 5, dur: 280 }, { index: 4, dur: 280 },
+                { index: 3, dur: 280 }, { index: 4, dur: 280 }, { index: 5, dur: 560 }
+            ],
+            "sutsanaen": [
+                { index: 1, dur: 450 }, { index: 2, dur: 450 }, { index: 3, dur: 450 }, { index: 4, dur: 900 },
+                { index: 3, dur: 450 }, { index: 2, dur: 450 }, { index: 1, dur: 450 }, { index: 0, dur: 900 },
+                { index: 1, dur: 450 }, { index: 2, dur: 450 }, { index: 1, dur: 450 }, { index: 0, dur: 450 },
+                { index: 4, dur: 450 }, { index: 0, dur: 900 },
+                { index: 1, dur: 450 }, { index: 2, dur: 450 }, { index: 3, dur: 450 }, { index: 4, dur: 900 }
+            ]
+        };
+
         // --- Audio Context & Variables ---
         let audioCtx;
         let masterGain;
@@ -239,6 +288,12 @@
         // key: touchIdentifier, value: pipeIndex
         const activeTouches = new Map();
 
+        // Autoplay state tracking
+        let isSongPlaying = false;
+        let songTimeoutId = null;
+        let activeSongNotes = [];
+        let songNotePointer = 0;
+
         const statusText = document.getElementById('status-text');
 
         // --- Reverb Generation ---
@@ -257,7 +312,7 @@
             return impulse;
         }
 
-        // --- STREAMING_CHUNK:Setting up web audio context and audio routing... ---
+        // --- STREAMING_CHUNK:Creating and setting up the audio context and routing... ---
         async function initAudio() {
             if (audioCtx) return;
             
@@ -337,10 +392,10 @@
             }
         });
 
-        // --- STREAMING_CHUNK:Defining sound synthesis logic with lowpass filtering and ADSR... ---
+        // --- STREAMING_CHUNK:Defining the audio synthesis engine and note triggers... ---
         function startNote(freq, index) {
             if (!audioCtx) initAudio();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
             // If already playing this note, return
             if (activeNotes[index]) return;
@@ -467,6 +522,101 @@
             }
         }
 
+        // --- STREAMING_CHUNK:Developing the song player engine and song profiles... ---
+        // ระบบเล่นเพลงแบบอัตโนมัติพร้อมการไฮไลต์แผ่นเสียงโน้ตอย่างสอดคล้อง
+        function playAutoSongCycle() {
+            if (!isSongPlaying) return;
+
+            // ตรวจสอบเมื่อเล่นจบลิสต์โน้ตเพลง
+            if (songNotePointer >= activeSongNotes.length) {
+                stopAutoSong();
+                return;
+            }
+
+            const currentNote = activeSongNotes[songNotePointer];
+            const pipeIdx = currentNote.index;
+            const stepDuration = currentNote.dur;
+
+            // กดและแสดงสถานะเรืองแสงอัตโนมัติที่ท่อโหวดใบนั้น ๆ
+            if (pipeIdx >= 0 && pipeIdx < notes.length) {
+                const pipeElement = document.querySelector(`.wot-pipe[data-index="${pipeIdx}"]`);
+                if (pipeElement) pipeElement.classList.add('active');
+                
+                // สั่งประมวลผลเสียงโน้ตโหวด
+                startNote(notes[pipeIdx].freq, pipeIdx);
+
+                // ตั้งการปิดตัวเสียงโน้ตก่อนถึงจังหวะถัดไปเพื่อมิติเสียงแยกกันชัดเจนขึ้น
+                setTimeout(() => {
+                    stopNote(pipeIdx);
+                    if (pipeElement) pipeElement.classList.remove('active');
+                }, stepDuration - 60);
+            }
+
+            songNotePointer++;
+            songTimeoutId = setTimeout(playAutoSongCycle, stepDuration);
+        }
+
+        function startAutoSong(songName) {
+            // หยุดเพลงก่อนหน้าหากกำลังเล่นอยู่
+            stopAutoSong();
+
+            if (!audioCtx) initAudio();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            activeSongNotes = songs[songName];
+            if (!activeSongNotes) return;
+
+            songNotePointer = 0;
+            isSongPlaying = true;
+
+            // ปรับเปลี่ยนสถานะปุ่มและแสดงปุ่มหยุดชั่วคราว
+            document.getElementById('btn-stop-song').classList.remove('hidden');
+            statusText.innerText = "กำลังเล่นเพลงและแสดงตำแหน่งโน้ตอัตโนมัติ...";
+
+            playAutoSongCycle();
+        }
+
+        function stopAutoSong() {
+            isSongPlaying = false;
+            if (songTimeoutId) {
+                clearTimeout(songTimeoutId);
+                songTimeoutId = null;
+            }
+
+            // ลบสถานะแอกทีฟและปิดเสียงโหวดทั้งหมดชั่วขณะ
+            document.querySelectorAll('.wot-pipe').forEach((pipe, i) => {
+                pipe.classList.remove('active');
+                stopNote(i);
+            });
+
+            document.getElementById('btn-stop-song').classList.add('hidden');
+            document.getElementById('song-select').value = ""; // รีเซ็ตค่าเลือกเพลง
+            statusText.innerText = "พร้อมใช้งาน";
+        }
+
+        // คอยขัดจังหวะการเล่นเพลงอัตโนมัติ เมื่อผู้ใช้ต้องการควบคุมหรือเล่นด้วยมือตัวเอง
+        function interruptAutoplay() {
+            if (isSongPlaying) {
+                stopAutoSong();
+                statusText.innerText = "ขัดจังหวะเพื่อเล่นดนตรีเอง";
+            }
+        }
+
+        // เชื่อมโยง Event ของปุ่มเลือกเพลง
+        document.getElementById('song-select').addEventListener('change', (e) => {
+            const selectedVal = e.target.value;
+            if (selectedVal) {
+                startAutoSong(selectedVal);
+            }
+        });
+
+        document.getElementById('btn-stop-song').addEventListener('click', () => {
+            stopAutoSong();
+        });
+
+
         // --- STREAMING_CHUNK:Building the circular virtual wot pipes... ---
         const container = document.getElementById('pipes-container');
         const radius = 130; 
@@ -493,6 +643,7 @@
             const handleMouseStart = (e) => {
                 // Ignore if touch is active (prevent double firing)
                 if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                interruptAutoplay();
                 pipe.classList.add('active');
                 startNote(n.freq, index);
             };
@@ -509,10 +660,11 @@
             container.appendChild(pipe);
         });
 
-        // --- STREAMING_CHUNK:Adding robust multi-touch and glissando handlings... ---
+        // --- STREAMING_CHUNK:Binding event handlers and multi-touch gestures... ---
         // This handles "Playing Together" and "Sliding" (Glissando) on the outer pipes
         function handleTouch(e) {
             e.preventDefault(); // Prevent scroll/zoom
+            interruptAutoplay();
             
             const touches = e.changedTouches;
             
@@ -578,13 +730,13 @@
         container.addEventListener('touchcancel', handleTouchEnd, {passive: false});
 
 
-        // --- STREAMING_CHUNK:Implementing the interactive center swipe glissando controls... ---
         // ระบบรูดตรงแผ่นไม้แกนกลาง (wot-center) เพื่อเปลี่ยนเสียงต่อเนื่องเป็นจังหวะตามมุมองศา
         const wotCenter = document.getElementById('wot-center');
         let centerActiveIndex = null;
         let isCenterInteracting = false;
 
         function handleCenterInteraction(clientX, clientY) {
+            interruptAutoplay();
             const rect = wotCenter.getBoundingClientRect();
             // ค้นหาตำแหน่งจุดศูนย์กลางของแกนกลางโหวด
             const centerX = rect.left + rect.width / 2;
@@ -681,7 +833,7 @@
         window.addEventListener('mouseup', endCenterInteraction);
 
 
-        // --- STREAMING_CHUNK:Drawing audio spectrum visualizer in realtime... ---
+        // --- Spectrum Visualizer ---
         const canvas = document.getElementById('visualizer');
         const canvasCtx = canvas.getContext('2d');
         
@@ -710,7 +862,7 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Handling audio recording and media saving features... ---
+        // --- STREAMING_CHUNK:Implementing recording controls and file exporters... ---
         const btnRecord = document.getElementById('btn-record');
         const btnStop = document.getElementById('btn-stop');
         const btnPlay = document.getElementById('btn-play');
