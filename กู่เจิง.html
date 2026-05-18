@@ -53,6 +53,7 @@
         .controls {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
 
         button {
@@ -89,6 +90,64 @@
             0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
             100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+        }
+
+        /* --- Autoplay Song Control Bar --- */
+        .song-control-bar {
+            background: rgba(43, 29, 25, 0.95);
+            border-bottom: 2px solid #5d4037;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            z-index: 9;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .song-control-bar span {
+            font-size: 0.9rem;
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        .song-control-bar select {
+            background: #1a100d;
+            color: #ffd700;
+            border: 1px solid #d4af37;
+            padding: 6px 12px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .btn-autoplay {
+            background: #d4af37;
+            color: #000;
+            border: 1px solid #fff;
+            font-weight: 600;
+        }
+
+        .btn-autoplay:hover {
+            background: #ffd700;
+        }
+
+        .btn-autoplay.active-play {
+            background: #ff8f00 !important;
+            color: #fff;
+            border-color: #ffb300;
+        }
+
+        #now-playing {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px #000;
+            min-width: 100px;
+            text-align: center;
         }
 
         /* --- Guzheng Board --- */
@@ -201,21 +260,38 @@
             color: #ffca28;
             font-size: 0.8rem;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s, transform 0.2s, background-color 0.2s;
             pointer-events: none;
             background: rgba(0,0,0,0.6);
             padding: 2px 4px;
             border-radius: 4px;
+            z-index: 4;
         }
         
         .show-notes .note-label {
             opacity: 1;
         }
 
-        /* Animation when playing */
+        /* Vibrating standard feedback */
         .string.vibrating {
             animation: vibrate 0.15s linear infinite;
             box-shadow: 0 0 5px #fff, 0 0 10px var(--string-green);
+        }
+
+        /* Autoplay golden feedback */
+        .string.vibrating-autoplay {
+            animation: vibrate-gold 0.12s linear infinite;
+            background: #ffd700 !important;
+            box-shadow: 0 0 10px #ffd700, 0 0 20px #ffaa00;
+        }
+
+        /* Label Pop-out effect */
+        .note-label.label-highlight {
+            opacity: 1 !important;
+            background: #ff9800 !important;
+            color: #fff !important;
+            transform: scale(1.3);
+            box-shadow: 0 0 8px #ff9800;
         }
 
         @keyframes vibrate {
@@ -223,6 +299,14 @@
             25% { transform: translateY(-2px); }
             50% { transform: translateY(0); }
             75% { transform: translateY(2px); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes vibrate-gold {
+            0% { transform: translateY(0); }
+            25% { transform: translateY(-3px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(3px); }
             100% { transform: translateY(0); }
         }
 
@@ -253,12 +337,39 @@
             border-radius: 5px;
         }
 
+        /* Custom Notification Toast (Replaces block-prone alert) */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(33, 21, 17, 0.95);
+            border: 1.5px solid #d4af37;
+            color: #ffd700;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            font-size: 0.9rem;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
         /* Mobile Adjustments */
         @media (max-width: 600px) {
             h1 { font-size: 1rem; }
             button { padding: 5px 8px; font-size: 0.8rem; }
             .tuning-box { width: 10%; }
             .strings-wrapper { width: 90%; }
+            .song-control-bar { padding: 5px 10px; gap: 8px; }
+            .song-control-bar span { font-size: 0.8rem; }
+            .song-control-bar select { padding: 4px 8px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -267,12 +378,15 @@
     <!-- Start Overlay -->
     <div id="hint-overlay">
         <h2>ยินดีต้อนรับสู่กู่เจิงเสมือนจริง</h2>
-        <p>เวอร์ชัน High Performance (เสียงเสถียร)<br>
+        <p>เวอร์ชัน High Performance พร้อมระบบเล่นอัตโนมัติ<br>
         1. เปิดเสียงอุปกรณ์ของคุณ<br>
         2. หากใช้มือถือ ให้หมุนเป็นแนวนอน<br>
-        3. ใช้นิ้วลากผ่านสาย (Glissando) ได้อย่างราบรื่น</p>
+        3. สามารถเลือกเพลงที่แถบด้านบนเพื่อเล่นโน้ตสาธิตอัตโนมัติ</p>
         <button onclick="startApp()">เริ่มเล่น (Start)</button>
     </div>
+
+    <!-- Alert replacement Container -->
+    <div id="toast">ข้อความแจ้งเตือน</div>
 
     <header>
         <h1>古筝 Guzheng</h1>
@@ -283,6 +397,19 @@
             <button id="btn-download" onclick="downloadRecording()" disabled>⬇️ โหลด</button>
         </div>
     </header>
+
+    <!-- --- Auto Play Bar --- -->
+    <div class="song-control-bar">
+        <span>🎵 เพลงสาธิต:</span>
+        <select id="song-select" onchange="changeSong()">
+            <option value="">-- เลือกบทเพลง --</option>
+            <option value="canghai">เสียงหัวเราะเยาะยุทธจักร (Blue Sea Laughter)</option>
+            <option value="molihua">ดอกมะลิ (Jasmine Flower)</option>
+            <option value="loykrathong">ลอยกระทง (Loy Krathong)</option>
+        </select>
+        <button id="btn-autoplay" class="btn-autoplay" onclick="toggleAutoplay()">▶️ เล่นอัตโนมัติ</button>
+        <div id="now-playing"></div>
+    </div>
 
     <div class="guzheng-container" id="board">
         <div class="tuning-box">古筝</div>
@@ -317,6 +444,98 @@
             { note: "D2", freq: 73.42, isGreen: false },   // 21
         ];
 
+        // --- Song Database (Demonstration Notes mapped by index 0-20 with timing) ---
+        const songs = {
+            canghai: {
+                title: "เสียงหัวเราะเยาะยุทธจักร",
+                notes: [
+                    { idx: 2, delay: 0, note: "A5" },
+                    { idx: 3, delay: 500, note: "F#5" },
+                    { idx: 4, delay: 1000, note: "E5" },
+                    { idx: 5, delay: 1500, note: "D5" },
+                    { idx: 6, delay: 2000, note: "B4" },
+                    //
+                    { idx: 3, delay: 3000, note: "F#5" },
+                    { idx: 4, delay: 3500, note: "E5" },
+                    { idx: 5, delay: 4000, note: "D5" },
+                    { idx: 6, delay: 4500, note: "B4" },
+                    { idx: 7, delay: 5000, note: "A4" },
+                    //
+                    { idx: 7, delay: 6000, note: "A4" },
+                    { idx: 6, delay: 6500, note: "B4" },
+                    { idx: 7, delay: 7000, note: "A4" },
+                    { idx: 6, delay: 7500, note: "B4" },
+                    { idx: 5, delay: 8000, note: "D5" },
+                    { idx: 4, delay: 8500, note: "E5" },
+                    { idx: 3, delay: 9000, note: "F#5" },
+                    { idx: 4, delay: 9500, note: "E5" },
+                    //
+                    { idx: 2, delay: 10500, note: "A5" },
+                    { idx: 3, delay: 11000, note: "F#5" },
+                    { idx: 4, delay: 11500, note: "E5" },
+                    { idx: 5, delay: 12000, note: "D5" },
+                    { idx: 6, delay: 12500, note: "B4" }
+                ]
+            },
+            molihua: {
+                title: "ดอกมะลิ (Jasmine Flower)",
+                notes: [
+                    { idx: 5, delay: 0, note: "D5" },
+                    { idx: 5, delay: 400, note: "D5" },
+                    { idx: 3, delay: 800, note: "F#5" },
+                    { idx: 2, delay: 1200, note: "A5" },
+                    { idx: 2, delay: 1600, note: "A5" },
+                    { idx: 1, delay: 2000, note: "B5" },
+                    { idx: 2, delay: 2400, note: "A5" },
+                    //
+                    { idx: 5, delay: 3200, note: "D5" },
+                    { idx: 5, delay: 3600, note: "D5" },
+                    { idx: 3, delay: 4000, note: "F#5" },
+                    { idx: 2, delay: 4400, note: "A5" },
+                    { idx: 2, delay: 4800, note: "A5" },
+                    { idx: 1, delay: 5200, note: "B5" },
+                    { idx: 2, delay: 5600, note: "A5" },
+                    //
+                    { idx: 2, delay: 6400, note: "A5" },
+                    { idx: 2, delay: 6800, note: "A5" },
+                    { idx: 2, delay: 7200, note: "A5" },
+                    { idx: 3, delay: 7600, note: "F#5" },
+                    { idx: 5, delay: 8000, note: "D5" },
+                    { idx: 4, delay: 8400, note: "E5" },
+                    { idx: 5, delay: 8800, note: "D5" }
+                ]
+            },
+            loykrathong: {
+                title: "ลอยกระทง (Loy Krathong)",
+                notes: [
+                    { idx: 7, delay: 0, note: "A4" },
+                    { idx: 7, delay: 400, note: "A4" },
+                    { idx: 7, delay: 800, note: "A4" },
+                    { idx: 6, delay: 1200, note: "B4" },
+                    { idx: 5, delay: 1600, note: "D5" },
+                    //
+                    { idx: 5, delay: 2400, note: "D5" },
+                    { idx: 6, delay: 2800, note: "B4" },
+                    { idx: 7, delay: 3200, note: "A4" },
+                    { idx: 6, delay: 3600, note: "B4" },
+                    { idx: 5, delay: 4000, note: "D5" },
+                    //
+                    { idx: 6, delay: 4800, note: "B4" },
+                    { idx: 5, delay: 5200, note: "D5" },
+                    { idx: 4, delay: 5600, note: "E5" },
+                    { idx: 3, delay: 6000, note: "F#5" },
+                    { idx: 4, delay: 6400, note: "E5" },
+                    { idx: 5, delay: 6800, note: "D5" },
+                    //
+                    { idx: 5, delay: 7600, note: "D5" },
+                    { idx: 6, delay: 8000, note: "B4" },
+                    { idx: 7, delay: 8400, note: "A4" },
+                    { idx: 6, delay: 8800, note: "B4" },
+                    { idx: 7, delay: 9200, note: "A4" }
+                ]
+            }
+        };
+
         let audioCtx;
         let masterGain;
         let compressor;
@@ -326,6 +545,20 @@
         let audioBlob;
         let audioUrl;
         let isRecording = false;
+
+        // Autoplay Logic States
+        let isAutoplayPlaying = false;
+        let autoplayTimeouts = [];
+
+        // Custom safe Notification toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
 
         // Initialize App
         function startApp() {
@@ -438,21 +671,119 @@
             setupInteraction();
         }
 
-        // --- Interaction Logic (Optimized) ---
+        // --- Core Playback Event Trigger (Shared by Manual and Autoplay) ---
+        function triggerPluck(index, isAutoplay = false) {
+            const stringEl = document.querySelector(`.string[data-index="${index}"]`);
+            if (!stringEl) return;
+
+            const freq = parseFloat(stringEl.dataset.freq);
+            playSound(freq);
+
+            // Highlight corresponding label during demo
+            const row = stringEl.closest('.string-row');
+            const label = row ? row.querySelector('.note-label') : null;
+
+            // Visual feedback
+            const activeClass = isAutoplay ? 'vibrating-autoplay' : 'vibrating';
+            stringEl.classList.remove('vibrating', 'vibrating-autoplay');
+            if (label) label.classList.add('label-highlight');
+
+            void stringEl.offsetWidth; // trigger reflow
+            stringEl.classList.add(activeClass);
+
+            setTimeout(() => {
+                stringEl.classList.remove(activeClass);
+                if (label) label.classList.remove('label-highlight');
+            }, isAutoplay ? 400 : 300);
+        }
+
+        // --- Autoplay Demonstration System ---
+        function changeSong() {
+            if (isAutoplayPlaying) {
+                stopAutoplay();
+            }
+        }
+
+        function toggleAutoplay() {
+            const songSelect = document.getElementById('song-select');
+            const songKey = songSelect.value;
+
+            if (!songKey) {
+                showToast("โปรดเลือกบทเพลงที่ต้องการให้ระบบเล่นอัตโนมัติ 🎵");
+                return;
+            }
+
+            if (isAutoplayPlaying) {
+                stopAutoplay();
+            } else {
+                startAutoplay(songKey);
+            }
+        }
+
+        function startAutoplay(songKey) {
+            const song = songs[songKey];
+            if (!song) return;
+
+            isAutoplayPlaying = true;
+            const btn = document.getElementById('btn-autoplay');
+            btn.innerHTML = '⏹ หยุดเล่น';
+            btn.classList.add('active-play');
+
+            const nowPlayingEl = document.getElementById('now-playing');
+            nowPlayingEl.innerText = `กำลังเล่น: ${song.title}`;
+
+            autoplayTimeouts = [];
+
+            // Schedule note triggers
+            song.notes.forEach(noteData => {
+                const playTimeout = setTimeout(() => {
+                    triggerPluck(noteData.idx, true);
+                }, noteData.delay);
+                autoplayTimeouts.push(playTimeout);
+            });
+
+            // "จบเพลงหยุดด้วย" - Set a final timeout to stop autoplay at song's completion
+            const totalDuration = Math.max(...song.notes.map(n => n.delay)) + 1200; // note delay + fadeout padding
+            const endTimeout = setTimeout(() => {
+                stopAutoplay();
+                showToast(`เล่นเพลง "${song.title}" จบเรียบร้อยแล้ว ✨`);
+            }, totalDuration);
+            
+            autoplayTimeouts.push(endTimeout);
+        }
+
+        function stopAutoplay() {
+            isAutoplayPlaying = false;
+            
+            // Clear all pending timeouts
+            autoplayTimeouts.forEach(clearTimeout);
+            autoplayTimeouts = [];
+
+            // Reset UI states
+            const btn = document.getElementById('btn-autoplay');
+            btn.innerHTML = '▶️ เล่นอัตโนมัติ';
+            btn.classList.remove('active-play');
+
+            document.getElementById('now-playing').innerText = '';
+
+            // Clean up left-over visual classes
+            document.querySelectorAll('.string').forEach(el => {
+                el.classList.remove('vibrating', 'vibrating-autoplay');
+            });
+            document.querySelectorAll('.note-label').forEach(el => {
+                el.classList.remove('label-highlight');
+            });
+        }
+
+        // --- Interaction Logic (Optimized for Glissando) ---
         function setupInteraction() {
             const container = document.getElementById('board');
             let isDragging = false;
 
             const pluck = (target) => {
-                if (target.classList.contains('string')) {
-                    const freq = parseFloat(target.dataset.freq);
-                    playSound(freq);
-                    
-                    // Visual feedback
-                    target.classList.remove('vibrating');
-                    void target.offsetWidth; 
-                    target.classList.add('vibrating');
-                    setTimeout(() => target.classList.remove('vibrating'), 300);
+                if (target && target.classList.contains('string')) {
+                    const idx = target.dataset.index;
+                    triggerPluck(idx, false);
                 }
             };
 
@@ -495,7 +826,7 @@
                     const el = document.elementFromPoint(t.clientX, t.clientY);
                     
                     if (el && el.classList.contains('string')) {
-                        // Check against the last target specfically for this touch identifier
+                        // Check against the last target specifically for this touch identifier
                         if (t.identifier !== undefined && window['lastTouch' + t.identifier] === el) {
                             continue; 
                         }
@@ -517,7 +848,7 @@
             });
         }
 
-        // --- Features ---
+        // --- Original Features ---
         function toggleNotes() {
             const board = document.getElementById('strings-area');
             board.classList.toggle('show-notes');
@@ -532,14 +863,14 @@
                 recordedChunks = [];
                 // Check if browser supports MediaRecorder
                 if (!window.MediaRecorder) {
-                    alert("Browser does not support recording.");
+                    showToast("เบราว์เซอร์ของคุณไม่รองรับการบันทึกเสียง 🎙️");
                     return;
                 }
                 
                 try {
                     mediaRecorder = new MediaRecorder(dest.stream);
                 } catch (err) {
-                    alert("Recording initialization failed.");
+                    showToast("การเตรียมระบบบันทึกเสียงล้มเหลว");
                     return;
                 }
                 
@@ -552,6 +883,7 @@
                     audioUrl = URL.createObjectURL(audioBlob);
                     document.getElementById('btn-play').disabled = false;
                     document.getElementById('btn-download').disabled = false;
+                    showToast("บันทึกเสียงสำเร็จ! สามารถกด 'เล่น' หรือ 'โหลด' ได้เลยครับ 💾");
                 };
 
                 mediaRecorder.start();
