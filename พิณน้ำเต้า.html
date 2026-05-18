@@ -3,399 +3,1008 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>พิณน้ำเต้าจำลอง (Phin Namtao Simulator)</title>
+    <title>พิณน้ำเต้าจำลองเสมือนจริง (Phin Namtao Pro)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&family=Chakra+Petch:wght@300;500;700&display=swap" rel="stylesheet">
+    
     <style>
         body {
             font-family: 'Sarabun', sans-serif;
-            background: linear-gradient(to bottom, #1a0f00, #3e2708);
-            color: white;
-            overflow: hidden; /* ป้องกันการเลื่อน */
-            touch-action: none; /* ป้องกันการซูมและเลื่อนบนมือถือ */
+            background: radial-gradient(circle at center, #2c1a04 0%, #0c0701 100%);
+            color: #f3e8ff;
+            overflow: hidden;
+            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
-            height: 100dvh; /* Dynamic viewport height */
+            height: 100dvh;
             display: flex;
             flex-direction: column;
         }
 
-        /* เอฟเฟกต์สายสั่น */
-        @keyframes vibrate {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-2px); }
-            50% { transform: translateX(2px); }
-            75% { transform: translateX(-1px); }
-            100% { transform: translateX(0); }
+        .thai-font {
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        /* เอฟเฟกต์การสั่นของสายแบบสมจริง */
+        @keyframes pluck-vibrate {
+            0% { transform: scaleX(1) translateX(0); }
+            10% { transform: scaleX(2.5) translateX(-4px); filter: brightness(1.5); }
+            20% { transform: scaleX(2.2) translateX(3px); }
+            30% { transform: scaleX(1.8) translateX(-3px); }
+            40% { transform: scaleX(1.5) translateX(2px); }
+            55% { transform: scaleX(1.3) translateX(-1px); }
+            70% { transform: scaleX(1.1) translateX(1px); }
+            85% { transform: scaleX(1.05) translateX(-0.5px); }
+            100% { transform: scaleX(1) translateX(0); }
         }
 
         .string-vibrate {
-            animation: vibrate 0.1s linear infinite;
+            animation: pluck-vibrate 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
 
-        /* โซนกดโน้ต */
+        /* โน้ตลอยขึ้นฟ้า */
+        @keyframes float-up {
+            0% {
+                transform: translateY(10px) translateX(0) scale(0.6);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+                transform: translateY(-20px) translateX(10px) scale(1.1);
+            }
+            50% {
+                transform: translateY(-80px) translateX(-15px) scale(1);
+            }
+            100% {
+                transform: translateY(-180px) translateX(20px) scale(0.7);
+                opacity: 0;
+            }
+        }
+
+        .floating-note {
+            position: absolute;
+            animation: float-up 2.2s ease-out forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* โซนกดและสไลด์ */
         .fret-zone {
-            transition: background-color 0.1s;
+            transition: all 0.1s ease;
         }
         .fret-zone:active, .fret-zone.active {
-            background-color: rgba(255, 215, 0, 0.2);
+            background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.25) 50%, transparent);
+            border-top: 1px solid rgba(245, 158, 11, 0.4);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.4);
         }
 
-        /* สไตล์ปุ่มอัดเสียง */
-        .recording-pulse {
-            animation: pulse-red 1.5s infinite;
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        /* อนิเมชันปุ่มบันทึกเสียง */
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
 
-        /* ลายไม้ */
-        .wood-texture {
-            background-color: #5c3a16;
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
-            box-shadow: inset 5px 5px 15px rgba(0,0,0,0.5);
+        .recording-active {
+            animation: pulse-gold 1.2s infinite;
+            border-color: #f59e0b !important;
+            background-color: #78350f !important;
         }
 
-        .gourd-texture {
-            background: radial-gradient(circle at 30% 30%, #cd853f, #8b4513, #3e1f08);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        /* ลายไม้ลายน้ำเต้า */
+        .wood-neck {
+            background: linear-gradient(90deg, #3d220a 0%, #5c3a16 50%, #3d220a 100%);
+            box-shadow: inset 2px 0 5px rgba(0,0,0,0.6), 2px 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .gourd-body {
+            background: radial-gradient(circle at 35% 35%, #e09745 0%, #9e5b16 45%, #593006 80%, #210f01 100%);
+            box-shadow: inset -5px -5px 25px rgba(0,0,0,0.9), 0 15px 30px rgba(0,0,0,0.7);
+        }
+
+        /* แผงแก้วหรูหรา */
+        .glass-panel {
+            background: rgba(26, 15, 4, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+        }
+
+        /* ซ่อน Scrollbar ของปุ่มควบคุม */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="relative">
+<body class="relative flex flex-col justify-between w-full h-screen overflow-hidden">
 
     <!-- Header -->
-    <header class="h-14 flex items-center justify-between px-4 bg-black/30 backdrop-blur-sm z-50 border-b border-white/10">
-        <h1 class="text-xl font-bold text-amber-400">พิณน้ำเต้า</h1>
-        <div id="status-text" class="text-xs text-gray-300">พร้อมใช้งาน</div>
+    <header class="h-14 flex items-center justify-between px-4 bg-black/50 backdrop-blur-md z-40 border-b border-amber-900/40">
+        <div class="flex items-center gap-2">
+            <span class="text-xl">🪕</span>
+            <div>
+                <h1 class="text-md font-bold text-amber-400 thai-font tracking-wide leading-tight">พิณน้ำเต้าโปร</h1>
+                <p class="text-[9px] text-amber-600 uppercase tracking-widest">Phin Namtao Acoustic Simulator</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+            <div id="status-text" class="text-xs text-amber-200/80 font-medium">พร้อมบรรเลง</div>
+        </div>
     </header>
 
-    <!-- Main Instrument Area -->
-    <main class="flex-1 relative flex justify-center items-center w-full h-full overflow-hidden">
+    <!-- Main Workspace Grid -->
+    <div class="flex-1 relative w-full flex flex-row overflow-hidden">
         
-        <!-- พื้นหลังลายไทยจางๆ -->
-        <div class="absolute inset-0 opacity-10 pointer-events-none flex justify-center items-center">
-            <svg width="300" height="300" viewBox="0 0 100 100" fill="none" stroke="white" stroke-width="1">
-                <circle cx="50" cy="50" r="40" />
-                <path d="M50 10 Q80 50 50 90 Q20 50 50 10" />
-            </svg>
-        </div>
-
-        <!-- ตัวพิณ (Stick & Gourd) -->
-        <div class="relative h-[95%] w-full max-w-md flex flex-col items-center">
+        <!-- แผงปรับแต่งเสียงขั้นสูง (Left Glass Panel) -->
+        <div id="advanced-panel" class="absolute left-2 top-2 bottom-2 w-56 glass-panel rounded-2xl z-30 flex flex-col p-3 transition-all duration-300 transform -translate-x-[110%] md:translate-x-0 md:static md:h-full md:m-2">
+            <div class="flex items-center justify-between mb-2 border-b border-amber-500/20 pb-1.5">
+                <span class="text-xs font-bold text-amber-400 thai-font flex items-center gap-1">
+                    ⚙️ ระบบจำลองเสียงฟิสิกส์
+                </span>
+                <button onclick="toggleAdvancedPanel()" class="md:hidden text-xs text-amber-500 hover:text-amber-400">✖</button>
+            </div>
             
-            <!-- คันพิณ (The Stick) -->
-            <div class="absolute top-0 bottom-0 w-8 wood-texture rounded-full z-10"></div>
+            <div class="flex-1 space-y-4 overflow-y-auto no-scrollbar pr-1 text-xs">
+                <!-- ตู้เสียงน้ำเต้า (Resonance) -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-amber-300">
+                        <span>🔊 ความก้องน้ำเต้า (Resonance)</span>
+                        <span id="val-resonance" class="font-mono text-amber-500">75%</span>
+                    </div>
+                    <input id="ctrl-resonance" type="range" min="10" max="95" value="75" class="w-full accent-amber-500 bg-amber-950 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-[9px] text-amber-200/50">จำลองขนาดความก้องภายในกะโหลกน้ำเต้า</p>
+                </div>
 
-            <!-- สายพิณ (The String) -->
-            <div id="main-string" class="absolute top-0 bottom-0 w-1 bg-yellow-200 z-20 shadow-[0_0_5px_rgba(255,255,0,0.8)] ml-0.5"></div>
+                <!-- การกดทาบอก (Chest Press / Wah) -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-amber-300">
+                        <span>🪵 การแนบหน้าอก (Chest Press)</span>
+                        <span id="val-chest" class="font-mono text-amber-500">Off</span>
+                    </div>
+                    <input id="ctrl-chest" type="range" min="10" max="90" value="45" class="w-full accent-amber-500 bg-amber-950 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-[9px] text-amber-200/50">กดทาบหน้าอกเพื่ออุด/ปล่อยเสียง (สร้างเอฟเฟกต์ วาว-วาว)</p>
+                </div>
 
-            <!-- กะโหลกน้ำเต้า (The Gourd Resonator) - อยู่ด้านหลัง -->
-            <div class="absolute top-10 w-48 h-48 rounded-[50%_50%_45%_45%_/_60%_60%_40%_40%] gourd-texture z-0 transform rotate-12 border-4 border-[#2a1505]">
-                <!-- รูเสียง -->
-                <div class="absolute bottom-10 left-12 w-8 h-12 bg-[#1a0f00] rounded-full transform rotate-[-20deg] shadow-[inset_0_0_10px_black]"></div>
+                <!-- หางเสียงยาว (Sustain Decay) -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-amber-300">
+                        <span>⏳ หางเสียงยาว (Decay)</span>
+                        <span id="val-decay" class="font-mono text-amber-500">2.2s</span>
+                    </div>
+                    <input id="ctrl-decay" type="range" min="5" max="40" value="22" class="w-full accent-amber-500 bg-amber-950 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- ความใสของเสียงสาย (Brightness Filter) -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-amber-300">
+                        <span>✨ โทนเสียงสาย (Tone)</span>
+                        <span id="val-tone" class="font-mono text-amber-500">สว่างใส</span>
+                    </div>
+                    <input id="ctrl-tone" type="range" min="200" max="4000" value="2200" class="w-full accent-amber-500 bg-amber-950 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- ความตึงสาย (Fine Tuning) -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-amber-300">
+                        <span>🔧 ตั้งค่าเสียงสาย (Fine Tune)</span>
+                        <span id="val-tune" class="font-mono text-amber-500">Standard</span>
+                    </div>
+                    <select id="ctrl-tune" class="w-full bg-amber-950 border border-amber-800 rounded px-1.5 py-1 text-amber-200 outline-none">
+                        <option value="C" selected>คีย์ C (มาตรฐานล้านนา)</option>
+                        <option value="D">คีย์ D (เสียงสูงกระชับ)</option>
+                        <option value="Bb">คีย์ Bb (เสียงทุ้มนุ่มลึก)</option>
+                    </select>
+                </div>
+
+                <!-- รีเซ็ตคืนค่าเริ่มต้น -->
+                <button onclick="resetToDefaults()" class="w-full py-1.5 bg-amber-900/40 hover:bg-amber-900/70 border border-amber-600/30 text-amber-300 rounded-lg text-xs font-semibold tracking-wide transition-all thai-font">
+                    🔄 คืนค่าโรงงาน
+                </button>
             </div>
-
-            <!-- พื้นที่สัมผัส (Fretboard Zones) -->
-            <div class="absolute top-0 bottom-0 w-full z-30 flex flex-col" id="fretboard">
-                <!-- Zones will be generated by JS -->
-            </div>
-
-            <!-- ลูกบิด (Tuning Peg) -->
-            <div class="absolute top-2 w-16 h-4 wood-texture rounded rotate-[-10deg] z-0 shadow-lg"></div>
         </div>
-    </main>
 
-    <!-- Controls Footer -->
-    <footer class="h-auto pb-6 pt-4 px-4 bg-gradient-to-t from-black to-transparent z-50 flex flex-col gap-3">
+        <!-- ส่วนเครื่องดนตรีกลาง (Interactive Phin Namtao Instrument) -->
+        <div class="flex-1 relative flex justify-center items-center h-full">
+            
+            <!-- วงลวดลายไทยพื้นหลัง -->
+            <div class="absolute inset-0 opacity-[0.06] pointer-events-none flex justify-center items-center scale-90">
+                <svg width="450" height="450" viewBox="0 0 100 100" fill="none" stroke="#f59e0b" stroke-width="0.8">
+                    <circle cx="50" cy="50" r="42" />
+                    <circle cx="50" cy="50" r="32" stroke-dasharray="1 2"/>
+                    <path d="M50 8 Q80 50 50 92 Q20 50 50 8" />
+                    <path d="M8 50 Q50 80 92 50 Q50 20 8 50" />
+                </svg>
+            </div>
+
+            <!-- กะโหลกน้ำเต้า (The Gourd Resonator) - แขวนอยู่ด้านหลังสุด -->
+            <div class="absolute top-[28%] w-52 h-52 rounded-[50%_50%_45%_45%_/_60%_60%_40%_40%] gourd-body z-0 transform -rotate-12 border-4 border-[#3a1d04] transition-transform duration-300" id="gourd-physical">
+                <!-- รูเสียงแกะสลักโบราณ -->
+                <div class="absolute bottom-12 left-12 w-10 h-14 bg-black rounded-full transform rotate-[-25deg] shadow-[inset_0_0_12px_rgba(0,0,0,0.95)] border border-amber-800/30"></div>
+                <!-- สายรัดกะโหลกผูกคันพิณ -->
+                <div class="absolute top-1/2 left-0 right-0 h-4 bg-[#1f0e01] opacity-90 border-y border-amber-900/40"></div>
+            </div>
+
+            <!-- คันพิณและสายแกนกลาง -->
+            <div class="relative h-[95%] w-24 flex justify-center items-center">
+                <!-- คันไม้ของพิณ (Wooden Stick Neck) -->
+                <div class="absolute top-0 bottom-0 w-8 wood-neck rounded-full z-10">
+                    <!-- ลายสลักไม้หัวท้าย -->
+                    <div class="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-amber-600 to-transparent opacity-30 rounded-t-full"></div>
+                    <div class="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black to-transparent opacity-60 rounded-b-full"></div>
+                </div>
+
+                <!-- สายพิณโลหะทองเหลืองเรืองรอง (The String) -->
+                <div id="main-string" class="absolute top-0 bottom-0 w-[4px] bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 z-20 shadow-[0_0_10px_rgba(251,191,36,0.9)] transition-all duration-75"></div>
+
+                <!-- เข็มขัดประดับคันพิณ -->
+                <div class="absolute top-24 w-10 h-2 bg-amber-600 rounded-sm z-20 opacity-85 shadow border border-amber-300/30"></div>
+                <div class="absolute bottom-24 w-10 h-2 bg-amber-600 rounded-sm z-20 opacity-85 shadow border border-amber-300/30"></div>
+
+                <!-- โซนสัมผัสคอพิณสำหรับกดเล่นโน้ตต่าง ๆ -->
+                <div class="absolute top-8 bottom-8 w-20 z-30 flex flex-col justify-between" id="fretboard">
+                    <!-- จะถูกวาดขึ้นด้วย JS ตามโน้ตล้านนา -->
+                </div>
+
+                <!-- ลูกบิดปรับเสียงไม้โบราณด้านบน -->
+                <div class="absolute top-6 w-20 h-5 wood-neck rounded-md rotate-[-12deg] z-10 shadow-xl border-t border-amber-300/20 flex justify-end px-2 items-center">
+                    <div class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"></div>
+                </div>
+            </div>
+
+            <!-- ปุ่มเปิดแผงปรับแต่งเสียงบนหน้าจอมือถือ -->
+            <button onclick="toggleAdvancedPanel()" class="md:hidden absolute left-4 bottom-4 w-10 h-10 rounded-full glass-panel flex items-center justify-center text-lg shadow-lg border border-amber-500/30 z-30">
+                ⚙️
+            </button>
+        </div>
+
+        <!-- แผงเพลงสาธิตอัตโนมัติ (Right Glass Panel) -->
+        <div class="absolute right-2 top-2 bottom-2 w-56 glass-panel rounded-2xl z-30 flex flex-col p-3 transition-all duration-300 transform translate-x-[110%] md:translate-x-0 md:static md:h-full md:m-2" id="demo-panel">
+            <div class="flex items-center justify-between mb-2 border-b border-amber-500/20 pb-1.5">
+                <span class="text-xs font-bold text-amber-400 thai-font flex items-center gap-1">
+                    🎶 บทเพลงบรรเลงสาธิต
+                </span>
+                <button onclick="toggleDemoPanel()" class="md:hidden text-xs text-amber-500 hover:text-amber-400">✖</button>
+            </div>
+
+            <div class="flex-1 flex flex-col justify-between text-xs gap-3">
+                <!-- รายชื่อเพลงบรรเลงล้านนา -->
+                <div class="space-y-2 overflow-y-auto no-scrollbar flex-1">
+                    <p class="text-[10px] text-amber-200/50">เลือกท่วงทำนองล้านนาโบราณเพื่อเปิดบรรเลงแบบแสดงโน้ตนำทางลอยฟ้า</p>
+                    
+                    <!-- เพลง 1 -->
+                    <button onclick="playDemoSong(0)" id="song-btn-0" class="w-full text-left p-2 rounded-lg bg-amber-950/40 border border-amber-800/30 hover:border-amber-500/50 hover:bg-amber-950/80 transition-all group flex flex-col gap-0.5">
+                        <span class="font-bold text-amber-200 group-hover:text-amber-400 thai-font">1. ลายลมพัดพร้าว (ต้นฉบับ)</span>
+                        <span class="text-[9px] text-amber-500">ท่วงทำนองกล่อมไพรแสนอบอุ่น</span>
+                    </button>
+                    
+                    <!-- เพลง 2 -->
+                    <button onclick="playDemoSong(1)" id="song-btn-1" class="w-full text-left p-2 rounded-lg bg-amber-950/40 border border-amber-800/30 hover:border-amber-500/50 hover:bg-amber-950/80 transition-all group flex flex-col gap-0.5">
+                        <span class="font-bold text-amber-200 group-hover:text-amber-400 thai-font">2. ลายสุดสะแนน</span>
+                        <span class="text-[9px] text-amber-500">ลายพื้นบ้านจังหวะชดช้อยสวยงาม</span>
+                    </button>
+
+                    <!-- เพลง 3 -->
+                    <button onclick="playDemoSong(2)" id="song-btn-2" class="w-full text-left p-2 rounded-lg bg-amber-950/40 border border-amber-800/30 hover:border-amber-500/50 hover:bg-amber-950/80 transition-all group flex flex-col gap-0.5">
+                        <span class="font-bold text-amber-200 group-hover:text-amber-400 thai-font">3. เพลงล่องแม่ปิง</span>
+                        <span class="text-[9px] text-amber-500">ทำนองหวานละมุนล่องนที</span>
+                    </button>
+                </div>
+
+                <!-- สถานะการบรรเลงและปุ่มหยุด -->
+                <div class="bg-black/30 p-2 rounded-lg border border-amber-950 space-y-1.5">
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-amber-400">โหมดสาธิต:</span>
+                        <span id="demo-status" class="text-amber-500 font-semibold">ไม่ได้เล่น</span>
+                    </div>
+                    <button id="stop-demo-btn" onclick="stopDemoSong()" disabled class="w-full py-1 bg-red-950/50 hover:bg-red-900 border border-red-500/30 text-red-200 rounded text-[11px] font-semibold transition-all disabled:opacity-30 disabled:pointer-events-none thai-font">
+                        🛑 หยุดการบรรเลงสาธิต
+                    </button>
+                </div>
+
+                <!-- แป้นกดจำลองการแนบหน้าอกเร่งด่วน (Interactive Chest Modulation Plate) -->
+                <div class="bg-amber-950/30 p-2 rounded-xl border border-amber-800/20">
+                    <span class="text-[10px] font-bold text-amber-400 mb-1 block thai-font text-center">🎯 แป้นสไลด์จำลองเสียงอุดหน้าอก</span>
+                    <div id="chest-pad" class="h-16 rounded-lg bg-gradient-to-b from-[#4d280b] to-[#210f01] border-2 border-amber-700/50 flex flex-col items-center justify-center cursor-pointer select-none active:scale-95 transition-all shadow-inner">
+                        <span class="text-[10px] text-amber-300 font-bold uppercase tracking-wider">Chest Modulation</span>
+                        <span class="text-[9px] text-amber-500">กดค้างเพื่อหุบเสียง (Wah effect)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ปุ่มสไลด์เปิดเพลงบนหน้าจอมือถือ -->
+            <button onclick="toggleDemoPanel()" class="md:hidden absolute right-4 bottom-4 w-10 h-10 rounded-full glass-panel flex items-center justify-center text-lg shadow-lg border border-amber-500/30 z-30">
+                🎵
+            </button>
+        </div>
+
+    </div>
+
+    <!-- แถบควบคุมเสียงดนตรีหลักด้านล่าง (Footer) -->
+    <footer class="h-auto pb-4 pt-3 px-4 bg-gradient-to-t from-black to-transparent z-40 flex flex-col gap-3">
         
-        <!-- แถบควบคุมเสียง -->
-        <div class="flex justify-center gap-4">
-            <button id="record-btn" class="flex flex-col items-center gap-1 group">
-                <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center border-2 border-slate-500 group-active:scale-95 transition-all">
-                    <div id="record-icon" class="w-4 h-4 rounded-full bg-red-500"></div>
-                </div>
-                <span class="text-xs">อัดเสียง</span>
+        <!-- แผงปุ่มควบคุมหลักสำหรับการบันทึกเสียงและตั้งค่าดนตรี -->
+        <div class="flex justify-between items-center max-w-lg mx-auto w-full gap-2">
+            
+            <!-- ปุ่มสลับการแสดงชื่อตัวโน้ต -->
+            <button id="toggle-notes" class="flex-1 max-w-[120px] py-2 px-1 bg-amber-900/60 hover:bg-amber-900/90 active:scale-95 border border-amber-500/30 rounded-xl text-xs font-semibold shadow-md transition-all flex items-center justify-center gap-1 thai-font">
+                👁️ <span id="btn-notes-text">แสดงโน้ต</span>
             </button>
 
-            <button id="play-btn" class="flex flex-col items-center gap-1 group disabled:opacity-50" disabled>
-                <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center border-2 border-slate-500 group-active:scale-95 transition-all">
-                    <svg class="w-6 h-6 text-green-400 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <span class="text-xs">เล่นเสียง</span>
-            </button>
+            <!-- แผงจัดการเสียงอัด -->
+            <div class="flex items-center justify-center gap-3 bg-black/60 px-4 py-1.5 rounded-2xl border border-amber-900/30 shadow-lg">
+                <!-- บันทึกเสียง -->
+                <button id="record-btn" class="flex flex-col items-center gap-0.5 group">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-600 group-active:scale-90 transition-all">
+                        <div id="record-icon" class="w-3.5 h-3.5 rounded-full bg-red-500"></div>
+                    </div>
+                    <span class="text-[9px] text-amber-300/80 thai-font">อัดเสียง</span>
+                </button>
 
-            <button id="download-btn" class="flex flex-col items-center gap-1 group disabled:opacity-50" disabled>
-                <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center border-2 border-slate-500 group-active:scale-95 transition-all">
-                    <svg class="w-6 h-6 text-blue-400 fill-current" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                </div>
-                <span class="text-xs">โหลด</span>
+                <!-- เล่นเสียงอัด -->
+                <button id="play-btn" class="flex flex-col items-center gap-0.5 group disabled:opacity-30 disabled:pointer-events-none" disabled>
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-600 group-active:scale-90 transition-all">
+                        <svg class="w-5 h-5 text-emerald-400 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                    <span class="text-[9px] text-amber-300/80 thai-font">ฟังเสียงอัด</span>
+                </button>
+
+                <!-- ดาวน์โหลดไฟล์เสียง -->
+                <button id="download-btn" class="flex flex-col items-center gap-0.5 group disabled:opacity-30 disabled:pointer-events-none" disabled>
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-600 group-active:scale-90 transition-all">
+                        <svg class="w-5 h-5 text-sky-400 fill-current" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    </div>
+                    <span class="text-[9px] text-amber-300/80 thai-font">เซฟไฟล์</span>
+                </button>
+            </div>
+
+            <!-- ปุ่มคู่มือสัญลักษณ์การดีด -->
+            <button onclick="showHelpModal()" class="flex-1 max-w-[90px] py-2 px-1 bg-amber-900/40 hover:bg-amber-900/70 border border-amber-800/30 rounded-xl text-xs font-semibold shadow-md transition-all flex items-center justify-center gap-1 thai-font">
+                📖 คู่มือ
             </button>
         </div>
 
-        <!-- Toggle Notes -->
-        <button id="toggle-notes" class="mx-auto px-4 py-2 bg-amber-700/80 rounded-full text-sm border border-amber-500/50 shadow-lg active:bg-amber-800 transition-colors w-full max-w-xs">
-            แสดงตำแหน่งโน้ต
-        </button>
+        <p class="text-[9px] text-center text-amber-500/40 tracking-wider">© 2026 Phin Namtao Simulator — สืบสานมรดกทางเสียงดนตรีล้านนาโบราณ</p>
     </footer>
 
-    <!-- Audio Logic Script -->
-    <script>
-        // --- การตั้งค่าเสียงและสเกล (Pentatonic Thai Style) ---
-        // พิณน้ำเต้าจริงๆ มีเสียงจำกัด แต่นี่จำลองให้เล่นได้หลายโน้ต
-        const notes = [
-            { name: "ด", note: "C4", freq: 261.63, label: "โด" },
-            { name: "ร", note: "D4", freq: 293.66, label: "เร" },
-            { name: "ม", note: "E4", freq: 329.63, label: "มี" },
-            { name: "ซ", note: "G4", freq: 392.00, label: "ซอล" },
-            { name: "ล", note: "A4", freq: 440.00, label: "ลา" },
-            { name: "ดํ", note: "C5", freq: 523.25, label: "โด (สูง)" },
-            { name: "รํ", note: "D5", freq: 587.33, label: "เร (สูง)" }
-        ].reverse(); // เรียงจากบนลงล่าง (เสียงสูงอยู่ล่างคอพิณ แต่นิยมเล่นจากบนลงล่างใน UI แนวตั้ง)
+    <!-- ป๊อปอัพคู่มือการบรรเลง (Help Modal) -->
+    <div id="help-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="glass-panel max-w-sm w-full rounded-2xl p-5 space-y-4 shadow-2xl text-amber-100">
+            <div class="flex justify-between items-center border-b border-amber-500/20 pb-2">
+                <h3 class="text-base font-bold text-amber-400 thai-font">🪕 เรียนรู้วิธีการบรรเลงพิณน้ำเต้า</h3>
+                <button onclick="hideHelpModal()" class="text-amber-500 text-lg hover:text-amber-300">✖</button>
+            </div>
+            <div class="space-y-3 text-xs leading-relaxed">
+                <p><strong>พิณน้ำเต้า</strong> คือเครื่องดนตรีโบราณล้านนาที่มีความมหัศจรรย์ในการดัดแปลงความก้องกังวานผ่านกะโหลกน้ำเต้า</p>
+                <div class="space-y-2 bg-amber-950/40 p-3 rounded-xl border border-amber-900/30">
+                    <p>👉 <strong>การเล่นแบบปกติ:</strong> แตะที่แต่ละช่วงบนสายเพื่อกำหนดโน้ตและสร้างแรงกระตุกเสียงก้อง</p>
+                    <p>👉 <strong>เอฟเฟกต์แนบหน้าอก (Wah):</strong> ลองปรับแถบสไลด์ <em>"การแนบหน้าอก"</em> หรือกดปุ่ม <em>"Chest Modulation"</em> ค้างไว้ขณะเล่น เพื่อฟังเสียงก้าวขึ้นห้วน-วูบเวหาแบบดั้งเดิม</p>
+                    <p>👉 <strong>โน้ตนำทางลอยฟ้า:</strong> กดเล่นเพลงสาธิต โน้ตเพลงจะส่องแสงเรืองสีทองและลอยขึ้นจากสายดนตรีอย่างสวยงาม</p>
+                </div>
+            </div>
+            <button onclick="hideHelpModal()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs transition-colors thai-font">
+                เข้าใจแล้ว เริ่มบรรเลงเลย!
+            </button>
+        </div>
+    </div>
 
-        // Web Audio Context
+    <!-- สคริปต์หลักจำลองระบบเสียงฟิสิกส์เชิงโครงสร้าง -->
+    <script>
+        // --- 1. ข้อมูลตัวโน้ตเพลงล้านนา (สะล้อ ซอ พิณ) ---
+        // ปรับจูนแบบเสียงดั้งเดิม (Pentatonic scale)
+        const noteScales = {
+            C: [
+                { name: "ด", note: "C4", freq: 261.63, label: "โด" },
+                { name: "ร", note: "D4", freq: 293.66, label: "เร" },
+                { name: "ม", note: "E4", freq: 329.63, label: "มี" },
+                { name: "ซ", note: "G4", freq: 392.00, label: "ซอล" },
+                { name: "ล", note: "A4", freq: 440.00, label: "ลา" },
+                { name: "ดํ", note: "C5", freq: 523.25, label: "โด (สูง)" },
+                { name: "รํ", note: "D5", freq: 587.33, label: "เร (สูง)" }
+            ].reverse(),
+            D: [
+                { name: "ร", note: "D4", freq: 293.66, label: "เร" },
+                { name: "ม", note: "E4", freq: 329.63, label: "มี" },
+                { name: "ฟ#", note: "F#4", freq: 369.99, label: "ฟาย" },
+                { name: "ล", note: "A4", freq: 440.00, label: "ลา" },
+                { name: "ที", note: "B4", freq: 493.88, label: "ที" },
+                { name: "รํ", note: "D5", freq: 587.33, label: "เร (สูง)" },
+                { name: "มํ", note: "E5", freq: 659.25, label: "มี (สูง)" }
+            ].reverse(),
+            Bb: [
+                { name: "ด", note: "Bb3", freq: 233.08, label: "โด" },
+                { name: "ร", note: "C4", freq: 261.63, label: "เร" },
+                { name: "ม", note: "D4", freq: 293.66, label: "มี" },
+                { name: "ซ", note: "F4", freq: 349.23, label: "ซอล" },
+                { name: "ล", note: "G4", freq: 392.00, label: "ลา" },
+                { name: "ดํ", note: "Bb4", freq: 466.16, label: "โด (สูง)" },
+                { name: "รํ", note: "C5", freq: 523.25, label: "เร (สูง)" }
+            ].reverse()
+        };
+
+        // เพลงสาธิตแสนสวยงาม
+        // แต่ละเพลงประกอบไปด้วยโน้ตและจังหวะ (delay เป็น ms)
+        const demoSongs = [
+            {
+                name: "ลายลมพัดพร้าว",
+                sequence: [
+                    { noteIndex: 3, duration: 400 }, // ซอล
+                    { noteIndex: 2, duration: 400 }, // มี
+                    { noteIndex: 1, duration: 400 }, // เร
+                    { noteIndex: 0, duration: 600 }, // โด
+                    { noteIndex: 1, duration: 400 }, // เร
+                    { noteIndex: 2, duration: 400 }, // มี
+                    { noteIndex: 3, duration: 800 }, // ซอล (ลากยาว)
+                    { noteIndex: 4, duration: 400 }, // ลา
+                    { noteIndex: 5, duration: 400 }, // โด (สูง)
+                    { noteIndex: 6, duration: 400 }, // เร (สูง)
+                    { noteIndex: 5, duration: 400 }, // โด (สูง)
+                    { noteIndex: 4, duration: 400 }, // ลา
+                    { noteIndex: 3, duration: 800 }  // ซอล
+                ]
+            },
+            {
+                name: "ลายสุดสะแนน",
+                sequence: [
+                    { noteIndex: 4, duration: 300 },
+                    { noteIndex: 3, duration: 300 },
+                    { noteIndex: 4, duration: 300 },
+                    { noteIndex: 5, duration: 500 },
+                    { noteIndex: 3, duration: 300 },
+                    { noteIndex: 2, duration: 300 },
+                    { noteIndex: 3, duration: 300 },
+                    { noteIndex: 4, duration: 500 },
+                    { noteIndex: 1, duration: 300 },
+                    { noteIndex: 0, duration: 300 },
+                    { noteIndex: 1, duration: 300 },
+                    { noteIndex: 2, duration: 600 }
+                ]
+            },
+            {
+                name: "เพลงล่องแม่ปิง",
+                sequence: [
+                    { noteIndex: 2, duration: 450 }, // มี
+                    { noteIndex: 3, duration: 450 }, // ซอล
+                    { noteIndex: 4, duration: 450 }, // ลา
+                    { noteIndex: 5, duration: 900 }, // โดสูง
+                    { noteIndex: 4, duration: 450 }, // ลา
+                    { noteIndex: 5, duration: 450 }, // โดสูง
+                    { noteIndex: 4, duration: 450 }, // ลา
+                    { noteIndex: 3, duration: 900 }, // ซอล
+                    { noteIndex: 2, duration: 450 }, // มี
+                    { noteIndex: 1, duration: 450 }, // เร
+                    { noteIndex: 2, duration: 450 }, // มี
+                    { noteIndex: 3, duration: 900 }  // ซอล
+                ]
+            }
+        ];
+
+        let currentScale = "C";
+        let activeNotes = noteScales[currentScale];
+
+        // Web Audio Context & Node configuration
         let audioCtx;
         let masterGain;
-        let dest; // For recording
+        let mainDelayNode; // เพื่อสร้างเสียงสะท้อนตู้ไม้
+        let mainDelayGain;
+        let recorderDestination;
         let mediaRecorder;
         let recordedChunks = [];
-        let audioBlob;
-        let audioUrl;
-        
-        // UI Elements
+        let recordedAudioUrl = null;
+        let currentDemoTimeout = null;
+        let activeDemoSongIndex = null;
+        let isRecording = false;
+        let showNotes = true;
+        let isModulatingChest = false;
+
+        // UI DOM Elements
         const fretboard = document.getElementById('fretboard');
         const mainString = document.getElementById('main-string');
         const toggleNotesBtn = document.getElementById('toggle-notes');
+        const btnNotesText = document.getElementById('btn-notes-text');
         const statusText = document.getElementById('status-text');
-        
-        // Recording UI
+        const statusDot = document.getElementById('status-dot');
+        const gourdPhysical = document.getElementById('gourd-physical');
+        const chestPad = document.getElementById('chest-pad');
+
+        // Controllers
+        const ctrlResonance = document.getElementById('ctrl-resonance');
+        const ctrlChest = document.getElementById('ctrl-chest');
+        const ctrlDecay = document.getElementById('ctrl-decay');
+        const ctrlTone = document.getElementById('ctrl-tone');
+        const ctrlTune = document.getElementById('ctrl-tune');
+
+        const valResonance = document.getElementById('val-resonance');
+        const valChest = document.getElementById('val-chest');
+        const valDecay = document.getElementById('val-decay');
+        const valTone = document.getElementById('val-tone');
+
+        // Recording Buttons
         const recordBtn = document.getElementById('record-btn');
         const recordIcon = document.getElementById('record-icon');
         const playBtn = document.getElementById('play-btn');
         const downloadBtn = document.getElementById('download-btn');
-        let isRecording = false;
 
-        let showNotes = false;
-
-        // --- 1. สร้าง Fretboard (โซนกด) ---
-        function createFretboard() {
-            fretboard.innerHTML = '';
-            notes.forEach((note, index) => {
-                const zone = document.createElement('div');
-                zone.className = 'fret-zone flex-1 flex items-center justify-center border-b border-white/5 relative cursor-pointer';
-                zone.dataset.freq = note.freq;
-                zone.dataset.index = index;
-                
-                // ป้ายบอกโน้ต (ซ่อนอยู่)
-                const label = document.createElement('span');
-                label.className = `note-label text-amber-300 font-bold text-lg drop-shadow-md opacity-0 transition-opacity duration-300 pointer-events-none`;
-                label.innerText = note.label;
-                zone.appendChild(label);
-
-                // Event Listeners for Touch/Click
-                const playHandler = (e) => {
-                    e.preventDefault(); // Prevent scrolling
-                    playTone(note.freq);
-                    visualizeString();
-                    zone.classList.add('active');
-                    setTimeout(() => zone.classList.remove('active'), 150);
-                };
-
-                zone.addEventListener('touchstart', playHandler, { passive: false });
-                zone.addEventListener('mousedown', playHandler);
-
-                fretboard.appendChild(zone);
-            });
-        }
-
-        // --- 2. ระบบเสียง (Synthesizer) ---
-        function initAudio() {
+        // --- 2. การสร้างเสียงสังเคราะห์ฟิสิกส์ของพิณ (Phin Physical Modeling Synthesizer) ---
+        function initAudioContext() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
                 
-                // Master Gain (Volume)
+                // Master Volume
                 masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.8;
+                masterGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
                 masterGain.connect(audioCtx.destination);
 
-                // Setup Recording Stream
-                dest = audioCtx.createMediaStreamDestination();
-                masterGain.connect(dest);
+                // ตู้เสียงจำลองน้ำเต้าสะท้อน (Delay & Comb resonance effect)
+                mainDelayNode = audioCtx.createDelay(1.0);
+                mainDelayGain = audioCtx.createGain();
+                
+                // กำหนดดีเลย์จังหวะละเอียดเพื่อให้เกิด Acoustic resonance สะท้อนในกล่องไม้
+                mainDelayNode.delayTime.setValueAtTime(0.045, audioCtx.currentTime); // 45ms resonance
+                mainDelayGain.gain.setValueAtTime(parseFloat(ctrlResonance.value) / 100 * 0.45, audioCtx.currentTime);
+
+                // เชื่อมสายแบบฟีดแบ็กกึกก้อง
+                mainDelayNode.connect(mainDelayGain);
+                mainDelayGain.connect(mainDelayNode);
+                mainDelayGain.connect(masterGain);
+
+                // เชื่อมเพื่ออัดเสียง
+                recorderDestination = audioCtx.createMediaStreamDestination();
+                masterGain.connect(recorderDestination);
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        function playTone(freq) {
-            initAudio();
+        // อัปเดตและแสดงค่าปรับแต่งต่าง ๆ แบบ Realtime
+        function updatePhysicalControls() {
+            // Resonance
+            const resonanceLevel = parseFloat(ctrlResonance.value);
+            valResonance.innerText = resonanceLevel + "%";
+            if (mainDelayGain) {
+                mainDelayGain.gain.setValueAtTime((resonanceLevel / 100) * 0.45, audioCtx.currentTime);
+            }
 
-            const t = audioCtx.currentTime;
-            
-            // Oscillator 1: Triangle (ตัวหลัก ให้เนื้อเสียง)
-            const osc1 = audioCtx.createOscillator();
-            osc1.type = 'triangle';
-            osc1.frequency.value = freq;
+            // Chest Press (Modulation of formant filter)
+            const chestVal = ctrlChest.value;
+            if (chestVal === "0" || isModulatingChest) {
+                valChest.innerText = "กำลังอุดเสียง";
+                gourdPhysical.style.transform = "scale(0.92) rotate(-14deg)";
+            } else {
+                valChest.innerText = chestVal + "mm";
+                gourdPhysical.style.transform = `scale(${0.9 + (chestVal/200)}) rotate(-10deg)`;
+            }
 
-            // Oscillator 2: Sawtooth (เพิ่มความแหลม/คมของสาย)
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = 'sawtooth';
-            osc2.frequency.value = freq;
-            // Detune เล็กน้อยเพื่อความเป็นธรรมชาติ
-            osc2.detune.value = 5; 
+            // Decay Time
+            valDecay.innerText = (parseFloat(ctrlDecay.value) / 10).toFixed(1) + "s";
 
-            // Gain Envelope (การดีดและหางเสียง)
-            const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(1, t + 0.02); // Attack เร็ว (เสียงดีด)
-            gainNode.gain.exponentialRampToValueAtTime(0.001, t + 1.5); // Decay ยาวหน่อยแบบพิณ
-
-            // Filter (Lowpass) จำลองความทึบของกะโหลกน้ำเต้า
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(3000, t);
-            filter.frequency.exponentialRampToValueAtTime(500, t + 1); // เสียงค่อยๆ ทึบลงตอนหางเสียง
-
-            // เชื่อมต่อ
-            osc1.connect(filter);
-            osc2.connect(filter); // ผสม 2 osc เข้า filter
-            filter.connect(gainNode);
-            gainNode.connect(masterGain);
-
-            osc1.start(t);
-            osc2.start(t);
-            osc1.stop(t + 2);
-            osc2.stop(t + 2);
-            
-            // Cleanup nodes after playing
-            setTimeout(() => {
-                osc1.disconnect();
-                osc2.disconnect();
-                gainNode.disconnect();
-                filter.disconnect();
-            }, 2000);
+            // Tone Quality
+            const toneVal = parseInt(ctrlTone.value);
+            if (toneVal < 800) valTone.innerText = "นุ่มนวล ทึบ";
+            else if (toneVal < 1800) valTone.innerText = "ละมุนกลมกล่อม";
+            else if (toneVal < 3000) valTone.innerText = "สว่างใส";
+            else valTone.innerText = "แหลมคมพุ่ง";
         }
 
-        // --- 3. Visual & Interaction Logic ---
-        function visualizeString() {
-            // Remove class to reset animation
-            mainString.classList.remove('string-vibrate');
-            void mainString.offsetWidth; // Trigger reflow
-            mainString.classList.add('string-vibrate');
+        // แลกเปลี่ยนค่าตั้งต้น (Reset)
+        function resetToDefaults() {
+            ctrlResonance.value = 75;
+            ctrlChest.value = 45;
+            ctrlDecay.value = 22;
+            ctrlTone.value = 2200;
+            ctrlTune.value = "C";
+            currentScale = "C";
+            activeNotes = noteScales["C"];
+            isModulatingChest = false;
+
+            createFretboardUI();
+            updatePhysicalControls();
             
-            // Remove after animation ends
+            statusText.innerText = "คืนค่าโรงงานเรียบร้อย";
+            statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
             setTimeout(() => {
-                mainString.classList.remove('string-vibrate');
-            }, 200);
+                statusText.innerText = "พร้อมบรรเลง";
+            }, 1500);
+        }
+
+        // ฟังเหตุการณ์ปรับค่าของแป้นสไลด์แบบสด
+        [ctrlResonance, ctrlChest, ctrlDecay, ctrlTone].forEach(ctrl => {
+            ctrl.addEventListener('input', updatePhysicalControls);
+        });
+
+        ctrlTune.addEventListener('change', (e) => {
+            currentScale = e.target.value;
+            activeNotes = noteScales[currentScale];
+            createFretboardUI();
+            statusText.innerText = "เปลี่ยนคีย์เสียงเป็น " + currentScale;
+            setTimeout(() => { statusText.innerText = "พร้อมบรรเลง"; }, 1500);
+        });
+
+        // สังเคราะห์คลื่นเสียงพิณน้ำเต้าจำลอง
+        function playPhinSound(freq) {
+            initAudioContext();
+            
+            const now = audioCtx.currentTime;
+            
+            // 1. Excitation Noise Pluck (เสียงรัดสะกิดสายจากปลายนิ้ว)
+            // สร้างคลื่นเสียงระเบิดเสียงพุ่งสั้น ๆ เพื่อเลียนแบบการดีดทองเหลืองด้วยเล็บ
+            const pluckOsc = audioCtx.createOscillator();
+            const pluckGain = audioCtx.createGain();
+            pluckOsc.type = "sine";
+            pluckOsc.frequency.setValueAtTime(freq * 1.5, now);
+            pluckOsc.frequency.exponentialRampToValueAtTime(freq, now + 0.05);
+
+            pluckGain.gain.setValueAtTime(0.7, now);
+            pluckGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+            // 2. Main Warm String Waveform (คลื่นเสียงอุ่นหลักผสมความแหลมคม)
+            const stringOsc1 = audioCtx.createOscillator();
+            stringOsc1.type = "triangle"; // ให้มิติมวลเสียงนุ่มของกล่องน้ำเต้า
+            stringOsc1.frequency.setValueAtTime(freq, now);
+
+            const stringOsc2 = audioCtx.createOscillator();
+            stringOsc2.type = "sawtooth"; // เพิ่มความแหลมสั่นของสายทองเหลือง
+            stringOsc2.frequency.setValueAtTime(freq + 1.2, now); // Detuned เล็กน้อยเพื่อความมีชีวิตชีวา
+
+            // 3. Acoustic Filter (กะโหลกปิดเปิดหน้าอก)
+            // ฟิลเตอร์ประเภท Bandpass และ Lowpass ผสมกันเพื่อเลียนแบบเสียงก้องกล่องน้ำเต้า
+            const resonantFilter = audioCtx.createBiquadFilter();
+            resonantFilter.type = "bandpass";
+            
+            // หากมีการกดหน้าอก หรือกดปุ่ม Modulator ค้าง ความถี่ Resonance จะต่ำและหุบลงทันทีแบบเสียง "วาว"
+            const resonanceFreqCenter = isModulatingChest ? 380 : parseInt(ctrlTone.value);
+            const resonanceQ = isModulatingChest ? 8.0 : (parseFloat(ctrlResonance.value) / 15);
+            
+            resonantFilter.frequency.setValueAtTime(resonanceFreqCenter, now);
+            // สร้าง Dynamic Envelope ของ Filter ตอนสายเริ่มสั่นแล้วสงบลง
+            resonantFilter.frequency.exponentialRampToValueAtTime(resonanceFreqCenter * 0.45, now + 0.6);
+            resonantFilter.Q.setValueAtTime(resonanceQ, now);
+
+            // 4. Amplitude Envelope
+            const stringGain = audioCtx.createGain();
+            const decayTime = parseFloat(ctrlDecay.value) / 10;
+            stringGain.gain.setValueAtTime(0.0, now);
+            stringGain.gain.linearRampToValueAtTime(0.65, now + 0.015); // ดีดไวมาก
+            stringGain.gain.exponentialRampToValueAtTime(0.001, now + decayTime); // คลี่คลายตามเวลาปรับแต่ง
+
+            // เชื่อมผสานสายสัญญาน
+            pluckOsc.connect(pluckGain);
+            pluckGain.connect(resonantFilter);
+
+            stringOsc1.connect(resonantFilter);
+            stringOsc2.connect(resonantFilter);
+            
+            resonantFilter.connect(stringGain);
+            stringGain.connect(masterGain);
+            
+            // เชื่อมต่อเข้าสู่ตู้ดีเลย์สะท้อนก้องเสียงภายในกะโหลก
+            if (mainDelayNode) {
+                stringGain.connect(mainDelayNode);
+            }
+
+            // เริ่มการสั่นเสียงคายพลังงาน
+            pluckOsc.start(now);
+            stringOsc1.start(now);
+            stringOsc2.start(now);
+
+            pluckOsc.stop(now + 0.1);
+            stringOsc1.stop(now + decayTime + 0.2);
+            stringOsc2.stop(now + decayTime + 0.2);
+
+            // คืนค่าเก็บกวาด Nodes เพื่อประหยัดหน่วยความจำ
+            setTimeout(() => {
+                pluckOsc.disconnect();
+                pluckGain.disconnect();
+                stringOsc1.disconnect();
+                stringOsc2.disconnect();
+                resonantFilter.disconnect();
+                stringGain.disconnect();
+            }, (decayTime + 0.5) * 1000);
+        }
+
+        // --- 3. การสร้างหน้ากาก UI โซนเล่น และปฏิสัมพันธ์ (Interactive Mechanics) ---
+        function createFretboardUI() {
+            fretboard.innerHTML = '';
+            activeNotes.forEach((item, index) => {
+                const zone = document.createElement('div');
+                // จัดสัดส่วนให้เล่นง่ายพอดีนิ้ว
+                zone.className = 'fret-zone flex-1 flex items-center justify-center border-b border-amber-500/10 relative cursor-pointer';
+                zone.dataset.freq = item.freq;
+                zone.dataset.index = index;
+
+                // ตัวแสดงผลตัวโน้ต
+                const label = document.createElement('span');
+                label.className = `note-label text-amber-200 font-bold text-md tracking-wider thai-font bg-amber-950/80 border border-amber-500/30 w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 pointer-events-none ${showNotes ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`;
+                label.innerText = item.name;
+                zone.appendChild(label);
+
+                // ฟังก์ชั่นประมวลผลการดีดพุ่ง
+                const playTrigger = (e) => {
+                    e.preventDefault();
+                    triggerPluckAtZone(zone, item.freq, item.name);
+                };
+
+                // รองรับ Multi-touch สมบูรณ์ลื่นไหล
+                zone.addEventListener('touchstart', playTrigger, { passive: false });
+                zone.addEventListener('mousedown', playTrigger);
+
+                fretboard.appendChild(zone);
+            });
+        }
+
+        // ฟังก์ชั่นสร้างแรงสั่นสะเทือนทางสายและการแสดงโน้ตพวยพุ่งขึ้นฟ้า
+        function triggerPluckAtZone(zoneElement, frequency, noteName) {
+            playPhinSound(frequency);
+            
+            // บังคับสั่นสะเทือนสายเหล็กเรืองแสง
+            mainString.classList.remove('string-vibrate');
+            void mainString.offsetWidth; // บังคับเว็บเบราว์เซอร์ให้รีเซ็ตสถานะกระตุ้นเฟรม
+            mainString.classList.add('string-vibrate');
+
+            // เพิ่มคลาสสีทองที่ปุ่มสัมผัสชั่วขณะ
+            zoneElement.classList.add('active');
+            setTimeout(() => zoneElement.classList.remove('active'), 250);
+
+            // พ่นตัวโน้ตลอยประกายสีทองขึ้นฟ้า
+            createFloatingNoteElement(zoneElement, noteName);
+        }
+
+        // พ่นเอฟเฟกต์ตัวโน้ตโบยบิน
+        function createFloatingNoteElement(parentZone, noteText) {
+            const rect = parentZone.getBoundingClientRect();
+            const floatNode = document.createElement('div');
+            floatNode.className = 'floating-note thai-font text-amber-400 font-extrabold text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.9)] bg-black/60 px-2 py-1 rounded-lg border border-amber-500/40';
+            floatNode.innerText = noteText;
+            
+            // สุ่มพิกัดแกน X เล็กน้อย เพื่อให้ดูลอยกระจายตัวแบบธรรมชาติ
+            const randomX = Math.random() * 60 - 30;
+            floatNode.style.left = `calc(50% + ${randomX}px)`;
+            floatNode.style.top = `${rect.top + (rect.height / 2)}px`;
+
+            document.body.appendChild(floatNode);
+
+            // เคลียร์ทิ้งหลังจบบทวิถีโบยบิน
+            setTimeout(() => {
+                floatNode.remove();
+            }, 2200);
+        }
+
+        // --- 4. ควบคุมการแนบหน้าอกเร่งด่วน (Chest Modulator Interactive) ---
+        function pressChestModulator() {
+            isModulatingChest = true;
+            updatePhysicalControls();
+        }
+
+        function releaseChestModulator() {
+            isModulatingChest = false;
+            updatePhysicalControls();
+        }
+
+        // ฟังเหตุการณ์ทั้งแตะและคลิกสำหรับแผ่นประคองอก
+        chestPad.addEventListener('mousedown', pressChestModulator);
+        chestPad.addEventListener('mouseup', releaseChestModulator);
+        chestPad.addEventListener('mouseleave', releaseChestModulator);
+
+        chestPad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            pressChestModulator();
+        }, { passive: false });
+        chestPad.addEventListener('touchend', releaseChestModulator);
+
+        // --- 5. ระบบอัดบรรเลงและการจัดเก็บไฟล์เสียงคุณภาพสูง ---
+        recordBtn.addEventListener('click', () => {
+            initAudioContext();
+            if (!isRecording) {
+                startRecordingSession();
+            } else {
+                stopRecordingSession();
+            }
+        });
+
+        function startRecordingSession() {
+            recordedChunks = [];
+            const supportedType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+            
+            try {
+                mediaRecorder = new MediaRecorder(recorderDestination.stream, { mimeType: supportedType });
+            } catch (e) {
+                statusText.innerText = "เบราว์เซอร์ไม่รองรับการอัดเสียง";
+                return;
+            }
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) recordedChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(recordedChunks, { type: supportedType });
+                recordedAudioUrl = URL.createObjectURL(audioBlob);
+                
+                // ปลดล็อกปุ่มฟังเสียงอัดและแชร์ออกภายนอก
+                playBtn.disabled = false;
+                downloadBtn.disabled = false;
+                
+                statusText.innerText = "บันทึกและพร้อมดาวน์โหลด";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+
+            // ปรับสีสันของปุ่มสัญลักษณ์อัดเสียงให้เป็นวงจังหวะชีพจรสีแดงสลัวเร้าอารมณ์
+            recordIcon.classList.replace('bg-red-500', 'bg-white');
+            recordIcon.classList.add('rounded-sm');
+            recordBtn.querySelector('div').classList.add('recording-active');
+            
+            statusText.innerText = "กำลังอัดสัญญานเสียง...";
+            statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500 animate-ping";
+
+            playBtn.disabled = true;
+            downloadBtn.disabled = true;
+        }
+
+        function stopRecordingSession() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+
+                recordIcon.classList.replace('bg-white', 'bg-red-500');
+                recordIcon.classList.remove('rounded-sm');
+                recordBtn.querySelector('div').classList.remove('recording-active');
+            }
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (recordedAudioUrl) {
+                const audio = new Audio(recordedAudioUrl);
+                statusText.innerText = "กำลังเล่นเสียงบันทึกของคุณ...";
+                audio.play();
+                audio.onended = () => {
+                    statusText.innerText = "พร้อมบรรเลง";
+                };
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (recordedAudioUrl) {
+                const link = document.createElement('a');
+                link.style.display = 'none';
+                link.href = recordedAudioUrl;
+                link.download = `พิณน้ำเต้า_${new Date().toLocaleDateString().replace(/\//g, '-')}.webm`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                statusText.innerText = "เซฟลงอุปกรณ์สำเร็จ";
+            }
+        });
+
+        // --- 6. ระบบเพลงสาธิตเล่นอัตโนมัติพร้อมวิถีโน้ตลอยฟ้ากระเพื่อมไหว (Autoplay) ---
+        function playDemoSong(songIndex) {
+            initAudioContext();
+            stopDemoSong(); // หยุดเพลงปัจจุบันก่อนถ้าหากรันอยู่
+            
+            const song = demoSongs[songIndex];
+            activeDemoSongIndex = songIndex;
+            document.getElementById('demo-status').innerText = song.name;
+            document.getElementById('stop-demo-btn').disabled = false;
+            
+            // อัปเดตสไตล์ของปุ่มเพลงปัจจุบันให้เรืองแสงบ่งบอกการทำหน้าที่
+            for (let i = 0; i < demoSongs.length; i++) {
+                const btn = document.getElementById(`song-btn-${i}`);
+                if (i === songIndex) {
+                    btn.classList.add('border-amber-400', 'bg-amber-900/60');
+                } else {
+                    btn.classList.remove('border-amber-400', 'bg-amber-900/60');
+                }
+            }
+
+            statusText.innerText = `กำลังสาธิต: ${song.name}`;
+            
+            let noteStep = 0;
+            
+            function scheduleNextNote() {
+                if (noteStep >= song.sequence.length) {
+                    // เล่นเพลงจนจบสมบูรณ์แบบ
+                    setTimeout(() => {
+                        stopDemoSong();
+                        statusText.innerText = "การสาธิตจบบรรเลงแล้ว";
+                        setTimeout(() => { statusText.innerText = "พร้อมบรรเลง"; }, 1500);
+                    }, 1000);
+                    return;
+                }
+
+                const currentAction = song.sequence[noteStep];
+                // แปลงทรานสเฟอร์อินเด็กซ์ของโน้ตปัจจุบัน
+                const zoneTarget = fretboard.children[currentAction.noteIndex];
+                if (zoneTarget) {
+                    const freq = parseFloat(zoneTarget.dataset.freq);
+                    const noteLabelText = activeNotes[currentAction.noteIndex].name;
+                    
+                    // บรรเลงเสียงจริงและเปิดทิศทางลอยฟ้าพ้นยอดคัน
+                    triggerPluckAtZone(zoneTarget, freq, noteLabelText);
+                }
+
+                noteStep++;
+                // วางแผนจังหวะขยับเล่นโน้ตตัวต่อไปตามเวลาหน่วง
+                currentDemoTimeout = setTimeout(scheduleNextNote, currentAction.duration);
+            }
+
+            // เริ่มดีดโน้ตท่วงทำนองตัวแรกสุด
+            scheduleNextNote();
+        }
+
+        function stopDemoSong() {
+            if (currentDemoTimeout) {
+                clearTimeout(currentDemoTimeout);
+                currentDemoTimeout = null;
+            }
+            if (activeDemoSongIndex !== null) {
+                const btn = document.getElementById(`song-btn-${activeDemoSongIndex}`);
+                if (btn) btn.classList.remove('border-amber-400', 'bg-amber-900/60');
+            }
+            activeDemoSongIndex = null;
+            document.getElementById('demo-status').innerText = "ไม่ได้เล่น";
+            document.getElementById('stop-demo-btn').disabled = true;
+            statusText.innerText = "พร้อมบรรเลง";
+        }
+
+        // --- 7. การควบคุมสลับแผงจอและคู่มือเรียนรู้เบื้องต้น ---
+        function toggleAdvancedPanel() {
+            const panel = document.getElementById('advanced-panel');
+            panel.classList.toggle('-translate-x-[110%]');
+        }
+
+        function toggleDemoPanel() {
+            const panel = document.getElementById('demo-panel');
+            panel.classList.toggle('translate-x-[110%]');
         }
 
         toggleNotesBtn.addEventListener('click', () => {
             showNotes = !showNotes;
             const labels = document.querySelectorAll('.note-label');
-            labels.forEach(l => {
-                l.style.opacity = showNotes ? '1' : '0';
+            labels.forEach(lbl => {
+                if (showNotes) {
+                    lbl.classList.remove('opacity-0', 'scale-75');
+                    lbl.classList.add('opacity-100', 'scale-100');
+                } else {
+                    lbl.classList.remove('opacity-100', 'scale-100');
+                    lbl.classList.add('opacity-0', 'scale-75');
+                }
             });
-            toggleNotesBtn.innerText = showNotes ? 'ซ่อนตำแหน่งโน้ต' : 'แสดงตำแหน่งโน้ต';
-            toggleNotesBtn.classList.toggle('bg-amber-600');
+            btnNotesText.innerText = showNotes ? 'ซ่อนโน้ต' : 'แสดงโน้ต';
+            toggleNotesBtn.classList.toggle('bg-amber-800');
         });
 
-        // --- 4. Recording Logic ---
-        recordBtn.addEventListener('click', () => {
-            initAudio(); // Ensure context is ready
-            
-            if (!isRecording) {
-                // Start Recording
-                startRecording();
-            } else {
-                // Stop Recording
-                stopRecording();
-            }
-        });
-
-        function startRecording() {
-            recordedChunks = [];
-            
-            // Check browser support for types
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-            
-            try {
-                mediaRecorder = new MediaRecorder(dest.stream, { mimeType: mimeType });
-            } catch (e) {
-                statusText.innerText = "ไม่รองรับการอัดเสียงบน Browser นี้";
-                return;
-            }
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                audioBlob = new Blob(recordedChunks, { type: mimeType });
-                audioUrl = URL.createObjectURL(audioBlob);
-                playBtn.disabled = false;
-                downloadBtn.disabled = false;
-                statusText.innerText = "บันทึกเสร็จสิ้น";
-            };
-
-            mediaRecorder.start();
-            isRecording = true;
-            
-            // UI Updates
-            recordIcon.classList.replace('bg-red-500', 'bg-white');
-            recordIcon.classList.replace('rounded-full', 'rounded-sm'); // Square stop icon
-            recordBtn.querySelector('div').classList.add('recording-pulse', 'border-red-500');
-            statusText.innerText = "กำลังบันทึก...";
-            
-            // Disable play/download while recording
-            playBtn.disabled = true;
-            downloadBtn.disabled = true;
+        // เปิด-ปิด ป๊อปอัปคู่มือผู้เล่นใหม่
+        function showHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
         }
 
-        function stopRecording() {
-            mediaRecorder.stop();
-            isRecording = false;
-
-            // UI Updates
-            recordIcon.classList.replace('bg-white', 'bg-red-500');
-            recordIcon.classList.replace('rounded-sm', 'rounded-full');
-            recordBtn.querySelector('div').classList.remove('recording-pulse', 'border-red-500');
+        function hideHelpModal() {
+            document.getElementById('help-modal').classList.add('hidden');
         }
 
-        playBtn.addEventListener('click', () => {
-            if (audioUrl) {
-                const audio = new Audio(audioUrl);
-                statusText.innerText = "กำลังเล่นเสียงที่อัด...";
-                audio.play();
-                audio.onended = () => statusText.innerText = "พร้อมใช้งาน";
-            }
-        });
+        // --- 8. เริ่มต้นการทำงาน (Initialization) ---
+        createFretboardUI();
+        updatePhysicalControls();
 
-        downloadBtn.addEventListener('click', () => {
-            if (audioUrl) {
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = audioUrl;
-                a.download = `phin-namtao-${new Date().getTime()}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                statusText.innerText = "ดาวน์โหลดแล้ว";
-            }
-        });
-
-        // Initialize
-        createFretboard();
-
-        // Prevent Context Menu on long press
-        window.oncontextmenu = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
+        // ป้องกัน Context menu บดบังขณะกดค้างบนระบบสัมผัสสมาร์ตโฟน
+        window.oncontextmenu = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             return false;
         };
 
+        // ตรวจสอบและรีเซ็ตค่าทุุกครั้งที่โหลดแอปพลิเคชันเพื่อความสดใหม่คงรูปเดิม
+        window.onload = function() {
+            resetToDefaults();
+        };
     </script>
 </body>
 </html>
