@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ขิมไทยเสมือนจริง Pro (2 Columns Layout)</title>
+    <title>ขิมไทยเสมือนจริง Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
-        /* Base Settings */
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
+        
         body {
             touch-action: manipulation;
             -webkit-user-select: none;
@@ -15,316 +16,239 @@
             overflow: hidden;
             height: 100dvh; 
             font-family: 'Sarabun', sans-serif;
+            background-color: #0c0a09; /* stone-950 */
         }
         
         .wood-pattern {
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #2e1a0f 10px, #2e1a0f 20px);
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(46, 26, 15, 0.4) 10px, rgba(46, 26, 15, 0.4) 20px);
         }
 
-        /* Animations */
         .string-active {
-            background-color: #fde68a !important;
-            box-shadow: 0 0 10px #fbbf24 !important;
+            background-color: #fde68a !important; /* amber-200 */
+            box-shadow: 0 0 15px #f59e0b !important; /* amber-500 */
+            filter: brightness(1.2);
         }
 
         .cap-active {
-            transform: scale(0.9);
-            background-color: #fbbf24 !important;
-            color: black !important;
-            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.5) !important;
+            transform: scale(0.85);
+            background-color: #d97706 !important; /* amber-600 */
+            color: #0c0a09 !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.9) !important;
         }
 
-        ::-webkit-scrollbar { display: none; }
+        .playing-auto-cap {
+            background-color: #0284c7 !important; /* sky-600 */
+            color: #ffffff !important;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.9) !important;
+            transform: scale(0.9);
+        }
+
+        ::-webkit-scrollbar { width: 0px; height: 0px; }
+        
+        /* Drawer transitions */
+        .drawer-open { transform: translateX(0%); }
+        .drawer-closed { transform: translateX(100%); }
     </style>
 </head>
-<body class="bg-stone-900 flex flex-col font-sans text-stone-200 overflow-hidden fixed inset-0 w-full">
+<body class="flex flex-col text-stone-200 w-full relative">
 
-    <!-- Header -->
-    <div class="flex-none w-full bg-stone-800 p-3 md:p-4 shadow-lg z-30 flex items-center justify-between gap-2 border-b border-stone-700">
-        <div class="flex items-center gap-2">
-            <i class="ph-fill ph-music-notes text-amber-500 text-xl md:text-2xl"></i>
-            <h1 class="text-lg md:text-2xl font-bold text-amber-50 text-nowrap">ขิมไทย Pro</h1>
+    <!-- Header Controls: ดีไซน์ให้บางกะทัดรัดสำหรับจอแนวตั้ง -->
+    <header class="flex-none w-full bg-stone-900/95 p-2 md:p-3 shadow-lg z-30 flex items-center justify-between gap-1.5 border-b border-stone-800 relative">
+        <div class="flex items-center gap-1">
+            <i class="ph-fill ph-music-notes text-amber-500 text-lg md:text-xl"></i>
+            <h1 class="text-xs md:text-lg font-bold text-amber-50 whitespace-nowrap">ขิม Pro</h1>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-3">
-            <!-- Loading Indicator -->
-            <div id="preload-status" class="hidden flex items-center gap-2 text-xs text-amber-400 bg-stone-900/50 px-3 py-1 rounded-full border border-amber-500/30">
-                <i class="ph-bold ph-spinner animate-spin"></i>
-                <span id="preload-text">Loading...</span>
+        <!-- ชุดควบคุมระบบเล่นเพลงอัตโนมัติบน Header -->
+        <div class="flex items-center gap-1 bg-stone-950/80 border border-stone-800 p-1 rounded-lg">
+            <select id="select-song" onchange="loadSelectedSong()" class="bg-transparent text-[10px] md:text-xs text-amber-200 focus:outline-none w-20 sm:w-28 md:w-40 truncate cursor-pointer pl-0.5">
+                <!-- รายชื่อเพลงจะถูกโหลดโดย JS -->
+            </select>
+            <button id="btn-play-song" onclick="toggleSongPlayback()" class="w-6 h-6 sm:w-7 sm:h-7 rounded text-stone-950 bg-amber-500 hover:bg-amber-400 flex items-center justify-center transition-all active:scale-90" title="บรรเลง/หยุดพัก">
+                <i class="ph-bold ph-play text-xs sm:text-sm"></i>
+            </button>
+            <button id="btn-stop-song" onclick="stopSongPlayback()" class="w-6 h-6 sm:w-7 sm:h-7 rounded text-stone-300 bg-stone-800 hover:bg-stone-700 flex items-center justify-center transition-all active:scale-90" title="หยุด">
+                <i class="ph-bold ph-stop text-xs sm:text-sm"></i>
+            </button>
+        </div>
+
+        <!-- เครื่องมือจัดการเสียงและบันทึกเพลง -->
+        <div class="flex items-center gap-1 sm:gap-1.5">
+            <button id="btn-labels" onclick="toggleLabels()" class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-amber-600/90 hover:bg-amber-600 text-white transition-all active:scale-90 flex items-center justify-center" title="ซ่อน/แสดง โน้ต">
+                <i class="ph-bold ph-text-t text-xs sm:text-sm"></i>
+            </button>
+
+            <!-- ปุ่มบันทึกเสียง -->
+            <button id="btn-record" onclick="toggleRecording()" class="w-6 h-6 sm:w-auto sm:px-2.5 sm:py-1 rounded-full flex items-center justify-center gap-1 bg-stone-800 hover:bg-stone-700 text-stone-200 active:scale-90 border border-stone-700" title="อัดเสียง">
+                <i class="ph-bold ph-microphone text-xs sm:text-sm"></i> 
+                <span id="text-record" class="hidden md:inline text-xs">อัดเสียง</span>
+            </button>
+
+            <!-- ปุ่มเปิดปิดแผงควบคุมหลัก -->
+            <button onclick="toggleSettingsPanel()" class="px-2 py-1 rounded-full flex items-center justify-center gap-1 bg-stone-800 hover:bg-stone-700 text-amber-500 active:scale-90 border border-stone-700" title="ตั้งค่าเครื่อง & คลังเพลงอัด">
+                <i class="ph-bold ph-sliders-horizontal text-xs sm:text-sm"></i>
+                <span class="hidden sm:inline text-[10px] md:text-xs">ตั้งค่า & คลังเสียง</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ป๊อปอัปให้ตั้งชื่อไฟล์เสียงอัดเสร็จเรียบร้อยเพื่อบันทึกในเครื่อง -->
+    <div id="save-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs hidden p-4">
+        <div class="bg-stone-900 border border-stone-800 rounded-xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center gap-2 text-amber-500 font-bold">
+                <i class="ph-bold ph-floppy-disk text-lg"></i>
+                <span>บันทึกเสียงขิมลงฐานข้อมูลในเครื่อง</span>
             </div>
-
-            <button id="btn-labels" onclick="toggleLabels()" class="p-2 rounded-full bg-amber-600 text-white transition-all shadow-md active:scale-95 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
-                <i class="ph-bold ph-text-t text-lg md:text-xl"></i>
-            </button>
-
-            <button id="btn-record" onclick="toggleRecording()" class="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-semibold transition-all bg-stone-700 hover:bg-stone-600 text-stone-200 shadow-md active:scale-95 text-sm md:text-base border border-stone-600">
-                <i class="ph-bold ph-microphone text-base md:text-lg"></i> 
-                <span id="text-record" class="hidden sm:inline">อัดเสียง</span>
-            </button>
-
-            <a id="btn-download" href="#" download="khim-recording.webm" class="hidden flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-green-600 hover:bg-green-700 text-white font-semibold transition-all shadow-md active:scale-95 text-sm md:text-base">
-                <i class="ph-bold ph-download text-base md:text-lg"></i>
-            </a>
+            <p class="text-xs text-stone-400">ไฟล์เสียงจะถูกเซฟเก็บไว้บนเบราว์เซอร์ของอุปกรณ์นี้อย่างถาวรโดยอัตโนมัติ (ไม่จำกัดเวลาบันทึก)</p>
+            <div class="space-y-1.5">
+                <label class="text-[11px] text-stone-300">ตั้งชื่อเพลงผลงานของคุณ</label>
+                <input id="input-record-name" type="text" class="w-full bg-stone-950 border border-stone-800 rounded px-3 py-2 text-xs text-amber-200 focus:outline-none focus:border-amber-500" placeholder="ระบุชื่อเพลง...">
+            </div>
+            <div class="flex gap-2 justify-end pt-2">
+                <button onclick="closeSaveModal()" class="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-xs text-stone-300">ยกเลิก</button>
+                <button onclick="confirmSaveRecording()" class="px-4 py-1.5 rounded bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1"><i class="ph-bold ph-check"></i> บันทึกผลงาน</button>
+            </div>
         </div>
     </div>
 
-    <!-- Main Instrument Area -->
-    <div class="flex-1 w-full max-w-7xl mx-auto p-1 md:p-6 flex items-center justify-center relative bg-gradient-to-b from-stone-900 to-black overflow-hidden">
-        <div class="relative w-full h-full md:h-auto md:aspect-[16/9] lg:aspect-[2.2/1] bg-[#4a3222] rounded-xl md:rounded-3xl shadow-2xl border-2 md:border-4 border-[#3e2723] overflow-hidden flex flex-col">
+    <!-- Settings & Archive Drawer (แผงตั้งค่าเสียงที่เก็บถาวรด้วย Local Storage และคลังอัดเสียงใน IndexedDB) -->
+    <aside id="settings-drawer" class="fixed inset-y-0 right-0 w-80 bg-stone-900 border-l border-stone-800 z-40 transform drawer-closed transition-transform duration-300 shadow-2xl flex flex-col pt-16">
+        <div class="flex items-center justify-between p-4 border-b border-stone-800">
+            <h2 class="font-bold text-amber-500 flex items-center gap-2"><i class="ph-bold ph-sliders"></i> แผงปรับจูนเครื่อง & คลังผลงาน</h2>
+            <button onclick="toggleSettingsPanel()" class="text-stone-400 hover:text-white p-1 rounded bg-stone-800">
+                <i class="ph-bold ph-x"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 overflow-y-auto flex-1 flex flex-col gap-5">
+            <!-- ส่วนจัดเก็บเสียงอัดในเครื่อง (IndexedDB) -->
+            <div class="space-y-3 bg-stone-950/60 p-3 rounded-lg border border-stone-800/80">
+                <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="ph-bold ph-folder-open"></i> คลังผลงานอัดเสียงในเครื่อง
+                </h3>
+                
+                <!-- รายการเสียงที่บันทึกไว้จะแสดงตรงนี้ -->
+                <div id="local-recordings-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    <p class="text-[11px] text-stone-500 text-center py-2">ไม่มีผลงานที่บันทึกไว้ในเครื่อง</p>
+                </div>
+            </div>
+
+            <!-- ปรับความดัง -->
+            <div class="space-y-3 bg-stone-950/40 p-3 rounded-lg border border-stone-800/60">
+                <h3 class="text-xs font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-bold ph-speaker-high"></i> ระดับเสียงขิม (Volume)</h3>
+                <div>
+                    <div class="flex justify-between text-[11px] text-stone-300 mb-1">
+                        <label>ความดังหลัก</label>
+                        <span id="label-volume">80%</span>
+                    </div>
+                    <input id="slider-volume" type="range" min="0" max="100" value="80" oninput="updateVolumeParam()" class="w-full accent-amber-500 h-1.5 bg-stone-800 rounded">
+                </div>
+            </div>
+
+            <!-- ระบบการจูนเสียง -->
+            <div class="space-y-3 bg-stone-950/40 p-3 rounded-lg border border-stone-800/60">
+                <h3 class="text-xs font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-bold ph-music-note"></i> ระบบเสียง & การจูน</h3>
+                <div>
+                    <label class="text-[11px] text-stone-300 block mb-1">คีย์บรรเลง (Root Key)</label>
+                    <select id="select-root-key" onchange="updateScaleTuning()" class="w-full bg-stone-800 border border-stone-700 text-amber-200 text-xs rounded-md p-1.5 focus:outline-none">
+                        <option value="0">C (ทางเพียงออปกติ)</option>
+                        <option value="2">D (ทางใน)</option>
+                        <option value="-2">Bb (ทางกรวย)</option>
+                        <option value="5">F (ทางนอก)</option>
+                        <option value="7">G (ทางกลาง)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[11px] text-stone-300 block mb-1">ระบบการจูนคีย์ (Scale)</label>
+                    <select id="select-tuning-type" onchange="updateScaleTuning()" class="w-full bg-stone-800 border border-stone-700 text-amber-200 text-xs rounded-md p-1.5 focus:outline-none">
+                        <option value="thai">ไทยเดิมแท้ (7-Tone Heptatonic)</option>
+                        <option value="western">สากลทั่วไป (12-Equal Temperament)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ความกังวานและเอฟเฟกต์สะท้อนของขิม -->
+            <div class="space-y-3 bg-stone-950/40 p-3 rounded-lg border border-stone-800/60">
+                <h3 class="text-xs font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-bold ph-waves"></i> บอดี้ไม้ & การสะท้อน</h3>
+                <div>
+                    <div class="flex justify-between text-[11px] text-stone-300 mb-1">
+                        <label>ความยาวเสียงสะท้อน (Sustain)</label>
+                        <span id="label-sustain">70%</span>
+                    </div>
+                    <input id="slider-sustain" type="range" min="10" max="100" value="70" oninput="document.getElementById('label-sustain').innerText = this.value + '%'" class="w-full accent-amber-500 h-1.5 bg-stone-800 rounded">
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] text-stone-300 mb-1">
+                        <label>ระดับเสียงสะท้อนตัวถัง (Reverb)</label>
+                        <span id="label-reverb">50%</span>
+                    </div>
+                    <input id="slider-reverb" type="range" min="0" max="100" value="50" oninput="updateAudioParams()" class="w-full accent-amber-500 h-1.5 bg-stone-800 rounded">
+                </div>
+            </div>
+
+            <!-- ควบคุมความเร็วการเล่นอัตโนมัติ -->
+            <div class="space-y-3 bg-stone-950/40 p-3 rounded-lg border border-stone-800/60">
+                <h3 class="text-xs font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-1.5"><i class="ph-bold ph-metronome"></i> ความเร็วบรรเลง</h3>
+                <div>
+                    <div class="flex justify-between text-[11px] text-stone-300 mb-1">
+                        <label>จังหวะเพลง (BPM Tempo)</label>
+                        <span id="label-speed">100%</span>
+                    </div>
+                    <input id="slider-song-speed" oninput="adjustSongSpeed()" type="range" min="50" max="200" value="100" class="w-full accent-sky-500 h-1.5 bg-stone-800 rounded">
+                </div>
+            </div>
+
+            <!-- จัดการบันทึกการตั้งค่าลงหน่วยความจำถาวร -->
+            <div class="space-y-2 mt-2 pt-2 border-t border-stone-800 flex flex-col gap-1">
+                <button onclick="saveSettingsToLocalStorage()" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-stone-950 font-bold py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1 shadow-md">
+                    <i class="ph-bold ph-floppy-disk-back"></i> บันทึกการตั้งค่าลงเครื่อง
+                </button>
+                <button onclick="resetSettingsToDefault()" class="w-full bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-400 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1 border border-stone-700">
+                    <i class="ph-bold ph-arrow-counter-clockwise"></i> คืนค่าเริ่มต้นโรงงาน
+                </button>
+                <p id="save-status" class="text-[11px] text-green-400 font-semibold text-center hidden animate-pulse">✓ บันทึกข้อมูลสำเร็จ!</p>
+            </div>
+        </div>
+    </aside>
+
+    <div id="drawer-overlay" onclick="toggleSettingsPanel()" class="fixed inset-0 bg-black/70 z-30 hidden backdrop-blur-xs transition-opacity"></div>
+
+    <!-- Main Instrument Area (บอร์ดขิมแบบ 3 คอลัมน์แนวตั้ง ทัชสะดวกด้วยสองนิ้วหัวแม่มือ) -->
+    <main class="flex-1 w-full p-2 md:p-6 flex items-center justify-center relative bg-gradient-to-b from-stone-950 to-black overflow-hidden z-10">
+        <div class="relative w-full max-w-5xl h-full md:h-auto md:aspect-[2.2/1] bg-[#3a2212] rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.9)] border-4 border-[#2b170a] overflow-hidden flex flex-col">
             <div class="wood-pattern absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80 pointer-events-none"></div>
             
-            <!-- Modified: Grid layout for mobile (2 columns), Flex for desktop -->
-            <div id="board-container" class="relative z-10 grid grid-cols-2 md:flex md:flex-row items-stretch md:items-center justify-evenly p-2 md:p-8 gap-2 md:gap-4 h-full w-full">
-                <!-- Javascript will inject bridges here -->
+            <!-- บอร์ดขิม: นำเสนอในรูป 3 คอลัมน์แนวตั้ง (ซ้าย-กลาง-ขวา) บนจอมือถือ เอื้อต่อการเล่นด้วยนิ้วหัวแม่มือ -->
+            <div id="board-container" class="relative z-10 grid grid-cols-3 items-stretch p-1.5 md:p-6 gap-2 md:gap-5 h-full w-full">
+                <!-- สะพานขิมจะถูกสร้างผ่านสคริปต์ JavaScript -->
             </div>
 
-            <div class="absolute bottom-2 right-2 md:bottom-4 md:right-4 text-white/10 pointer-events-none">
-                <i class="ph-fill ph-speaker-high text-4xl md:text-6xl"></i>
+            <!-- แสดงตัววิ่งโน้ตที่กำลังบรรเลงอัตโนมัติ -->
+            <div id="auto-play-banner" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-stone-950/90 border border-stone-800 rounded-full px-3 py-1 flex flex-col items-center justify-center transition-all opacity-0 pointer-events-none">
+                <span id="banner-song-name" class="text-[9px] text-amber-500 font-bold">ชื่อเพลง</span>
+                <div class="h-3.5 overflow-hidden relative flex items-center justify-center min-w-[120px]">
+                    <div id="noteroll-container" class="flex gap-1 text-[10px] font-mono text-stone-300 absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap transition-transform duration-100">
+                        <!-- โน้ตบรรเลงแบบเลื่อนไหล -->
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <div class="flex-none bg-stone-900 text-stone-500 text-[10px] md:text-xs p-1 pb-2 text-center w-full">
-        Tip: ใช้หูฟังเพื่อเสียงที่สมจริง | Use headphones for best quality
-    </div>
+    <!-- เครื่องเล่นเสียงจำลองแบคกราวนด์สำหรับการฟังผลงานอัดย้อนหลัง -->
+    <audio id="recording-audio-player" class="hidden"></audio>
+
+    <footer class="flex-none bg-stone-950 text-stone-600 text-[10px] py-1 text-center border-t border-stone-900">
+        ออกแบบเพื่อสมาร์ทโฟนแนวตั้ง | บันทึกเสียงอย่างแม่นยำและไร้ปัญหาด้วย IndexedDB
+    </footer>
 
     <script>
-        // --- CONFIGURATION ---
-        
-        // ใส่ลิงก์เสียงตรงนี้ (Mapping: Note Name -> URL)
-        // หากใส่แล้ว ระบบจะใช้ไฟล์นี้เล่นเสียง
-        // หากปล่อยว่าง ({}) ระบบจะใช้เสียงสังเคราะห์ (Synth)
-        const SOUND_URLS = {
-            // Low Register (เสียงต่ำ)
-            'G3': '', 'A3': '', 'B3': '', 'C4': '', 'D4': '', 'E4': '', 'F4': '',
-            
-            // Mid Register (เสียงกลาง - ใช้บ่อย)
-            'G4': '', 'A4': '', 'B4': '', 'C5': '', 'D5': '', 'E5': '', 'F5': '',
-            
-            // High Register (เสียงสูง)
-            'G5': '', 'A5': '', 'B5': '', 'C6': '', 'D6': ''
-        };
-
-        // --- ENGINE ---
-
-        class KhimAudioEngine {
-            constructor() {
-                this.ctx = null;
-                this.masterGain = null;
-                this.dest = null;
-                
-                this.buffers = {}; 
-                this.baseFreqs = {};
-                
-                // Recording
-                this.mediaRecorder = null;
-                this.audioChunks = [];
-            }
-
-            init() {
-                if (!this.ctx) {
-                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioContextClass();
-                    this.masterGain = this.ctx.createGain();
-                    this.masterGain.gain.value = 0.8;
-                    
-                    this.dest = this.ctx.createMediaStreamDestination();
-                    this.masterGain.connect(this.ctx.destination);
-                    this.masterGain.connect(this.dest);
-                    
-                    if (Object.keys(SOUND_URLS).length > 0) {
-                        // Check if any URL is actually filled
-                        const hasUrl = Object.values(SOUND_URLS).some(url => url.length > 0);
-                        if (hasUrl) {
-                            this.preloadSounds();
-                        }
-                    }
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            }
-
-            // --- Preload & Decode ---
-            async preloadSounds() {
-                if (!this.ctx) this.init();
-                
-                const statusEl = document.getElementById('preload-status');
-                const textEl = document.getElementById('preload-text');
-                
-                let loadedCount = 0;
-                let tasks = [];
-
-                for (const [noteName, url] of Object.entries(SOUND_URLS)) {
-                    if (!url) continue; // Skip empty strings
-                    
-                    statusEl.classList.remove('hidden');
-                    textEl.textContent = `Loading ${noteName}...`;
-                    
-                    const task = (async () => {
-                        try {
-                            const response = await fetch(url);
-                            const arrayBuffer = await response.arrayBuffer();
-                            const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
-                            
-                            // Trim Silence
-                            const trimmedBuffer = this.trimSilence(audioBuffer);
-                            
-                            this.buffers[noteName] = trimmedBuffer;
-                            
-                            const freq = this.getFreqFromName(noteName);
-                            if (freq) this.baseFreqs[noteName] = freq;
-
-                            loadedCount++;
-                        } catch (e) {
-                            console.error(`Failed to load ${noteName}:`, e);
-                        }
-                    })();
-                    tasks.push(task);
-                }
-
-                if (tasks.length > 0) {
-                    await Promise.all(tasks);
-                    textEl.textContent = "Ready";
-                    setTimeout(() => statusEl.classList.add('hidden'), 1000);
-                }
-            }
-
-            trimSilence(buffer) {
-                const rawData = buffer.getChannelData(0);
-                const len = rawData.length;
-                const threshold = 0.005; 
-                
-                let start = 0;
-                for (let i = 0; i < len; i++) {
-                    if (Math.abs(rawData[i]) > threshold) {
-                        start = i;
-                        break;
-                    }
-                }
-                
-                let end = len;
-                for (let i = len - 1; i >= 0; i--) {
-                    if (Math.abs(rawData[i]) > threshold) {
-                        end = i + 1;
-                        break;
-                    }
-                }
-                
-                if (end <= start) return buffer;
-
-                const newLen = end - start;
-                const newBuffer = this.ctx.createBuffer(buffer.numberOfChannels, newLen, buffer.sampleRate);
-
-                for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
-                    const chData = buffer.getChannelData(ch);
-                    const newChData = newBuffer.getChannelData(ch);
-                    for (let i = 0; i < newLen; i++) {
-                        newChData[i] = chData[start + i];
-                    }
-                }
-                
-                return newBuffer;
-            }
-
-            playNote(targetFreq, velocity = 1) {
-                if (!this.ctx) this.init();
-
-                // If buffers exist, use them. Otherwise, synth.
-                if (Object.keys(this.buffers).length > 0) {
-                    this.playBuffer(targetFreq, velocity);
-                } else {
-                    this.playSynth(targetFreq, velocity);
-                }
-            }
-
-            playBuffer(targetFreq, velocity) {
-                let bestNote = null;
-                let minDiff = Infinity;
-                
-                for (const noteName in this.baseFreqs) {
-                    const baseFreq = this.baseFreqs[noteName];
-                    const diff = Math.abs(targetFreq - baseFreq);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        bestNote = noteName;
-                    }
-                }
-
-                if (!bestNote) return; 
-
-                const buffer = this.buffers[bestNote];
-                const baseFreq = this.baseFreqs[bestNote];
-                
-                const source = this.ctx.createBufferSource();
-                source.buffer = buffer;
-                source.playbackRate.value = targetFreq / baseFreq;
-
-                const gainNode = this.ctx.createGain();
-                const t = this.ctx.currentTime;
-                
-                gainNode.gain.setValueAtTime(0, t);
-                gainNode.gain.linearRampToValueAtTime(velocity, t + 0.005); 
-                gainNode.gain.exponentialRampToValueAtTime(0.01, t + 3.5); 
-
-                source.connect(gainNode);
-                gainNode.connect(this.masterGain);
-                
-                source.start(0);
-            }
-
-            playSynth(frequency, velocity) {
-                const t = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                osc.type = 'triangle';
-                osc.frequency.value = frequency;
-                
-                const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0, t);
-                gain.gain.linearRampToValueAtTime(velocity, t + 0.002);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
-
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start(t);
-                osc.stop(t + 2.0);
-            }
-
-            getFreqFromName(name) {
-                const note = KHIM_NOTES.find(n => n.eng === name);
-                return note ? note.freq : null;
-            }
-            
-            startRecording() {
-                if (!this.dest) this.init();
-                this.audioChunks = [];
-                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-                this.mediaRecorder = new MediaRecorder(this.dest.stream, { mimeType });
-                this.mediaRecorder.ondataavailable = (evt) => {
-                    if (evt.data.size > 0) this.audioChunks.push(evt.data);
-                };
-                this.mediaRecorder.start();
-            }
-            stopRecording() {
-                return new Promise((resolve) => {
-                    if (!this.mediaRecorder) return resolve('');
-                    this.mediaRecorder.onstop = () => {
-                        const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                        const url = URL.createObjectURL(blob);
-                        resolve(url);
-                    };
-                    this.mediaRecorder.stop();
-                });
-            }
-        }
-
-        // --- DATA ---
-        const engine = new KhimAudioEngine();
-        let showLabels = true;
-        let isRecording = false;
-        
+        // ==========================================
+        // 1. DATA: รายละเอียดโน้ตสะพานขิมไทย
+        // ==========================================
         const KHIM_NOTES = [
+            // หย่องซ้าย (Low Register)
             { id: 'l1', name: 'ซ', eng: 'G3', freq: 196.00, group: 'low' },
             { id: 'l2', name: 'ล', eng: 'A3', freq: 220.00, group: 'low' },
             { id: 'l3', name: 'ท', eng: 'B3', freq: 246.94, group: 'low' },
@@ -332,6 +256,7 @@
             { id: 'l5', name: 'ร', eng: 'D4', freq: 293.66, group: 'low' },
             { id: 'l6', name: 'ม', eng: 'E4', freq: 329.63, group: 'low' },
             { id: 'l7', name: 'ฟ', eng: 'F4', freq: 349.23, group: 'low' },
+            // หย่องกลาง (Mid Register)
             { id: 'm1', name: 'ซ', eng: 'G4', freq: 392.00, group: 'mid' },
             { id: 'm2', name: 'ล', eng: 'A4', freq: 440.00, group: 'mid' },
             { id: 'm3', name: 'ท', eng: 'B4', freq: 493.88, group: 'mid' },
@@ -339,6 +264,7 @@
             { id: 'm5', name: 'ร', eng: 'D5', freq: 587.33, group: 'mid' },
             { id: 'm6', name: 'ม', eng: 'E5', freq: 659.25, group: 'mid' },
             { id: 'm7', name: 'ฟ', eng: 'F5', freq: 698.46, group: 'mid' },
+            // หย่องขวา (High Register)
             { id: 'h1', name: 'ซ', eng: 'G5', freq: 783.99, group: 'high' },
             { id: 'h2', name: 'ล', eng: 'A5', freq: 880.00, group: 'high' },
             { id: 'h3', name: 'ท', eng: 'B5', freq: 987.77, group: 'high' },
@@ -346,19 +272,372 @@
             { id: 'h5', name: 'ร', eng: 'D6', freq: 1174.66, group: 'high' }
         ];
 
-        // --- UI ---
-        function initApp() {
+        // คลังเพลงสำหรับบรรเลงขิมอัตโนมัติ
+        const SONGS = [
+            {
+                id: 'kangkao',
+                title: 'เพลงค้างคาวกินกล้วย',
+                bpm: 135,
+                notes: "ดร มรดร มดรม -ร-ด -ท-ล -ซ-ล -ท-ด -ร-ด -ท-ล -ซ-ม -ซ-ล -ท-ด -ร-ม -ร-ด -ท-ล -ซ-ล -ท-ด -ร-ด -ท-ล ซลทล ซมรด -ร-ม -ซ-ล ซมรด -ร-ม -ซ-ม -ร-ด"
+            },
+            {
+                id: 'loykratong',
+                title: 'เพลงลอยกระทง',
+                bpm: 110,
+                notes: "ซ ซ ซลซม ซ ซ ซลซม ดรดทลซ ลซมร มซมร มรมด ซลซม รมรด มรดท ลทลด รดทล ซลซม รร รมรด มม มซมร ซซ ซลซม ดรดทลซ ลซมร"
+            },
+            {
+                id: 'khaek',
+                title: 'เพลงแขกบรเทศ',
+                bpm: 100,
+                notes: "-ด-ด -ด-ด -ล-ด -ร-ม -ซ-ซ -ซ-ซ -ม-ซ -ล-ด -ร-ม -ร-ด -ท-ล -ซ-ม -ซ-ล -ซ-ม -ร-ด -ท-ล"
+            }
+        ];
+
+        // ฟังก์ชันตรวจเช็คชนิดสื่อที่เบราว์เซอร์เป้าหมายรองรับสำหรับอัดเสียง
+        function getSupportedMimeType() {
+            const types = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/mp4',
+                'audio/aac',
+                'audio/wav'
+            ];
+            for (const t of types) {
+                if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) {
+                    return t;
+                }
+            }
+            return ''; // ปล่อยให้เบราว์เซอร์ดีฟอลต์เอง
+        }
+
+        // ==========================================
+        // 2. AUDIO ENGINE: ระบบสังเคราะห์เสียงขิมสายคู่ให้สมจริงที่สุด
+        // ==========================================
+        class KhimAudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.masterGain = null;
+                this.reverbNode = null;
+                this.reverbGain = null;
+                this.dest = null;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                
+                this.tuningType = 'thai'; 
+                this.currentRootOffset = 0; 
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContextClass();
+                    
+                    this.masterGain = this.ctx.createGain();
+                    const volVal = document.getElementById('slider-volume') ? parseInt(document.getElementById('slider-volume').value) : 80;
+                    this.masterGain.gain.value = (volVal / 100) * 0.7;
+                    
+                    this.reverbGain = this.ctx.createGain();
+                    const reverbVal = document.getElementById('slider-reverb') ? parseInt(document.getElementById('slider-reverb').value) : 50;
+                    this.reverbGain.gain.value = reverbVal / 100;
+                    
+                    this.masterGain.connect(this.ctx.destination);
+                    
+                    // สร้างจุดเชื่อมสายอัดเสียงก่อนเพื่อหลีกเลี่ยงข้อผิดพลาด overload
+                    this.dest = this.ctx.createMediaStreamDestination();
+                    this.masterGain.connect(this.dest);
+
+                    this.setupReverb();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            // สร้างมิติเสียงสะท้อนจากบอดี้กล่องไม้ขิมจริง
+            async setupReverb() {
+                const sampleRate = this.ctx.sampleRate;
+                const length = Math.floor(sampleRate * 2.2); // มิติเสียงสั่นปลายสายยาว 2.2 วินาที
+                const impulse = this.ctx.createBuffer(2, length, sampleRate);
+                
+                const left = impulse.getChannelData(0);
+                const right = impulse.getChannelData(1);
+                
+                for (let i = 0; i < length; i++) {
+                    const decay = Math.exp(-i / (sampleRate * 0.45));
+                    left[i] = (Math.random() * 2 - 1) * decay;
+                    right[i] = (Math.random() * 2 - 1) * decay;
+                }
+                
+                this.reverbNode = this.ctx.createConvolver();
+                this.reverbNode.buffer = impulse;
+                
+                this.masterGain.connect(this.reverbNode);
+                this.reverbNode.connect(this.reverbGain);
+                this.reverbGain.connect(this.ctx.destination);
+                
+                if (this.dest) {
+                    this.reverbGain.connect(this.dest);
+                }
+            }
+
+            // คำนวณความถี่แบบสากลและระบบ 7 เสียงเท่า (Thai Heptatonic Heptatemp)
+            getFrequency(baseFreq) {
+                let midiNote = 12 * Math.log2(baseFreq / 440) + 69;
+                midiNote += this.currentRootOffset;
+                
+                if (this.tuningType === 'thai') {
+                    const degreeMap = { 0:0, 2:1, 4:2, 5:3, 7:4, 9:5, 11:6 };
+                    const octave = Math.floor(midiNote / 12) - 5;
+                    const pc = Math.round(midiNote) % 12; 
+                    
+                    let degree = degreeMap[pc];
+                    if (degree === undefined) degree = pc / 2; 
+                    
+                    const thaiStep = 12 / 7;
+                    const offsetFromC = degree * thaiStep;
+                    const finalMidi = (octave * 12) + 60 + offsetFromC; 
+                    
+                    return 440 * Math.pow(2, (finalMidi - 69) / 12);
+                } else {
+                    return 440 * Math.pow(2, (midiNote - 69) / 12);
+                }
+            }
+
+            // สังเคราะห์เสียงขิมโลหะ และจำลองสเกลเสียงหัวไม้เคาะจริง
+            playSynth(targetFreq, isAutoPlay = false) {
+                if (!this.ctx) this.init();
+                
+                const freq = this.getFrequency(targetFreq);
+                const t = this.ctx.currentTime;
+                
+                const sustainVal = document.getElementById('slider-sustain') 
+                                    ? parseInt(document.getElementById('slider-sustain').value) 
+                                    : 70;
+                const decayTime = 0.4 + (sustainVal / 100) * 3.6; 
+
+                // --- เทคนิคสายคู่ (Double Course Synthesis with detuning) ---
+                const osc1 = this.ctx.createOscillator();
+                osc1.type = 'triangle';
+                osc1.frequency.value = freq;
+                osc1.detune.setValueAtTime(-5, t); // ต่ำกว่านิดนึง -5 cent
+
+                const osc2 = this.ctx.createOscillator();
+                osc2.type = 'sine';
+                osc2.frequency.value = freq;
+                osc2.detune.setValueAtTime(5, t); // สูงกว่านิดนึง +5 cent
+
+                // เพิ่มมิติเสียง Harmonic ลำดับที่สอง เพื่อเลียนแบบทองเหลืองสั่น
+                const osc3 = this.ctx.createOscillator();
+                osc3.type = 'triangle';
+                osc3.frequency.value = freq * 2;
+                osc3.detune.setValueAtTime(0, t);
+
+                // --- จำลองเสียงเคาะค้อนไม้ไผ่กระทบสายขิม (Bamboo Hammer Strike Transient) ---
+                const noiseBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.05, this.ctx.sampleRate);
+                const noiseData = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < noiseBuffer.length; i++) {
+                    noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.015));
+                }
+                const noiseSrc = this.ctx.createBufferSource();
+                noiseSrc.buffer = noiseBuffer;
+
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 3500; 
+                noiseSrc.connect(noiseFilter);
+
+                const gain1 = this.ctx.createGain();
+                const gain2 = this.ctx.createGain();
+                const gain3 = this.ctx.createGain();
+                const noiseGain = this.ctx.createGain();
+                
+                const vol = isAutoPlay ? 0.65 : 1.0;
+
+                // ตกแต่งความพุ่งของระดับเสียง
+                gain1.gain.setValueAtTime(0, t);
+                gain1.gain.linearRampToValueAtTime(0.55 * vol, t + 0.003);
+                gain1.gain.exponentialRampToValueAtTime(0.001, t + decayTime);
+
+                gain2.gain.setValueAtTime(0, t);
+                gain2.gain.linearRampToValueAtTime(0.45 * vol, t + 0.003);
+                gain2.gain.exponentialRampToValueAtTime(0.001, t + decayTime);
+
+                gain3.gain.setValueAtTime(0, t);
+                gain3.gain.linearRampToValueAtTime(0.20 * vol, t + 0.002);
+                gain3.gain.exponentialRampToValueAtTime(0.001, t + decayTime * 0.4);
+
+                noiseGain.gain.setValueAtTime(0.22 * vol, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+
+                osc1.connect(gain1);
+                osc2.connect(gain2);
+                osc3.connect(gain3);
+                noiseFilter.connect(noiseGain);
+
+                gain1.connect(this.masterGain);
+                gain2.connect(this.masterGain);
+                gain3.connect(this.masterGain);
+                noiseGain.connect(this.masterGain);
+
+                osc1.start(t);
+                osc2.start(t);
+                osc3.start(t);
+                noiseSrc.start(t);
+
+                osc1.stop(t + decayTime);
+                osc2.stop(t + decayTime);
+                osc3.stop(t + decayTime * 0.4);
+            }
+
+            // ระบบบันทึกเสียงสดแบบสแกนฟอร์แมตเพื่อความเข้ากันได้ 100%
+            startRecording() {
+                if (!this.dest) this.init();
+                this.audioChunks = [];
+                
+                const mimeType = getSupportedMimeType();
+                const options = mimeType ? { mimeType } : undefined;
+                
+                try {
+                    this.mediaRecorder = new MediaRecorder(this.dest.stream, options);
+                    this.mediaRecorder.ondataavailable = (evt) => {
+                        if (evt.data.size > 0) this.audioChunks.push(evt.data);
+                    };
+                    this.mediaRecorder.start();
+                } catch (e) {
+                    console.warn("การลองตั้งค่า MIME เริ่มต้นล้มเหลว ลองบันทึกแบบระบบออโต้:", e);
+                    try {
+                        this.mediaRecorder = new MediaRecorder(this.dest.stream);
+                        this.mediaRecorder.ondataavailable = (evt) => {
+                            if (evt.data.size > 0) this.audioChunks.push(evt.data);
+                        };
+                        this.mediaRecorder.start();
+                    } catch (err) {
+                        console.error("เบราว์เซอร์ไม่รองรับการจำลองสื่อเพื่ออัดเสียง:", err);
+                    }
+                }
+            }
+            
+            stopRecording() {
+                return new Promise((resolve) => {
+                    if (!this.mediaRecorder) return resolve({ url: '', blob: null });
+                    this.mediaRecorder.onstop = () => {
+                        const finalType = this.mediaRecorder.mimeType || getSupportedMimeType() || 'audio/webm';
+                        const blob = new Blob(this.audioChunks, { type: finalType });
+                        const url = URL.createObjectURL(blob);
+                        resolve({ url, blob });
+                    };
+                    this.mediaRecorder.stop();
+                });
+            }
+        }
+
+        // ==========================================
+        // 3. DATABASE ENGINE (IndexedDB): คลังบันทึกผลงานในเครื่อง
+        // ==========================================
+        class KhimDatabase {
+            constructor() {
+                this.dbName = 'KhimProDB';
+                this.dbVersion = 1;
+                this.db = null;
+            }
+
+            init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+                    request.onerror = (e) => reject(e);
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        resolve(this.db);
+                    };
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('recordings')) {
+                            db.createObjectStore('recordings', { keyPath: 'id', autoIncrement: true });
+                        }
+                    };
+                });
+            }
+
+            saveRecording(name, blob) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) return reject("ฐานข้อมูลไม่พร้อมใช้งาน");
+                    const transaction = this.db.transaction(['recordings'], 'readwrite');
+                    const store = transaction.objectStore('recordings');
+                    
+                    const item = {
+                        name: name || 'เพลงขิมของฉัน',
+                        blob: blob,
+                        timestamp: new Date().toLocaleString('th-TH')
+                    };
+                    
+                    const request = store.add(item);
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = (e) => reject(e);
+                });
+            }
+
+            getAllRecordings() {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) return resolve([]);
+                    const transaction = this.db.transaction(['recordings'], 'readonly');
+                    const store = transaction.objectStore('recordings');
+                    const request = store.getAll();
+                    request.onsuccess = (e) => resolve(e.target.result);
+                    request.onerror = (e) => reject(e);
+                });
+            }
+
+            deleteRecording(id) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) return reject("ฐานข้อมูลไม่พร้อมใช้งาน");
+                    const transaction = this.db.transaction(['recordings'], 'readwrite');
+                    const store = transaction.objectStore('recordings');
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = (e) => reject(e);
+                });
+            }
+        }
+
+        // ==========================================
+        // 4. UI CONTROLLER & APP INTEGRATION
+        // ==========================================
+        const engine = new KhimAudioEngine();
+        const khimDb = new KhimDatabase();
+        
+        let showLabels = true;
+        let isRecording = false;
+        let currentRecordBlob = null;
+        
+        let currentSong = null;
+        let parsedNotes = [];
+        let currentNoteIndex = 0;
+        let songPlaybackInterval = null;
+        let songSpeedPercent = 100;
+
+        async function initApp() {
+            // โหลดโมเดลฐานข้อมูล IndexedDB
+            try {
+                await khimDb.init();
+                updateRecordingsListUI();
+            } catch (e) {
+                console.error("ฐานข้อมูลขิมทำงานขัดข้อง:", e);
+            }
+
             const container = document.getElementById('board-container');
-            const groups = {
-                low: KHIM_NOTES.filter(n => n.group === 'low'),
-                mid: KHIM_NOTES.filter(n => n.group === 'mid'),
-                high: KHIM_NOTES.filter(n => n.group === 'high')
-            };
+            
+            const lowNotes = KHIM_NOTES.filter(n => n.group === 'low');
+            const midNotes = KHIM_NOTES.filter(n => n.group === 'mid');
+            const highNotes = KHIM_NOTES.filter(n => n.group === 'high');
 
-            ['low', 'mid', 'high'].forEach(pos => {
-                container.insertAdjacentHTML('beforeend', createBridgeHtml(groups[pos], pos));
-            });
+            // จัดหน้าขิม 3 คอลัมน์ สะพานซ้าย (Low) หย่องกลาง (Mid) และขวา (High) บนจอมือถือ
+            container.insertAdjacentHTML('beforeend', createBridgeHtml(lowNotes, 'low', 'col-span-1 border-r border-stone-800/40'));
+            container.insertAdjacentHTML('beforeend', createBridgeHtml(midNotes, 'mid', 'col-span-1 border-r border-stone-800/40'));
+            container.insertAdjacentHTML('beforeend', createBridgeHtml(highNotes, 'high', 'col-span-1'));
 
+            // ดักจับการทัชบรรเลง
             document.querySelectorAll('.khim-string').forEach(btn => {
                 const freq = parseFloat(btn.dataset.freq);
                 const id = btn.dataset.id;
@@ -366,68 +645,122 @@
                 const playHandler = (e) => {
                     e.preventDefault(); 
                     e.stopPropagation();
-                    playNote(id, freq);
+                    playNoteVisual(id, freq);
                 };
                 
                 btn.addEventListener('touchstart', playHandler, { passive: false });
                 btn.addEventListener('mousedown', playHandler);
             });
+
+            // สร้างตัวเลือกเพลงบรรเลงออโต้
+            const songSelect = document.getElementById('select-song');
+            SONGS.forEach(song => {
+                const opt = document.createElement('option');
+                opt.value = song.id;
+                opt.text = song.title;
+                songSelect.appendChild(opt);
+            });
+
+            loadSettingsFromLocalStorage();
+            loadSelectedSong();
         }
 
-        function createBridgeHtml(notes, position) {
-            let scaleClass = 'scale-95 opacity-90';
-            let bridgeColor = 'bg-[#4e342e]';
-            let zIndex = '';
-            // Modified: Add layout logic for High bridge (span 2 cols on mobile)
-            let colSpan = '';
+        function createBridgeHtml(notes, position, layoutClasses) {
+            let scaleClass = 'scale-100 opacity-95';
+            let bridgeColor = 'bg-gradient-to-b from-[#2e1a0f] to-[#3a2212]';
             
-            if (position === 'center' || position === 'mid') {
-                scaleClass = 'scale-100 md:scale-110'; 
-                bridgeColor = 'bg-[#5d4037]';
-                zIndex = 'z-10';
-            } else if (position === 'high') {
-                // High bridge takes full width (2 cols) at the bottom on mobile
-                colSpan = 'col-span-2 md:col-span-1';
+            if (position === 'mid') {
+                scaleClass = 'scale-[1.03]'; 
+                bridgeColor = 'bg-gradient-to-b from-[#3a2212] to-[#4c2d18]';
             }
 
             const stringsHtml = notes.slice().reverse().map(note => `
-                <div class="khim-string relative w-full flex-1 flex items-center justify-center cursor-pointer touch-manipulation group min-h-0"
+                <div class="khim-string relative w-full flex-1 flex items-center justify-center cursor-pointer touch-manipulation group min-h-0 py-1.5 md:py-2"
                      data-freq="${note.freq}" 
                      data-id="${note.id}">
-                    <div class="absolute inset-x-0 flex flex-col items-center justify-center gap-[1px] md:gap-[3px] pointer-events-none">
+                    
+                    <div class="absolute inset-x-0 flex flex-col items-center justify-center gap-[1px] pointer-events-none opacity-70 group-hover:opacity-100">
                         <div class="line-string h-[1px] w-full bg-amber-100/40 transition-colors duration-75"></div>
-                        <div class="line-string h-[1px] w-full bg-amber-100/60 transition-colors duration-75"></div>
+                        <div class="line-string h-[1.5px] w-full bg-amber-200/70 transition-colors duration-75 shadow-xs"></div>
                         <div class="line-string h-[1px] w-full bg-amber-100/40 transition-colors duration-75"></div>
                     </div>
-                    <div class="cap-visual relative z-10 w-6 h-6 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-[#3e2723] text-amber-100/80 shadow-md border border-amber-900/50 transition-all duration-75">
-                        <span class="note-label font-bold text-xs md:text-lg drop-shadow-md select-none">${note.name}</span>
+                    
+                    <div class="cap-visual relative z-10 w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center bg-stone-900 text-amber-100/90 shadow-[0_2px_4px_rgba(0,0,0,0.6)] border border-amber-900/30 transition-all duration-75">
+                        <span class="note-label font-bold text-[10px] sm:text-xs md:text-sm drop-shadow-xs select-none">${note.name}</span>
                     </div>
                 </div>
             `).join('');
 
             return `
-                <div class="relative flex-1 md:h-full w-full md:w-auto flex items-center justify-center ${zIndex} ${colSpan}">
-                    <div class="absolute top-0 bottom-0 w-8 md:w-12 rounded-lg shadow-xl ${bridgeColor} border-x border-black/30 pointer-events-none"></div>
-                    <div class="flex flex-col items-center justify-evenly gap-0 md:gap-2 w-full h-full max-w-[120px] md:max-w-[150px] ${scaleClass} py-1 md:py-0">
+                <div class="relative flex-1 h-full w-full flex flex-col items-center justify-center ${layoutClasses}">
+                    <div class="absolute top-0 bottom-0 w-6 md:w-8 rounded-md shadow-lg ${bridgeColor} border-x border-black/30 pointer-events-none"></div>
+                    <div class="flex flex-col items-center justify-evenly gap-0.5 w-full h-full max-w-[100px] md:max-w-[140px] ${scaleClass} py-2">
                         ${stringsHtml}
                     </div>
                 </div>
             `;
         }
 
-        function playNote(id, freq) {
-            engine.playNote(freq);
+        function playNoteVisual(id, freq, isAuto = false) {
+            engine.playSynth(freq, isAuto);
             const btn = document.querySelector(`.khim-string[data-id="${id}"]`);
             if (btn) {
                 const lines = btn.querySelectorAll('.line-string');
                 const cap = btn.querySelector('.cap-visual');
+                
                 lines.forEach(l => l.classList.add('string-active'));
-                cap.classList.add('cap-active');
+                if (isAuto) {
+                    cap.classList.add('playing-auto-cap');
+                } else {
+                    cap.classList.add('cap-active');
+                }
+                
                 setTimeout(() => {
                     lines.forEach(l => l.classList.remove('string-active'));
-                    cap.classList.remove('cap-active');
-                }, 150);
+                    cap.classList.remove('cap-active', 'playing-auto-cap');
+                }, 130);
             }
+        }
+
+        function toggleSettingsPanel() {
+            const drawer = document.getElementById('settings-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            
+            if (drawer.classList.contains('drawer-closed')) {
+                drawer.classList.remove('drawer-closed');
+                drawer.classList.add('drawer-open');
+                overlay.classList.remove('hidden');
+                // โหลดและรีเฟรชรายการไฟล์อัดใหม่เสมอที่เปิดแถบนี้
+                updateRecordingsListUI();
+            } else {
+                drawer.classList.remove('drawer-open');
+                drawer.classList.add('drawer-closed');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function updateAudioParams() {
+            if (engine.reverbGain) {
+                const reverbVal = document.getElementById('slider-reverb').value;
+                document.getElementById('label-reverb').innerText = reverbVal + '%';
+                engine.reverbGain.gain.value = reverbVal / 100;
+            }
+        }
+
+        function updateVolumeParam() {
+            const volVal = document.getElementById('slider-volume').value;
+            document.getElementById('label-volume').innerText = volVal + '%';
+            if (engine && engine.masterGain) {
+                engine.masterGain.gain.value = (volVal / 100) * 0.7; 
+            }
+        }
+
+        function updateScaleTuning() {
+            const rootSelector = document.getElementById('select-root-key');
+            const tuningSelector = document.getElementById('select-tuning-type');
+            
+            engine.currentRootOffset = parseInt(rootSelector.value);
+            engine.tuningType = tuningSelector.value;
         }
 
         function toggleLabels() {
@@ -445,45 +778,393 @@
             }
         }
 
+        // บันทึกเสียงแบบเรียลไทม์
         async function toggleRecording() {
             const btn = document.getElementById('btn-record');
             const btnText = document.getElementById('text-record');
             const btnIcon = btn.querySelector('i');
-            const downloadBtn = document.getElementById('btn-download');
 
             if (isRecording) {
                 isRecording = false;
-                btn.classList.remove('bg-red-500', 'animate-pulse', 'text-white');
-                btn.classList.add('bg-stone-700', 'text-stone-200');
+                btn.classList.remove('bg-red-600', 'animate-pulse', 'text-white', 'border-red-500');
+                btn.classList.add('bg-stone-800', 'text-stone-200', 'border-stone-700');
                 btnIcon.classList.replace('ph-stop', 'ph-microphone');
                 btnText.textContent = "อัดเสียง";
-                const url = await engine.stopRecording();
-                if (url) {
-                    downloadBtn.href = url;
-                    downloadBtn.classList.remove('hidden');
-                    downloadBtn.classList.add('flex');
-                    const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,"-");
-                    downloadBtn.download = `Thai-Khim-${timestamp}.webm`;
+                
+                const recData = await engine.stopRecording();
+                if (recData && recData.blob) {
+                    currentRecordBlob = recData.blob;
+                    openSaveModal();
                 }
             } else {
                 engine.init();
                 isRecording = true;
-                downloadBtn.classList.add('hidden');
-                downloadBtn.classList.remove('flex');
                 engine.startRecording();
-                btn.classList.remove('bg-stone-700', 'text-stone-200');
-                btn.classList.add('bg-red-500', 'animate-pulse', 'text-white');
+                
+                btn.classList.remove('bg-stone-800', 'text-stone-200', 'border-stone-700');
+                btn.classList.add('bg-red-600', 'animate-pulse', 'text-white', 'border-red-500');
                 btnIcon.classList.replace('ph-microphone', 'ph-stop');
-                btnText.textContent = "หยุดบันทึก";
+                btnText.textContent = "กำลังอัด";
             }
         }
 
+        function openSaveModal() {
+            document.getElementById('input-record-name').value = 'ผลงานบรรเลงขิม - ' + new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('save-modal').classList.remove('hidden');
+        }
+
+        function closeSaveModal() {
+            document.getElementById('save-modal').classList.add('hidden');
+            currentRecordBlob = null;
+        }
+
+        // จัดการบันทึกเสียงขิมจริงในฐานข้อมูล IndexedDB ในมือถือ
+        async function confirmSaveRecording() {
+            const name = document.getElementById('input-record-name').value.trim();
+            if (currentRecordBlob) {
+                try {
+                    await khimDb.saveRecording(name, currentRecordBlob);
+                    closeSaveModal();
+                    updateRecordingsListUI();
+                    
+                    // สั่นพ้องความรู้สึกและแสดง Drawer เพื่อดูผลงานที่อัด
+                    toggleSettingsPanel();
+                } catch (e) {
+                    alert("ไม่สามารถจัดเก็บเสียงลงคลังเครื่องได้: " + e);
+                }
+            }
+        }
+
+        // โหลดรายการเสียงที่อัดแสดงในคลังผลงาน
+        async function updateRecordingsListUI() {
+            const listContainer = document.getElementById('local-recordings-list');
+            if (!listContainer) return;
+
+            try {
+                const recordings = await khimDb.getAllRecordings();
+                if (recordings.length === 0) {
+                    listContainer.innerHTML = `<p class="text-[11px] text-stone-500 text-center py-2">ไม่มีผลงานที่บันทึกไว้ในเครื่อง</p>`;
+                    return;
+                }
+
+                listContainer.innerHTML = recordings.map(rec => {
+                    const blobSize = (rec.blob.size / 1024).toFixed(1) + ' KB';
+                    return `
+                        <div class="bg-stone-900 border border-stone-800 p-2 rounded flex flex-col gap-1 text-xs">
+                            <div class="flex justify-between items-start gap-1">
+                                <span class="font-semibold text-amber-100 truncate w-36" title="${rec.name}">${rec.name}</span>
+                                <span class="text-[9px] text-stone-500 shrink-0">${rec.timestamp}</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-1 pt-1 border-t border-stone-800/60">
+                                <span class="text-[9px] text-stone-400">${blobSize}</span>
+                                <div class="flex items-center gap-1.5">
+                                    <!-- ปุ่มเปิดฟังย้อนหลังในเครื่อง -->
+                                    <button onclick="playStoredAudio(${rec.id})" class="text-sky-400 hover:text-sky-300 active:scale-90" title="ฟังย้อนหลัง">
+                                        <i class="ph-bold ph-play-circle text-base"></i>
+                                    </button>
+                                    <!-- ดาวน์โหลดลงเครื่องตรงๆ -->
+                                    <button onclick="downloadStoredAudio(${rec.id})" class="text-green-500 hover:text-green-400 active:scale-90" title="ดาวน์โหลดไฟล์เสียง">
+                                        <i class="ph-bold ph-download-simple text-base"></i>
+                                    </button>
+                                    <!-- ลบไฟล์เสียง -->
+                                    <button onclick="deleteStoredAudio(${rec.id})" class="text-red-500 hover:text-red-400 active:scale-90" title="ลบ">
+                                        <i class="ph-bold ph-trash text-base"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error("โหลดรายการบันทึกเสียงขัดข้อง:", e);
+            }
+        }
+
+        // เล่นไฟล์เสียงจำลองที่อัดไว้ในเครื่อง
+        let playingAudioUrl = null;
+        async function playStoredAudio(id) {
+            const recordings = await khimDb.getAllRecordings();
+            const target = recordings.find(r => r.id === id);
+            if (target) {
+                const player = document.getElementById('recording-audio-player');
+                
+                // คลายหน่วยความจำเก่ง
+                if (playingAudioUrl) {
+                    URL.revokeObjectURL(playingAudioUrl);
+                }
+                
+                playingAudioUrl = URL.createObjectURL(target.blob);
+                player.src = playingAudioUrl;
+                player.play();
+                
+                const statusEl = document.getElementById('save-status');
+                statusEl.innerText = ` sedangเล่น: ${target.name}`;
+                statusEl.classList.remove('hidden');
+                setTimeout(() => statusEl.classList.add('hidden'), 3000);
+            }
+        }
+
+        // ดาวน์โหลดไฟล์เสียงเก็บไว้ในหน่วยความจำมือถือ/พีซี
+        async function downloadStoredAudio(id) {
+            const recordings = await khimDb.getAllRecordings();
+            const target = recordings.find(r => r.id === id);
+            if (target) {
+                const url = URL.createObjectURL(target.blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // กำหนดนามสกุลที่แท้จริงตามชนิด Blob
+                const extension = target.blob.type.includes('mp4') ? 'mp4' : 
+                                  target.blob.type.includes('webm') ? 'webm' : 'wav';
+                                  
+                a.download = `${target.name.replace(/\s+/g, '_')}.${extension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+        }
+
+        async function deleteStoredAudio(id) {
+            if (confirm("ยืนยันการลบไฟล์อัดเสียงชิ้นนี้?")) {
+                await khimDb.deleteRecording(id);
+                updateRecordingsListUI();
+            }
+        }
+
+        // ==========================================
+        // 5. LOCAL STORAGE SETTINGS MANAGEMENT
+        // ==========================================
+        function loadSettingsFromLocalStorage() {
+            const savedData = localStorage.getItem('khim_pro_preferences_v2');
+            if (savedData) {
+                try {
+                    const settings = JSON.parse(savedData);
+                    
+                    if (settings.volume !== undefined) {
+                        document.getElementById('slider-volume').value = settings.volume;
+                        document.getElementById('label-volume').innerText = settings.volume + '%';
+                    }
+                    if (settings.rootKey !== undefined) {
+                        document.getElementById('select-root-key').value = settings.rootKey;
+                    }
+                    if (settings.tuningType !== undefined) {
+                        document.getElementById('select-tuning-type').value = settings.tuningType;
+                    }
+                    if (settings.sustain !== undefined) {
+                        document.getElementById('slider-sustain').value = settings.sustain;
+                        document.getElementById('label-sustain').innerText = settings.sustain + '%';
+                    }
+                    if (settings.reverb !== undefined) {
+                        document.getElementById('slider-reverb').value = settings.reverb;
+                        document.getElementById('label-reverb').innerText = settings.reverb + '%';
+                    }
+                    if (settings.songSpeed !== undefined) {
+                        document.getElementById('slider-song-speed').value = settings.songSpeed;
+                        document.getElementById('label-speed').innerText = settings.songSpeed + '%';
+                        songSpeedPercent = parseInt(settings.songSpeed);
+                    }
+                    
+                    updateScaleTuning();
+                } catch (e) {
+                    console.error("โหลดข้อมูลค่าติดตั้งเดิมขัดข้อง: ", e);
+                }
+            }
+        }
+
+        function saveSettingsToLocalStorage() {
+            const preferences = {
+                volume: document.getElementById('slider-volume').value,
+                rootKey: document.getElementById('select-root-key').value,
+                tuningType: document.getElementById('select-tuning-type').value,
+                sustain: document.getElementById('slider-sustain').value,
+                reverb: document.getElementById('slider-reverb').value,
+                songSpeed: document.getElementById('slider-song-speed').value
+            };
+            
+            localStorage.setItem('khim_pro_preferences_v2', JSON.stringify(preferences));
+            
+            const statusEl = document.getElementById('save-status');
+            statusEl.innerText = "✓ บันทึกการตั้งค่าลงเครื่องสำเร็จ!";
+            statusEl.classList.remove('hidden');
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 2500);
+        }
+
+        function resetSettingsToDefault() {
+            document.getElementById('slider-volume').value = "80";
+            document.getElementById('label-volume').innerText = "80%";
+            document.getElementById('select-root-key').value = "0";
+            document.getElementById('select-tuning-type').value = "thai";
+            document.getElementById('slider-sustain').value = "70";
+            document.getElementById('label-sustain').innerText = "70%";
+            document.getElementById('slider-reverb').value = "50";
+            document.getElementById('label-reverb').innerText = "50%";
+            document.getElementById('slider-song-speed').value = "100";
+            document.getElementById('label-speed').innerText = "100%";
+            songSpeedPercent = 100;
+
+            updateScaleTuning();
+            updateAudioParams();
+            updateVolumeParam();
+            adjustSongSpeed();
+
+            localStorage.removeItem('khim_pro_preferences_v2');
+
+            const statusEl = document.getElementById('save-status');
+            statusEl.innerText = "✓ รีเซ็ตค่าเริ่มโรงงานสำเร็จ!";
+            statusEl.classList.remove('hidden');
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 2500);
+        }
+
+        // ==========================================
+        // 6. AUTO-PLAY SYSTEM (ระบบบรรเลงอัตโนมัติ)
+        // ==========================================
+        function loadSelectedSong() {
+            const songId = document.getElementById('select-song').value;
+            currentSong = SONGS.find(s => s.id === songId);
+            
+            parsedNotes = parseThaiNotes(currentSong.notes);
+            currentNoteIndex = 0;
+            
+            stopSongPlayback();
+        }
+
+        function parseThaiNotes(noteString) {
+            const rawTokens = noteString.split(/\s+/).join(''); 
+            const result = [];
+            
+            for (let i = 0; i < rawTokens.length; i++) {
+                const char = rawTokens[i];
+                if (char === '-') {
+                    result.push({ type: 'rest' });
+                } else {
+                    let foundNote = KHIM_NOTES.find(n => n.name === char && n.group === 'mid');
+                    if (!foundNote) foundNote = KHIM_NOTES.find(n => n.name === char);
+
+                    if (foundNote) {
+                        result.push({ type: 'note', noteObj: foundNote, char: char });
+                    }
+                }
+            }
+            return result;
+        }
+
+        function toggleSongPlayback() {
+            const btnPlay = document.getElementById('btn-play-song');
+            const banner = document.getElementById('auto-play-banner');
+            const bannerTitle = document.getElementById('banner-song-name');
+
+            if (songPlaybackInterval) {
+                clearInterval(songPlaybackInterval);
+                songPlaybackInterval = null;
+                btnPlay.innerHTML = `<i class="ph-bold ph-play"></i>`;
+                btnPlay.className = "w-6 h-6 sm:w-7 sm:h-7 rounded text-stone-950 bg-amber-500 hover:bg-amber-400 flex items-center justify-center transition-all active:scale-90";
+            } else {
+                engine.init();
+                btnPlay.innerHTML = `<i class="ph-bold ph-pause text-xs sm:text-sm"></i>`;
+                btnPlay.className = "w-6 h-6 sm:w-7 sm:h-7 rounded text-white bg-sky-600 hover:bg-sky-500 flex items-center justify-center transition-all active:scale-90";
+                
+                bannerTitle.innerText = currentSong.title;
+                banner.classList.remove('opacity-0');
+                banner.classList.add('opacity-100');
+                
+                const bpm = currentSong.bpm * (songSpeedPercent / 100);
+                const stepMs = (60 / bpm) * 1000 / 2; 
+
+                songPlaybackInterval = setInterval(playNextAutoNote, stepMs);
+            }
+        }
+
+        function stopSongPlayback() {
+            const btnPlay = document.getElementById('btn-play-song');
+            const banner = document.getElementById('auto-play-banner');
+            
+            clearInterval(songPlaybackInterval);
+            songPlaybackInterval = null;
+            currentNoteIndex = 0;
+            
+            btnPlay.innerHTML = `<i class="ph-bold ph-play"></i>`;
+            btnPlay.className = "w-6 h-6 sm:w-7 sm:h-7 rounded text-stone-950 bg-amber-500 hover:bg-amber-400 flex items-center justify-center transition-all active:scale-90";
+            
+            banner.classList.add('opacity-0');
+            banner.classList.remove('opacity-100');
+            
+            updateNoteRollUI();
+        }
+
+        function adjustSongSpeed() {
+            songSpeedPercent = document.getElementById('slider-song-speed').value;
+            document.getElementById('label-speed').innerText = songSpeedPercent + '%';
+            
+            if (songPlaybackInterval) {
+                toggleSongPlayback(); 
+                toggleSongPlayback(); 
+            }
+        }
+
+        function playNextAutoNote() {
+            if (currentNoteIndex >= parsedNotes.length) {
+                currentNoteIndex = 0; 
+            }
+
+            const noteData = parsedNotes[currentNoteIndex];
+            if (noteData.type === 'note') {
+                playNoteVisual(noteData.noteObj.id, noteData.noteObj.freq, true);
+            }
+
+            updateNoteRollUI();
+            currentNoteIndex++;
+        }
+
+        function updateNoteRollUI() {
+            const container = document.getElementById('noteroll-container');
+            if (!container) return;
+            
+            let html = '';
+            const startIdx = currentNoteIndex - 2;
+            const endIdx = currentNoteIndex + 8;
+            
+            for (let i = startIdx; i <= endIdx; i++) {
+                if (i < 0 || i >= parsedNotes.length) {
+                    html += `<span class="w-3 text-center opacity-0">-</span>`;
+                    continue;
+                }
+                
+                const nd = parsedNotes[i];
+                const isCurrent = i === currentNoteIndex;
+                let char = nd.type === 'rest' ? '-' : nd.char;
+                
+                let styleClass = 'w-3 text-center transition-all duration-100 ';
+                if (isCurrent) {
+                    styleClass += 'text-amber-400 font-bold scale-125';
+                } else if (i < currentNoteIndex) {
+                    styleClass += 'text-stone-600 scale-90';
+                } else {
+                    styleClass += 'text-stone-400';
+                }
+                
+                html += `<span class="${styleClass}">${char}</span>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // โหลดโปรแกรมและเตรียมการทำงานเริ่มต้น
         window.addEventListener('load', initApp);
-        document.body.addEventListener('click', () => {
+        
+        // สนับสนุนการสั่งงาน AudioContext ให้ทำงานหลังผู้เล่นทัชจอครั้งแรกเพื่อปลดล็อคเบราว์เซอร์
+        const resumeAudio = () => {
             if (engine.ctx && engine.ctx.state === 'suspended') {
                 engine.ctx.resume();
             }
-        }, { once: true });
+        };
+        document.body.addEventListener('click', resumeAudio, { once: true });
+        document.body.addEventListener('touchstart', resumeAudio, { once: true });
+
     </script>
 </body>
 </html>
