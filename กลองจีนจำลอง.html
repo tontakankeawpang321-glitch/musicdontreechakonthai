@@ -3,772 +3,1151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>กลองจีนเสมือนจริง - Chinese Drum Master</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-
-        :root {
-            --primary-red: #c92a2a;
-            --dark-red: #8a1c1c;
-            --gold: #ffd43b;
-            --wood: #5c3a21;
-            --skin: #f4e4bc;
-            --bg-color: #2b2b2b;
-        }
-
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at center, #3a3a3a 0%, #1a1a1a 100%);
-            color: white;
-            margin: 0;
-            height: 100dvh; /* Use dynamic viewport height for mobile */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow: hidden; /* Prevent scrolling on mobile */
-            touch-action: none; /* Crucial for fast touch response */
-        }
-
-        header {
-            text-align: center;
-            padding: 5px; /* Compact padding */
-            background: linear-gradient(to bottom, var(--dark-red), var(--primary-red));
-            width: 100%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            border-bottom: 2px solid var(--gold);
-            z-index: 10;
-            flex-shrink: 0;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1rem; /* Compact font */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            color: var(--gold);
-        }
-
-        .controls {
-            display: flex;
-            gap: 5px;
-            padding: 5px; /* Compact padding */
-            justify-content: center;
-            flex-wrap: wrap;
-            background: rgba(0,0,0,0.3);
-            width: 100%;
-            backdrop-filter: blur(5px);
-            flex-shrink: 0;
-        }
-
-        button.ctrl-btn {
-            padding: 5px 12px; /* Compact buttons */
-            border: 1px solid var(--gold);
-            background: rgba(0,0,0,0.6);
-            color: var(--gold);
-            border-radius: 20px;
-            font-family: 'Sarabun', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-        }
-
-        button.ctrl-btn:active {
-            transform: scale(0.95);
-        }
-
-        button.ctrl-btn.recording {
-            background: var(--primary-red);
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(201, 42, 42, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0); }
-        }
-
-        /* Drum Layout */
-        .drum-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 1000px;
-            padding: 5px;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        .drum-set {
-            display: grid;
-            /* Default Mobile Portrait Layout */
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 5px; /* Tight gap */
-            width: 100%;
-            height: 100%;
-            justify-items: center;
-            align-items: center;
-            
-            /* Define areas for better ergonomic placement on mobile */
-            grid-template-areas: 
-                "cym-l cym-r"
-                "tom-l tom-r"
-                "wood  bass";
-        }
-
-        /* Assign Grid Areas */
-        .drum-wrapper:nth-child(1) { grid-area: cym-l; } /* Cymbal L */
-        .drum-wrapper:nth-child(2) { grid-area: bass; }  /* Bass (moved to bottom right) */
-        .drum-wrapper:nth-child(3) { grid-area: cym-r; } /* Cymbal R */
-        .drum-wrapper:nth-child(4) { grid-area: tom-l; } /* Tom L */
-        .drum-wrapper:nth-child(5) { grid-area: wood; }  /* Wood (moved to bottom left) */
-        .drum-wrapper:nth-child(6) { grid-area: tom-r; } /* Tom R */
-
-        /* Responsive adjustments for Desktop/Landscape */
-        @media (min-width: 768px) {
-            .drum-set {
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: repeat(2, 1fr);
-                gap: 20px;
-                grid-template-areas: 
-                    "cym-l bass cym-r"
-                    "tom-l tom-c tom-r"; /* tom-c is usually small drum, mapping wood here */
+    <title>กลองจีนเสมือนจริง - Chinese Drum Master Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dynasty: {
+                            red: '#7f1d1d',       // Deep Imperial Red
+                            brightred: '#b91c1c', // Silk Crimson
+                            gold: '#fbbf24',      // Palace Gold
+                            darkgold: '#b45309',  // Bronze Gold
+                            wood: '#2d140b',      // Polished Rosewood
+                            skin: '#ebd2a1',      // Ancient Parchment
+                            skinlight: '#f5e4c3'  // Fresh Goat Skin
+                        }
+                    },
+                    fontFamily: {
+                        sarabun: ['Sarabun', 'sans-serif'],
+                        chinese: ['Noto Serif TC', 'serif']
+                    }
+                }
             }
-            /* Remap for desktop layout */
-            .drum-wrapper:nth-child(1) { grid-area: 1 / 1 / 2 / 2; } /* Cymbal L */
-            .drum-wrapper:nth-child(2) { grid-area: 1 / 2 / 2 / 3; } /* Bass Center */
-            .drum-wrapper:nth-child(3) { grid-area: 1 / 3 / 2 / 4; } /* Cymbal R */
-            .drum-wrapper:nth-child(4) { grid-area: 2 / 1 / 3 / 2; } /* Tom L */
-            .drum-wrapper:nth-child(5) { grid-area: 2 / 2 / 3 / 3; } /* Wood Center */
-            .drum-wrapper:nth-child(6) { grid-area: 2 / 3 / 3 / 4; } /* Tom R */
+        }
+    </script>
+    <style>
+        body {
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1e0505 0%, #050000 100%);
         }
         
-        /* Landscape Mobile adjustments */
-        @media (max-width: 767px) and (orientation: landscape) {
-             .drum-set {
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: repeat(2, 1fr);
-                /* Reset areas for landscape flow */
-                grid-template-areas: none; 
-            }
-            /* Simple flow for landscape mobile */
-            .drum-wrapper:nth-child(1) { grid-area: auto; }
-            .drum-wrapper:nth-child(2) { grid-area: auto; order: 2; } 
-            .drum-wrapper:nth-child(3) { grid-area: auto; }
-            .drum-wrapper:nth-child(4) { grid-area: auto; }
-            .drum-wrapper:nth-child(5) { grid-area: auto; }
-            .drum-wrapper:nth-child(6) { grid-area: auto; }
-
-            .controls { display: none; } 
-            header { padding: 2px; }
-            h1 { font-size: 0.8rem; }
+        /* Traditional cloud patterns and borders */
+        .imperial-border {
+            background-image: 
+                radial-gradient(circle at 100% 150%, transparent 24%, rgba(251, 191, 36, 0.08) 24%, rgba(251, 191, 36, 0.08) 28%, transparent 28%, transparent),
+                radial-gradient(circle at 0% 150%, transparent 24%, rgba(251, 191, 36, 0.08) 24%, rgba(251, 191, 36, 0.08) 28%, transparent 28%, transparent);
+            background-size: 20px 20px;
         }
 
-        .drum-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
-        .drum-pad {
-            /* Compact Logic for Vertical Mobile */
-            width: min(30vw, 16vh); 
-            height: min(30vw, 16vh);
-            
-            /* Max limits */
-            max-width: 150px;
-            max-height: 150px;
-            
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, var(--skin), #d4c4a0);
-            border: min(1.5vw, 6px) solid var(--wood);
+        /* 3D Drum Skin Styling with Rivets (หมุดทองเหลือง) */
+        .drum-head {
+            background: radial-gradient(circle at 40% 40%, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
             box-shadow: 
-                0 4px 10px rgba(0,0,0,0.6),
-                inset 0 0 10px rgba(0,0,0,0.2);
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.05s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+                inset 0 0 15px rgba(0,0,0,0.3),
+                0 10px 20px rgba(0,0,0,0.6),
+                inset 0 4px 6px rgba(255,255,255,0.4);
         }
 
-        /* Decoration for Chinese Drums */
-        .drum-pad::after {
+        /* Realistic wood rim styling */
+        .drum-rim {
+            border: 8px solid #2d140b;
+            box-shadow: 
+                0 0 0 3px #b45309,
+                inset 0 0 10px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* Generated studs on the rim representing brass rivets (หมุดมงคล) */
+        .studs::before {
             content: '';
             position: absolute;
-            width: 90%;
-            height: 90%;
+            inset: -6px;
             border-radius: 50%;
-            border: 2px dashed rgba(92, 58, 33, 0.3);
+            border: 4px dotted #fbbf24;
+            opacity: 0.85;
             pointer-events: none;
         }
 
-        .drum-pad.large {
-            width: min(36vw, 20vh);
-            height: min(36vw, 20vh);
-            max-width: 180px;
-            max-height: 180px;
-            border-width: min(2vw, 8px);
-            background: radial-gradient(circle at 30% 30%, var(--skin), #cbb381);
+        /* Visual Active state for hit animation */
+        .drum-active {
+            transform: scale(0.93) translateY(4px) !important;
+            filter: brightness(1.2) contrast(1.1);
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.8) !important;
         }
 
-        .drum-pad.metal {
-            background: radial-gradient(circle at 30% 30%, #fffbe6, #ffd43b, #b08d00);
-            border: min(1vw, 4px) solid #b08d00;
-        }
-
-        .drum-pad:active, .drum-pad.active {
-            transform: scale(0.95);
-            box-shadow: 
-                0 2px 5px rgba(0,0,0,0.5),
-                inset 0 0 30px rgba(0,0,0,0.4);
-        }
-        
-        .ripple {
+        /* Shimmer reflection for brass instruments (Gong & Cymbal) */
+        .brass-shimmer::after {
+            content: '';
             position: absolute;
+            inset: 0;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(0);
-            animation: ripple-anim 0.4s linear;
+            background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.4) 100%);
             pointer-events: none;
         }
 
-        @keyframes ripple-anim {
-            to {
-                transform: scale(2.5);
+        /* Floating word animations */
+        @keyframes customFloatUp {
+            0% {
+                transform: translateY(20px) scale(0.5) rotate(-15deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+                transform: translateY(-10px) scale(1.1) rotate(5deg);
+            }
+            100% {
+                transform: translateY(-120px) scale(0.8) rotate(20deg);
                 opacity: 0;
             }
         }
-
-        .drum-label {
-            margin-top: 2px;
-            font-size: 0.75rem;
-            color: #ddd;
-            background: rgba(0,0,0,0.5);
-            padding: 2px 6px;
-            border-radius: 8px;
-            white-space: nowrap;
+        .vibrating-word {
+            animation: customFloatUp 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
         }
 
-        .key-hint {
-            position: absolute;
-            bottom: -5px;
-            right: 0;
-            background: var(--primary-red);
-            color: white;
-            font-size: 0.6rem;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid white;
+        /* Subtle glow for play bar */
+        .gold-pulse-glow {
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+            animation: pulseGlow 2s infinite ease-in-out;
         }
 
-        /* Notification */
-        #notification {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 100;
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.6); }
         }
-
     </style>
 </head>
-<body>
+<body class="font-sarabun text-white h-[100dvh] flex flex-col justify-between imperial-border select-none overflow-hidden">
 
-    <header>
-        <h1>🥁 กลองจีน (Chinese Drums)</h1>
+    <header class="w-full bg-gradient-to-b from-dynasty-red to-stone-950 border-b-4 border-dynasty-gold px-4 py-2 flex flex-col items-center justify-center relative shadow-2xl z-30 shrink-0">
+        <!-- Golden Corner Embellishments -->
+        <div class="absolute top-1 left-3 text-dynasty-gold/50 text-[10px] font-chinese tracking-widest">卍 興旺發達 卍</div>
+        <div class="absolute top-1 right-3 text-dynasty-gold/50 text-[10px] font-chinese tracking-widest">卍 吉祥如意 卍</div>
+        
+        <div class="flex items-center gap-2">
+            <span class="text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">🥁</span>
+            <h1 class="font-chinese font-black text-xl md:text-2xl text-dynasty-gold tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                萬能中國鼓 <span class="text-white text-xs font-sans font-bold bg-amber-950/90 px-2 py-0.5 rounded border border-dynasty-gold/40">Master Pro</span>
+            </h1>
+        </div>
+        
+        <!-- Interactive Rhythm Highway / Flow track -->
+        <div id="rhythmContainer" class="w-full max-w-md h-12 mt-1.5 bg-black/80 rounded-lg border-2 border-dynasty-gold/30 relative overflow-hidden flex items-center">
+            <div class="absolute left-10 top-0 bottom-0 w-0.5 bg-dynasty-gold z-10"></div>
+            <div class="absolute left-4 top-1.5 text-[8px] text-dynasty-gold font-bold z-10 bg-dynasty-red px-1 rounded-sm">จุดตี!</div>
+            <!-- Scrollable note track -->
+            <div id="rhythmTrack" class="absolute inset-0 flex items-center pl-10 pointer-events-none w-full">
+                <span id="demoStatusText" class="text-xs text-stone-400 mx-auto animate-pulse">เคาะที่กลอง หรือกดเล่นเพลงเพื่อเริ่มบรรเลงแบบโบราณ</span>
+            </div>
+        </div>
     </header>
 
-    <div class="controls">
-        <button id="recordBtn" class="ctrl-btn">
-            <span>●</span> อัด
-        </button>
-        <button id="stopBtn" class="ctrl-btn" disabled>
-            <span>■</span> หยุด
-        </button>
-        <button id="playBtn" class="ctrl-btn" disabled>
-            <span>▶</span> ฟัง
-        </button>
-        <button id="downloadBtn" class="ctrl-btn" disabled>
-            <span>⬇</span> โหลด
-        </button>
-    </div>
-
-    <div class="drum-container">
-        <div class="drum-set">
-            <!-- Cymbal Left -->
-            <div class="drum-wrapper">
-                <div class="drum-pad metal" data-sound="cymbal" data-key="q">
-                    <span class="key-hint">Q</span>
-                </div>
-                <div class="drum-label">ฉาบ (Bo)</div>
+    <div class="w-full bg-black/60 backdrop-blur-md border-b border-dynasty-gold/20 p-2 flex flex-col gap-2 z-20 shrink-0">
+        <!-- Panel Trigger & Live Recording Controls -->
+        <div class="flex items-center justify-between gap-2 max-w-md mx-auto w-full">
+            <div class="flex items-center gap-1">
+                <button id="demoBtn" class="bg-gradient-to-r from-emerald-800 to-teal-950 text-white font-bold text-xs py-2 px-3 rounded-full border border-emerald-400/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 shadow-md">
+                    <i class="fa-solid fa-gong text-dynasty-gold"></i> เล่นเพลงสาธิต
+                </button>
+                <select id="songSelect" class="bg-stone-900 border border-dynasty-gold/40 text-dynasty-gold text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-dynasty-gold">
+                    <option value="lion">🦁 ระบำเชิดสิงโตจักรพรรดิ (เร็ว)</option>
+                    <option value="battle">⚔️ เพลงศึกกู้ชาติด่านซานไห่กวน (ดุดัน)</option>
+                    <option value="ritual">🎋 ถวายพรพระอารามสวรรค์ (สงบ)</option>
+                </select>
             </div>
 
-            <!-- Large Drum (Center/Bottom Right on mobile) -->
-            <div class="drum-wrapper">
-                <div class="drum-pad large" data-sound="bass" data-key="space">
-                     <span class="key-hint">SPC</span>
+            <div class="flex items-center gap-1">
+                <button id="recordBtn" class="bg-dynasty-brightred hover:bg-red-600 border border-red-400/30 text-white text-xs px-2.5 py-1.5 rounded-md flex items-center gap-1 active:scale-95 transition-all">
+                    <span id="recDot" class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block animate-pulse"></span> บันทึกเสียง
+                </button>
+                <button id="playRecBtn" class="bg-stone-850 border border-stone-700 text-stone-300 disabled:opacity-40 disabled:scale-100 text-xs px-2 py-1.5 rounded-md flex items-center gap-1 active:scale-95 transition-all" disabled>
+                    <i class="fa-solid fa-play"></i> ฟังกลับ
+                </button>
+                <button id="downloadBtn" class="bg-stone-850 border border-stone-700 text-stone-300 disabled:opacity-40 disabled:scale-100 text-xs px-2.5 py-1.5 rounded-md active:scale-95 transition-all" disabled title="ดาวน์โหลดเสียงบรรเลง">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tempo (Speed) & Loop Controls Panel -->
+        <div class="flex items-center justify-between gap-3 max-w-md mx-auto w-full text-xs border-t border-stone-800/60 pt-2 pb-1 text-stone-300">
+            <div class="flex items-center gap-2 w-[55%]">
+                <span class="text-stone-400 shrink-0 flex items-center gap-1 font-semibold">
+                    <i class="fa-solid fa-gauge-high text-dynasty-gold"></i> ความเร็วเพลง:
+                </span>
+                <span id="speedVal" class="text-dynasty-gold font-bold w-10 shrink-0">1.0x</span>
+                <input type="range" id="globalSpeedSlider" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full accent-dynasty-gold bg-stone-800 rounded h-1.5 cursor-pointer">
+            </div>
+            <div class="flex gap-2.5 w-[45%] justify-end">
+                <label class="flex items-center gap-1 cursor-pointer select-none text-stone-400 hover:text-stone-200 transition-colors">
+                    <input type="checkbox" id="loopDemoToggle" class="accent-dynasty-gold rounded w-3.5 h-3.5"> วนลูปสาธิต
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer select-none text-stone-400 hover:text-stone-200 transition-colors">
+                    <input type="checkbox" id="loopRecToggle" class="accent-dynasty-gold rounded w-3.5 h-3.5"> วนลูปเสียงอัด
+                </label>
+            </div>
+        </div>
+
+        <!-- Quick setting checkboxes and Advance panel trigger -->
+        <div class="flex justify-between items-center max-w-md mx-auto w-full text-xs text-stone-400 border-t border-stone-850 pt-1.5">
+            <div class="flex gap-4">
+                <label class="flex items-center gap-1 cursor-pointer select-none">
+                    <input type="checkbox" id="keyHintToggle" checked class="accent-dynasty-gold"> ไกด์คีย์บอร์ด
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer select-none">
+                    <input type="checkbox" id="soundTextToggle" checked class="accent-dynasty-gold"> คำโน้ตอักษรจีนลอย
+                </label>
+            </div>
+            
+            <button id="toggleTuningBtn" class="text-dynasty-gold hover:text-yellow-300 font-bold flex items-center gap-1 bg-dynasty-gold/10 px-2 py-1 rounded border border-dynasty-gold/20 active:scale-95 transition-all">
+                <i class="fa-solid fa-sliders"></i> แผงปรับแต่งเสียงโบราณ
+            </button>
+        </div>
+
+        <div id="tuningPanel" class="hidden max-w-md mx-auto w-full bg-stone-950/95 border-2 border-dynasty-gold/40 rounded-xl p-3 mt-1 shadow-2xl transition-all">
+            <h3 class="text-xs font-bold text-dynasty-gold mb-2.5 flex items-center justify-between border-b border-stone-800 pb-1.5">
+                <span>🎛️ ระบบสังเคราะห์เสียงทางฟิสิกส์ (Physical Modeling Synthesizer)</span>
+                <span class="text-[9px] text-stone-500 font-normal">คืนค่าเริ่มต้นอัตโนมัติเมื่อออกจากแอป</span>
+            </h3>
+            
+            <div class="grid grid-cols-2 gap-3 text-[11px]">
+                <!-- Row 1 -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between">
+                        <span class="text-stone-300">ความตึงหนังกลอง (Pitch)</span>
+                        <span id="pitchVal" class="text-dynasty-gold font-bold">x1.00</span>
+                    </div>
+                    <input type="range" id="pitchSlider" min="0.5" max="1.8" step="0.05" value="1.0" class="w-full accent-dynasty-gold bg-stone-800 rounded">
                 </div>
-                <div class="drum-label">กลองใหญ่</div>
+                
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between">
+                        <span class="text-stone-300">ความสั่นสะท้อนไม้ (Decay)</span>
+                        <span id="decayVal" class="text-dynasty-gold font-bold">x1.00</span>
+                    </div>
+                    <input type="range" id="decaySlider" min="0.4" max="2.5" step="0.05" value="1.0" class="w-full accent-dynasty-gold bg-stone-800 rounded">
+                </div>
+
+                <!-- Row 2 -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between">
+                        <span class="text-stone-300">ความสว่างโลหะสัมฤทธิ์</span>
+                        <span id="brightVal" class="text-dynasty-gold font-bold">3,600Hz</span>
+                    </div>
+                    <input type="range" id="brightSlider" min="1500" max="7000" step="100" value="3600" class="w-full accent-dynasty-gold bg-stone-800 rounded">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between">
+                        <span class="text-stone-300">ความก้องท้องพระโรง (Reverb)</span>
+                        <span id="reverbVal" class="text-dynasty-gold font-bold">35%</span>
+                    </div>
+                    <input type="range" id="reverbSlider" min="0" max="100" step="5" value="35" class="w-full accent-dynasty-gold bg-stone-800 rounded">
+                </div>
             </div>
 
-            <!-- Cymbal Right -->
-            <div class="drum-wrapper">
-                <div class="drum-pad metal" data-sound="gong" data-key="e">
-                     <span class="key-hint">E</span>
+            <!-- Volume Adjuster and Reset Button -->
+            <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-stone-800 text-[10px]">
+                <div class="flex items-center gap-2 w-2/3">
+                    <span class="text-stone-400 shrink-0">ความดังรวม:</span>
+                    <input type="range" id="volumeSlider" min="0" max="150" value="100" class="w-full accent-dynasty-gold bg-stone-800 rounded">
                 </div>
-                <div class="drum-label">ฆ้อง (Luo)</div>
-            </div>
-
-            <!-- Tom Left -->
-            <div class="drum-wrapper">
-                <div class="drum-pad" data-sound="tom1" data-key="a">
-                     <span class="key-hint">A</span>
-                </div>
-                <div class="drum-label">กลองทุ้ม</div>
-            </div>
-
-             <!-- Wood Block (Bottom Left on mobile) -->
-             <div class="drum-wrapper">
-                <div class="drum-pad" data-sound="wood" data-key="s">
-                     <span class="key-hint">S</span>
-                </div>
-                <div class="drum-label">เกราะไม้</div>
-            </div>
-
-            <!-- Tom Right -->
-            <div class="drum-wrapper">
-                <div class="drum-pad" data-sound="tom2" data-key="d">
-                     <span class="key-hint">D</span>
-                </div>
-                <div class="drum-label">กลองกลาง</div>
+                <button id="resetTuningBtn" class="bg-dynasty-red/80 border border-red-700 hover:bg-dynasty-brightred text-amber-100 px-2 py-1 rounded">
+                    รีเซ็ตเสียงมาตรฐาน
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="notification">Notification</div>
-    <audio id="playbackAudio" style="display:none;"></audio>
+    <main id="canvasContainer" class="flex-grow w-full max-w-lg mx-auto relative flex flex-col justify-center px-4 py-2 select-none">
+        <!-- Floating Word Canvas Overlay -->
+        <div id="particleField" class="absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+
+        <!-- Balanced Ergonomic Grid for Traditional Chinese Drums -->
+        <div class="grid grid-cols-2 gap-x-4 gap-y-3 h-full max-h-[58vh] items-center justify-items-center">
+            
+            <!-- 1. CYMBAL (鈸 - Bo) - Traditional Hand Cymbals -->
+            <div class="flex flex-col items-center w-full">
+                <div class="relative w-28 h-28 max-w-[27vw] max-h-[27vw] rounded-full bg-gradient-to-tr from-yellow-700 via-amber-400 to-yellow-100 border-4 border-yellow-800 shadow-2xl flex items-center justify-center cursor-pointer active:scale-95 transition-all transform hover:rotate-3 brass-shimmer drum-pad drum-glow" 
+                     id="pad-cymbal" data-sound="cymbal" data-key="q">
+                    <!-- Red Silk Ribbon hanging center representing traditional hand cymbals -->
+                    <div class="absolute w-4 h-12 bg-red-700 rounded-b shadow-lg -top-2 left-1/2 -translate-x-1/2 z-10 border-b border-amber-400"></div>
+                    <span class="font-chinese font-black text-amber-950 text-3xl select-none z-10 drop-shadow">鈸</span>
+                    <div class="absolute bottom-1 right-2 bg-black/60 text-[8px] text-white font-mono px-1 rounded key-hint z-10">Q</div>
+                </div>
+                <span class="text-[10px] text-dynasty-gold font-bold mt-1 bg-stone-900/90 px-1.5 py-0.5 rounded border border-yellow-800/30">ฉาบหลวง (Bo)</span>
+            </div>
+
+            <!-- 2. GONG (鑼 - Luo) - Ceremonial Gong in Wood Frame -->
+            <div class="flex flex-col items-center w-full">
+                <div class="relative w-28 h-28 max-w-[27vw] max-h-[27vw] rounded-full bg-gradient-to-tr from-amber-850 via-yellow-500 to-amber-200 border-8 border-yellow-950 shadow-2xl flex items-center justify-center cursor-pointer active:scale-95 transition-all transform hover:-rotate-3 brass-shimmer drum-pad drum-glow" 
+                     id="pad-gong" data-sound="gong" data-key="e">
+                    <!-- Concentric circles for high resonance gong styling -->
+                    <div class="absolute inset-1.5 border-4 border-amber-900/20 rounded-full"></div>
+                    <div class="absolute inset-4 border-2 border-amber-900/20 rounded-full"></div>
+                    <span class="font-chinese font-black text-amber-950 text-3xl select-none z-10 drop-shadow">鑼</span>
+                    <div class="absolute bottom-1 right-2 bg-black/60 text-[8px] text-white font-mono px-1 rounded key-hint z-10">E</div>
+                </div>
+                <span class="text-[10px] text-dynasty-gold font-bold mt-1 bg-stone-900/90 px-1.5 py-0.5 rounded border border-yellow-800/30">ฆ้องเบิกฟ้า (Luo)</span>
+            </div>
+
+            <!-- 3. TANG GU (堂鼓 - Mid-size Drum) - Red body drum -->
+            <div class="flex flex-col items-center w-full">
+                <div class="relative w-30 h-30 max-w-[30vw] max-h-[30vw] rounded-full bg-stone-900 p-1.5 drum-rim studs">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-dynasty-skinlight via-dynasty-skin to-amber-200 flex items-center justify-center cursor-pointer active:scale-95 transition-all drum-pad drum-head" 
+                         id="pad-tom1" data-sound="tom1" data-key="a">
+                        <!-- Traditional stitched ring patterns inside skin -->
+                        <div class="absolute inset-2 border border-dashed border-dynasty-wood/40 rounded-full"></div>
+                        <span class="font-chinese font-black text-dynasty-wood/80 text-xl select-none drop-shadow-sm">堂</span>
+                        <div class="absolute bottom-1 right-2 bg-black/60 text-[8px] text-white font-mono px-1 rounded key-hint">A</div>
+                    </div>
+                </div>
+                <span class="text-[10px] text-stone-200 font-bold mt-1 bg-stone-900/90 px-1.5 py-0.5 rounded border border-stone-800">กลองทุ้มราชพิธี (Tang Gu)</span>
+            </div>
+
+            <!-- 4. PAI GU (排鼓 - High-pitched Drum) -->
+            <div class="flex flex-col items-center w-full">
+                <div class="relative w-30 h-30 max-w-[30vw] max-h-[30vw] rounded-full bg-stone-900 p-1.5 drum-rim studs">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-stone-100 via-dynasty-skin to-amber-100 flex items-center justify-center cursor-pointer active:scale-95 transition-all drum-pad drum-head" 
+                         id="pad-tom2" data-sound="tom2" data-key="d">
+                        <div class="absolute inset-2 border border-dashed border-dynasty-wood/40 rounded-full"></div>
+                        <span class="font-chinese font-black text-dynasty-wood/80 text-xl select-none drop-shadow-sm">排</span>
+                        <div class="absolute bottom-1 right-2 bg-black/60 text-[8px] text-white font-mono px-1 rounded key-hint">D</div>
+                    </div>
+                </div>
+                <span class="text-[10px] text-stone-200 font-bold mt-1 bg-stone-900/90 px-1.5 py-0.5 rounded border border-stone-800">กลองกลางประชัน (Pai Gu)</span>
+            </div>
+
+            <!-- 5. WOOD BLOCK (梆子 - Bangzi) - Hollow Mahogany block -->
+            <div class="flex flex-col items-center w-full">
+                <div class="relative w-28 h-16 max-w-[27vw] rounded-lg bg-gradient-to-b from-amber-900 to-amber-950 border-t-2 border-b-4 border-amber-700 shadow-xl flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-all drum-pad" 
+                     id="pad-wood" data-sound="wood" data-key="s">
+                    <!-- Physical hollowed resonance slot in block -->
+                    <div class="w-16 h-1 bg-black/60 rounded-full mb-1"></div>
+                    <span class="font-chinese font-black text-amber-200 text-xs select-none tracking-widest">梆子</span>
+                    <div class="absolute bottom-0.5 right-1.5 bg-black/60 text-[8px] text-white font-mono px-1 rounded key-hint">S</div>
+                </div>
+                <span class="text-[10px] text-amber-500/80 font-bold mt-1 bg-stone-900/90 px-1 py-0.5 rounded border border-amber-950/40">เกราะไม้แดง (Bangzi)</span>
+            </div>
+
+            <!-- 6. DEEP BASS DRUM (大鼓 - Da Gu) - Imperial Grand Bass Drum with golden dragon watermark -->
+            <div class="flex flex-col items-center w-full">
+                <!-- Outer Rosewood Frame with intensive brass rivets -->
+                <div class="relative w-36 h-36 max-w-[36vw] max-h-[36vw] rounded-full bg-gradient-to-br from-dynasty-wood to-stone-950 p-2.5 drum-rim studs">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-yellow-50 via-dynasty-skin to-amber-200 flex items-center justify-center cursor-pointer active:scale-95 transition-all gold-pulse-glow drum-pad drum-head" 
+                         id="pad-bass" data-sound="bass" data-key="space">
+                        <div class="absolute inset-1.5 border-2 border-dashed border-dynasty-darkgold/30 rounded-full"></div>
+                        <!-- Traditional Imperial Golden Dragon subtle watermark representation -->
+                        <div class="absolute inset-4 opacity-[0.05] flex items-center justify-center text-3xl">🐉</div>
+                        <span class="font-chinese font-black text-red-950 text-3xl drop-shadow select-none">大鼓</span>
+                        <div class="absolute bottom-2 right-2 bg-black/60 text-[8px] text-white font-mono px-1 rounded key-hint">SPC</div>
+                    </div>
+                </div>
+                <span class="text-xs text-red-400 font-extrabold mt-1 bg-stone-900/90 px-2 py-0.5 rounded border border-red-950/40 shadow-sm animate-pulse">กลองใหญ่กู้ชาติ (Da Gu)</span>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="w-full bg-stone-950/90 border-t-2 border-dynasty-gold/30 p-2 text-center text-[10px] text-stone-400 shrink-0">
+        <div class="max-w-md mx-auto flex justify-between items-center px-2">
+            <span class="text-left text-stone-500 font-sans">
+                💡 เคาะกลองหรือเคาะคีย์บอร์ดเพื่อขับขานจังหวะมงคล
+            </span>
+            <div class="flex items-center gap-1.5 text-dynasty-gold font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Web Synthesis Active</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Status Toast -->
+    <div id="toast" class="fixed bottom-14 left-1/2 -translate-x-1/2 bg-stone-950/95 border-2 border-dynasty-gold text-dynasty-gold font-bold text-xs px-4 py-2.5 rounded-full shadow-2xl opacity-0 scale-90 pointer-events-none transition-all duration-300 z-50 text-center">
+        ระบบสังเคราะห์เสียงเริ่มบรรเลง!
+    </div>
 
     <script>
-        // --- Audio Engine (Web Audio API) ---
-        let audioCtx;
-        let masterGain;
-        let compressor;
-        let dest; // Destination for recording
-        let mediaRecorder;
-        let audioChunks = [];
-        let audioBlob;
-        let audioUrl;
+        let audioCtx = null;
+        let masterGainNode = null;
+        let mainReverbNode = null;
+        let dryGainNode = null;
+        let wetGainNode = null;
+        let recorderDestination = null;
+        let mainMediaRecorder = null;
+        let audioRecordedChunks = [];
+        let playbackBlobUrl = null;
+        let playbackAudio = null; // Persistent audio player for loop control and speed adjustment
 
-        // Initialize Audio Context on first interaction
-        function initAudio() {
+        // Interactive Synthesizer Parameters controlled by Advanced Panel
+        const soundParameters = {
+            pitch: 1.0,      // Physical Tension multiplier
+            decay: 1.0,      // Physical Wood/Metal Resonance multiplier
+            bright: 3600,    // Brass metallic highpass cut
+            reverb: 0.35,    // Room wet mix (0 to 1)
+            masterVol: 1.0   // Total system volume
+        };
+
+        // Traditional Phonetics & Floating Characters for Visual Strikes
+        const floatingDrumsWords = {
+            bass: { th: 'ตึง!', zh: '咚', color: 'text-amber-100 shadow-amber-900/50' },
+            tom1: { th: 'ตุ่ม!', zh: '咚', color: 'text-orange-200 shadow-orange-900/50' },
+            tom2: { th: 'ตึก!', zh: '嗒', color: 'text-red-200 shadow-red-900/50' },
+            wood: { th: 'ก็อก!', zh: '梆', color: 'text-amber-400 shadow-amber-900/50' },
+            cymbal: { th: 'แช่!', zh: '嚓', color: 'text-yellow-200 shadow-yellow-600/50' },
+            gong: { th: 'โหม่ง!', zh: '鑼', color: 'text-yellow-400 shadow-yellow-600/50' }
+        };
+
+        // Instantiates the full real-time Synthesis audio graph
+        function initializeAudioGraph() {
             if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
                 
-                // --- HIGH POWER AUDIO CHAIN ---
-                
-                // 1. Dynamics Compressor (To prevent clipping at high volume)
-                compressor = audioCtx.createDynamicsCompressor();
-                compressor.threshold.value = -10; // Start compressing early
-                compressor.knee.value = 30;
-                compressor.ratio.value = 12; // High compression ratio
-                compressor.attack.value = 0.003;
-                compressor.release.value = 0.25;
+                // Master Gain Node configuration
+                masterGainNode = audioCtx.createGain();
+                masterGainNode.gain.setValueAtTime(soundParameters.masterVol, audioCtx.currentTime);
 
-                // 2. Master Volume (Boosted)
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 1.8; // Boost volume significantly (compressor protects it)
-                
-                // Chain: Source -> masterGain -> Compressor -> Destination
-                masterGain.connect(compressor);
-                compressor.connect(audioCtx.destination);
-                
-                // Destination setup for recording (Record from compressor output)
-                dest = audioCtx.createMediaStreamDestination();
-                compressor.connect(dest);
-                
-                showToast("ระบบเสียงพร้อมทำงาน!");
+                // Professional Dynamics Compressor to glue physical models together and prevent digital clipping
+                const compressorNode = audioCtx.createDynamicsCompressor();
+                compressorNode.threshold.setValueAtTime(-10, audioCtx.currentTime);
+                compressorNode.knee.setValueAtTime(30, audioCtx.currentTime);
+                compressorNode.ratio.setValueAtTime(12, audioCtx.currentTime);
+                compressorNode.attack.setValueAtTime(0.003, audioCtx.currentTime);
+                compressorNode.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+                // Algorithmic physical room reverb
+                mainReverbNode = audioCtx.createConvolver();
+                mainReverbNode.buffer = synthesizeRoomImpulse(2.0, 1.8); // 2.0s duration, 1.8 decay rate
+
+                dryGainNode = audioCtx.createGain();
+                wetGainNode = audioCtx.createGain();
+
+                // Connect paths
+                dryGainNode.gain.setValueAtTime(1 - soundParameters.reverb, audioCtx.currentTime);
+                wetGainNode.gain.setValueAtTime(soundParameters.reverb, audioCtx.currentTime);
+
+                // Route: dry & wet signals -> compressor -> masterGainNode -> physical output
+                dryGainNode.connect(compressorNode);
+                mainReverbNode.connect(wetGainNode);
+                wetGainNode.connect(compressorNode);
+                compressorNode.connect(masterGainNode);
+
+                masterGainNode.connect(audioCtx.destination);
+
+                // Setup internal media stream recording target (clean synthesis capture)
+                recorderDestination = audioCtx.createMediaStreamDestination();
+                masterGainNode.connect(recorderDestination);
+
+                launchToastNotification("ระบบสังเคราะห์เสียงทางฟิสิกส์เริ่มต้น!");
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // --- Sound Synthesis Functions ---
-        // Generates drum sounds procedurally (No external files needed)
-        
-        function playSound(type) {
-            initAudio();
-            const t = audioCtx.currentTime;
+        // Generates procedural space impulse (Imperial Room Sound) without static files
+        function synthesizeRoomImpulse(duration, decayRate) {
+            const sampleRate = audioCtx ? audioCtx.sampleRate : 44100;
+            const length = sampleRate * duration;
+            const impulseBuffer = audioCtx.createBuffer(2, length, sampleRate);
+            
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulseBuffer.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    // Exponential decay white noise representing physical reflections
+                    channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decayRate);
+                }
+            }
+            return impulseBuffer;
+        }
 
-            // Common nodes for this specific hit
-            const gainNode = audioCtx.createGain();
-            gainNode.connect(masterGain);
+        function executePhysicalSound(instrument) {
+            initializeAudioGraph();
+            const now = audioCtx.currentTime;
+            const pitchScale = soundParameters.pitch;
+            const decayScale = soundParameters.decay;
 
-            switch (type) {
-                case 'bass': // Da Gu (Deep, Powerful, Resonant)
-                    // 1. Body (Deep Sine)
+            // Simple router helper to pump sound into dry and wet channels
+            const routeSoundToGraph = (source, gain) => {
+                source.connect(gain);
+                gain.connect(dryGainNode);
+                gain.connect(mainReverbNode);
+            };
+
+            switch (instrument) {
+                case 'bass': { // Da Gu - Deep Imperial Grand Bass Drum (Completely redesigned for high-fidelity thump)
+                    // 1. Mallet Leather Strike Slap (Transient)
+                    // Generates the realistic wood cracking impact of the mallet hitting thick heavy hide
+                    const strikeBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.08, audioCtx.sampleRate);
+                    const strikeData = strikeBuffer.getChannelData(0);
+                    for (let i = 0; i < strikeBuffer.length; i++) {
+                        strikeData[i] = Math.random() * 2 - 1;
+                    }
+                    const strikeSource = audioCtx.createBufferSource();
+                    strikeSource.buffer = strikeBuffer;
+
+                    const strikeFilter = audioCtx.createBiquadFilter();
+                    strikeFilter.type = 'bandpass';
+                    strikeFilter.frequency.setValueAtTime(850 * pitchScale, now);
+                    strikeFilter.Q.setValueAtTime(3.0, now);
+
+                    const strikeGain = audioCtx.createGain();
+                    strikeGain.gain.setValueAtTime(3.5, now); // Strong attack
+                    strikeGain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+
+                    strikeSource.connect(strikeFilter);
+                    strikeFilter.connect(strikeGain);
+                    strikeGain.connect(dryGainNode);
+                    strikeGain.connect(mainReverbNode);
+
+                    strikeSource.start(now);
+                    strikeSource.stop(now + 0.08);
+
+                    // 2. Hollow Mahogany Barrel (Cabinet Resonance)
+                    // Adds the woody, hollow-barrel characteristics of the traditional Da Gu, audible even on mobile phones!
+                    const barrelOsc = audioCtx.createOscillator();
+                    barrelOsc.type = 'triangle'; 
+                    barrelOsc.frequency.setValueAtTime(145 * pitchScale, now);
+                    barrelOsc.frequency.exponentialRampToValueAtTime(68 * pitchScale, now + 0.14 * decayScale);
+
+                    const barrelFilter = audioCtx.createBiquadFilter();
+                    barrelFilter.type = 'lowpass';
+                    barrelFilter.frequency.setValueAtTime(280, now); // Filters out harsh frequencies to maintain woody warmth
+
+                    const barrelGain = audioCtx.createGain();
+                    barrelGain.gain.setValueAtTime(3.2, now); // Intense thump
+                    barrelGain.gain.exponentialRampToValueAtTime(0.5, now + 0.12 * decayScale);
+                    barrelGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9 * decayScale);
+
+                    barrelOsc.connect(barrelFilter);
+                    barrelFilter.connect(barrelGain);
+                    barrelGain.connect(dryGainNode);
+                    barrelGain.connect(mainReverbNode);
+
+                    barrelOsc.start(now);
+                    barrelOsc.stop(now + 1.0 * decayScale);
+
+                    // 3. Deep Skin Boom (Sub-bass Air Vibration)
+                    // Authentic chest-shaking rumbling finish of a massive Chinese drum
+                    const boomOsc = audioCtx.createOscillator();
+                    boomOsc.type = 'sine';
+                    boomOsc.frequency.setValueAtTime(90 * pitchScale, now);
+                    boomOsc.frequency.exponentialRampToValueAtTime(38 * pitchScale, now + 0.28 * decayScale);
+
+                    const boomGain = audioCtx.createGain();
+                    boomGain.gain.setValueAtTime(3.8, now); // Extreme sub-bass boost
+                    boomGain.gain.exponentialRampToValueAtTime(0.6, now + 0.22 * decayScale);
+                    boomGain.gain.exponentialRampToValueAtTime(0.001, now + 1.6 * decayScale);
+
+                    boomOsc.connect(boomGain);
+                    boomGain.connect(dryGainNode);
+                    boomGain.connect(mainReverbNode);
+
+                    boomOsc.start(now);
+                    boomOsc.stop(now + 1.7 * decayScale);
+                    break;
+                }
+
+                case 'tom1': { // Tang Gu - Warm Traditional Wood Frame Drum
                     const osc = audioCtx.createOscillator();
-                    osc.frequency.setValueAtTime(100, t);
-                    osc.frequency.exponentialRampToValueAtTime(40, t + 0.5);
-                    gainNode.gain.setValueAtTime(1.5, t); // Louder start
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 1.2); // Longer decay
-                    osc.connect(gainNode);
-                    osc.start(t);
-                    osc.stop(t + 1.2);
+                    const gain = audioCtx.createGain();
 
-                    // 2. Punch (Square wave transient)
-                    const punch = audioCtx.createOscillator();
-                    punch.type = 'square';
-                    punch.frequency.setValueAtTime(120, t);
-                    punch.frequency.exponentialRampToValueAtTime(40, t + 0.1);
-                    const punchGain = audioCtx.createGain();
-                    punchGain.gain.setValueAtTime(0.5, t);
-                    punchGain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-                    punch.connect(punchGain);
-                    punchGain.connect(masterGain);
-                    punch.start(t);
-                    punch.stop(t + 0.1);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(185 * pitchScale, now);
+                    osc.frequency.exponentialRampToValueAtTime(80 * pitchScale, now + 0.22 * decayScale);
 
-                    // 3. Skin Noise (Thud)
-                    createFilteredNoise(t, 0.15, 1.0, 200); 
+                    gain.gain.setValueAtTime(1.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.2, now + 0.15 * decayScale);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7 * decayScale);
+
+                    routeSoundToGraph(osc, gain);
+                    osc.start(now);
+                    osc.stop(now + 0.75 * decayScale);
                     break;
+                }
 
-                case 'tom1': // Tang Gu (Warm, Tubby)
-                    const oscT1 = audioCtx.createOscillator();
-                    oscT1.frequency.setValueAtTime(220, t);
-                    oscT1.frequency.exponentialRampToValueAtTime(90, t + 0.4);
-                    gainNode.gain.setValueAtTime(1.2, t);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
-                    oscT1.connect(gainNode);
-                    oscT1.start(t);
-                    oscT1.stop(t + 0.6);
+                case 'tom2': { // Pai Gu - High Tension Rapid response drum
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(290 * pitchScale, now);
+                    osc.frequency.exponentialRampToValueAtTime(130 * pitchScale, now + 0.13 * decayScale);
+
+                    gain.gain.setValueAtTime(1.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.09 * decayScale);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45 * decayScale);
+
+                    routeSoundToGraph(osc, gain);
+                    osc.start(now);
+                    osc.stop(now + 0.5 * decayScale);
+                    break;
+                }
+
+                case 'wood': { // Bangzi - Ultra hollow tight Rosewood Block
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1250 * pitchScale, now);
+                    osc.frequency.exponentialRampToValueAtTime(780 * pitchScale, now + 0.035);
+
+                    gain.gain.setValueAtTime(1.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09 * decayScale);
+
+                    routeSoundToGraph(osc, gain);
+                    osc.start(now);
+                    osc.stop(now + 0.11 * decayScale);
+                    break;
+                }
+
+                case 'cymbal': { // Bo - Complex physical FM brass array shimmer
+                    const rawFrequencies = [305, 520, 675, 890, 1010, 1330];
+                    const bandpass = audioCtx.createBiquadFilter();
+                    bandpass.type = 'bandpass';
+                    bandpass.frequency.value = soundParameters.bright; // Configurable metallic brightness
+
+                    const highpass = audioCtx.createBiquadFilter();
+                    highpass.type = 'highpass';
+                    highpass.frequency.value = 6500;
+
+                    const cymGain = audioCtx.createGain();
+                    cymGain.gain.setValueAtTime(1.5, now);
+                    cymGain.gain.exponentialRampToValueAtTime(0.35, now + 0.14 * decayScale);
+                    cymGain.gain.exponentialRampToValueAtTime(0.001, now + 1.25 * decayScale);
+
+                    rawFrequencies.forEach(freq => {
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'square';
+                        osc.frequency.value = freq * pitchScale;
+                        osc.connect(bandpass);
+                        osc.start(now);
+                        osc.stop(now + 1.35 * decayScale);
+                    });
+
+                    bandpass.connect(highpass);
+                    highpass.connect(cymGain);
                     
-                    // Add hollow resonance
-                    createResonance(t, 200, 0.4);
-                    createFilteredNoise(t, 0.1, 0.5, 400);
+                    cymGain.connect(dryGainNode);
+                    cymGain.connect(mainReverbNode);
                     break;
+                }
 
-                case 'tom2': // Pai Gu (Tight, Higher)
-                    const oscT2 = audioCtx.createOscillator();
-                    oscT2.frequency.setValueAtTime(320, t);
-                    oscT2.frequency.exponentialRampToValueAtTime(140, t + 0.3);
-                    gainNode.gain.setValueAtTime(1.2, t);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-                    oscT2.connect(gainNode);
-                    oscT2.start(t);
-                    oscT2.stop(t + 0.4);
-                    createFilteredNoise(t, 0.08, 0.5, 500);
-                    break;
-                
-                case 'wood': // Bangzi (Sharp, Clicky)
-                    const oscW = audioCtx.createOscillator();
-                    oscW.type = 'triangle'; // Triangle is woodier than sine
-                    oscW.frequency.setValueAtTime(900, t);
-                    oscW.frequency.exponentialRampToValueAtTime(600, t + 0.05); // Pitch drop for "knock"
-                    gainNode.gain.setValueAtTime(1.0, t);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-                    oscW.connect(gainNode);
-                    oscW.start(t);
-                    oscW.stop(t + 0.2);
+                case 'gong': { // Luo - Traditional bend-up FM physical Gong
+                    const carrier = audioCtx.createOscillator();
+                    const modulator = audioCtx.createOscillator();
+                    const modGain = audioCtx.createGain();
+                    const gongGain = audioCtx.createGain();
+
+                    // Traditional Chinese Gongs bend pitch UPWARDS as the dynamic force settles
+                    carrier.type = 'sine';
+                    carrier.frequency.setValueAtTime(150 * pitchScale, now);
+                    carrier.frequency.linearRampToValueAtTime(188 * pitchScale, now + 0.85 * decayScale);
+
+                    modulator.type = 'sawtooth';
+                    modulator.frequency.value = 110 * pitchScale;
+                    modGain.gain.setValueAtTime(460 * pitchScale, now);
+                    modGain.gain.exponentialRampToValueAtTime(45, now + 0.65 * decayScale);
+
+                    gongGain.gain.setValueAtTime(1.6, now);
+                    gongGain.gain.exponentialRampToValueAtTime(0.22, now + 0.45 * decayScale);
+                    gongGain.gain.exponentialRampToValueAtTime(0.001, now + 2.1 * decayScale);
+
+                    modulator.connect(modGain);
+                    modGain.connect(carrier.frequency);
                     
-                    // Add click
-                    createFilteredNoise(t, 0.02, 0.8, 2000, 'highpass');
-                    break;
+                    carrier.connect(gongGain);
+                    gongGain.connect(dryGainNode);
+                    gongGain.connect(mainReverbNode);
 
-                case 'cymbal': // Bo (Bright, Shimmering)
-                    createMetallicNoise(t, 1.2, 0.8); // Longer decay, higher volume
+                    carrier.start(now);
+                    modulator.start(now);
+                    carrier.stop(now + 2.2 * decayScale);
+                    modulator.stop(now + 2.2 * decayScale);
                     break;
-                
-                case 'gong': // Luo (Rich FM)
-                    playGong(t);
-                    break;
+                }
             }
         }
 
-        // Helper: Filtered Noise for skin impact
-        function createFilteredNoise(time, duration, vol, freq, type = 'lowpass') {
-            const bufferSize = audioCtx.sampleRate * duration;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
+        function triggerFlyingTraditionalWords(elemId, type) {
+            const targetPad = document.getElementById(elemId);
+            const fontObj = floatingDrumsWords[type];
+            if (!targetPad || !fontObj) return;
 
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
+            // Generate localized coordinate within the canvas
+            const elementRect = targetPad.getBoundingClientRect();
+            const relativeContainer = document.getElementById('canvasContainer').getBoundingClientRect();
             
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = type;
-            filter.frequency.value = freq;
+            const randomX = elementRect.left - relativeContainer.left + (elementRect.width / 2) + (Math.random() * 30 - 15);
+            const randomY = elementRect.top - relativeContainer.top + 10;
 
-            const noiseGain = audioCtx.createGain();
-            noiseGain.gain.setValueAtTime(vol, time);
-            noiseGain.gain.exponentialRampToValueAtTime(0.01, time + duration);
-            
-            noise.connect(filter);
-            filter.connect(noiseGain);
-            noiseGain.connect(masterGain);
-            noise.start(time);
-        }
+            const labelElem = document.createElement('div');
+            labelElem.className = `absolute text-2xl md:text-3xl font-chinese font-black pointer-events-none z-40 select-none vibrating-word drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)] ${fontObj.color}`;
+            labelElem.style.left = `${randomX}px`;
+            labelElem.style.top = `${randomY}px`;
 
-        // Helper: Extra Resonance for Toms
-        function createResonance(time, freq, duration) {
-            const osc = audioCtx.createOscillator();
-            osc.frequency.value = freq;
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.2, time); // Subtle
-            gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
-            osc.connect(gain);
-            gain.connect(masterGain);
-            osc.start(time);
-            osc.stop(time + duration);
-        }
+            // Display beautiful Chinese Character coupled with Thai phonetic guide
+            labelElem.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <span class="text-dynasty-gold tracking-wider">${fontObj.zh}</span>
+                    <span class="text-[9px] font-sarabun bg-black/90 text-white px-1.5 py-0.5 rounded-full border border-dynasty-gold/30 mt-0.5">${fontObj.th}</span>
+                </div>
+            `;
 
-        // Helper: Metallic Sound (Complex Bandpass)
-        function createMetallicNoise(time, duration, vol) {
-            const bufferSize = audioCtx.sampleRate * duration;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
+            document.getElementById('particleField').appendChild(labelElem);
 
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-
-            // Multiple filters for complex spectrum
-            const bandpass1 = audioCtx.createBiquadFilter();
-            bandpass1.type = "bandpass";
-            bandpass1.frequency.value = 1000;
-            bandpass1.Q.value = 1;
-
-            const bandpass2 = audioCtx.createBiquadFilter();
-            bandpass2.type = "highpass";
-            bandpass2.frequency.value = 3000;
-
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(vol, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
-
-            // Split path
-            noise.connect(bandpass1);
-            noise.connect(bandpass2);
-            
-            bandpass1.connect(gain);
-            bandpass2.connect(gain);
-            
-            gain.connect(masterGain);
-            noise.start(time);
-        }
-
-        // Helper: Gong Sound (Enhanced FM)
-        function playGong(t) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            // FM Synthesis: Modulator
-            const mod = audioCtx.createOscillator();
-            const modGain = audioCtx.createGain();
-            
-            osc.type = 'sine';
-            osc.frequency.value = 180; // Lower pitch for bigger gong
-            
-            mod.type = 'square';
-            mod.frequency.value = 245; // Disharmonic
-            modGain.gain.value = 400; // Stronger modulation for more metal
-
-            mod.connect(modGain);
-            modGain.connect(osc.frequency);
-            
-            osc.connect(gain);
-            gain.connect(masterGain);
-
-            gain.gain.setValueAtTime(1.0, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 2.5); // Longer sustain
-
-            osc.start(t);
-            mod.start(t);
-            osc.stop(t + 2.5);
-            mod.stop(t + 2.5);
-        }
-
-
-        // --- Interaction Logic ---
-        const drums = document.querySelectorAll('.drum-pad');
-        const activeTouches = new Map(); // Track multitouch
-
-        function triggerDrum(element) {
-            const soundType = element.dataset.sound;
-            
-            // Audio
-            playSound(soundType);
-
-            // Visual
-            element.classList.add('active');
-            createRipple(element);
-            
+            // Cleanup memory references after flight animation finishes
             setTimeout(() => {
-                element.classList.remove('active');
-            }, 100);
+                labelElem.remove();
+            }, 1300);
         }
 
-        function createRipple(element) {
-            const ripple = document.createElement('div');
-            ripple.classList.add('ripple');
-            // Randomize position slightly for realism
-            const size = element.offsetWidth;
-            ripple.style.width = size + 'px';
-            ripple.style.height = size + 'px';
-            ripple.style.left = '0px'; 
-            ripple.style.top = '0px';
+        // Adds instantaneous physical scale compression upon striking
+        function visualFlashStrike(elemId) {
+            const targetPad = document.getElementById(elemId);
+            if (targetPad) {
+                targetPad.classList.add('drum-active');
+                setTimeout(() => {
+                    targetPad.classList.remove('drum-active');
+                }, 85);
+            }
+        }
+
+        // Bridge combining synthesis & visual layers
+        function fireDrumHit(instrument) {
+            const padIdMap = {
+                cymbal: 'pad-cymbal',
+                gong: 'pad-gong',
+                tom1: 'pad-tom1',
+                tom2: 'pad-tom2',
+                wood: 'pad-wood',
+                bass: 'pad-bass'
+            };
+            const targetId = padIdMap[instrument];
+            visualFlashStrike(targetId);
+            executePhysicalSound(instrument);
             
-            element.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 400);
+            if (document.getElementById('soundTextToggle').checked) {
+                triggerFlyingTraditionalWords(targetId, instrument);
+            }
         }
 
-        // Mouse & Touch Events
-        drums.forEach(drum => {
-            // Mouse
-            drum.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                triggerDrum(drum);
+        function beginLocalRecording() {
+            initializeAudioGraph();
+            audioRecordedChunks = [];
+            
+            let optimalMimeType = 'audio/webm';
+            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                optimalMimeType = 'audio/webm;codecs=opus';
+            } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+                optimalMimeType = 'audio/ogg;codecs=opus';
+            } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                optimalMimeType = 'audio/mp4';
+            }
+
+            try {
+                mainMediaRecorder = new MediaRecorder(recorderDestination.stream, { mimeType: optimalMimeType });
+            } catch (err) {
+                mainMediaRecorder = new MediaRecorder(recorderDestination.stream);
+            }
+
+            mainMediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) {
+                    audioRecordedChunks.push(e.data);
+                }
+            };
+
+            mainMediaRecorder.onstop = function() {
+                const combinedBlob = new Blob(audioRecordedChunks, { type: mainMediaRecorder.mimeType });
+                playbackBlobUrl = URL.createObjectURL(combinedBlob);
+                
+                // Set up the global audio element with currently selected loop & speed rates
+                playbackAudio = new Audio(playbackBlobUrl);
+                playbackAudio.loop = document.getElementById('loopRecToggle').checked;
+                playbackAudio.playbackRate = parseFloat(document.getElementById('globalSpeedSlider').value);
+                
+                document.getElementById('playRecBtn').disabled = false;
+                document.getElementById('downloadBtn').disabled = false;
+                
+                launchToastNotification("บันทึกเสร็จสมบูรณ์! กดฟังกลับหรือดาวน์โหลดได้เลย");
+                
+                const recBtn = document.getElementById('recordBtn');
+                recBtn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block animate-pulse"></span> บันทึกเสียง`;
+                recBtn.className = recBtn.className.replace('bg-amber-950 border-red-500', 'bg-dynasty-brightred');
+            };
+
+            mainMediaRecorder.start();
+            launchToastNotification("🎙️ กำลังบันทึกการตีกลอง...");
+            
+            // Adjust visual look of the record button
+            const recBtn = document.getElementById('recordBtn');
+            recBtn.innerHTML = `🛑 หยุดบันทึก`;
+            recBtn.className = recBtn.className.replace('bg-dynasty-brightred', 'bg-amber-950 border-red-500');
+        }
+
+        function stopLocalRecording() {
+            if (mainMediaRecorder && mainMediaRecorder.state === 'recording') {
+                mainMediaRecorder.stop();
+            }
+        }
+
+        const demoTracks = {
+            lion: [ // Lion Dance - Traditional energetic temple patterns
+                { time: 0, drum: 'bass' }, { time: 180, drum: 'cymbal' },
+                { time: 360, drum: 'bass' }, { time: 540, drum: 'cymbal' },
+                { time: 720, drum: 'bass' }, { time: 820, drum: 'bass' }, { time: 920, drum: 'cymbal' },
+                { time: 1100, drum: 'tom1' }, { time: 1300, drum: 'tom2' }, { time: 1500, drum: 'gong' },
+                { time: 1700, drum: 'bass' }, { time: 1850, drum: 'bass' }, { time: 2000, drum: 'cymbal' },
+                { time: 2200, drum: 'wood' }, { time: 2350, drum: 'wood' }, { time: 2500, drum: 'bass' },
+                { time: 2700, drum: 'cymbal' }, { time: 2900, drum: 'gong' }
+            ],
+            battle: [ // War Drums - Thumping march beats
+                { time: 0, drum: 'bass' }, { time: 220, drum: 'bass' },
+                { time: 440, drum: 'tom1' }, { time: 660, drum: 'tom1' },
+                { time: 880, drum: 'tom2' }, { time: 1100, drum: 'tom2' },
+                { time: 1320, drum: 'gong' }, { time: 1540, drum: 'cymbal' },
+                { time: 1760, drum: 'bass' }, { time: 1880, drum: 'bass' }, { time: 2000, drum: 'bass' }, { time: 2120, drum: 'bass' },
+                { time: 2240, drum: 'gong' }, { time: 2460, drum: 'gong' }, { time: 2700, drum: 'bass' }
+            ],
+            ritual: [ // Temple Praying - Slow ceremonial layout
+                { time: 0, drum: 'wood' }, { time: 450, drum: 'wood' },
+                { time: 900, drum: 'gong' }, { time: 1800, drum: 'bass' },
+                { time: 2250, drum: 'wood' }, { time: 2700, drum: 'tom1' },
+                { time: 3150, drum: 'tom2' }, { time: 3600, drum: 'gong' },
+                { time: 4400, drum: 'bass' }, { time: 4850, drum: 'bass' }, { time: 5300, drum: 'cymbal' }
+            ]
+        };
+
+        let demoTrackTimers = [];
+        let isDemoPlaying = false;
+
+        function playDemoTrack() {
+            if (isDemoPlaying) {
+                terminateDemoTrack();
+                return;
+            }
+
+            initializeAudioGraph();
+            isDemoPlaying = true;
+            document.getElementById('demoBtn').innerHTML = `<i class="fa-solid fa-square"></i> หยุดสาธิต`;
+            document.getElementById('demoBtn').className = document.getElementById('demoBtn').className.replace('from-emerald-800 to-teal-950', 'from-red-800 to-red-950');
+
+            const selectedKey = document.getElementById('songSelect').value;
+            const chosenTrack = demoTracks[selectedKey];
+            const speed = parseFloat(document.getElementById('globalSpeedSlider').value);
+            const maxDuration = (Math.max(...chosenTrack.map(n => n.time)) + 800) / speed;
+            
+            // Build flowing scrolling notes visual highway scaled to correct speed parameter
+            renderVisualFlowRoad(chosenTrack, speed);
+
+            launchToastNotification(`🎶 บรรเลงเพลงสาธิต (ความเร็ว ${speed.toFixed(1)}x)...`);
+
+            chosenTrack.forEach(note => {
+                const timerRef = setTimeout(() => {
+                    fireDrumHit(note.drum);
+                }, note.time / speed);
+                demoTrackTimers.push(timerRef);
             });
 
-            // Touch (Multitouch support)
-            drum.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Stop scrolling
-                initAudio(); // Ensure audio starts on first touch
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    triggerDrum(drum);
+            // Auto teardown when track finishes or trigger loop recursively
+            const finalTimer = setTimeout(() => {
+                const isLoopEnabled = document.getElementById('loopDemoToggle').checked;
+                if (isLoopEnabled && isDemoPlaying) {
+                    demoTrackTimers.forEach(t => clearTimeout(t));
+                    demoTrackTimers = [];
+                    restartDemoTrackLoop();
+                } else {
+                    terminateDemoTrack();
+                    launchToastNotification("✨ อัญเชิญจังหวะเพลงเสร็จสมบูรณ์");
                 }
-            }, { passive: false });
+            }, maxDuration);
+            demoTrackTimers.push(finalTimer);
+        }
+
+        // Loop execution helper maintaining active status seamlessly
+        function restartDemoTrackLoop() {
+            const selectedKey = document.getElementById('songSelect').value;
+            const chosenTrack = demoTracks[selectedKey];
+            const speed = parseFloat(document.getElementById('globalSpeedSlider').value);
+            const maxDuration = (Math.max(...chosenTrack.map(n => n.time)) + 800) / speed;
+
+            renderVisualFlowRoad(chosenTrack, speed);
+
+            chosenTrack.forEach(note => {
+                const timerRef = setTimeout(() => {
+                    fireDrumHit(note.drum);
+                }, note.time / speed);
+                demoTrackTimers.push(timerRef);
+            });
+
+            const finalTimer = setTimeout(() => {
+                const isLoopEnabled = document.getElementById('loopDemoToggle').checked;
+                if (isLoopEnabled && isDemoPlaying) {
+                    demoTrackTimers.forEach(t => clearTimeout(t));
+                    demoTrackTimers = [];
+                    restartDemoTrackLoop();
+                } else {
+                    terminateDemoTrack();
+                    launchToastNotification("✨ อัญเชิญจังหวะเพลงเสร็จสมบูรณ์");
+                }
+            }, maxDuration);
+            demoTrackTimers.push(finalTimer);
+        }
+
+        function terminateDemoTrack() {
+            isDemoPlaying = false;
+            demoTrackTimers.forEach(t => clearTimeout(t));
+            demoTrackTimers = [];
+
+            // UI Reset states
+            const demoBtn = document.getElementById('demoBtn');
+            demoBtn.innerHTML = `<i class="fa-solid fa-gong text-dynasty-gold"></i> เล่นเพลงสาธิต`;
+            demoBtn.className = demoBtn.className.replace('from-red-800 to-red-950', 'from-emerald-800 to-teal-950');
+
+            // Reset visual road labels
+            document.getElementById('rhythmTrack').innerHTML = `<span id="demoStatusText" class="text-xs text-stone-400 mx-auto animate-pulse">เคาะที่กลอง หรือกดเล่นเพลงเพื่อเริ่มบรรเลงแบบโบราณ</span>`;
+        }
+
+        function renderVisualFlowRoad(trackData, speed = 1.0) {
+            const trackContainer = document.getElementById('rhythmTrack');
+            trackContainer.innerHTML = ''; 
+
+            const instrumentColorMaps = {
+                bass: 'bg-red-600 border-red-300',
+                tom1: 'bg-orange-500 border-orange-300',
+                tom2: 'bg-yellow-600 border-yellow-300',
+                wood: 'bg-amber-800 border-amber-600',
+                cymbal: 'bg-teal-600 border-teal-300',
+                gong: 'bg-yellow-500 border-yellow-200'
+            };
+
+            const localizedShortLabels = {
+                bass: 'กลองใหญ่',
+                tom1: 'กลองทุ้ม',
+                tom2: 'กลองกลาง',
+                wood: 'เกราะไม้',
+                cymbal: 'ฉาบหลวง',
+                gong: 'ฆ้องพิธี'
+            };
+
+            trackData.forEach(note => {
+                const blockNode = document.createElement('div');
+                const scaledTime = note.time / speed;
+                const relativeTranslateX = (scaledTime / 100) * 30; // 30px per 100ms
+                blockNode.className = `absolute h-8 px-2.5 border-2 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-lg ${instrumentColorMaps[note.drum]}`;
+                blockNode.style.left = `${relativeTranslateX}px`;
+                blockNode.innerText = localizedShortLabels[note.drum];
+
+                // CSS Slide transformation logic
+                blockNode.style.transition = `transform ${scaledTime}ms linear`;
+                trackContainer.appendChild(blockNode);
+
+                // Start sliding transition towards the hit center target on frame load
+                requestAnimationFrame(() => {
+                    blockNode.style.transform = `translateX(-${relativeTranslateX}px)`;
+                });
+            });
+        }
+
+        // Speed and Loop Event Listeners
+        document.getElementById('globalSpeedSlider').addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            document.getElementById('speedVal').innerText = `${speed.toFixed(1)}x`;
+            
+            // Adjust current playback speed rate instantly if a recorded audio exists
+            if (playbackAudio) {
+                playbackAudio.playbackRate = speed;
+            }
         });
 
-        // Keyboard Support
+        document.getElementById('loopRecToggle').addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            if (playbackAudio) {
+                playbackAudio.loop = isChecked;
+            }
+            launchToastNotification(isChecked ? "🔄 เปิดระบบวนลูปเสียงบันทึก" : "❌ ปิดระบบวนลูปเสียงบันทึก");
+        });
+
+        document.getElementById('loopDemoToggle').addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            launchToastNotification(isChecked ? "🔄 เปิดระบบเล่นวนลูปเพลงสาธิต" : "❌ ปิดระบบเล่นวนลูปเพลงสาธิต");
+        });
+
+        document.getElementById('pitchSlider').addEventListener('input', (e) => {
+            soundParameters.pitch = parseFloat(e.target.value);
+            document.getElementById('pitchVal').innerText = `x${soundParameters.pitch.toFixed(2)}`;
+        });
+
+        document.getElementById('decaySlider').addEventListener('input', (e) => {
+            soundParameters.decay = parseFloat(e.target.value);
+            document.getElementById('decayVal').innerText = `x${soundParameters.decay.toFixed(2)}`;
+        });
+
+        document.getElementById('brightSlider').addEventListener('input', (e) => {
+            soundParameters.bright = parseInt(e.target.value);
+            document.getElementById('brightVal').innerText = `${soundParameters.bright.toLocaleString()}Hz`;
+        });
+
+        document.getElementById('reverbSlider').addEventListener('input', (e) => {
+            soundParameters.reverb = parseFloat(e.target.value) / 100;
+            document.getElementById('reverbVal').innerText = `${e.target.value}%`;
+            
+            // Adjust current gains inside graph instantly
+            if (dryGainNode && wetGainNode) {
+                dryGainNode.gain.setValueAtTime(1 - soundParameters.reverb, audioCtx.currentTime);
+                wetGainNode.gain.setValueAtTime(soundParameters.reverb, audioCtx.currentTime);
+            }
+        });
+
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            soundParameters.masterVol = parseFloat(e.target.value) / 100;
+            if (masterGainNode) {
+                masterGainNode.gain.setValueAtTime(soundParameters.masterVol, audioCtx.currentTime);
+            }
+        });
+
+        // Toggles display on Advanced Tuning console drawer
+        document.getElementById('toggleTuningBtn').addEventListener('click', () => {
+            const block = document.getElementById('tuningPanel');
+            block.classList.toggle('hidden');
+        });
+
+        // Resets synthesizer presets to standard clean defaults
+        document.getElementById('resetTuningBtn').addEventListener('click', () => {
+            document.getElementById('pitchSlider').value = "1.0";
+            document.getElementById('decaySlider').value = "1.0";
+            document.getElementById('brightSlider').value = "3600";
+            document.getElementById('reverbSlider').value = "35";
+            document.getElementById('volumeSlider').value = "100";
+            document.getElementById('globalSpeedSlider').value = "1.0";
+
+            soundParameters.pitch = 1.0;
+            soundParameters.decay = 1.0;
+            soundParameters.bright = 3600;
+            soundParameters.reverb = 0.35;
+            soundParameters.masterVol = 1.0;
+
+            document.getElementById('pitchVal').innerText = 'x1.00';
+            document.getElementById('decayVal').innerText = 'x1.00';
+            document.getElementById('brightVal').innerText = '3,600Hz';
+            document.getElementById('reverbVal').innerText = '35%';
+            document.getElementById('speedVal').innerText = '1.0x';
+
+            if (playbackAudio) {
+                playbackAudio.playbackRate = 1.0;
+            }
+
+            if (masterGainNode && dryGainNode && wetGainNode) {
+                masterGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
+                dryGainNode.gain.setValueAtTime(0.65, audioCtx.currentTime);
+                wetGainNode.gain.setValueAtTime(0.35, audioCtx.currentTime);
+            }
+            launchToastNotification("🕹️ เสียงคืนค่ามาตรฐานโบราณเสร็จสิ้น");
+        });
+
+        // Shows/Hides computer keyboard shortcut helpers
+        document.getElementById('keyHintToggle').addEventListener('change', (e) => {
+            const labels = document.querySelectorAll('.key-hint');
+            labels.forEach(label => {
+                if (e.target.checked) {
+                    label.classList.remove('hidden');
+                } else {
+                    label.classList.add('hidden');
+                }
+            });
+        });
+
+        // Audio Action Buttons Event Bindings
+        document.getElementById('demoBtn').addEventListener('click', playDemoTrack);
+
+        document.getElementById('recordBtn').addEventListener('click', () => {
+            if (mainMediaRecorder && mainMediaRecorder.state === 'recording') {
+                stopLocalRecording();
+            } else {
+                beginLocalRecording();
+            }
+        });
+
+        document.getElementById('playRecBtn').addEventListener('click', () => {
+            if (playbackAudio) {
+                // Ensure loop & speed are up-to-date right before playback
+                playbackAudio.loop = document.getElementById('loopRecToggle').checked;
+                playbackAudio.playbackRate = parseFloat(document.getElementById('globalSpeedSlider').value);
+                playbackAudio.currentTime = 0;
+                playbackAudio.play();
+                launchToastNotification("🔊 เล่นบันทึกการบรรเลงเสียงสด...");
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (playbackBlobUrl) {
+                const anchor = document.createElement('a');
+                anchor.href = playbackBlobUrl;
+                anchor.download = `กลองจีน_ImperialSession_${Date.now()}.wav`;
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+                launchToastNotification("💾 ดาวน์โหลดไฟล์เสียงเสร็จสมบูรณ์!");
+            }
+        });
+
+        const interactionPads = document.querySelectorAll('.drum-pad');
+        
+        interactionPads.forEach(pad => {
+            const rawSound = pad.dataset.sound;
+
+            // Ultra-responsive multi-touch active listeners
+            pad.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                fireDrumHit(rawSound);
+            }, { passive: false });
+
+            // Standard desktop fallback mouse listeners
+            pad.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                fireDrumHit(rawSound);
+            });
+        });
+
+        // Computer Physical Keyboard hotkeys logic
         window.addEventListener('keydown', (e) => {
             if (e.repeat) return;
             
-            const key = e.key.toLowerCase() === ' ' ? 'space' : e.key.toLowerCase();
-            const drum = document.querySelector(`.drum-pad[data-key="${key}"]`);
+            const normalizedKey = e.key.toLowerCase();
+            const evaluatedKey = normalizedKey === ' ' ? 'space' : normalizedKey;
             
-            if (drum) {
-                triggerDrum(drum);
+            const matchedPad = document.querySelector(`.drum-pad[data-key="${evaluatedKey}"]`);
+            if (matchedPad) {
+                const targetSound = matchedPad.dataset.sound;
+                fireDrumHit(targetSound);
             }
         });
 
-        // --- Recording Logic ---
-        const recordBtn = document.getElementById('recordBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const playBtn = document.getElementById('playBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const playbackAudio = document.getElementById('playbackAudio');
-
-        recordBtn.addEventListener('click', startRecording);
-        stopBtn.addEventListener('click', stopRecording);
-        playBtn.addEventListener('click', playRecording);
-        downloadBtn.addEventListener('click', downloadRecording);
-
-        function startRecording() {
-            initAudio();
-            audioChunks = [];
+        // Visual Toast message trigger
+        function launchToastNotification(msg) {
+            const element = document.getElementById('toast');
+            element.innerText = msg;
+            element.className = element.className.replace('opacity-0 scale-90', 'opacity-100 scale-100');
             
-            // Check browser support
-            const options = MediaRecorder.isTypeSupported('audio/webm') 
-                ? { mimeType: 'audio/webm' } 
-                : { mimeType: 'audio/mp4' };
-
-            mediaRecorder = new MediaRecorder(dest.stream, options);
-            
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) audioChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // Generic container
-                audioUrl = URL.createObjectURL(audioBlob);
-                playbackAudio.src = audioUrl;
-                
-                playBtn.disabled = false;
-                downloadBtn.disabled = false;
-                showToast("บันทึกเสร็จสิ้น!");
-            };
-
-            mediaRecorder.start();
-            recordBtn.classList.add('recording');
-            recordBtn.innerHTML = "<span>●</span> กำลังอัด...";
-            recordBtn.disabled = true;
-            stopBtn.disabled = false;
-            playBtn.disabled = true;
-            downloadBtn.disabled = true;
-            
-            showToast("เริ่มอัดเสียง...");
-        }
-
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-                recordBtn.classList.remove('recording');
-                recordBtn.innerHTML = "<span>●</span> อัด";
-                recordBtn.disabled = false;
-                stopBtn.disabled = true;
-            }
-        }
-
-        function playRecording() {
-            if (audioUrl) {
-                playbackAudio.play();
-                showToast("กำลังเล่นเสียงที่อัด...");
-            }
-        }
-
-        function downloadRecording() {
-            if (audioUrl) {
-                const a = document.createElement('a');
-                a.href = audioUrl;
-                a.download = `chinese_drum_session_${new Date().getTime()}.wav`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }
-        }
-
-        // --- UI Utils ---
-        function showToast(msg) {
-            const el = document.getElementById('notification');
-            el.innerText = msg;
-            el.style.opacity = '1';
             setTimeout(() => {
-                el.style.opacity = '0';
-            }, 2000);
+                element.className = element.className.replace('opacity-100 scale-100', 'opacity-0 scale-90');
+            }, 2500);
         }
+
+        // Auto teardown when page exits
+        window.addEventListener('beforeunload', () => {
+            if (audioCtx) {
+                audioCtx.close();
+            }
+        });
 
     </script>
 </body>
