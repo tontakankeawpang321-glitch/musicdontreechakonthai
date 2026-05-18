@@ -9,7 +9,7 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght=400;600&display=swap');
 
         body {
             font-family: 'Sarabun', sans-serif;
@@ -37,7 +37,6 @@
             transition: transform 0.1s, filter 0.1s;
             border: 2px solid #3e2723;
             overflow: hidden;
-            /* touch-action handled by container */
         }
 
         .wot-pipe::after {
@@ -84,9 +83,15 @@
             background: radial-gradient(circle, #4a3020, #2a1b12);
             border-radius: 50%;
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            z-index: 0;
-            /* ลายมัดเชือก */
+            z-index: 20; /* ปรับระดับ z-index ให้อยู่ด้านบนท่อ เพื่อให้ตรวจจับการรูดตรงกลางได้เสถียร */
             border: 4px solid #8d6e63;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        
+        /* เพิ่มเอฟเฟกต์เรืองแสงเมื่อกำลังรูดแกนกลาง */
+        .wot-body.active {
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.6);
+            border-color: #ffb300;
         }
         
         .rope-binding {
@@ -98,6 +103,7 @@
             height: 90%;
             top: 5%;
             left: 5%;
+            pointer-events: none;
         }
 
         #visualizer {
@@ -126,10 +132,11 @@
     <header class="w-full p-4 flex justify-between items-center bg-yellow-900/10 backdrop-blur-sm z-20">
         <div>
             <h1 class="text-2xl font-bold text-yellow-900 drop-shadow-sm">โหวดอีสาน (Wot)</h1>
-            <p class="text-xs text-yellow-800">กดพร้อมกันได้ • รูดเพื่อเล่นต่อเนื่อง</p>
+            <p class="text-xs text-yellow-800">กดท่อค้าง • รูดตรงกลางเพื่อให้เสียงต่อเนื่อง</p>
         </div>
         <div class="flex gap-2">
-            <button id="toggle-notes-btn" class="bg-white/80 text-yellow-900 p-2 rounded-full shadow-md hover:bg-white transition flex items-center justify-center w-10 h-10 border border-yellow-200" title="แสดง/ซ่อนโน้ต">
+            <!-- ปุ่มโน้ตซ่อนไว้ (hidden) เพื่อไม่ให้แสดงตามคำสั่งของผู้ใช้ แต่คง Element ไว้เพื่อป้องกันสคริปต์พัง -->
+            <button id="toggle-notes-btn" class="hidden bg-white/80 text-yellow-900 p-2 rounded-full shadow-md hover:bg-white transition flex items-center justify-center w-10 h-10 border border-yellow-200" title="แสดง/ซ่อนโน้ต">
                 <i class="ph-fill ph-text-t"></i>
             </button>
             <button id="start-audio-btn" class="bg-yellow-700 text-white px-4 py-2 rounded-full shadow-lg text-sm hover:bg-yellow-800 transition animate-pulse">
@@ -147,10 +154,10 @@
 
         <!-- The Wot Instrument -->
         <div class="relative w-[320px] h-[320px] md:w-[400px] md:h-[400px]" id="wot-wrapper">
-            <!-- Center Body (แกนกลาง) -->
-            <div class="wot-body w-32 h-32 md:w-40 md:h-40">
+            <!-- Center Body (แกนกลางรองรับระบบรูด) -->
+            <div id="wot-center" class="wot-body w-32 h-32 md:w-40 md:h-40 cursor-pointer touch-none">
                 <div class="rope-binding"></div>
-                <div class="absolute inset-0 flex items-center justify-center text-yellow-100/50 text-4xl">
+                <div class="absolute inset-0 flex items-center justify-center text-yellow-100/50 text-4xl pointer-events-none">
                     <i class="ph-fill ph-music-note"></i>
                 </div>
             </div>
@@ -228,7 +235,7 @@
         // key: pipeIndex, value: { stop: function, oscs: [] }
         const activeNotes = {};
 
-        // Track active touches for multi-touch/glissando
+        // Track active touches for multi-touch/glissando on outer pipes
         // key: touchIdentifier, value: pipeIndex
         const activeTouches = new Map();
 
@@ -250,7 +257,7 @@
             return impulse;
         }
 
-        // --- Initialization ---
+        // --- STREAMING_CHUNK:Setting up web audio context and audio routing... ---
         async function initAudio() {
             if (audioCtx) return;
             
@@ -301,7 +308,7 @@
                 statusText.innerText = "ระบบเสียงทำงานแล้ว";
                 drawVisualizer();
             } catch (e) {
-                alert("Browser นี้ไม่รองรับ Web Audio API");
+                statusText.innerText = "ไม่สามารถเชื่อมระบบเสียงได้ในเบราว์เซอร์นี้";
             }
         }
 
@@ -312,7 +319,7 @@
             }
         });
 
-        // --- Toggle Notes Button Logic ---
+        // --- Toggle Notes Button Logic (Still present in background but hidden) ---
         const toggleBtn = document.getElementById('toggle-notes-btn');
         const pipesContainer = document.getElementById('pipes-container');
         let areNotesVisible = true;
@@ -330,7 +337,7 @@
             }
         });
 
-        // --- Synthesis Logic (Sustain Capable) ---
+        // --- STREAMING_CHUNK:Defining sound synthesis logic with lowpass filtering and ADSR... ---
         function startNote(freq, index) {
             if (!audioCtx) initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -460,7 +467,7 @@
             }
         }
 
-        // --- UI Construction ---
+        // --- STREAMING_CHUNK:Building the circular virtual wot pipes... ---
         const container = document.getElementById('pipes-container');
         const radius = 130; 
         const totalPipes = notes.length;
@@ -502,9 +509,8 @@
             container.appendChild(pipe);
         });
 
-        // --- Robust Multi-Touch & Glissando Handler ---
-        // This handles "Playing Together" and "Sliding" (Glissando)
-        
+        // --- STREAMING_CHUNK:Adding robust multi-touch and glissando handlings... ---
+        // This handles "Playing Together" and "Sliding" (Glissando) on the outer pipes
         function handleTouch(e) {
             e.preventDefault(); // Prevent scroll/zoom
             
@@ -521,12 +527,6 @@
                 if (pipe) {
                     const newIndex = parseInt(pipe.dataset.index);
                     
-                    // Logic:
-                    // 1. Is this finger already tracking a note?
-                    // 2. If yes, is it the SAME note? -> Do nothing.
-                    // 3. If yes, is it a DIFFERENT note? -> Stop old note, Start new note (Glissando).
-                    // 4. If no, Start new note.
-
                     const oldIndex = activeTouches.get(touchId);
 
                     if (oldIndex !== undefined && oldIndex !== newIndex) {
@@ -578,7 +578,110 @@
         container.addEventListener('touchcancel', handleTouchEnd, {passive: false});
 
 
-        // --- Visualizer ---
+        // --- STREAMING_CHUNK:Implementing the interactive center swipe glissando controls... ---
+        // ระบบรูดตรงแผ่นไม้แกนกลาง (wot-center) เพื่อเปลี่ยนเสียงต่อเนื่องเป็นจังหวะตามมุมองศา
+        const wotCenter = document.getElementById('wot-center');
+        let centerActiveIndex = null;
+        let isCenterInteracting = false;
+
+        function handleCenterInteraction(clientX, clientY) {
+            const rect = wotCenter.getBoundingClientRect();
+            // ค้นหาตำแหน่งจุดศูนย์กลางของแกนกลางโหวด
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // คำนวณหาเวกเตอร์มุมพิกัด (Angle) จากจุดศูนย์กลางไปยังจุดสัมผัส
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+            const theta = Math.atan2(dy, dx); // ค่าช่วงระหว่าง -PI ถึง PI
+
+            // ค้นหาท่อโหวดที่มีมุมใกล้เคียงกับมุมสัมผัสในปัจจุบันมากที่สุด
+            let bestIndex = 0;
+            let minDiff = Infinity;
+
+            notes.forEach((n, index) => {
+                const pipeAngle = startAngle + (index * angleStep);
+                // คำนวณหาผลต่างมุม (เกลี่ยช่วงคาบคาบคลื่น 2 * PI)
+                let diff = Math.abs(theta - pipeAngle);
+                diff = diff % (2 * Math.PI);
+                if (diff > Math.PI) {
+                    diff = 2 * Math.PI - diff;
+                }
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    bestIndex = index;
+                }
+            });
+
+            // ตรวจสอบและสลับเสียงเมื่อเปลี่ยนไปยังโซนมุมของท่อใหม่
+            if (centerActiveIndex !== bestIndex) {
+                // หยุดเสียงและเอฟเฟกต์ท่อก่อนหน้า
+                if (centerActiveIndex !== null) {
+                    stopNote(centerActiveIndex);
+                    const prevPipe = document.querySelector(`.wot-pipe[data-index="${centerActiveIndex}"]`);
+                    if (prevPipe) prevPipe.classList.remove('active');
+                }
+
+                // สั่งเล่นเสียงท่อใหม่พร้อมสร้างเอฟเฟกต์เรืองแสงบนหน้าจอ
+                centerActiveIndex = bestIndex;
+                const newPipe = document.querySelector(`.wot-pipe[data-index="${centerActiveIndex}"]`);
+                if (newPipe) newPipe.classList.add('active');
+                startNote(notes[centerActiveIndex].freq, centerActiveIndex);
+            }
+        }
+
+        // ตัวหยุดการส่งสัญญาณการรูดแกนกลาง
+        const endCenterInteraction = () => {
+            if (isCenterInteracting) {
+                isCenterInteracting = false;
+                wotCenter.classList.remove('active');
+                if (centerActiveIndex !== null) {
+                    stopNote(centerActiveIndex);
+                    const pipe = document.querySelector(`.wot-pipe[data-index="${centerActiveIndex}"]`);
+                    if (pipe) pipe.classList.remove('active');
+                    centerActiveIndex = null;
+                }
+            }
+        };
+
+        // สัมผัสผ่านอุปกรณ์พกพา (Touch Screens)
+        wotCenter.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                isCenterInteracting = true;
+                wotCenter.classList.add('active');
+                handleCenterInteraction(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+
+        wotCenter.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isCenterInteracting && e.touches.length > 0) {
+                handleCenterInteraction(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+
+        wotCenter.addEventListener('touchend', endCenterInteraction, { passive: false });
+        wotCenter.addEventListener('touchcancel', endCenterInteraction, { passive: false });
+
+        // สัมผัสผ่านเมาส์คอมพิวเตอร์ (Desktop Mouse Controls)
+        wotCenter.addEventListener('mousedown', (e) => {
+            if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+            isCenterInteracting = true;
+            wotCenter.classList.add('active');
+            handleCenterInteraction(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isCenterInteracting) {
+                handleCenterInteraction(e.clientX, e.clientY);
+            }
+        });
+
+        window.addEventListener('mouseup', endCenterInteraction);
+
+
+        // --- STREAMING_CHUNK:Drawing audio spectrum visualizer in realtime... ---
         const canvas = document.getElementById('visualizer');
         const canvasCtx = canvas.getContext('2d');
         
@@ -607,7 +710,7 @@
             }
         }
 
-        // --- Recording Logic ---
+        // --- STREAMING_CHUNK:Handling audio recording and media saving features... ---
         const btnRecord = document.getElementById('btn-record');
         const btnStop = document.getElementById('btn-stop');
         const btnPlay = document.getElementById('btn-play');
