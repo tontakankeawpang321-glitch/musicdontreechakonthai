@@ -2,33 +2,35 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Harmonica Pro (เมาท์ออแกนมือถือ)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700;800&display=swap');
         
         body {
             font-family: 'Sarabun', sans-serif;
-            touch-action: none; /* ป้องกันการซูมและเลื่อนหน้าจอ */
-            background-color: #1a202c;
+            touch-action: none; /* ป้องกันการซูมและการเลื่อนหน้าจอทุกกรณี */
+            background-color: #0f172a;
             color: white;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
 
+        /* ดีไซน์ตัวเครื่องเมาท์ออแกนแนว Metallic มีมิติ */
         .harmonica-body {
-            background: linear-gradient(180deg, #b0c4de 0%, #778899 15%, #dbeafe 50%, #778899 85%, #b0c4de 100%);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.3);
-            border: 2px solid #4a5568;
+            background: linear-gradient(180deg, #cbd5e1 0%, #64748b 15%, #f1f5f9 50%, #475569 85%, #94a3b8 100%);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.6);
+            border: 3px solid #334155;
         }
 
+        /* ช่องลมเป่า/ดูด */
         .hole {
-            background: linear-gradient(to bottom, #2d3748, #000000);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
-            transition: transform 0.1s, background 0.1s;
+            background: linear-gradient(to bottom, #1e293b, #020617);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.9);
+            transition: transform 0.05s, background 0.05s;
             position: relative;
             overflow: hidden;
         }
@@ -37,215 +39,242 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,215,0, 0.0);
-            transition: background 0.1s;
+            background: rgba(234, 179, 8, 0);
+            transition: background 0.05s;
+            pointer-events: none;
         }
 
+        /* เมื่อกดใช้งานช่องนั้น ๆ */
         .hole.active {
-            transform: scale(0.95);
+            transform: scale(0.94);
         }
         
         .hole.active::after {
-            background: rgba(255,215,0, 0.4); /* แสงสีทองเมื่อกด */
+            background: rgba(234, 179, 8, 0.45); /* แสงสีทองสว่าง */
+        }
+
+        /* ช่องที่เป็นคิวถัดไปในโหมดฝึกฝน */
+        .hole.guide-next::after {
+            background: rgba(34, 197, 94, 0.3); /* แสงนำทางสีเขียวอ่อน */
+            border: 2px solid #22c55e;
+            box-sizing: border-box;
         }
 
         /* ปุ่มสลับโหมด */
         .mode-toggle {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
         .mode-blow {
-            background-color: #38a169; /* Green */
-            box-shadow: 0 4px 0 #2f855a;
+            background-color: #10b981; /* เขียวมรกต */
+            box-shadow: 0 4px 0 #047857;
         }
         .mode-draw {
-            background-color: #3182ce; /* Blue */
-            box-shadow: 0 4px 0 #2c5282;
+            background-color: #3b82f6; /* น้ำเงินสว่าง */
+            box-shadow: 0 4px 0 #1d4ed8;
         }
         .mode-active {
             transform: translateY(4px);
             box-shadow: none !important;
         }
 
-        /* Visualizer */
+        /* แถบคลื่นความถี่เสียง */
         canvas {
             width: 100%;
-            height: 60px;
-            background: #000;
+            height: 45px;
+            background: #020617;
             border-radius: 8px;
-            border: 1px solid #4a5568;
+            border: 1px solid #334155;
         }
 
-        .record-btn {
-            background-color: #e53e3e;
-            animation: pulse-red 2s infinite;
+        /* ปุ่มอัดเสียงกระพริบ */
+        .record-btn-active {
+            background-color: #ef4444;
+            animation: pulse-red 1.5s infinite;
         }
         
         @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(229, 62, 62, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        /* เพิ่มสไตล์สำหรับปุ่มดาวน์โหลด */
-        .control-area {
-            min-height: 4rem;
+        /* ซ่อน Scrollbar ของรายชื่อเพลง */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="h-screen flex flex-col justify-between p-4">
+<body class="h-screen flex flex-col justify-between p-3 pb-safe-bottom">
 
-    <!-- Header & Visualizer -->
-    <div class="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto">
-        <h1 class="text-xl font-bold text-gray-300 tracking-wider">HARMONICA PRO</h1>
+    <!-- ส่วนหัวเครื่องดนตรี & คลื่นความถี่เสียง -->
+    <div class="w-full max-w-md mx-auto flex flex-col gap-1.5 flex-shrink-0">
+        <div class="flex justify-between items-center px-1">
+            <h1 class="text-base font-extrabold tracking-widest text-slate-200">HARMONICA PRO</h1>
+            <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-bold">คีย์ C DIATONIC</span>
+        </div>
         <canvas id="visualizer"></canvas>
     </div>
 
-    <!-- Main Instrument Area -->
-    <div class="flex-grow flex items-center justify-center w-full max-w-4xl mx-auto">
-        <div class="harmonica-body w-full p-2 md:p-4">
-            <!-- Numbers -->
-            <div class="flex justify-between px-2 mb-1 text-xs text-gray-800 font-bold">
+    <!-- ส่วนเลือกเพลงสาธิต (Demo Songs Panel) - ปรับปรุงให้ประหยัดพื้นที่แนวตั้ง -->
+    <div class="w-full max-w-md mx-auto flex flex-col gap-1 flex-shrink-0 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+        <div class="flex justify-between items-center mb-0.5 px-1">
+            <span class="text-xs font-bold text-yellow-400 flex items-center gap-1">
+                🎵 เลือกเพลงสาธิต (Demo)
+            </span>
+            <span id="demoPlayingStatus" class="text-[10px] text-green-400 font-semibold hidden animate-pulse">กำลังเล่นอัตโนมัติ...</span>
+        </div>
+        
+        <!-- รายการเพลงเลื่อนซ้ายขวา (Horizontal Scroll) ช่วยประหยัดเนื้อที่แนวตั้งได้ดีเยี่ยม -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button class="song-btn bg-slate-800 hover:bg-slate-700 text-white text-xs px-3 py-1.5 rounded-lg flex-shrink-0 border border-slate-700 font-medium transition" data-song="0">
+                ⭐ Twinkle Twinkle
+            </button>
+            <button class="song-btn bg-slate-800 hover:bg-slate-700 text-white text-xs px-3 py-1.5 rounded-lg flex-shrink-0 border border-slate-700 font-medium transition" data-song="1">
+                🎼 Ode to Joy
+            </button>
+            <button class="song-btn bg-slate-800 hover:bg-slate-700 text-white text-xs px-3 py-1.5 rounded-lg flex-shrink-0 border border-slate-700 font-medium transition" data-song="2">
+                🔔 Jingle Bells
+            </button>
+            <button class="song-btn bg-slate-800 hover:bg-slate-700 text-white text-xs px-3 py-1.5 rounded-lg flex-shrink-0 border border-slate-700 font-medium transition" data-song="3">
+                🚢 Titanic (My Heart)
+            </button>
+        </div>
+
+        <!-- ตัวควบคุมการเล่นเพลงเดโม -->
+        <div id="demoControls" class="flex items-center justify-between bg-slate-950/80 px-2 py-1.5 rounded-lg border border-slate-800 text-[11px] hidden">
+            <div class="flex flex-col">
+                <span id="activeSongName" class="font-bold text-white text-xs">ชื่อเพลง</span>
+                <span id="activeNoteGuide" class="text-slate-400 text-[10px]">โน้ตถัดไป: -</span>
+            </div>
+            <div class="flex gap-1.5">
+                <button id="stopDemoBtn" class="bg-red-600 hover:bg-red-500 text-white font-bold px-2.5 py-1 rounded transition text-[10px]">
+                    หยุดเล่นเดโม
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ตัวเครื่องเมาท์ออแกน (Main Instrument Area) - ปรับกระชับแบบแนวตั้งเต็มตัว -->
+    <div class="flex-grow flex items-center justify-center w-full max-w-md mx-auto my-2">
+        <div class="harmonica-body w-full p-2 flex flex-col justify-between h-[180px] sm:h-[210px]">
+            <!-- ตัวเลขช่องกำกับ 1 - 10 -->
+            <div class="flex justify-between px-2 text-[10px] sm:text-xs text-slate-800 font-black">
                 <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
                 <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
             </div>
             
-            <!-- Holes Container -->
-            <div class="grid grid-cols-10 gap-1 md:gap-2 h-48 md:h-64">
-                <!-- Holes will be generated/labeled dynamic -->
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="0">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">C4</span>
+            <!-- ตารางสิบลมเป่าลมดูด (Grid 10 ช่อง) -->
+            <div class="grid grid-cols-10 gap-0.5 sm:gap-1 h-2/3">
+                <!-- ช่องลมสร้างจาก JS ให้รองรับขนาดความกว้างตามเปอร์เซ็นต์จอสัมผัส -->
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="0">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">C4</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="1">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">E4</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="1">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">E4</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="2">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">G4</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="2">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">G4</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="3">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">C5</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="3">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">C5</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="4">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">E5</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="4">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">E5</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="5">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">G5</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="5">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">G5</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="6">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">C6</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="6">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">C6</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="7">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">E6</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="7">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">E6</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="8">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">G6</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="8">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">G6</span>
                 </button>
-                <button class="hole rounded-md flex flex-col items-center justify-center text-white" data-hole="9">
-                    <span class="note-name text-lg md:text-2xl font-bold text-yellow-400">C7</span>
+                <button class="hole rounded flex flex-col items-center justify-between py-2 text-white" data-hole="9">
+                    <span class="note-name text-[9px] sm:text-xs md:text-sm font-extrabold text-yellow-400">C7</span>
                 </button>
             </div>
             
-            <div class="text-center mt-2 text-gray-700 text-sm font-semibold">KEY: C Major</div>
+            <div id="keyIndicator" class="text-center text-slate-700 text-[10px] font-bold">KEY C MAJOR DIATONIC</div>
         </div>
     </div>
 
-    <!-- Controls -->
-    <div class="w-full max-w-2xl mx-auto flex flex-col gap-3 pb-2">
+    <!-- ส่วนควบคุมการใช้งาน (Controls Block) - ชิดขอบล่างของหน้าจอ -->
+    <div class="w-full max-w-md mx-auto flex flex-col gap-2 flex-shrink-0">
         
-        <!-- Blow/Draw Switch -->
-        <div class="flex gap-4">
-            <button id="modeBtn" class="mode-toggle mode-blow flex-1 py-4 rounded-xl text-xl font-bold text-white shadow-lg active:translate-y-1 active:shadow-none">
-                สถานะ: เป่า (Blow)
-            </button>
-        </div>
+        <!-- สวิตช์สลับ เป่า (Blow) / ดูด (Draw) ขนาดพอดีนิ้วโป้ง -->
+        <button id="modeBtn" class="mode-toggle mode-blow w-full py-3.5 rounded-2xl text-base font-extrabold text-white shadow-md active:translate-y-1 active:shadow-none">
+            สถานะปัจจุบัน: เป่า (Blow)
+        </button>
 
-        <!-- NEW: Demo Songs Section -->
-        <div class="bg-gray-800/90 backdrop-blur-sm rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 border border-gray-700 shadow-lg">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">🎵</span>
-                <div>
-                    <h3 class="text-sm font-bold text-gray-200">เพลงสาธิตการเล่น (Demo Songs)</h3>
-                    <p class="text-[11px] text-gray-400">เลือกเพลงเพื่อเป่าหรือดูดตามสัญญาณไฟของระบบ</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <select id="demoSelect" class="bg-gray-900 border border-gray-700 text-gray-200 text-sm rounded-lg p-2 flex-grow sm:flex-initial focus:outline-none focus:border-yellow-400">
-                    <option value="mary">เพลงหนูมาลี (Mary Had a Little Lamb)</option>
-                    <option value="susanna">โอ ซูซานนา (Oh! Susanna)</option>
-                    <option value="scale">บันไดเสียง C (C Major Scale)</option>
-                    <option value="titanic">เพลงไททานิค (My Heart Will Go On)</option>
-                </select>
-                <button id="demoPlayBtn" class="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1">
-                    <span id="demoPlayIcon">▶</span>
-                    <span id="demoPlayText">เล่นเพลง</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Recording Controls -->
-        <div class="bg-gray-800 rounded-xl p-2 flex items-center justify-between gap-2 border border-gray-700 control-area">
-            <!-- ปุ่มเริ่มอัด -->
-            <button id="recordBtn" class="bg-gray-600 hover:bg-gray-500 text-white rounded-lg p-3 w-12 h-12 flex items-center justify-center transition flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        <!-- ระบบอัดเสียง (Recording & Playback) สไตล์โมเดิร์น -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-2 flex items-center justify-between gap-2 h-14">
+            <!-- ปุ่มเริ่มบันทึกเสียง -->
+            <button id="recordBtn" class="bg-slate-800 hover:bg-slate-700 text-white rounded-lg w-10 h-10 flex items-center justify-center transition flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 fill-current" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="8" />
                 </svg>
             </button>
             
-            <!-- ปุ่มหยุด -->
-            <button id="stopBtn" class="bg-gray-600 text-white rounded-lg p-3 w-12 h-12 flex items-center justify-center hidden flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <rect x="6" y="6" width="12" height="12" rx="2" />
+            <!-- ปุ่มกดหยุดการบันทึกเสียง -->
+            <button id="stopBtn" class="bg-red-600 hover:bg-red-500 text-white rounded-lg w-10 h-10 flex items-center justify-center hidden flex-shrink-0 animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <rect x="6" y="6" width="12" height="12" rx="1.5" />
                 </svg>
             </button>
             
-            <!-- สถานะและตัวจับเวลา -->
-            <div id="recordingStatus" class="text-gray-400 text-sm hidden flex-grow text-center">กำลังอัด... <span id="timer" class="font-mono text-white">00:00</span></div>
+            <!-- การอัปเดตสถานะและเวลาการบันทึกเสียง -->
+            <div id="recordingStatus" class="text-slate-400 text-xs hidden flex-grow text-center font-semibold">
+                กำลังบันทึกเสียง... <span id="timer" class="font-mono text-red-400 ml-1">00:00</span>
+            </div>
             
-            <!-- ส่วนเล่นเสียงและดาวน์โหลด (แสดงเมื่ออัดเสร็จ) -->
-            <div id="playbackContainer" class="hidden flex items-center gap-2 flex-grow justify-end">
-                <audio id="audioPlayback" controls class="h-10 w-32 md:w-48"></audio>
+            <!-- เมนูเล่นย้อนกลับและดาวน์โหลดไฟล์ (จะปรากฏขึ้นหลังกดหยุดอัด) -->
+            <div id="playbackContainer" class="hidden flex items-center gap-1.5 flex-grow justify-end">
+                <audio id="audioPlayback" class="h-8 w-28 md:w-36 bg-slate-950 rounded"></audio>
                 
-                <a id="downloadBtn" class="bg-green-600 hover:bg-green-500 text-white rounded-lg p-2 h-10 w-10 flex items-center justify-center shadow-md cursor-pointer" download="harmonica_solo.webm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <a id="downloadBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg w-8 h-8 flex items-center justify-center transition cursor-pointer" download="harmonica_session.webm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                 </a>
                 
-                <button id="discardBtn" class="bg-red-900/50 hover:bg-red-800 text-red-200 rounded-lg p-2 h-10 w-10 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <button id="discardBtn" class="bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded-lg w-8 h-8 flex items-center justify-center transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Custom Modal Dialog (แทนที่ alert เดิม) -->
-    <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-300">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 bg-yellow-500/20 text-yellow-400 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-white">แจ้งเตือน</h3>
-            </div>
-            <p id="modalMessage" class="text-slate-300 mb-6"></p>
-            <div class="flex justify-end">
-                <button id="modalCloseBtn" class="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold px-5 py-2 rounded-lg transition-colors">ตกลง</button>
-            </div>
+    <!-- Custom Modal สวยงามแทนการใช้ alert() ของระบบเว็บบนเบราว์เซอร์ปกติ -->
+    <div id="customModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-xs w-full text-center shadow-2xl">
+            <div class="text-yellow-400 text-4xl mb-3">⚠️</div>
+            <h3 class="text-base font-bold text-white mb-2" id="modalTitle">แจ้งเตือน</h3>
+            <p class="text-xs text-slate-300 mb-5 leading-relaxed" id="modalMessage">ข้อความแจ้งรายละเอียดที่นี่...</p>
+            <button id="closeModalBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-6 rounded-lg text-xs w-full transition">
+                เข้าใจแล้ว
+            </button>
         </div>
     </div>
 
-    <!-- Audio Engine & Logic -->
+    <!-- สคริปต์การทำเสียงและการโต้ตอบ (Audio Synthesis & Interaction) -->
     <script>
-        // --- Configuration ---
+        // --- Web Audio API Context ---
         const context = new (window.AudioContext || window.webkitAudioContext)();
         let masterGain = context.createGain();
-        masterGain.gain.value = 0.5;
+        masterGain.gain.value = 0.6; // ควบคุมระดับความดังเริ่มต้น
         masterGain.connect(context.destination);
 
-        // Recording Stream Setup
+        // ตั้งค่า Stream บันทึกเสียงภายในเครื่อง
         const destStream = context.createMediaStreamDestination();
         masterGain.connect(destStream);
         
@@ -255,11 +284,12 @@
         let recordingStartTime = 0;
         let recordingTimerInterval;
 
-        // Frequencies (C Major Diatonic Harmonica)
-        // Holes 1-10
+        // รายการความถี่เสียงแบบ Diatonic Harmonica ในคีย์ C (ช่อง 1 ถึง 10)
         const frequencies = {
-            blow: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00], // C4, E4, G4, C5, E5, G5, C6, E6, G6, C7
-            draw: [293.66, 392.00, 493.88, 587.33, 698.46, 880.00, 1174.66, 1396.91, 1760.00, 2349.32]  // D4, G4, B4, D5, F5, A5, D6, F6, A6, D7
+            // Blow (เป่าลม): C4, E4, G4, C5, E5, G5, C6, E6, G6, C7
+            blow: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00],
+            // Draw (ดูดลม): D4, G4, B4, D5, F5, A5, D6, F6, A6, D7
+            draw: [293.66, 392.00, 493.88, 587.33, 698.46, 880.00, 1174.66, 1396.91, 1760.00, 2349.32]
         };
 
         const noteNames = {
@@ -267,9 +297,89 @@
             draw: ['D4', 'G4', 'B4', 'D5', 'F5', 'A5', 'D6', 'F6', 'A6', 'D7']
         };
 
-        // State
-        let currentMode = 'blow'; // 'blow' or 'draw'
-        let activeOscillators = {}; // Store active notes { holeIndex: {osc1, osc2, gain} }
+        // สถานะปัจจุบันการทำงาน
+        let currentMode = 'blow'; // 'blow' หรือ 'draw'
+        let activeOscillators = {}; // ออสซิลเลเตอร์ที่กำลังทำงานอยู่ { holeIndex: {osc1, osc2, gainNode} }
+        let isDemoPlaying = false;
+        let demoSequenceTimeout = null;
+
+        // ข้อมูลเพลงเดโม 4 เพลง (ช่องเป่า 0-9, โหมด blow/draw, ความเร็วระยะเวลา ms)
+        const demoSongs = [
+            {
+                name: "⭐ Twinkle Twinkle Little Star",
+                notes: [
+                    { hole: 3, mode: 'blow', duration: 400 }, // C5
+                    { hole: 3, mode: 'blow', duration: 400 }, // C5
+                    { hole: 5, mode: 'blow', duration: 400 }, // G5
+                    { hole: 5, mode: 'blow', duration: 400 }, // G5
+                    { hole: 5, mode: 'draw', duration: 400 }, // A5
+                    { hole: 5, mode: 'draw', duration: 400 }, // A5
+                    { hole: 5, mode: 'blow', duration: 600 }, // G5
+                    { hole: 4, mode: 'draw', duration: 400 }, // F5
+                    { hole: 4, mode: 'draw', duration: 400 }, // F5
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 3, mode: 'draw', duration: 400 }, // D5
+                    { hole: 3, mode: 'draw', duration: 400 }, // D5
+                    { hole: 3, mode: 'blow', duration: 600 }  // C5
+                ]
+            },
+            {
+                name: "🎼 Ode to Joy (Beethoven)",
+                notes: [
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 4, mode: 'draw', duration: 400 }, // F5
+                    { hole: 5, mode: 'blow', duration: 400 }, // G5
+                    { hole: 5, mode: 'blow', duration: 400 }, // G5
+                    { hole: 4, mode: 'draw', duration: 400 }, // F5
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 3, mode: 'draw', duration: 400 }, // D5
+                    { hole: 3, mode: 'blow', duration: 400 }, // C5
+                    { hole: 3, mode: 'blow', duration: 400 }, // C5
+                    { hole: 3, mode: 'draw', duration: 400 }, // D5
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 4, mode: 'blow', duration: 500 }, // E5
+                    { hole: 3, mode: 'draw', duration: 250 }, // D5
+                    { hole: 3, mode: 'draw', duration: 600 }  // D5
+                ]
+            },
+            {
+                name: "🔔 Jingle Bells",
+                notes: [
+                    { hole: 4, mode: 'blow', duration: 300 }, // E5
+                    { hole: 4, mode: 'blow', duration: 300 }, // E5
+                    { hole: 4, mode: 'blow', duration: 500 }, // E5
+                    { hole: 4, mode: 'blow', duration: 300 }, // E5
+                    { hole: 4, mode: 'blow', duration: 300 }, // E5
+                    { hole: 4, mode: 'blow', duration: 500 }, // E5
+                    { hole: 4, mode: 'blow', duration: 300 }, // E5
+                    { hole: 5, mode: 'blow', duration: 300 }, // G5
+                    { hole: 3, mode: 'blow', duration: 300 }, // C5
+                    { hole: 3, mode: 'draw', duration: 300 }, // D5
+                    { hole: 4, mode: 'blow', duration: 600 }  // E5
+                ]
+            },
+            {
+                name: "🚢 Titanic (My Heart Will Go On)",
+                notes: [
+                    { hole: 3, mode: 'blow', duration: 300 }, // C5
+                    { hole: 3, mode: 'blow', duration: 300 }, // C5
+                    { hole: 3, mode: 'blow', duration: 300 }, // C5
+                    { hole: 3, mode: 'blow', duration: 200 }, // C5
+                    { hole: 3, mode: 'draw', duration: 350 }, // B4
+                    { hole: 3, mode: 'blow', duration: 350 }, // C5
+                    { hole: 3, mode: 'blow', duration: 200 }, // C5
+                    { hole: 3, mode: 'draw', duration: 350 }, // B4
+                    { hole: 3, mode: 'blow', duration: 350 }, // C5
+                    { hole: 3, mode: 'draw', duration: 400 }, // D5
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 4, mode: 'draw', duration: 600 }, // F5
+                    { hole: 4, mode: 'blow', duration: 400 }, // E5
+                    { hole: 3, mode: 'draw', duration: 600 }  // D5
+                ]
+            }
+        ];
 
         // --- UI Elements ---
         const holeButtons = document.querySelectorAll('.hole');
@@ -282,62 +392,62 @@
         const playbackContainer = document.getElementById('playbackContainer');
         const downloadBtn = document.getElementById('downloadBtn');
         const discardBtn = document.getElementById('discardBtn');
-
-        // Modal Elements
+        
+        // Modal elements
         const customModal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
-        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
 
-        // --- Custom Alert Utility ---
-        function showCustomAlert(message) {
+        // Demo Elements
+        const songButtons = document.querySelectorAll('.song-btn');
+        const demoControls = document.getElementById('demoControls');
+        const activeSongName = document.getElementById('activeSongName');
+        const activeNoteGuide = document.getElementById('activeNoteGuide');
+        const stopDemoBtn = document.getElementById('stopDemoBtn');
+        const demoPlayingStatus = document.getElementById('demoPlayingStatus');
+
+        // ฟังก์ชันแสดงกล่องแจ้งเตือนสวยงามแทน alert
+        function showAlert(title, message) {
+            modalTitle.innerText = title;
             modalMessage.innerText = message;
             customModal.classList.remove('hidden');
-            setTimeout(() => {
-                customModal.classList.remove('opacity-0');
-                customModal.querySelector('div').classList.remove('scale-95');
-                customModal.querySelector('div').classList.add('scale-100');
-            }, 10);
         }
 
-        modalCloseBtn.addEventListener('click', () => {
-            customModal.classList.add('opacity-0');
-            customModal.querySelector('div').classList.remove('scale-100');
-            customModal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => {
-                customModal.classList.add('hidden');
-            }, 300);
+        closeModalBtn.addEventListener('click', () => {
+            customModal.classList.add('hidden');
         });
 
-        // --- Audio Synthesis (Harmonica Sound) ---
+        // --- ระบบสร้างเสียงและเอฟเฟกต์เครื่องดนตรีคีย์บอร์ดลม ---
         function playTone(holeIndex) {
             if (context.state === 'suspended') context.resume();
-            if (activeOscillators[holeIndex]) return; // Already playing
+            if (activeOscillators[holeIndex]) return; // ถ้าเล่นอยู่แล้วให้ข้าม
 
             const freq = frequencies[currentMode][holeIndex];
             const now = context.currentTime;
 
-            // Oscillator 1: Sawtooth (Richness)
+            // Oscillator 1: Sawtooth เพื่อเพิ่มความสว่างใสและแอมพลิจูดความร้อนของลิ้นเครื่องเป่าทองเหลือง (Reed)
             const osc1 = context.createOscillator();
             osc1.type = 'sawtooth';
             osc1.frequency.value = freq;
 
-            // Oscillator 2: Square (Hollowness)
+            // Oscillator 2: Square มอบความแน่น นุ่มนวล คล้ายลักษณะโพรงอากาศ (Chamber) ภายในเมาท์ออแกน
             const osc2 = context.createOscillator();
             osc2.type = 'square';
             osc2.frequency.value = freq; 
 
-            // Lowpass Filter (Muffle harshness)
+            // ตัวกรองความถี่ต่ำเพื่อขจัดคลื่นเสียงที่แหลมกระด้างเกินไป
             const filter = context.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 2500;
-            filter.Q.value = 1;
+            filter.frequency.setValueAtTime(2200, now);
+            filter.Q.setValueAtTime(1.2, now);
 
-            // Gain Envelope (ADSR)
+            // ซองสัญญาณ Gain สำหรับความดัง (ADSR Style)
             const noteGain = context.createGain();
             noteGain.gain.setValueAtTime(0, now);
-            noteGain.gain.linearRampToValueAtTime(0.4, now + 0.05); // Attack
-            
-            // Connect Graph
+            noteGain.gain.linearRampToValueAtTime(0.45, now + 0.04); // เวลาในการไต่ความดัง (Attack)
+
+            // เชื่อมวงจรสัญญาณ
             osc1.connect(filter);
             osc2.connect(filter);
             filter.connect(noteGain);
@@ -346,9 +456,10 @@
             osc1.start(now);
             osc2.start(now);
 
+            // บันทึกตำแหน่งออบเจ็กต์เสียง
             activeOscillators[holeIndex] = { osc1, osc2, noteGain };
             
-            // UI Feedback
+            // แสดงผลการสัมผัสปุ่มช่อง
             holeButtons[holeIndex].classList.add('active');
         }
 
@@ -358,34 +469,36 @@
             const { osc1, osc2, noteGain } = activeOscillators[holeIndex];
             const now = context.currentTime;
 
-            // Release
+            // ค่อย ๆ ปล่อยระดับเสียงเพื่อป้องกันเสียงขาดตอนฉับพลัน (Release)
             noteGain.gain.cancelScheduledValues(now);
             noteGain.gain.setValueAtTime(noteGain.gain.value, now);
-            noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
-            osc1.stop(now + 0.15);
-            osc2.stop(now + 0.15);
+            osc1.stop(now + 0.12);
+            osc2.stop(now + 0.12);
 
-            // Cleanup
+            // คืนค่าหน่วยความจำและเชื่อมต่อวงจรหลังจากปิดเสียง
             setTimeout(() => {
-                // Ensure nodes are disconnected to prevent memory leaks
-                osc1.disconnect();
-                osc2.disconnect();
-                noteGain.disconnect();
-            }, 200);
+                try {
+                    osc1.disconnect();
+                    osc2.disconnect();
+                    noteGain.disconnect();
+                } catch(e){}
+            }, 150);
 
             delete activeOscillators[holeIndex];
             
-            // UI Feedback
+            // ยกเลิกแสดงผลสัมผัสปุ่มช่อง
             holeButtons[holeIndex].classList.remove('active');
         }
 
+        // --- อัปเดตป้ายชื่อตัวโน้ตบนปุ่มกด ---
         function updateLabels() {
             holeButtons.forEach((btn, index) => {
                 const note = noteNames[currentMode][index];
                 btn.querySelector('.note-name').innerText = note;
                 
-                // Color hint
+                // ไฮไลต์สีตามสถานะ เป่า (สีเหลืองทอง) และ ดูด (สีฟ้าน้ำทะเล)
                 if(currentMode === 'blow') {
                     btn.querySelector('.note-name').classList.remove('text-blue-300');
                     btn.querySelector('.note-name').classList.add('text-yellow-400');
@@ -396,39 +509,40 @@
             });
         }
 
-        // --- Mode Switching ---
+        // --- ฟังก์ชันการสลับโหมดลมเป่า / ลมดูด ---
         function toggleMode() {
-            // Stop all current sounds when switching
+            // ดับโน้ตเสียงที่ยังเป่าค้างอยู่เมื่อมีการเปลี่ยนสลับช่องเป่า/ดูดกะทันหัน
             Object.keys(activeOscillators).forEach(key => stopTone(parseInt(key)));
 
             if (currentMode === 'blow') {
                 currentMode = 'draw';
-                modeBtn.innerText = "สถานะ: ดูด (Draw)";
+                modeBtn.innerText = "สถานะปัจจุบัน: ดูด (Draw)";
                 modeBtn.classList.remove('mode-blow');
                 modeBtn.classList.add('mode-draw');
             } else {
                 currentMode = 'blow';
-                modeBtn.innerText = "สถานะ: เป่า (Blow)";
+                modeBtn.innerText = "สถานะปัจจุบัน: เป่า (Blow)";
                 modeBtn.classList.remove('mode-draw');
                 modeBtn.classList.add('mode-blow');
             }
             updateLabels();
         }
 
-        // Mode Button Interaction (Toggle Click)
-        modeBtn.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            toggleMode();
-        });
-        modeBtn.addEventListener('touchstart', (e) => {
+        // กำหนดปุ่มกดสวิตช์ เป่า/ดูด สำหรับจอสัมผัสและเมาส์
+        modeBtn.addEventListener('pointerdown', (e) => {
             e.preventDefault();
             toggleMode();
         });
 
-        // --- Touch Interaction Logic for Holes ---
+        // --- ทริกเกอร์ระบบเสียงมัลติทัชบนโทรศัพท์มือถือ (Pointer Events) ---
+        // ใช้ PointerDown และ PointerUp, PointerLeave เพื่อลดความล่าช้าของสัมผัสบนสมาร์ทโฟน
         holeButtons.forEach((btn, index) => {
             const handleStart = (e) => {
-                e.preventDefault(); // Prevent scrolling
+                e.preventDefault();
+                // ถ้าแอปเปิดเพลงเดโมอยู่ แล้วผู้ใช้เล่นตาม ให้หยุดเพลงเดโมชั่วคราวเพื่อรับสัมผัส
+                if (isDemoPlaying) {
+                    stopDemoPlayback();
+                }
                 playTone(index);
             };
 
@@ -437,186 +551,108 @@
                 stopTone(index);
             };
 
-            btn.addEventListener('touchstart', handleStart, {passive: false});
-            btn.addEventListener('touchend', handleEnd, {passive: false});
-            btn.addEventListener('touchcancel', handleEnd, {passive: false});
+            // รองรับทั้งระบบทัชสกรีนและเมาส์ในอีเวนต์เดียว
+            btn.addEventListener('pointerdown', handleStart);
+            btn.addEventListener('pointerup', handleEnd);
+            btn.addEventListener('pointerleave', handleEnd);
+            btn.addEventListener('pointercancel', handleEnd);
+        });
+
+        // --- อัปเดตและควบคุมการเล่นเพลงสาธิต (Demo Songs Player) ---
+        function playDemoSong(songIndex) {
+            stopDemoPlayback(); // หยุดเพลงเดิมก่อนหน้าทุกครั้ง
             
-            // Mouse support for desktop testing
-            btn.addEventListener('mousedown', handleStart);
-            btn.addEventListener('mouseup', handleEnd);
-            btn.addEventListener('mouseleave', handleEnd);
-        });
-
-        // --- Demo Songs Engine ---
-        const demoSongs = {
-            // เพลงหนูมาลี: โน้ตมีเป่าและดูดสลับกัน
-            mary: [
-                { hole: 1, mode: 'blow', duration: 300, delay: 0 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 400 },
-                { hole: 0, mode: 'blow', duration: 300, delay: 800 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 1200 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 1600 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 2000 },
-                { hole: 1, mode: 'blow', duration: 600, delay: 2400 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 3200 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 3600 },
-                { hole: 0, mode: 'draw', duration: 600, delay: 4000 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 4800 },
-                { hole: 2, mode: 'blow', duration: 300, delay: 5200 },
-                { hole: 2, mode: 'blow', duration: 600, delay: 5600 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 6400 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 6800 },
-                { hole: 0, mode: 'blow', duration: 300, delay: 7200 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 7600 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 8000 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 8400 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 8800 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 9200 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 9600 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 10000 },
-                { hole: 1, mode: 'blow', duration: 300, delay: 10400 },
-                { hole: 0, mode: 'draw', duration: 300, delay: 10800 },
-                { hole: 0, mode: 'blow', duration: 800, delay: 11200 }
-            ],
-            // เพลงโอ ซูซานนา
-            susanna: [
-                { hole: 3, mode: 'blow', duration: 250, delay: 0 },
-                { hole: 3, mode: 'draw', duration: 250, delay: 300 },
-                { hole: 4, mode: 'blow', duration: 250, delay: 600 },
-                { hole: 5, mode: 'blow', duration: 250, delay: 900 },
-                { hole: 5, mode: 'blow', duration: 250, delay: 1200 },
-                { hole: 5, mode: 'draw', duration: 250, delay: 1500 },
-                { hole: 5, mode: 'blow', duration: 250, delay: 1800 },
-                { hole: 4, mode: 'blow', duration: 250, delay: 2100 },
-                { hole: 3, mode: 'blow', duration: 250, delay: 2400 },
-                { hole: 3, mode: 'draw', duration: 250, delay: 2700 },
-                { hole: 4, mode: 'blow', duration: 250, delay: 3000 },
-                { hole: 4, mode: 'blow', duration: 250, delay: 3300 },
-                { hole: 3, mode: 'draw', duration: 250, delay: 3600 },
-                { hole: 3, mode: 'blow', duration: 400, delay: 3900 },
-                { hole: 3, mode: 'draw', duration: 250, delay: 4400 },
-                { hole: 4, mode: 'blow', duration: 250, delay: 4900 },
-                { hole: 3, mode: 'blow', duration: 600, delay: 5400 }
-            ],
-            // การไล่สเกลเมเจอร์ลงต่ำ
-            scale: [
-                { hole: 6, mode: 'blow', duration: 400, delay: 0 },
-                { hole: 5, mode: 'draw', duration: 400, delay: 500 },
-                { hole: 5, mode: 'blow', duration: 400, delay: 1000 },
-                { hole: 4, mode: 'draw', duration: 400, delay: 1500 },
-                { hole: 4, mode: 'blow', duration: 400, delay: 2000 },
-                { hole: 3, mode: 'draw', duration: 400, delay: 2500 },
-                { hole: 3, mode: 'blow', duration: 600, delay: 3000 }
-            ],
-            // เพลงไททานิค (My Heart Will Go On)
-            titanic: [
-                { hole: 3, mode: 'blow', duration: 300, delay: 0 },
-                { hole: 3, mode: 'blow', duration: 300, delay: 400 },
-                { hole: 3, mode: 'blow', duration: 300, delay: 800 },
-                { hole: 3, mode: 'blow', duration: 300, delay: 1200 },
-                { hole: 2, mode: 'draw', duration: 300, delay: 1600 },
-                { hole: 3, mode: 'blow', duration: 550, delay: 2000 },
-                { hole: 3, mode: 'blow', duration: 300, delay: 2650 },
-                { hole: 2, mode: 'draw', duration: 300, delay: 3050 },
-                { hole: 3, mode: 'blow', duration: 300, delay: 3450 },
-                { hole: 4, mode: 'blow', duration: 450, delay: 3850 },
-                { hole: 4, mode: 'draw', duration: 450, delay: 4350 },
-                { hole: 4, mode: 'blow', duration: 600, delay: 4850 },
-                { hole: 3, mode: 'draw', duration: 550, delay: 5500 }
-            ]
-        };
-
-        let demoTimeouts = [];
-        let isDemoPlaying = false;
-
-        function stopDemoSong() {
-            demoTimeouts.forEach(t => clearTimeout(t));
-            demoTimeouts = [];
-            isDemoPlaying = false;
-            // Stop all active tones
-            Object.keys(activeOscillators).forEach(key => stopTone(parseInt(key)));
-            updateDemoButtonUI();
-        }
-
-        function playDemoSong(songKey) {
-            stopDemoSong();
+            const song = demoSongs[songIndex];
             isDemoPlaying = true;
-            updateDemoButtonUI();
+            activeSongName.innerText = `เพลง: ${song.name}`;
+            demoControls.classList.remove('hidden');
+            demoPlayingStatus.classList.remove('hidden');
+            
+            let currentNoteIndex = 0;
+            
+            function playNext() {
+                if (!isDemoPlaying) return;
+                
+                if (currentNoteIndex >= song.notes.length) {
+                    // เล่นเพลงจนจบการวนลูปใหม่ หรือหยุดเล่น
+                    stopDemoPlayback();
+                    showAlert("✨ เล่นสำเร็จ!", `เล่นเพลงสาธิต "${song.name}" จบแล้วครับ`);
+                    return;
+                }
+                
+                const noteInfo = song.notes[currentNoteIndex];
+                
+                // แจ้งเตือนโน้ตถัดไปที่ตัวควบคุม
+                if (currentNoteIndex + 1 < song.notes.length) {
+                    const nextNote = song.notes[currentNoteIndex + 1];
+                    const direction = nextNote.mode === 'blow' ? 'เป่า' : 'ดูด';
+                    activeNoteGuide.innerText = `โน้ตถัดไป: ช่อง ${nextNote.hole + 1} (${direction})`;
+                } else {
+                    activeNoteGuide.innerText = `จบเพลง`;
+                }
 
-            const notes = demoSongs[songKey];
-            if (!notes) return;
+                // 1. สลับโหมดเสียงให้ตรงกับเดโมโน้ตปัจจุบันโดยอัตโนมัติ
+                if (currentMode !== noteInfo.mode) {
+                    toggleMode();
+                }
+                
+                // 2. สั่งเล่นตัวโน้ตนั้นๆ
+                playTone(noteInfo.hole);
+                
+                // 3. ปรับสีความสว่างตัวนำทาง (Guide Next)
+                holeButtons[noteInfo.hole].classList.add('guide-next');
 
-            notes.forEach(note => {
-                // ตัวนับสำหรับเริ่มเปิดเสียง
-                const startTimeout = setTimeout(() => {
-                    if (!isDemoPlaying) return;
-                    // ปรับสลับสถานะเป่า/ดูดในโหมดแสดงผลของระบบให้ตรงตามทำนองจริง
-                    if (currentMode !== note.mode) {
-                        toggleMode();
-                    }
-                    playTone(note.hole);
-                }, note.delay);
+                // รอระยะเวลาและปิดโน้ต เพื่อเล่นโน้ตถัดไป
+                demoSequenceTimeout = setTimeout(() => {
+                    stopTone(noteInfo.hole);
+                    holeButtons[noteInfo.hole].classList.remove('guide-next');
+                    currentNoteIndex++;
+                    
+                    // ปล่อยช่องว่างสั้น ๆ ระหว่างช่วงโน้ต
+                    demoSequenceTimeout = setTimeout(playNext, 80);
+                }, noteInfo.duration);
+            }
+            
+            playNext();
+        }
 
-                // ตัวนับสำหรับหยุดเสียง
-                const stopTimeout = setTimeout(() => {
-                    if (!isDemoPlaying) return;
-                    stopTone(note.hole);
-                }, note.delay + note.duration);
+        function stopDemoPlayback() {
+            isDemoPlaying = false;
+            if (demoSequenceTimeout) {
+                clearTimeout(demoSequenceTimeout);
+            }
+            
+            // ปิดโน้ตทุกตัวและตัวนำทางบนช่องที่อาจจะเปิดค้างอยู่
+            Object.keys(activeOscillators).forEach(key => stopTone(parseInt(key)));
+            holeButtons.forEach(btn => btn.classList.remove('guide-next'));
+            
+            demoControls.classList.add('hidden');
+            demoPlayingStatus.classList.add('hidden');
+        }
 
-                demoTimeouts.push(startTimeout, stopTimeout);
+        // จัดการคลิกเลือกเพลงจากรายการเลื่อน
+        songButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const songIndex = parseInt(btn.getAttribute('data-song'));
+                playDemoSong(songIndex);
             });
-
-            // ตรวจสอบเมื่อเล่นเพลงจบ
-            const totalDuration = Math.max(...notes.map(n => n.delay + n.duration)) + 200;
-            const endTimeout = setTimeout(() => {
-                stopDemoSong();
-            }, totalDuration);
-            demoTimeouts.push(endTimeout);
-        }
-
-        function updateDemoButtonUI() {
-            const btn = document.getElementById('demoPlayBtn');
-            const icon = document.getElementById('demoPlayIcon');
-            const text = document.getElementById('demoPlayText');
-            if (isDemoPlaying) {
-                btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-400', 'text-slate-900');
-                btn.classList.add('bg-red-600', 'hover:bg-red-500', 'text-white');
-                icon.innerText = '⏹';
-                text.innerText = 'หยุดเล่น';
-            } else {
-                btn.classList.remove('bg-red-600', 'hover:bg-red-500', 'text-white');
-                btn.classList.add('bg-yellow-500', 'hover:bg-yellow-400', 'text-slate-900');
-                icon.innerText = '▶';
-                text.innerText = 'เล่นเพลง';
-            }
-        }
-
-        // เชื่อมปุ่มควบคุมเพลงสาธิต
-        document.getElementById('demoPlayBtn').addEventListener('click', () => {
-            if (context.state === 'suspended') context.resume();
-            if (isDemoPlaying) {
-                stopDemoSong();
-            } else {
-                const selectedSong = document.getElementById('demoSelect').value;
-                playDemoSong(selectedSong);
-            }
         });
 
-        // --- Recorder Logic ---
+        stopDemoBtn.addEventListener('click', stopDemoPlayback);
+
+
+        // --- ระบบควบคุมสตรีมอัดเสียงภายในแอปพลิเคชัน (Internal Recorder) ---
         recordBtn.addEventListener('click', () => {
             if (context.state === 'suspended') context.resume();
             
-            // หากระบบกำลังเล่นเพลงสาธิตอยู่ ให้หยุดเล่นก่อนเริ่มอัดเสียง
-            if (isDemoPlaying) stopDemoSong();
-
             chunks = [];
             
-            // ตรวจสอบและเลือก MimeType ที่ดีที่สุดสำหรับอุปกรณ์
+            // ตรวจสอบโมดูลจัดเก็บไฟล์เสียงที่เข้ากันได้ดีที่สุดบนแพลตฟอร์มอุปกรณ์นั้น ๆ
             const types = [
-                "audio/mp4",
                 "audio/webm;codecs=opus",
                 "audio/webm", 
                 "audio/ogg;codecs=opus",
+                "audio/mp4",
                 "audio/aac"
             ];
             
@@ -624,7 +660,6 @@
             for (let type of types) {
                 if (MediaRecorder.isTypeSupported(type)) {
                     options = { mimeType: type };
-                    console.log("Using mimeType:", type);
                     break;
                 }
             }
@@ -633,10 +668,10 @@
                 if (options) {
                     mediaRecorder = new MediaRecorder(destStream.stream, options);
                 } else {
-                    mediaRecorder = new MediaRecorder(destStream.stream); // ให้เบราว์เซอร์เลือกเอง
+                    mediaRecorder = new MediaRecorder(destStream.stream);
                 }
             } catch (err) {
-                showCustomAlert("เบราว์เซอร์นี้ไม่รองรับการอัดเสียง หรือเกิดข้อผิดพลาด: " + err.message);
+                showAlert("เกิดข้อผิดพลาด", "ระบบไม่รองรับโมดูลการบันทึกเสียง: " + err.message);
                 return;
             }
 
@@ -647,16 +682,12 @@
             };
 
             mediaRecorder.onstop = () => {
-                // สร้าง Blob ตาม mimeType ที่ใช้จริง
                 const blob = new Blob(chunks, { 'type' : mediaRecorder.mimeType || 'audio/webm' });
                 const audioURL = window.URL.createObjectURL(blob);
                 
                 audioPlayback.src = audioURL;
-                
-                // ตั้งค่าปุ่มดาวน์โหลด
                 downloadBtn.href = audioURL;
                 
-                // ตั้งนามสกุลไฟล์ให้ถูกต้อง
                 let ext = 'webm';
                 if (mediaRecorder.mimeType.includes('mp4')) ext = 'mp4';
                 else if (mediaRecorder.mimeType.includes('ogg')) ext = 'ogg';
@@ -665,11 +696,12 @@
                 
                 downloadBtn.download = `harmonica_solo_${new Date().getTime()}.${ext}`;
 
-                // แสดงผล UI
-                recordBtn.classList.add('hidden');
+                // การปรับเปลี่ยน Interface หลังเสร็จสิ้นการอัดเสียง
+                recordBtn.classList.remove('hidden');
                 stopBtn.classList.add('hidden');
                 recordingStatus.classList.add('hidden');
                 playbackContainer.classList.remove('hidden');
+                recordBtn.classList.remove('record-btn-active');
                 
                 clearInterval(recordingTimerInterval);
             };
@@ -678,14 +710,14 @@
             isRecording = true;
             recordingStartTime = Date.now();
             
-            // UI Updates
+            // แสดงสถานะระหว่างอัด
             recordBtn.classList.add('hidden');
             stopBtn.classList.remove('hidden');
             playbackContainer.classList.add('hidden');
             recordingStatus.classList.remove('hidden');
-            recordBtn.classList.add('record-btn');
+            recordBtn.classList.add('record-btn-active');
 
-            // Timer
+            // อัปเดตตัวเลขบอกเวลา (Timer)
             recordingTimerInterval = setInterval(() => {
                 const diff = Math.floor((Date.now() - recordingStartTime) / 1000);
                 const m = Math.floor(diff / 60).toString().padStart(2, '0');
@@ -701,7 +733,7 @@
             }
         });
         
-        // ปุ่มลบทิ้ง/อัดใหม่
+        // ล้างไฟล์บันทึกเพื่อเริ่มเล่นหรืออัดเซสชันใหม่
         discardBtn.addEventListener('click', () => {
             playbackContainer.classList.add('hidden');
             recordBtn.classList.remove('hidden');
@@ -709,7 +741,8 @@
             chunks = [];
         });
 
-        // --- Visualizer ---
+
+        // --- แถบแสดงคลื่นเสียง (FFT Analyzer Visualizer) ---
         const canvas = document.getElementById('visualizer');
         const canvasCtx = canvas.getContext('2d');
         const analyser = context.createAnalyser();
@@ -718,9 +751,10 @@
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
 
+        // กำหนดสเกลความกว้างของแถบให้รับตามขนาดความละเอียดความกว้างหน้าจอจริง
         function resizeCanvas() {
             canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = 60;
+            canvas.height = 45;
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -729,19 +763,20 @@
             requestAnimationFrame(drawVisualizer);
             analyser.getByteFrequencyData(dataArray);
 
-            canvasCtx.fillStyle = 'rgb(20, 20, 20)';
+            canvasCtx.fillStyle = '#020617';
             canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const barWidth = (canvas.width / bufferLength) * 2.5;
+            const barWidth = (canvas.width / bufferLength) * 2.2;
             let barHeight;
             let x = 0;
 
             for(let i = 0; i < bufferLength; i++) {
-                barHeight = dataArray[i] / 2; // Scale down
+                barHeight = dataArray[i] / 4.8; // ปรับลดขนาดความสูงที่ล้นขอบ
 
-                const r = barHeight + 25 * (i/bufferLength);
-                const g = 250 * (i/bufferLength);
-                const b = 50;
+                // การไล่โทนสีคลื่นความถี่จาก เสียงทุ้ม-ลึก (น้ำเงิน/เขียว) ไปยัง เสียงแหลม-สูง (เหลือง/ส้ม)
+                const r = barHeight + 50 * (i/bufferLength);
+                const g = 180 * (i/bufferLength);
+                const b = 255 - (150 * (i/bufferLength));
 
                 canvasCtx.fillStyle = `rgb(${r},${g},${b})`;
                 canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
