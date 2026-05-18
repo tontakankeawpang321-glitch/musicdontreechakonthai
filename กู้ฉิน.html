@@ -4,602 +4,865 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>กู้ฉินเสมือนจริง (Realistic Virtual Guqin)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;600;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap');
-
         :root {
-            --wood-dark: #1a0b05;
-            --wood-light: #3e1e10;
-            --gold: #d4af37;
-            --pearl: #e6e6fa; /* สีมุก */
-            --highlight: #fffae0;
+            --wood-dark: #0f0502;
+            --wood-medium: #220b04;
+            --gold: #dfb15b;
+            --gold-light: #f3e5ab;
+            --pearl: #f4f0ea;
         }
-
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #050505;
-            font-family: 'Sarabun', sans-serif;
-            overflow: hidden;
-            touch-action: none;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            color: white;
+            font-family: 'Sarabun', 'Noto Serif SC', sans-serif;
+            background-color: #030100;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: none;
         }
-
-        /* --- Header & Controls --- */
-        header {
-            background: linear-gradient(to bottom, #111, #1a1a1a);
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-            z-index: 100;
-            border-bottom: 1px solid #333;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--gold);
-            letter-spacing: 1px;
-            text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            background: #222;
-            border: 1px solid #555;
-            color: #ccc;
-            padding: 8px 14px;
-            border-radius: 25px;
-            font-family: 'Sarabun', sans-serif;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            outline: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        button:active {
-            transform: scale(0.96);
-        }
-
-        button.active {
-            background: var(--gold);
-            color: #1a0b05;
-            border-color: var(--gold);
-            box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
-            font-weight: bold;
-        }
-
-        button.recording {
-            background: #d32f2f;
-            border-color: #ff5252;
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
-            70% { box-shadow: 0 0 0 8px rgba(211, 47, 47, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
-        }
-
-        /* --- Instrument Body --- */
-        .guqin-container {
-            flex: 1;
-            position: relative;
-            /* ลายไม้แบบแลกเกอร์เข้ม (Dark Lacquer) */
+        /* ลายไม้โบราณแบบแลกเกอร์ลึก */
+        .wood-texture {
             background: 
-                radial-gradient(circle at 50% 30%, rgba(255,255,255,0.05) 0%, transparent 60%),
-                linear-gradient(90deg, #0a0302 0%, #220d06 15%, #2d1208 50%, #220d06 85%, #0a0302 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-evenly;
-            padding: 20px 0;
-            box-shadow: inset 0 0 80px rgba(0,0,0,1);
-            perspective: 1000px;
-            overflow: hidden;
+                radial-gradient(circle at 50% 15%, rgba(243, 229, 171, 0.05) 0%, transparent 50%),
+                linear-gradient(90deg, #070201 0%, #170703 10%, #291008 50%, #170703 90%, #070201 100%);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.95);
         }
-
-        /* Texture Overlay */
-        .guqin-container::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-            pointer-events: none;
-            mix-blend-mode: overlay;
+        /* มุกประดับบอกตำแหน่งเสียง (Hui - 徽) */
+        .hui-bead {
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e0d0cc 50%, #9c847c 100%);
+            box-shadow: 0 0 6px rgba(255,255,255,0.7), 0 3px 5px rgba(0,0,0,0.6);
         }
-
-        /* Bridge (Yueshan) Decoration on the right */
-        .bridge {
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 35px;
-            background: linear-gradient(to right, #1a0500, #000);
-            box-shadow: -2px 0 10px rgba(0,0,0,0.8);
-            z-index: 5;
-            border-left: 1px solid rgba(255,255,255,0.05);
+        .hui-bead.major {
+            background: radial-gradient(circle at 35% 35%, #fffdfa 0%, #f6e5c5 60%, #b89355 100%);
+            box-shadow: 0 0 10px rgba(243, 229, 171, 0.8), 0 4px 8px rgba(0,0,0,0.8);
         }
-
-        /* Hui (Dots) - Mother of Pearl Style */
-        .hui-markers {
-            position: absolute;
-            top: 0; bottom: 0; left: 50%; width: 92%; /* ลดความกว้างเพื่อไม่ให้ทับ Bridge */
-            transform: translateX(-53%); /* Shift slightly left */
-            display: flex;
-            flex-direction: row;
-            justify-content: space-evenly;
-            align-items: center;
-            pointer-events: none;
-            z-index: 1;
+        /* แถบมาร์กเกอร์จำลองไม้สะพานสาย (Yueshan) */
+        .yueshan-bridge {
+            background: linear-gradient(180deg, #120300 0%, #000000 100%);
+            border-bottom: 2px solid rgba(223, 177, 91, 0.4);
         }
-
-        .hui {
-            width: 8px;
-            height: 8px;
-            background: radial-gradient(circle at 30% 30%, #fff, #a0a0a0);
-            border-radius: 50%;
-            box-shadow: 0 0 2px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.8);
-            opacity: 0.9;
+        /* แถบตัวโน้ตไหล */
+        .score-scroll-container::-webkit-scrollbar {
+            display: none;
         }
-        
-        .hui.main {
-            width: 14px;
-            height: 14px;
-            background: radial-gradient(circle at 30% 30%, #fff, #c0c0c0);
-            box-shadow: 0 0 4px rgba(255,255,255,0.9), 0 2px 5px rgba(0,0,0,0.8);
-        }
-
-        /* --- Strings --- */
-        .string-container {
-            position: relative;
-            width: 100%;
-            height: 12%; 
-            display: flex;
-            align-items: center;
-            justify-content: flex-start; /* Align left to accommodate bridge */
-            padding-left: 20px; 
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .string {
-            width: 96%; /* เหลือที่ให้ Bridge */
-            height: 2px;
-            /* สายพันเกลียว (Wound String Texture) */
-            background: repeating-linear-gradient(90deg, 
-                #ddd, #ddd 1px, 
-                #bbb 2px, #bbb 3px
-            );
-            box-shadow: 0 4px 6px rgba(0,0,0,0.9);
-            position: relative;
-            transition: transform 0.05s;
-            border-radius: 2px;
-        }
-
-        /* Realistic String Thickness & Texture adjustments */
-        .string[data-index="0"] { height: 6px; background: repeating-linear-gradient(90deg, #999, #999 1px, #777 2px, #777 3px); } 
-        .string[data-index="1"] { height: 5.5px; background: repeating-linear-gradient(90deg, #aaa, #aaa 1px, #888 2px, #888 3px); }
-        .string[data-index="2"] { height: 5px; background: repeating-linear-gradient(90deg, #bbb, #bbb 1px, #999 2px, #999 3px); }
-        .string[data-index="3"] { height: 4.5px; }
-        .string[data-index="4"] { height: 4px; }
-        .string[data-index="5"] { height: 3.5px; }
-        .string[data-index="6"] { height: 3px; opacity: 0.95; } 
-
-        .string.vibrating {
-            animation: vibrate 0.15s ease-in-out infinite;
-        }
-        
-        @keyframes vibrate {
+        /* เอฟเฟกต์สะเทือนของสายกู่ฉิน */
+        @keyframes stringVibrate {
             0% { transform: translateY(0); }
-            25% { transform: translateY(-2px); }
-            50% { transform: translateY(0); }
-            75% { transform: translateY(2px); }
+            20% { transform: translateY(-3.5px); opacity: 0.9; }
+            40% { transform: translateY(3px); }
+            60% { transform: translateY(-2px); }
+            80% { transform: translateY(1.5px); }
             100% { transform: translateY(0); }
         }
-
-        /* Note Labels */
-        .note-label {
+        .string-vibrating {
+            animation: stringVibrate 0.12s linear infinite;
+        }
+        /* คลื่นแสงสะท้อนของสายเมื่อสั่น */
+        .string-glow::after {
+            content: '';
             position: absolute;
-            left: 20px; /* ย้ายมาซ้าย */
-            color: rgba(255,255,255,0.6);
-            font-size: 0.8rem;
+            left: 0; right: 0; top: 50%;
+            height: 10px;
+            background: radial-gradient(ellipse at center, rgba(223, 177, 91, 0.4) 0%, transparent 75%);
+            transform: translateY(-50%);
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.3s;
-            background: rgba(0,0,0,0.5);
-            padding: 2px 8px;
-            border-radius: 10px;
-            text-shadow: 0 1px 2px black;
+            transition: opacity 0.1s;
         }
-
-        .show-notes .note-label {
+        .string-vibrating .string-glow::after {
             opacity: 1;
         }
-
-        /* Visual Feedback */
-        .touch-feedback {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,250,224,0.6) 0%, transparent 70%);
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            animation: ripple 0.4s ease-out forwards;
-            z-index: 20;
-        }
-
-        @keyframes ripple {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-        }
-
-        /* Overlay */
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(10, 5, 2, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            text-align: center;
-            padding: 20px;
-            backdrop-filter: blur(5px);
-        }
-
-        #start-btn {
-            margin-top: 30px;
-            padding: 15px 50px;
-            font-size: 1.2rem;
-            border: 1px solid var(--gold);
-            background: rgba(212, 175, 55, 0.1);
-            color: var(--gold);
-            border-radius: 50px;
-            letter-spacing: 1px;
-        }
-
-        #start-btn:active {
-            background: var(--gold);
-            color: black;
-        }
-
     </style>
 </head>
-<body>
+<body class="h-screen w-screen overflow-hidden flex flex-col text-stone-100">
 
-    <div id="start-overlay">
-        <h1 style="font-size: 2.5rem; margin-bottom: 5px; color: var(--gold);">古琴</h1>
-        <h2 style="font-size: 1.5rem; margin: 0; font-weight: 300; color: #ccc;">Guqin Simulator</h2>
-        <p style="color: #888; margin-top: 10px; font-size: 0.9rem;">แนะนำให้ใช้หูฟังเพื่อเสียงที่สมจริง</p>
-        <button id="start-btn">แตะเพื่อเริ่ม (Start)</button>
+    <!-- หน้าจอต้อนรับและเริ่มโหลดเสียงเพื่อความสมจริง -->
+    <div id="start-overlay" class="fixed inset-0 bg-stone-950 z-50 flex flex-col justify-center items-center text-center p-6 backdrop-blur-md transition-all duration-700">
+        <div class="max-w-md space-y-8">
+            <div class="space-y-2">
+                <span class="text-xs tracking-widest text-[#dfb15b] uppercase font-semibold">เครื่องดนตรีโบราณเสมือนจริง</span>
+                <h1 class="text-5xl font-extrabold text-[#dfb15b] tracking-wider font-serif">古琴</h1>
+                <h2 class="text-lg text-stone-300 font-light tracking-widest">REALISTIC VIRTUAL GUQIN</h2>
+            </div>
+            
+            <div class="p-6 bg-stone-900/60 rounded-2xl border border-stone-800/80 text-stone-300 space-y-4 text-sm leading-relaxed text-left">
+                <p class="text-center font-bold text-amber-400">🔊 ปรับปรุงพลังเสียงลำโพงมือถือใหม่แล้ว!</p>
+                <p>🎸 <strong class="text-[#dfb15b]">ระบบขับเสียงแบบไฮบริด (Hybrid Modeling):</strong> ช่วยให้ขับเสียงโทนกู่ฉินโบราณออกลำโพงมือถือขนาดเล็กได้พุ่งกังวานและคมชัดเป็นพิเศษ</p>
+                <p>📢 <strong class="text-[#dfb15b]">สำหรับผู้ใช้ iPhone/iPad:</strong> โปรดตรวจสอบว่าได้ <span class="underline text-amber-300 font-bold">เลื่อนสวิตช์ปิดเสียงด้านข้างเครื่องออก (เปิดเสียงสั่น/มีเสียง)</span> และเร่งระดับเสียงสื่อมีเดียให้เต็มร้อย</p>
+            </div>
+
+            <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-600 text-stone-950 font-bold text-lg rounded-full transition-all duration-300 transform active:scale-95 shadow-[0_0_25px_rgba(223,177,91,0.3)] border border-[#dfb15b]">
+                เริ่มบรรเลงเพลงกู่ฉิน
+            </button>
+        </div>
     </div>
 
-    <header>
-        <h1>Virtual Guqin</h1>
-        <div class="controls">
-            <button id="toggle-notes">
-                <span>🎵</span> โน้ต
-            </button>
-            <button id="record-btn">
-                <span>🔴</span> <span id="rec-text">อัดเสียง</span>
-            </button>
-            <button id="download-btn" disabled style="opacity: 0.4;">
-                <span>⬇️</span>
+    <!-- หัวข้อและการเปลี่ยนเพลง -->
+    <header class="px-4 py-3 bg-stone-950/90 border-b border-stone-800/60 z-30 flex items-center justify-between shadow-lg">
+        <div class="flex flex-col">
+            <span class="text-[10px] tracking-wider text-[#dfb15b] font-serif">VIRTUAL GUQIN</span>
+            <h1 class="text-sm font-bold text-stone-100 flex items-center gap-1">กู่ฉินโบราณ <span class="text-[#dfb15b]" id="selected-song-title">滄海一聲笑</span></h1>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- เลือกเพลงจากรายการ -->
+            <select id="song-select" class="bg-stone-900 border border-stone-700 text-stone-200 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-[#dfb15b]">
+                <option value="canghai">滄海一聲笑 (เพลงสุราเย้ยยุทธจักร)</option>
+                <option value="molihua">茉莉花 (ดอกมะลิโบราณ)</option>
+                <option value="guangling">广陵散 (บทนำกวางหลิงซาน)</option>
+            </select>
+
+            <button id="toggle-help" class="p-2 bg-stone-900 border border-stone-800 rounded-lg text-xs hover:bg-stone-800">
+                ℹ️
             </button>
         </div>
     </header>
 
-    <div class="guqin-container" id="guqin-board">
-        <div class="bridge"></div> <!-- Decoration -->
+    <!-- แท่นระบบควบคุมเพลงและแถบเล่นโน้ตโบราณแบบไหล (Scrolling Score Panel) -->
+    <section class="bg-[#1c120d] border-b border-stone-800 p-3 flex flex-col gap-2 z-20 shadow-md">
+        <!-- บาร์ควบคุมการเล่นอัตโนมัติ -->
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <button id="btn-play-auto" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#dfb15b] hover:bg-amber-400 text-stone-950 font-bold text-xs rounded-full transition-all transform active:scale-95">
+                    <span id="play-icon">▶</span> <span id="play-text">เล่นอัตโนมัติ</span>
+                </button>
+                <button id="btn-stop-auto" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs rounded-full disabled:opacity-40 transition-all" disabled>
+                    Stop
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-3 text-xs text-stone-400">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-stone-500">ความเร็ว:</span>
+                    <select id="tempo-select" class="bg-stone-900 border border-stone-700 text-stone-200 px-1.5 py-0.5 rounded">
+                        <option value="0.75">ช้ามาก</option>
+                        <option value="1.0" selected>ปกติ</option>
+                        <option value="1.25">เร็วขึ้น</option>
+                        <option value="1.5">เร็วมาก</option>
+                    </select>
+                </div>
+                <div id="playback-timer" class="font-mono text-[11px] text-[#dfb15b]">00:00</div>
+            </div>
+        </div>
+
+        <!-- หน้าต่างแผ่นโน้ตเลื่อน (Horizontal Scrolling Sheet Music) -->
+        <div class="relative w-full h-20 bg-stone-950/80 rounded-xl border border-stone-800/80 overflow-hidden flex items-center">
+            <!-- เส้นแนวกึ่งกลางบอกจุดดีดปัจจุบัน -->
+            <div class="absolute left-1/2 top-0 bottom-0 w-[2px] bg-amber-500/70 z-10 shadow-[0_0_8px_rgba(245,158,11,0.8)] flex flex-col justify-between items-center">
+                <span class="text-[8px] bg-amber-500 text-stone-950 px-1 rounded-b font-bold">PLAYHEAD</span>
+                <span class="text-[8px] bg-amber-500 text-stone-950 px-1 rounded-t font-bold">▲</span>
+            </div>
+            
+            <!-- โครงสร้างกลุ่มโน้ตที่เลื่อนได้จริงด้วย JS -->
+            <div id="score-scroll-area" class="score-scroll-container flex items-center gap-4 px-[50%] h-full overflow-x-auto scroll-smooth transition-all duration-300">
+                <!-- โน้ตเพลงจะถูกเรนเดอร์ลงในส่วนนี้แบบพลวัตด้วย JS -->
+                <div class="text-stone-500 text-xs italic shrink-0">เลือกเพลงและกดเริ่มเพื่อดูโน้ต...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- แผงกู่ฉินหลัก (Guqin Board) คอนฟิกแบบแนวตั้งสำหรับหน้าจอมือถือ -->
+    <main class="flex-1 relative wood-texture flex flex-col justify-between py-6 px-1 overflow-hidden select-none">
         
-        <div class="hui-markers">
-             <div class="hui"></div><div class="hui"></div><div class="hui"></div><div class="hui"></div>
-             <div class="hui"></div><div class="hui"></div><div class="hui main"></div>
-             <div class="hui"></div><div class="hui"></div><div class="hui"></div><div class="hui"></div>
-             <div class="hui"></div><div class="hui"></div>
+        <!-- แถบสะพานกู่ฉินด้านขวาสุด (Yueshan Bridge) สำหรับสายสะท้อน -->
+        <div class="absolute right-0 top-0 bottom-0 w-8 yueshan-bridge z-10 opacity-90 shadow-2xl flex flex-col justify-around py-4">
+            <!-- ลายหลักไม้สะพานสาย -->
+            <div class="w-1.5 h-full bg-[#dfb15b]/20 mx-auto border-r border-stone-900"></div>
+        </div>
+
+        <!-- จุดสัญลักษณ์บอกตำแหน่งนิ้วมือทองคำกู่ฉิน (Hui Dots - 徽) พาดแนวขวางที่สมดุล -->
+        <div class="absolute inset-x-0 top-1/4 h-2 flex justify-evenly pointer-events-none z-10 opacity-75">
+            <div class="w-2.5 h-2.5 hui-bead rounded-full"></div>
+            <div class="w-2.5 h-2.5 hui-bead rounded-full"></div>
+            <div class="w-3 h-3 hui-bead major rounded-full -mt-0.5"></div> <!-- Center Node (7th Hui) -->
+            <div class="w-2.5 h-2.5 hui-bead rounded-full"></div>
+            <div class="w-2.5 h-2.5 hui-bead rounded-full"></div>
+        </div>
+
+        <div class="absolute inset-x-0 bottom-1/4 h-2 flex justify-evenly pointer-events-none z-10 opacity-75">
+            <div class="w-2.5 h-2.5 hui-bead rounded-full"></div>
+            <div class="w-3 h-3 hui-bead major rounded-full -mt-0.5"></div> <!-- Middle-Lower Node -->
+            <div class="w-2.5 h-2.5 hui-bead rounded-full"></div>
+        </div>
+
+        <!-- พื้นที่ของสายกู่ฉินทั้ง 7 สาย -->
+        <div id="guqin-strings-wrapper" class="w-full h-full flex flex-col justify-around items-stretch px-4 relative z-20">
+            <!-- สายกู่ฉินจำลองเสมือนจริงจะถูกวาดที่นี่ด้วยสถิตินิ้วมือผ่าน JS -->
+        </div>
+
+    </main>
+
+    <!-- การตั้งค่าความดังและเอฟเฟกต์บรรยากาศกู่ฉินด้านล่าง -->
+    <footer class="bg-stone-950 p-3.5 border-t border-stone-800 flex flex-col gap-2 z-30">
+        <div class="grid grid-cols-2 gap-4">
+            <!-- ระดับความอลังการของเสียงสะท้อน (Reverb Ambience) -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-[11px] text-stone-400">
+                    <span>ความก้องสไตล์อารามโบราณ</span>
+                    <span id="lbl-reverb" class="text-[#dfb15b]">70%</span>
+                </div>
+                <input type="range" id="slider-reverb" min="0" max="100" value="70" class="w-full accent-[#dfb15b] bg-stone-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- ระบบปรับหางเสียงสั่นคลอนสั่นพริ้ว (Vibrato Yin/Nao Intensity) -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-[11px] text-stone-400">
+                    <span>เอฟเฟกต์การสั่นคลอนสาย (吟猱)</span>
+                    <span id="lbl-vibrato" class="text-[#dfb15b]">ปานกลาง</span>
+                </div>
+                <input type="range" id="slider-vibrato" min="0" max="2" value="1" step="1" class="w-full accent-[#dfb15b] bg-stone-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center text-[10px] text-stone-500 pt-1 border-t border-stone-900">
+            <span>แตะนิ้วเพื่อดีด ลากนิ้วขวางเพื่อกรีดกู่ฉิน</span>
+            <span>กู่ฉินสังเคราะห์เสียงฟิสิกส์ 7 สาย</span>
+        </div>
+    </footer>
+
+    <!-- โทรศัพท์ขึ้นคำอธิบายวิธีการเล่นเบื้องต้น -->
+    <div id="help-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-stone-900 border border-stone-700 p-6 rounded-2xl max-w-sm w-full space-y-4">
+            <h3 class="text-lg font-bold text-[#dfb15b]">วิธีการเล่นและฝึกฝน</h3>
+            <ul class="text-xs space-y-2 text-stone-300 list-disc pl-4 leading-relaxed">
+                <li><strong>ดีดเดี่ยว:</strong> แตะสายกู่ฉินใดก็ได้บนหน้าจอเพื่อเริ่มเปล่งพลังเสียง</li>
+                <li><strong>กรีดกู่ฉิน (Strum/Strake):</strong> ปาดลากนิ้วผ่านสายบนลงล่างเพื่อสร้างโทนกระเพื่อมเสมือนการเกลา</li>
+                <li><strong>ฝึกตามโน้ต:</strong> เปิดระบบอัตโนมัติแล้วสังเกตโน้ตสีส้มที่กำลังวิ่ง หากต้องการฝึกช้าลงให้กด Pause แล้วดีดสายตามชื่อคีย์ที่ขึ้น</li>
+                <li><strong>โทนเสียง Yin (吟):</strong> หางเสียงจะมีการสั่นไหวและสไลด์ขึ้นลงเล็กน้อยเพื่อความอ่อนโยนสมจริงตามตำรา</li>
+            </ul>
+            <button id="close-help" class="w-full py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs rounded-xl">รับทราบ</button>
         </div>
     </div>
 
     <script>
-        // --- Tuning & Audio Config ---
-        // Pentatonic Scale: C D F G A C D
-        const TUNING = [
-            { note: "C2", freq: 65.41, name: "Kung (宮)" },
-            { note: "D2", freq: 73.42, name: "Shang (商)" },
-            { note: "F2", freq: 87.31, name: "Chiao (角)" },
-            { note: "G2", freq: 98.00, name: "Chih (徵)" },
-            { note: "A2", freq: 110.00, name: "Yu (羽)" },
-            { note: "C3", freq: 130.81, name: "Wen (文)" },
-            { note: "D3", freq: 146.83, name: "Wu (武)" }
+        // --- ฐานข้อมูลเพลงกู่ฉิน (Ancient Guqin Melodies) ---
+        // โน้ตเพลงกู่ฉิน pentatonic (C2, D2, F2, G2, A2, C3, D3)
+        // string mapping: 
+        // 0: C2 (宫 Kung), 1: D2 (商 Shang), 2: F2 (角 Chiao), 3: G2 (徵 Chih), 4: A2 (羽 Yu), 5: C3 (文 Wen), 6: D3 (武 Wu)
+        const SONGS_DATA = {
+            canghai: {
+                title: "滄海一聲笑 (Blue Sea Laughter)",
+                notes: [
+                    { string: 4, name: "羽 (Yu)", duration: 600 },
+                    { string: 4, name: "羽 (Yu)", duration: 300 },
+                    { string: 3, name: "徵 (Chih)", duration: 600 },
+                    { string: 2, name: "角 (Chiao)", duration: 600 },
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 0, name: "宮 (Kung)", duration: 1200, glide: 1 }, // สไลด์เสียง
+                    
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 1, name: "商 (Shang)", duration: 300 },
+                    { string: 2, name: "角 (Chiao)", duration: 600 },
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 3, name: "徵 (Chih)", duration: 1200 },
+                    
+                    { string: 4, name: "羽 (Yu)", duration: 600 },
+                    { string: 3, name: "徵 (Chih)", duration: 600 },
+                    { string: 2, name: "角 (Chiao)", duration: 600 },
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 0, name: "宮 (Kung)", duration: 1200, glide: 1 },
+
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 0, name: "宮 (Kung)", duration: 600 },
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 2, name: "角 (Chiao)", duration: 600 },
+                    { string: 3, name: "徵 (Chih)", duration: 1200 },
+                    
+                    { string: 4, name: "羽 (Yu)", duration: 600 },
+                    { string: 4, name: "羽 (Yu)", duration: 300 },
+                    { string: 3, name: "徵 (Chih)", duration: 600 },
+                    { string: 2, name: "角 (Chiao)", duration: 600 },
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 0, name: "宮 (Kung)", duration: 1200 }
+                ]
+            },
+            molihua: {
+                title: "茉莉花 (Jasmine Flower)",
+                notes: [
+                    { string: 4, name: "羽 (Yu)", duration: 600 },
+                    { string: 4, name: "羽 (Yu)", duration: 300 },
+                    { string: 5, name: "文 (Wen)", duration: 600 },
+                    { string: 6, name: "武 (Wu)", duration: 600 },
+                    { string: 5, name: "文 (Wen)", duration: 600 },
+                    { string: 4, name: "羽 (Yu)", duration: 900 },
+                    
+                    { string: 3, name: "徵 (Chih)", duration: 300 },
+                    { string: 4, name: "羽 (Yu)", duration: 600 },
+                    { string: 3, name: "徵 (Chih)", duration: 600 },
+                    { string: 2, name: "角 (Chiao)", duration: 1200 },
+                    
+                    { string: 3, name: "徵 (Chih)", duration: 600 },
+                    { string: 2, name: "角 (Chiao)", duration: 300 },
+                    { string: 3, name: "徵 (Chih)", duration: 600 },
+                    { string: 4, name: "羽 (Yu)", duration: 600 },
+                    { string: 3, name: "徵 (Chih)", duration: 900 },
+                    
+                    { string: 2, name: "角 (Chiao)", duration: 300 },
+                    { string: 1, name: "商 (Shang)", duration: 600 },
+                    { string: 2, name: "角 (Chiao)", duration: 600 },
+                    { string: 0, name: "宮 (Kung)", duration: 1200 }
+                ]
+            },
+            guangling: {
+                title: "广陵散 (Guangling San Intro)",
+                notes: [
+                    { string: 0, name: "宮 (Kung)", duration: 1000 },
+                    { string: 3, name: "徵 (Chih)", duration: 1000 },
+                    { string: 1, name: "商 (Shang)", duration: 500, glide: 2 },
+                    { string: 2, name: "角 (Chiao)", duration: 500 },
+                    { string: 4, name: "羽 (Yu)", duration: 1000 },
+                    
+                    { string: 2, name: "角 (Chiao)", duration: 500 },
+                    { string: 3, name: "徵 (Chih)", duration: 500 },
+                    { string: 5, name: "文 (Wen)", duration: 1000 },
+                    { string: 4, name: "羽 (Yu)", duration: 500, glide: 3 },
+                    { string: 3, name: "徵 (Chih)", duration: 500 },
+                    { string: 2, name: "角 (Chiao)", duration: 1000 },
+
+                    { string: 1, name: "商 (Shang)", duration: 500 },
+                    { string: 0, name: "宮 (Kung)", duration: 500 },
+                    { string: 1, name: "商 (Shang)", duration: 1500 }
+                ]
+            }
+        };
+
+        // --- กำหนดความถี่สาย (Silk String Tuning - Pentatonic) ---
+        const GUQIN_TUNING = [
+            { note: "C2", freq: 65.41, name: "1 宫 (Kung)" },
+            { note: "D2", freq: 73.42, name: "2 商 (Shang)" },
+            { note: "F2", freq: 87.31, name: "3 角 (Chiao)" },
+            { note: "G2", freq: 98.00, name: "4 徵 (Chih)" },
+            { note: "A2", freq: 110.00, name: "5 羽 (Yu)" },
+            { note: "C3", freq: 130.81, name: "6 文 (Wen)" },
+            { note: "D3", freq: 146.83, name: "7 武 (Wu)" }
         ];
 
-        let audioCtx;
-        let masterGain;
-        let reverbNode;
-        let mediaRecorder;
-        let recordedChunks = [];
-        let destNode;
-        let isRecording = false;
+        // --- Audio Context & Synth Engine ---
+        let audioCtx = null;
+        let masterGain = null;
+        let reverbNode = null;
+        let reverbDry = null;
+        let reverbWet = null;
 
-        const board = document.getElementById('guqin-board');
+        // คอนฟิกการสังเคราะห์เสียง
+        let currentReverbLevel = 0.5; // ปรับลดเพื่อไม่ให้เสียงเปียกจนเบาเกินไป
+        let currentVibratoLevel = 1;  // 0: ไม่มี, 1: ปานกลาง, 2: ลึกมาก
 
-        // --- Init Audio ---
-        async function initAudio() {
+        // --- ระบบเล่นเพลงอัตโนมัติ (State) ---
+        let activeSongKey = "canghai";
+        let autoPlayInterval = null;
+        let songPlayhead = 0; // ลำดับโน้ตปัจจุบัน
+        let isAutoPlaying = false;
+        let playSpeedRatio = 1.0;
+
+        // --- เริ่มต้นระบบเสียง (Initialize Audio Web API) ---
+        async function initAudioEngine() {
+            if (audioCtx) return;
+            
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
                 
+                // บูสต์ระดับเสียงขึ้นเป็น 1.6 เพื่อแก้เสียงเบาบนมือถือ
                 masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.6; // ลดความดังรวมลงเล็กน้อยเพื่อป้องกัน Distortion เมื่อเล่นหลายสาย
-                
-                // High Quality Reverb
+                masterGain.gain.setValueAtTime(1.6, audioCtx.currentTime);
+
+                // ระบบก้องจำลองเวทีโบราณ (Convolver Reverb Node)
                 reverbNode = audioCtx.createConvolver();
-                reverbNode.buffer = await createReverbBuffer(audioCtx);
+                reverbNode.buffer = await buildRealisticImpulseResponse(audioCtx, 3.2, 2.5);
+
+                // ระบบควบคุม Wet / Dry แบบขนานเพื่อให้สัญญาณเสียงตรงมีความคมชัดเสมอตลอดการเล่น
+                reverbDry = audioCtx.createGain();
+                reverbWet = audioCtx.createGain();
                 
-                // Compressor for stability
-                const compressor = audioCtx.createDynamicsCompressor();
-                compressor.threshold.setValueAtTime(-10, audioCtx.currentTime);
-                compressor.knee.setValueAtTime(40, audioCtx.currentTime);
-                compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
-                compressor.attack.setValueAtTime(0, audioCtx.currentTime);
-                compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+                updateReverbMix();
 
-                // Routing: Master -> Reverb -> Compressor -> Destination
-                //          Master -> Compressor -> Destination (Dry)
+                // ผสมผสานสัญญาณเสียง
+                masterGain.connect(reverbDry);
+                reverbDry.connect(audioCtx.destination);
+
                 masterGain.connect(reverbNode);
-                reverbNode.connect(compressor);
-                masterGain.connect(compressor);
-                compressor.connect(audioCtx.destination);
+                reverbNode.connect(reverbWet);
+                reverbWet.connect(audioCtx.destination);
 
-                // Recording setup
-                destNode = audioCtx.createMediaStreamDestination();
-                compressor.connect(destNode);
-
-                document.getElementById('start-overlay').style.opacity = '0';
-                setTimeout(() => document.getElementById('start-overlay').style.display = 'none', 500);
-            } catch (e) {
-                console.error("Audio Init Failed", e);
-                alert("Audio Init Failed. Please tap again.");
+            } catch (err) {
+                console.error("ไม่สามารถเริ่มระบบเสียงได้: ", err);
             }
         }
 
-        async function createReverbBuffer(ctx) {
-            // สร้าง Impulse Response แบบ High Decay (3.5s)
-            const length = 3.5 * ctx.sampleRate;
-            const decay = 3.0;
-            const buffer = ctx.createBuffer(2, length, ctx.sampleRate);
+        // --- การสังเคราะห์เสียงกู่ฉินแบบฟิสิกส์ (Physical Modeling Guqin Synthesizer) ---
+        function triggerGuqinPluck(stringIndex, userGlideTo = null) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+            const config = GUQIN_TUNING[stringIndex];
+            const baseFreq = config.freq;
+
+            // 1. จำลองหางสั่นพริ้วขยับนิ้วโบราณ (Subtle Vibrato LFO)
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
             
-            for (let c = 0; c < 2; c++) {
-                const data = buffer.getChannelData(c);
+            let vibratoDepth = 0;
+            let vibratoRate = 4.8 + Math.random() * 1.2;
+
+            if (currentVibratoLevel === 1) vibratoDepth = baseFreq * 0.009;
+            if (currentVibratoLevel === 2) vibratoDepth = baseFreq * 0.022;
+
+            lfo.frequency.setValueAtTime(vibratoRate, now);
+            lfoGain.gain.setValueAtTime(vibratoDepth, now);
+            
+            lfoGain.gain.setValueAtTime(0, now);
+            lfoGain.gain.linearRampToValueAtTime(vibratoDepth, now + 0.3);
+
+            // 2. แหล่งคลื่นผสมความคมพุ่งชัด (Dynamic Hybrid Tone)
+            // ใช้ Sawtooth Wave เป็นแกนเสียงหลักเพราะมีความถี่ช่วงกลางสูงเยอะมาก ทำให้ได้ยินชัดบนมือถือเสียงลำโพงจิ๋ว
+            const oscFundamental = audioCtx.createOscillator();
+            oscFundamental.type = "sawtooth";
+            oscFundamental.frequency.setValueAtTime(baseFreq, now);
+
+            // ดึงฮาร์มอนิกที่ 2 และ 3 เพิ่มมิติ
+            const oscH2 = audioCtx.createOscillator();
+            const oscH3 = audioCtx.createOscillator();
+            oscH2.type = "sine";
+            oscH3.type = "sine";
+            
+            oscH2.frequency.setValueAtTime(baseFreq * 2.001, now);
+            oscH3.frequency.setValueAtTime(baseFreq * 3.002, now);
+
+            // โยงสาย LFO กับ Oscillator ทั้งหมด
+            lfo.connect(lfoGain);
+            lfoGain.connect(oscFundamental.frequency);
+            lfoGain.connect(oscH2.frequency);
+            lfoGain.connect(oscH3.frequency);
+
+            // 3. ระบบสไลด์นิ้วลื่นไหลหากโน้ตกำหนดไว้ (Pitch Slide / Portamento - 吟猱)
+            if (userGlideTo !== null && userGlideTo !== undefined) {
+                const targetFreq = GUQIN_TUNING[userGlideTo].freq;
+                oscFundamental.frequency.exponentialRampToValueAtTime(targetFreq, now + 0.5);
+                oscH2.frequency.exponentialRampToValueAtTime(targetFreq * 2.001, now + 0.5);
+                oscH3.frequency.exponentialRampToValueAtTime(targetFreq * 3.002, now + 0.5);
+            }
+
+            // 4. บรรจุภัณฑ์แอมปลิจูดแอดแวนซ์ (Dynamic Gain Envelope)
+            const ampFund = audioCtx.createGain();
+            const ampH2 = audioCtx.createGain();
+            const ampH3 = audioCtx.createGain();
+
+            // คลื่นเสียงหลัก: บูสต์ความดังขึ้น ปล่อยสลายตัวยาว
+            ampFund.gain.setValueAtTime(0, now);
+            ampFund.gain.linearRampToValueAtTime(1.2, now + 0.015); // เร่งความดังช่วงเริ่มเตะสาย
+            ampFund.gain.exponentialRampToValueAtTime(0.001, now + 4.5);
+
+            // ฮาร์มอนิกที่ 2: วูบวาบสั้นกว่าคลื่นหลัก
+            ampH2.gain.setValueAtTime(0, now);
+            ampH2.gain.linearRampToValueAtTime(0.6, now + 0.01);
+            ampH2.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+
+            // ฮาร์มอนิกที่ 3: แหลมใส สลายวับทันที
+            ampH3.gain.setValueAtTime(0, now);
+            ampH3.gain.linearRampToValueAtTime(0.4, now + 0.008);
+            ampH3.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+            // 5. ตัวกรองบอดี้กล่องเสียงไม้โบราณ (Resonant Lowpass Filter)
+            // ส่วนสำคัญที่สุด: ใช้ Lowpass กรองกรีดเสียง Sawtooth คืนความนุ่มนวลแบบสายไหมโบราณ
+            const dynamicFilter = audioCtx.createBiquadFilter();
+            dynamicFilter.type = "lowpass";
+            dynamicFilter.Q.setValueAtTime(1.2, now);
+            dynamicFilter.frequency.setValueAtTime(1600, now); // ตอนกดดีดจะได้ยินความใสนำร่องชัดเจน
+            dynamicFilter.frequency.exponentialRampToValueAtTime(150, now + 2.2); // แล้วลดลงเพื่อคงหางทุ้มอุ่น
+
+            // 6. ตัวจำลองนิ้วและเล็บดีดสัมผัส (Pluck Transient Scratch Generator)
+            const pluckNoise = audioCtx.createOscillator();
+            const pluckNoiseGain = audioCtx.createGain();
+            pluckNoise.type = "triangle";
+            pluckNoise.frequency.setValueAtTime(650, now);
+            
+            pluckNoiseGain.gain.setValueAtTime(0.5, now);
+            pluckNoiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+            // เชื่อมโยงสายเสียง (Node Route Mapping)
+            oscFundamental.connect(dynamicFilter);
+            dynamicFilter.connect(ampFund);
+            
+            oscH2.connect(ampH2);
+            oscH3.connect(ampH3);
+
+            ampFund.connect(masterGain);
+            ampH2.connect(masterGain);
+            ampH3.connect(masterGain);
+
+            pluckNoise.connect(pluckNoiseGain);
+            pluckNoiseGain.connect(masterGain);
+
+            // สั่งทำกิจกรรมเริ่มดีด
+            lfo.start(now);
+            oscFundamental.start(now);
+            oscH2.start(now);
+            oscH3.start(now);
+            pluckNoise.start(now);
+
+            // หยุดทำงานตัดแรม
+            lfo.stop(now + 4.8);
+            oscFundamental.stop(now + 4.8);
+            oscH2.stop(now + 4.8);
+            oscH3.stop(now + 4.8);
+            pluckNoise.stop(now + 0.1);
+
+            // สั่งเอฟเฟกต์บอร์ดและสายสั่นพริ้ว
+            vibrateUiString(stringIndex);
+        }
+
+        // --- ตัวสร้างเสียงก้อง Impulse Response คุณภาพสูง ---
+        function buildRealisticImpulseResponse(ctx, duration, decay) {
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = ctx.createBuffer(2, length, sampleRate);
+            
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
                 for (let i = 0; i < length; i++) {
-                    // noise * exponential decay
-                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+                    channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
                 }
             }
-            return buffer;
+            return Promise.resolve(impulse);
         }
 
-        // --- Sound Generation ---
-        function playString(index) {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+        function updateReverbMix() {
+            if (!reverbDry || !reverbWet) return;
+            // คงเสียงดีดหลักแห้ง (Dry) ไว้ที่เต็ม 100% เสมอเพื่อให้ได้ยินดังชัดเจน
+            reverbDry.gain.setValueAtTime(1.0, audioCtx.currentTime);
+            // ผสม Reverb เสริมจากด้านหลัง
+            reverbWet.gain.setValueAtTime(currentReverbLevel * 1.5, audioCtx.currentTime);
+        }
 
-            const t = audioCtx.currentTime;
-            const freq = TUNING[index].freq;
-
-            // Micro-detuning for realism (randomly +/- 0.5 cents)
-            const detune = (Math.random() - 0.5) * 2; 
-
-            // 1. Fundamental Tone (Sawtooth for richness)
-            const osc = audioCtx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(freq, t);
-            osc.detune.setValueAtTime(detune, t);
-
-            // 2. Body Resonance Filter (Lowpass)
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.Q.value = 0.5;
-            // Dynamic Filtering: Bright attack -> Warm sustain
-            filter.frequency.setValueAtTime(2500, t);
-            filter.frequency.exponentialRampToValueAtTime(150, t + 2.5);
-
-            // 3. Amplitude Envelope
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0, t);
-            gain.gain.linearRampToValueAtTime(1.0, t + 0.02); // Quick attack
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 5.0); // Very long release
-
-            // 4. "Zheng" Noise (Finger/String friction scratch - Subtle)
-            const noiseOsc = audioCtx.createOscillator();
-            noiseOsc.type = 'triangle';
-            noiseOsc.frequency.setValueAtTime(freq * 2.01, t); // Slight harmonic mismatch
-            const noiseGain = audioCtx.createGain();
-            noiseGain.gain.setValueAtTime(0, t);
-            noiseGain.gain.linearRampToValueAtTime(0.15, t + 0.01);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-
-            // Connect graph
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(masterGain);
-
-            noiseOsc.connect(noiseGain);
-            noiseGain.connect(masterGain);
-
-            // Life cycle
-            osc.start(t);
-            osc.stop(t + 5.0);
-            noiseOsc.start(t);
-            noiseOsc.stop(t + 0.5);
-
-            // Cleanup nodes automatically by GC, but stop is essential
+        // --- การประมวลผลโน้ตในบทเพลงและโน้ตไหล ---
+        function selectSong(songKey) {
+            activeSongKey = songKey;
+            const song = SONGS_DATA[songKey];
+            document.getElementById("selected-song-title").innerText = song.title;
             
-            animateString(index);
+            // รีเซ็ตการเล่นและสร้างมุมมองโน้ตใหม่
+            stopAutoPlay();
+            renderScoreViewer();
         }
 
-        // --- Visuals ---
-        function createStrings() {
-            TUNING.forEach((data, index) => {
-                const container = document.createElement('div');
-                container.className = 'string-container';
-                container.dataset.index = index;
+        // วาดแผ่นโน้ตบนวิวเวอร์เลื่อนได้
+        function renderScoreViewer() {
+            const container = document.getElementById("score-scroll-area");
+            container.innerHTML = ""; // เคลียร์ของเก่า
 
-                const stringDiv = document.createElement('div');
-                stringDiv.className = 'string';
-                stringDiv.dataset.index = index;
+            const song = SONGS_DATA[activeSongKey];
+            
+            song.notes.forEach((item, index) => {
+                const noteCard = document.createElement("div");
+                noteCard.id = `note-card-${index}`;
+                noteCard.className = `shrink-0 w-16 h-14 rounded-xl flex flex-col justify-center items-center border transition-all duration-300 ${
+                    index === songPlayhead 
+                    ? "bg-[#dfb15b] border-amber-300 text-stone-950 scale-105 font-bold shadow-[0_0_12px_rgba(223,177,91,0.5)]" 
+                    : "bg-stone-900/90 border-stone-800 text-stone-300"
+                }`;
 
-                const label = document.createElement('div');
-                label.className = 'note-label';
-                label.innerText = data.name;
+                // แตะที่ตัวโน้ตเพื่อข้ามหัวอ่านไปเล่นช่วงนั้นได้อิสระ!
+                noteCard.addEventListener("click", () => {
+                    jumpToNote(index);
+                });
 
-                container.appendChild(label);
-                container.appendChild(stringDiv);
-                board.appendChild(container);
+                const jianpuSymbol = document.createElement("span");
+                jianpuSymbol.className = "text-base font-bold font-serif";
+                jianpuSymbol.innerText = getStringChineseSymbol(item.string);
 
-                // Mouse interaction (Fallback)
-                container.addEventListener('mousedown', (e) => {
-                    playString(index);
-                    createTouchRipple(e.clientX, e.clientY);
+                const noteName = document.createElement("span");
+                noteName.className = "text-[9px] opacity-75 mt-0.5";
+                noteName.innerText = `สาย ${item.string + 1}`;
+
+                if (item.glide) {
+                    const glideLabel = document.createElement("span");
+                    glideLabel.className = "absolute top-1 right-1 text-[7px] bg-amber-800 text-amber-200 px-0.5 rounded";
+                    glideLabel.innerText = "吟";
+                    noteCard.appendChild(glideLabel);
+                }
+
+                noteCard.appendChild(jianpuSymbol);
+                noteCard.appendChild(noteName);
+                container.appendChild(noteCard);
+            });
+
+            scrollScoreToCurrent();
+        }
+
+        function getStringChineseSymbol(index) {
+            const symbols = ["一", "二", "三", "四", "五", "六", "七"];
+            return symbols[index] || "•";
+        }
+
+        // ข้ามหัวอ่านคัมภีร์โน้ต
+        function jumpToNote(index) {
+            const song = SONGS_DATA[activeSongKey];
+            if (index >= 0 && index < song.notes.length) {
+                songPlayhead = index;
+                renderScoreViewer();
+                triggerGuqinPluck(song.notes[index].string, song.notes[index].glide);
+                updatePlaybackTimer();
+            }
+        }
+
+        // จัดตำแหน่งเลื่อนโน้ตให้อยู่ตรงกลางสายตาพอดีตามแนว Playhead
+        function scrollScoreToCurrent() {
+            const activeCard = document.getElementById(`note-card-${songPlayhead}`);
+            if (activeCard) {
+                activeCard.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+        }
+
+        function updatePlaybackTimer() {
+            const song = SONGS_DATA[activeSongKey];
+            const percent = Math.floor((songPlayhead / song.notes.length) * 100);
+            document.getElementById("playback-timer").innerText = `โน้ต: ${songPlayhead + 1}/${song.notes.length} (${percent}%)`;
+        }
+
+        // --- เริ่มต้น / หยุด ระบบเล่นเพลงอัตโนมัติ (Auto Play Core Loops) ---
+        function startAutoPlay() {
+            if (isAutoPlaying) return;
+            
+            initAudioEngine();
+            isAutoPlaying = true;
+            
+            document.getElementById("play-icon").innerText = "⏸";
+            document.getElementById("play-text").innerText = "หยุดดูโน้ต";
+            document.getElementById("btn-stop-auto").disabled = false;
+
+            playNextAutoNote();
+        }
+
+        function pauseAutoPlay() {
+            if (!isAutoPlaying) return;
+            isAutoPlaying = false;
+            
+            clearTimeout(autoPlayInterval);
+            document.getElementById("play-icon").innerText = "▶";
+            document.getElementById("play-text").innerText = "เล่นต่อ";
+        }
+
+        function stopAutoPlay() {
+            isAutoPlaying = false;
+            clearTimeout(autoPlayInterval);
+            
+            songPlayhead = 0;
+            
+            document.getElementById("play-icon").innerText = "▶";
+            document.getElementById("play-text").innerText = "เล่นอัตโนมัติ";
+            document.getElementById("btn-stop-auto").disabled = true;
+            
+            updatePlaybackTimer();
+            renderScoreViewer();
+        }
+
+        function playNextAutoNote() {
+            if (!isAutoPlaying) return;
+
+            const song = SONGS_DATA[activeSongKey];
+            
+            if (songPlayhead >= song.notes.length) {
+                stopAutoPlay();
+                return;
+            }
+
+            const currentNote = song.notes[songPlayhead];
+            
+            triggerGuqinPluck(currentNote.string, currentNote.glide);
+            
+            renderScoreViewer();
+            updatePlaybackTimer();
+
+            songPlayhead++;
+
+            const delayTime = (currentNote.duration / playSpeedRatio);
+            
+            autoPlayInterval = setTimeout(() => {
+                playNextAutoNote();
+            }, delayTime);
+        }
+
+        // --- ส่วนขับเคลื่อนหน้าตาอินเตอร์เฟสและทัชสกรีนบนจอแนวตั้งมือถือ ---
+        function drawGuqinStrings() {
+            const container = document.getElementById("guqin-strings-wrapper");
+            container.innerHTML = "";
+
+            GUQIN_TUNING.forEach((item, index) => {
+                const stringTrack = document.createElement("div");
+                stringTrack.className = "relative w-full h-[12%] flex items-center cursor-pointer select-none group touch-none";
+                stringTrack.dataset.index = index;
+
+                const nameLabel = document.createElement("div");
+                nameLabel.className = "absolute left-2 text-[10px] bg-stone-900/80 border border-stone-800 text-amber-100 px-2 py-1 rounded-md z-30 font-serif tracking-tighter opacity-75 shadow-sm";
+                nameLabel.innerText = item.name;
+
+                const stringLine = document.createElement("div");
+                stringLine.id = `string-line-${index}`;
+                stringLine.className = "absolute inset-x-0 h-[2px] bg-gradient-to-r from-yellow-700 via-amber-200 to-yellow-800 transition-shadow duration-300 string-glow";
+                
+                const thickness = 4.5 - (index * 0.5); 
+                stringLine.style.height = `${thickness}px`;
+                stringLine.style.boxShadow = "0 3px 6px rgba(0,0,0,0.85)";
+
+                stringTrack.appendChild(nameLabel);
+                stringTrack.appendChild(stringLine);
+                container.appendChild(stringTrack);
+
+                // พฤติกรรมคลิกสัมผัสด้วยเมาส์ (Fallback)
+                stringTrack.addEventListener("mousedown", (e) => {
+                    initAudioEngine();
+                    triggerGuqinPluck(index);
+                    spawnVisualRipple(e.clientX, e.clientY);
                 });
             });
         }
 
-        function animateString(index) {
-            const str = document.querySelectorAll('.string')[index];
-            str.classList.remove('vibrating');
-            void str.offsetWidth;
-            str.classList.add('vibrating');
-            setTimeout(() => str.classList.remove('vibrating'), 1000);
+        function vibrateUiString(index) {
+            const str = document.getElementById(`string-line-${index}`);
+            if (str) {
+                str.classList.remove("string-vibrating");
+                void str.offsetWidth;
+                str.classList.add("string-vibrating");
+                
+                setTimeout(() => {
+                    str.classList.remove("string-vibrating");
+                }, 1200);
+            }
         }
 
-        function createTouchRipple(x, y) {
-            const ripple = document.createElement('div');
-            ripple.className = 'touch-feedback';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            document.body.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 500);
+        function spawnVisualRipple(x, y) {
+            const rip = document.createElement("div");
+            rip.className = "absolute w-8 h-8 rounded-full border border-amber-400/80 bg-radial pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-40 transition-all duration-500 ease-out";
+            rip.style.left = `${x}px`;
+            rip.style.top = `${y}px`;
+            rip.style.transform = "translate(-50%, -50%) scale(0.2)";
+            rip.style.opacity = "1";
+            rip.style.boxShadow = "0 0 15px rgba(223,177,91,0.6)";
+
+            document.body.appendChild(rip);
+
+            requestAnimationFrame(() => {
+                rip.style.transform = "translate(-50%, -50%) scale(2.8)";
+                rip.style.opacity = "0";
+            });
+
+            setTimeout(() => {
+                rip.remove();
+            }, 600);
         }
 
-        // --- Multitouch & Strumming Logic ---
-        // Using a Map to track which finger is currently on which string
-        // to prevent repeated triggering while holding, but allow strumming
-        
-        board.addEventListener('touchstart', handleTouch, { passive: false });
-        board.addEventListener('touchmove', handleTouch, { passive: false });
-        // touchend not needed for logic reset as we track by movement
+        // --- รองรับระบบสไลด์เกลาสัมผัสพร้อมกัน (Multi-Touch / Strumming Stiction) ---
+        let lastPlayedStringMap = new Map();
 
-        function handleTouch(e) {
-            e.preventDefault();
-            const touches = e.changedTouches;
+        function setupMultiTouchStrum() {
+            const board = document.getElementById("guqin-strings-wrapper");
 
+            board.addEventListener("touchstart", (e) => {
+                e.preventDefault();
+                initAudioEngine();
+                handleTouchActivity(e.touches);
+            }, { passive: false });
+
+            board.addEventListener("touchmove", (e) => {
+                e.preventDefault();
+                handleTouchActivity(e.touches);
+            }, { passive: false });
+
+            board.addEventListener("touchend", (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    lastPlayedStringMap.delete(e.changedTouches[i].identifier);
+                }
+            });
+        }
+
+        function handleTouchActivity(touches) {
             for (let i = 0; i < touches.length; i++) {
                 const touch = touches[i];
                 const element = document.elementFromPoint(touch.clientX, touch.clientY);
-                
-                if (element) {
-                    const container = element.closest('.string-container');
-                    if (container) {
-                        const index = parseInt(container.dataset.index);
-                        const touchId = touch.identifier;
-                        
-                        // Check if this specific touch just entered this string
-                        // We store the last played string index on the DOM element of the touch? 
-                        // Actually easier: store 'lastTouchId' on the container like before, 
-                        // but logic needs to be robust for multiple fingers.
-                        
-                        // Logic: A string plays if a Touch ID matches it, AND that Touch ID wasn't matching it in the previous frame.
-                        // Implemented via dataset.lastTouch check
-                        
-                        if (container.dataset.lastActiveTouch !== String(touchId)) {
-                            playString(index);
-                            createTouchRipple(touch.clientX, touch.clientY);
-                            container.dataset.lastActiveTouch = touchId;
-                            
-                            // Clear the flag after a short delay so you can tap again quickly
-                            setTimeout(() => {
-                                if(container.dataset.lastActiveTouch === String(touchId)) {
-                                     container.dataset.lastActiveTouch = '';
-                                }
-                            }, 150);
-                        }
+                if (!element) continue;
+
+                const stringContainer = element.closest("[data-index]");
+                if (stringContainer) {
+                    const stringIndex = parseInt(stringContainer.dataset.index);
+                    const touchId = touch.identifier;
+
+                    if (lastPlayedStringMap.get(touchId) !== stringIndex) {
+                        triggerGuqinPluck(stringIndex);
+                        spawnVisualRipple(touch.clientX, touch.clientY);
+                        lastPlayedStringMap.set(touchId, stringIndex);
                     }
                 }
             }
         }
 
-        // --- Controls ---
-        document.getElementById('start-btn').addEventListener('click', initAudio);
+        // --- STREAMING_CHUNK: Connecting UI Event Listeners... ---
+        document.addEventListener("DOMContentLoaded", () => {
+            drawGuqinStrings();
+            renderScoreViewer();
 
-        document.getElementById('toggle-notes').addEventListener('click', function() {
-            board.classList.toggle('show-notes');
-            this.classList.toggle('active');
+            document.getElementById("start-btn").addEventListener("click", () => {
+                initAudioEngine();
+                const overlay = document.getElementById("start-overlay");
+                overlay.style.opacity = "0";
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                }, 750);
+            });
+
+            document.getElementById("song-select").addEventListener("change", (e) => {
+                selectSong(e.target.value);
+            });
+
+            document.getElementById("btn-play-auto").addEventListener("click", () => {
+                if (isAutoPlaying) {
+                    pauseAutoPlay();
+                } else {
+                    startAutoPlay();
+                }
+            });
+
+            document.getElementById("btn-stop-auto").addEventListener("click", () => {
+                stopAutoPlay();
+            });
+
+            document.getElementById("tempo-select").addEventListener("change", (e) => {
+                playSpeedRatio = parseFloat(e.target.value);
+            });
+
+            const sliderReverb = document.getElementById("slider-reverb");
+            sliderReverb.addEventListener("input", (e) => {
+                currentReverbLevel = parseFloat(e.target.value) / 100;
+                document.getElementById("lbl-reverb").innerText = `${e.target.value}%`;
+                updateReverbMix();
+            });
+
+            const sliderVibrato = document.getElementById("slider-vibrato");
+            const vibratoLabels = ["ไม่มี", "ปานกลาง", "สั่นกระสะเทือนลึก"];
+            sliderVibrato.addEventListener("input", (e) => {
+                currentVibratoLevel = parseInt(e.target.value);
+                document.getElementById("lbl-vibrato").innerText = vibratoLabels[currentVibratoLevel];
+            });
+
+            document.getElementById("toggle-help").addEventListener("click", () => {
+                document.getElementById("help-modal").classList.remove("hidden");
+            });
+            document.getElementById("close-help").addEventListener("click", () => {
+                document.getElementById("help-modal").classList.add("hidden");
+            });
+
+            setupMultiTouchStrum();
         });
-
-        // Record
-        const recBtn = document.getElementById('record-btn');
-        const dlBtn = document.getElementById('download-btn');
-        
-        recBtn.addEventListener('click', () => {
-            if (!audioCtx) initAudio();
-            
-            if (!isRecording) {
-                // Start
-                recordedChunks = [];
-                const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg";
-                mediaRecorder = new MediaRecorder(destNode.stream, { mimeType });
-                
-                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: mimeType });
-                    const url = URL.createObjectURL(blob);
-                    dlBtn.disabled = false;
-                    dlBtn.style.opacity = 1;
-                    dlBtn.onclick = () => {
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `guqin-jam-${Date.now()}.webm`;
-                        a.click();
-                    };
-                };
-
-                mediaRecorder.start();
-                isRecording = true;
-                recBtn.classList.add('recording');
-                document.getElementById('rec-text').innerText = "00:00";
-                
-                // Simple timer visualization could go here
-                
-            } else {
-                // Stop
-                mediaRecorder.stop();
-                isRecording = false;
-                recBtn.classList.remove('recording');
-                document.getElementById('rec-text').innerText = "อัดเสียง";
-            }
-        });
-
-        createStrings();
-
     </script>
 </body>
 </html>
+```
+eof
