@@ -53,6 +53,12 @@
             flex-shrink: 0;
         }
 
+        .demo-controls-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .btn {
             background: linear-gradient(145deg, #5d4037, #3e2723);
             color: var(--gold);
@@ -78,6 +84,16 @@
             background: #b71c1c;
             color: white;
             animation: pulse 1.5s infinite;
+        }
+
+        select.btn {
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 24px;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23ffd700'><polygon points='0,0 10,0 5,5'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            outline: none;
         }
 
         @keyframes pulse {
@@ -136,7 +152,6 @@
             z-index: 10;
             padding-bottom: 15px;
             position: relative;
-            /* เพิ่ม cursor แบบมือเมื่อเอาเมาส์ไปวาง */
             cursor: pointer;
         }
 
@@ -159,7 +174,6 @@
             position: relative;
             background: linear-gradient(90deg, #5d4037 0%, #a1887f 20%, #8d6e63 50%, #a1887f 80%, #5d4037 100%);
             border-radius: 4px; 
-            /* ลบ cursor: pointer ออกจากตัวลูก เพราะเราจัดการที่ wrapper แล้ว */
             box-shadow: 2px 4px 6px rgba(0,0,0,0.4);
             transition: transform 0.05s, background 0.05s;
             display: flex;
@@ -184,10 +198,9 @@
             height: 50%;
             background: radial-gradient(rgba(255,255,255,0.15), transparent);
             border-radius: 50%;
-            pointer-events: none; /* สำคัญมาก: เพื่อให้ elementFromPoint มองทะลุไปหาตัว key */
+            pointer-events: none; /* เพื่อให้ elementFromPoint มองทะลุไปหาตัว key */
         }
 
-        /* Active state controlled by JS now */
         .key.active {
             transform: translateY(6px) scale(0.95);
             background: linear-gradient(90deg, #4e342e 0%, #8d6e63 50%, #4e342e 100%);
@@ -198,7 +211,7 @@
             bottom: 10px;
             opacity: 0;
             transition: opacity 0.3s;
-            pointer-events: none; /* สำคัญ */
+            pointer-events: none;
             font-size: 1.1em;
         }
 
@@ -212,14 +225,52 @@
             height: 40px;
             background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, rgba(255,215,0,0) 70%);
             border-radius: 50%;
-            pointer-events: none; /* สำคัญ */
-            animation: hitFade 0.2s ease-out forwards; /* ทำให้เร็วขึ้นเล็กน้อยสำหรับการลากรัว */
+            pointer-events: none;
+            animation: hitFade 0.2s ease-out forwards;
             z-index: 20;
         }
 
         @keyframes hitFade {
             0% { transform: scale(0.5); opacity: 1; }
             100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* --- โน้ตรอยลอยละล่อง (Aesthetic Floating Note System) --- */
+        .floating-note {
+            position: absolute;
+            bottom: 80px; /* เริ่มลอยอยู่เหนือป้ายชื่อโน้ต */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-family: 'Sarabun', sans-serif;
+            font-weight: bold;
+            font-size: 1rem;
+            pointer-events: none;
+            z-index: 99;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+            border: 2px solid #ffffff;
+            animation: floatUpAndSway 2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes floatUpAndSway {
+            0% {
+                transform: translate(-50%, 0) scale(0.6) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(calc(-50% + 20px), -150px) scale(1.1) rotate(15deg);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translate(calc(-50% - 25px), -350px) scale(0.7) rotate(-25deg);
+                opacity: 0;
+            }
         }
 
         /* Status Text */
@@ -274,6 +325,29 @@
         <button class="btn" onclick="toggleNotes()">
             <span id="note-btn-text">👁️ โน้ต</span>
         </button>
+        
+        <div class="demo-controls-wrapper">
+            <select id="demoSelect" class="btn" onchange="playDemoSong(this.value)">
+                <option value="" style="background: #3e2723; color: var(--gold);">🎵 เพลงสาธิต (10 เพลง)</option>
+                <option value="kangkhao" style="background: #3e2723; color: var(--gold);">🦇 1. ค้างคาวกินกล้วย</option>
+                <option value="laoduangduan" style="background: #3e2723; color: var(--gold);">🌙 2. ลาวดวงเดือน</option>
+                <option value="toeykhong" style="background: #3e2723; color: var(--gold);">🌾 3. เต้ยโขง</option>
+                <option value="laokrathobmai" style="background: #3e2723; color: var(--gold);">🎋 4. ลาวกระทบไม้</option>
+                <option value="khamensaiyok" style="background: #3e2723; color: var(--gold);">🏞️ 5. เขมรไทรโยค</option>
+                <option value="kluenkrathobfang" style="background: #3e2723; color: var(--gold);">🌊 6. คลื่นกระทบฝั่ง</option>
+                <option value="laosiangtian" style="background: #3e2723; color: var(--gold);">🕯️ 7. ลาวเสี่ยงเทียน</option>
+                <option value="saenkhamnueng" style="background: #3e2723; color: var(--gold);">💭 8. แสนคำนึง</option>
+                <option value="bupphesannivas" style="background: #3e2723; color: var(--gold);">🌸 9. บุพเพสันนิวาส</option>
+                <option value="saifon" style="background: #3e2723; color: var(--gold);">🌧️ 10. สายฝน</option>
+            </select>
+            <button id="demoPlayPauseBtn" class="btn" onclick="toggleDemoPause()" style="display: none;">
+                ⏸️ หยุดค้าง
+            </button>
+            <button id="demoStopBtn" class="btn" onclick="stopDemoSong()" style="display: none;">
+                ⏹️ ปิด
+            </button>
+        </div>
+
         <button class="btn" id="recordBtn" onclick="toggleRecord()">
             ⏺️ อัด
         </button>
@@ -313,12 +387,144 @@
         let showNotes = false;
 
         // State for Multi-touch & Glissando
-        // ใช้ Map เพื่อเก็บสถานะของนิ้วแต่ละนิ้ว (Key: Touch ID, Value: Index ของปุ่มล่าสุดที่นิ้วนั้นเล่น)
         const activeTouches = new Map(); 
         let isMouseDown = false;
         let lastMouseKeyIndex = -1;
 
         const thaiNotes = ['ซ', 'ล', 'ท', 'ด', 'ร', 'ม', 'ฟ']; 
+
+        // --- Demo Playback State for Pause / Resume / Precise Loop Timer ---
+        let demoPlaying = false;
+        let isDemoPaused = false;
+        let demoNotes = [];
+        let demoPlaybackIndex = 0;
+        let demoPlayOffset = 0;
+        let lastUpdate = 0;
+        let demoTimer = null;
+
+        // --- Demo Songs Data (10 Songs) ---
+        
+        // 1. ค้างคาวกินกล้วย (Kang Khao Gin Kluay)
+        const kangkhaoData = [
+            { note: 7, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 8, dur: 0.3 },
+            { note: 10, dur: 0.3 }, { note: 8, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 5, dur: 0.3 },
+            { note: 4, dur: 0.3 }, { note: 5, dur: 0.3 }, { note: 7, dur: 0.6 },
+            { note: 8, dur: 0.3 }, { note: 10, dur: 0.3 }, { note: 11, dur: 0.6 },
+
+            { note: 12, dur: 0.3 }, { note: 11, dur: 0.3 }, { note: 10, dur: 0.3 }, { note: 8, dur: 0.3 },
+            { note: 10, dur: 0.3 }, { note: 8, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 5, dur: 0.3 },
+            { note: 4, dur: 0.3 }, { note: 5, dur: 0.3 }, { note: 7, dur: 0.6 },
+            { note: 8, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 5, dur: 0.6 },
+
+            { note: 7, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 8, dur: 0.3 },
+            { note: 10, dur: 0.3 }, { note: 8, dur: 0.3 }, { note: 7, dur: 0.3 }, { note: 5, dur: 0.3 },
+            { note: 4, dur: 0.3 }, { note: 5, dur: 0.3 }, { note: 7, dur: 0.6 },
+            { note: 8, dur: 0.3 }, { note: 10, dur: 0.3 }, { note: 11, dur: 0.6 }
+        ];
+
+        // 2. ลาวดวงเดือน (Lao Duang Duean)
+        const laoduangduanData = [
+            { note: 10, dur: 0.5 }, { note: 11, dur: 0.5 }, { note: 12, dur: 1.0 },
+            { note: 14, dur: 0.5 }, { note: 15, dur: 0.5 }, { note: 17, dur: 1.0 },
+            { note: 18, dur: 0.5 }, { note: 19, dur: 0.5 }, { note: 18, dur: 1.0 },
+            { note: 17, dur: 0.5 }, { note: 15, dur: 0.5 }, { note: 17, dur: 1.0 },
+
+            { note: 17, dur: 0.5 }, { note: 14, dur: 0.5 }, { note: 12, dur: 0.5 }, { note: 10, dur: 0.5 },
+            { note: 12, dur: 0.5 }, { note: 14, dur: 0.5 }, { note: 12, dur: 1.0 },
+            { note: 10, dur: 0.5 }, { note: 8, dur: 0.5 }, { note: 7, dur: 1.0 }
+        ];
+
+        // 3. เต้ยโขง (Toey Khong)
+        const toeykhongData = [
+            { note: 14, dur: 0.35 }, { note: 14, dur: 0.35 }, { note: 15, dur: 0.35 }, { note: 17, dur: 0.35 },
+            { note: 18, dur: 0.35 }, { note: 17, dur: 0.35 }, { note: 15, dur: 0.35 }, { note: 14, dur: 0.35 },
+            { note: 12, dur: 0.35 }, { note: 14, dur: 0.35 }, { note: 15, dur: 0.35 }, { note: 14, dur: 0.35 },
+            { note: 12, dur: 0.35 }, { note: 11, dur: 0.35 }, { note: 10, dur: 0.7 },
+
+            { note: 10, dur: 0.35 }, { note: 11, dur: 0.35 }, { note: 12, dur: 0.35 }, { note: 14, dur: 0.35 },
+            { note: 12, dur: 0.35 }, { note: 14, dur: 0.35 }, { note: 15, dur: 0.7 }
+        ];
+
+        // 4. ลาวกระทบไม้ (Lao Krathob Mai)
+        const laokrathobmaiData = [
+            { note: 10, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 12, dur: 0.8 },
+            { note: 10, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 12, dur: 0.8 },
+            { note: 14, dur: 0.4 }, { note: 12, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 10, dur: 0.4 },
+            { note: 12, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 10, dur: 0.8 },
+
+            { note: 12, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 10, dur: 0.4 }, { note: 8, dur: 0.4 },
+            { note: 10, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 12, dur: 0.8 },
+            { note: 14, dur: 0.4 }, { note: 12, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 10, dur: 0.4 },
+            { note: 12, dur: 0.4 }, { note: 11, dur: 0.4 }, { note: 10, dur: 0.8 }
+        ];
+
+        // 5. เขมรไทรโยค (Khamen Sai Yok)
+        const khamensaiyokData = [
+            { note: 10, dur: 0.6 }, { note: 12, dur: 0.6 }, { note: 14, dur: 1.2 },
+            { note: 15, dur: 0.6 }, { note: 14, dur: 0.6 }, { note: 12, dur: 1.2 },
+            { note: 10, dur: 0.6 }, { note: 11, dur: 0.6 }, { note: 10, dur: 1.2 },
+            { note: 8, dur: 0.6 }, { note: 7, dur: 0.6 }, { note: 10, dur: 2.0 },
+
+            { note: 12, dur: 0.6 }, { note: 14, dur: 0.6 }, { note: 15, dur: 1.2 },
+            { note: 17, dur: 0.6 }, { note: 15, dur: 0.6 }, { note: 14, dur: 1.2 },
+            { note: 12, dur: 0.6 }, { note: 10, dur: 0.6 }, { note: 12, dur: 1.2 }
+        ];
+
+        // 6. คลื่นกระทบฝั่ง (Kluen Krathob Fang)
+        const kluenkrathobfangData = [
+            { note: 10, dur: 0.4 }, { note: 10, dur: 0.4 }, { note: 8, dur: 0.4 }, { note: 7, dur: 0.4 },
+            { note: 5, dur: 0.4 }, { note: 7, dur: 0.4 }, { note: 8, dur: 0.8 },
+            { note: 12, dur: 0.4 }, { note: 12, dur: 0.4 }, { note: 10, dur: 0.4 }, { note: 8, dur: 0.4 },
+            { note: 7, dur: 0.4 }, { note: 8, dur: 0.4 }, { note: 10, dur: 0.8 },
+
+            { note: 14, dur: 0.4 }, { note: 12, dur: 0.4 }, { note: 10, dur: 0.4 }, { note: 8, dur: 0.4 },
+            { note: 7, dur: 0.4 }, { note: 5, dur: 0.4 }, { note: 3, dur: 0.8 },
+            { note: 5, dur: 0.4 }, { note: 7, dur: 0.4 }, { note: 8, dur: 0.4 }, { note: 10, dur: 0.8 }
+        ];
+
+        // 7. ลาวเสี่ยงเทียน (Lao Siang Tian)
+        const laosiangtianData = [
+            { note: 12, dur: 0.6 }, { note: 14, dur: 0.6 }, { note: 12, dur: 0.6 }, { note: 10, dur: 0.6 },
+            { note: 8, dur: 0.6 }, { note: 10, dur: 0.6 }, { note: 12, dur: 1.2 },
+            { note: 14, dur: 0.6 }, { note: 15, dur: 0.6 }, { note: 14, dur: 0.6 }, { note: 12, dur: 0.6 },
+            { note: 10, dur: 0.6 }, { note: 8, dur: 0.6 }, { note: 7, dur: 1.2 },
+
+            { note: 5, dur: 0.6 }, { note: 7, dur: 0.6 }, { note: 8, dur: 1.2 },
+            { note: 10, dur: 0.6 }, { note: 12, dur: 0.6 }, { note: 10, dur: 1.8 }
+        ];
+
+        // 8. แสนคำนึง (Saen Kham Nueng)
+        const saenkhamnuengData = [
+            { note: 10, dur: 0.5 }, { note: 8, dur: 0.5 }, { note: 7, dur: 1.0 },
+            { note: 5, dur: 0.5 }, { note: 4, dur: 0.5 }, { note: 3, dur: 1.0 },
+            { note: 7, dur: 0.5 }, { note: 8, dur: 0.5 }, { note: 10, dur: 1.0 },
+            { note: 12, dur: 0.5 }, { note: 11, dur: 0.5 }, { note: 10, dur: 1.5 },
+
+            { note: 14, dur: 0.5 }, { note: 12, dur: 0.5 }, { note: 10, dur: 1.0 },
+            { note: 8, dur: 0.5 }, { note: 7, dur: 0.5 }, { note: 5, dur: 2.0 }
+        ];
+
+        // 9. บุพเพสันนิวาส (Bupphesannivas)
+        const bupphesannivasData = [
+            { note: 10, dur: 0.5 }, { note: 11, dur: 0.5 }, { note: 12, dur: 0.5 }, { note: 14, dur: 1.0 },
+            { note: 12, dur: 0.5 }, { note: 10, dur: 0.5 }, { note: 8, dur: 1.0 },
+            { note: 7, dur: 0.5 }, { note: 8, dur: 0.5 }, { note: 10, dur: 1.0 },
+            { note: 8, dur: 0.5 }, { note: 7, dur: 0.5 }, { note: 5, dur: 1.5 },
+
+            { note: 10, dur: 0.5 }, { note: 11, dur: 0.5 }, { note: 12, dur: 0.5 }, { note: 14, dur: 1.0 },
+            { note: 15, dur: 0.5 }, { note: 17, dur: 0.5 }, { note: 14, dur: 1.5 }
+        ];
+
+        // 10. พระราชนิพนธ์ สายฝน (Sai Fon)
+        const saifonData = [
+            { note: 12, dur: 0.5 }, { note: 14, dur: 0.5 }, { note: 15, dur: 0.75 }, { note: 14, dur: 0.25 },
+            { note: 12, dur: 0.5 }, { note: 10, dur: 1.0 },
+            { note: 10, dur: 0.5 }, { note: 12, dur: 0.5 }, { note: 14, dur: 0.75 }, { note: 12, dur: 0.25 },
+            { note: 10, dur: 0.5 }, { note: 8, dur: 1.0 },
+
+            { note: 8, dur: 0.5 }, { note: 10, dur: 0.5 }, { note: 12, dur: 0.75 }, { note: 10, dur: 0.25 },
+            { note: 8, dur: 0.5 }, { note: 7, dur: 1.0 }, { note: 5, dur: 1.5 }
+        ];
 
         // --- Initialization ---
         function init() {
@@ -343,8 +549,6 @@
                 // Visual Styling
                 const heightPercent = 100 - (i * 2.5); 
                 key.style.height = `${Math.max(45, heightPercent)}%`; 
-                
-                // Note: เราลบ event listener รายตัวออก และใช้ระบบ Global Handler แทนด้านล่าง
                 
                 keysWrapper.appendChild(key);
             }
@@ -380,6 +584,11 @@
 
         function handleTouch(e) {
             e.preventDefault(); // ป้องกันการเลื่อนหน้าจอ
+
+            // เมื่อเริ่มตีระนาดเอง ให้ปิดหรือหยุดการเล่นอัตโนมัติทันที
+            if (demoPlaying) {
+                stopDemoSong();
+            }
             
             // วนลูปตรวจสอบทุกนิ้วที่แตะหรือขยับ
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -409,6 +618,11 @@
         }
 
         function handleMouse(e) {
+            // เมื่อคลิกตีระนาดเอง ให้ปิดหรือหยุดการเล่นอัตโนมัติทันที
+            if (demoPlaying) {
+                stopDemoSong();
+            }
+
             // ระบบเมาส์ (จุดเดียว)
             const target = document.elementFromPoint(e.clientX, e.clientY);
             const key = target ? target.closest('.key') : null;
@@ -431,12 +645,12 @@
 
             const t = audioCtx.currentTime;
 
-            // 1. Oscillator
+            // 1. Oscillator (Sine Wave เพื่อเสียงที่กลมมน คล้ายระนาด)
             const osc = audioCtx.createOscillator();
             osc.type = 'sine'; 
             osc.frequency.setValueAtTime(freq, t);
 
-            // 2. Gain Node (Envelope)
+            // 2. Gain Node (Envelope การควบคุมเสียงเคาะแบบระนาด)
             const gain = audioCtx.createGain();
             gain.gain.setValueAtTime(0, t);
             gain.gain.linearRampToValueAtTime(0.8, t + 0.01); // Attack
@@ -452,12 +666,12 @@
             osc.stop(t + 0.5);
 
             // Visual Feedback
-            // ใช้เทคนิค remove/add class เพื่อให้ animation รีเซ็ตถ้าเล่นรัวๆ
             element.classList.remove('active');
             void element.offsetWidth; // Trigger Reflow
             element.classList.add('active');
             
             createHitEffect(element);
+            createFloatingNote(element); // สร้างตัวโน้ตให้ลอยขึ้น
             
             setTimeout(() => {
                 element.classList.remove('active');
@@ -475,6 +689,39 @@
             setTimeout(() => effect.remove(), 200);
         }
 
+        // --- ระบบสร้างโน้ตรอยลอยขึ้นฟ้า (Aesthetic Floating Note System) ---
+        function createFloatingNote(element) {
+            const index = parseInt(element.dataset.index, 10);
+            const noteName = thaiNotes[index % 7];
+
+            const floatNode = document.createElement('div');
+            floatNode.className = 'floating-note';
+            floatNode.innerText = noteName;
+
+            // กำหนดโทนสีพาสเทลสลับกันไปตามลำดับตัวโน้ต เพื่อความสวยงามพรีเมียมสไตล์ไหมไทย
+            const colors = [
+                '#ffd700', // ซ - ทองสว่าง
+                '#ff7043', // ล - แสดนุ่มนวล
+                '#ec407a', // ท - ชมพูสดใส
+                '#26a69a', // ด - เขียวศิลาดล
+                '#29b6f6', // ร - ฟ้าน้ำไหล
+                '#ab47bc', // ม - ม่วงคราม
+                '#ffee58'  // ฟ - เหลืองดอกฝ้าย
+            ];
+            const activeColor = colors[index % colors.length];
+
+            floatNode.style.background = `radial-gradient(circle, ${activeColor} 0%, #3e2723 100%)`;
+            floatNode.style.boxShadow = `0 0 15px ${activeColor}, inset 0 0 8px rgba(255,255,255,0.9)`;
+            floatNode.style.borderColor = activeColor;
+
+            element.appendChild(floatNode);
+
+            // ลบโดมทิ้งเมื่องานอนิเมชั่นสิ้นสุดลง
+            setTimeout(() => {
+                floatNode.remove();
+            }, 2000);
+        }
+
         function toggleNotes() {
             showNotes = !showNotes;
             const wrapper = document.getElementById('keys-wrapper');
@@ -487,6 +734,164 @@
                 wrapper.classList.remove('show-notes');
                 btnText.innerText = "👁️ โน้ต";
             }
+        }
+
+        // --- Auto Play Demo Songs Logic with Play / Pause / Resume ---
+        function playDemoSong(songId) {
+            stopDemoSong(); // เคลียร์ของเก่าก่อนเสมอ
+            if (!songId) return;
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            demoPlaying = true;
+            isDemoPaused = false;
+
+            // แสดงปุ่มช่วยเหลือเพื่อกดหยุดชั่วคราวและหยุดเล่น
+            document.getElementById('demoPlayPauseBtn').style.display = 'inline-flex';
+            document.getElementById('demoStopBtn').style.display = 'inline-flex';
+            document.getElementById('demoPlayPauseBtn').innerText = "⏸️ หยุดค้าง";
+
+            showStatus("กำลังตีระนาดอัตโนมัติ...");
+
+            let songData = [];
+            let speedFactor = 1.0;
+
+            switch(songId) {
+                case 'kangkhao':
+                    songData = kangkhaoData;
+                    speedFactor = 1.0;
+                    break;
+                case 'laoduangduan':
+                    songData = laoduangduanData;
+                    speedFactor = 1.25;
+                    break;
+                case 'toeykhong':
+                    songData = toeykhongData;
+                    speedFactor = 1.0;
+                    break;
+                case 'laokrathobmai':
+                    songData = laokrathobmaiData;
+                    speedFactor = 1.1;
+                    break;
+                case 'khamensaiyok':
+                    songData = khamensaiyokData;
+                    speedFactor = 1.15;
+                    break;
+                case 'kluenkrathobfang':
+                    songData = kluenkrathobfangData;
+                    speedFactor = 1.0;
+                    break;
+                case 'laosiangtian':
+                    songData = laosiangtianData;
+                    speedFactor = 1.2;
+                    break;
+                case 'saenkhamnueng':
+                    songData = saenkhamnuengData;
+                    speedFactor = 1.1;
+                    break;
+                case 'bupphesannivas':
+                    songData = bupphesannivasData;
+                    speedFactor = 1.1;
+                    break;
+                case 'saifon':
+                    songData = saifonData;
+                    speedFactor = 1.15;
+                    break;
+            }
+
+            // คำนวณเวลาเริ่มต้นที่แน่นอนของแต่ละตัวโน้ตเป็นหน่วยมิลลิวินาที (Absolute Miliseconds)
+            let accumulatedTime = 0;
+            demoNotes = songData.map((noteObj) => {
+                let noteItem = {
+                    note: noteObj.note,
+                    delay: accumulatedTime,
+                    dur: noteObj.dur
+                };
+                accumulatedTime += noteObj.dur * speedFactor * 1000;
+                return noteItem;
+            });
+
+            demoPlaybackIndex = 0;
+            demoPlayOffset = 0;
+            lastUpdate = Date.now();
+
+            // รัน Timer ทรงประสิทธิภาพระดับฮาร์ดแวร์เฟรมเรต
+            demoLoop();
+        }
+
+        // หัวใจการประมวลผลเสียงตามเวลาจริง: สามารถจัดลำดับการค้างโน้ตและนับต่อจุดเดิมได้ล้านเปอร์เซ็นต์
+        function demoLoop() {
+            if (!demoPlaying || isDemoPaused) return;
+
+            let now = Date.now();
+            let elapsed = now - lastUpdate;
+            lastUpdate = now;
+            demoPlayOffset += elapsed;
+
+            const keys = document.querySelectorAll('.key');
+
+            while (demoPlaybackIndex < demoNotes.length) {
+                let currentNote = demoNotes[demoPlaybackIndex];
+                if (demoPlayOffset >= currentNote.delay) {
+                    const keyElement = keys[currentNote.note];
+                    if (keyElement) {
+                        playNote(parseFloat(keyElement.dataset.freq), keyElement);
+                    }
+                    demoPlaybackIndex++;
+                } else {
+                    break;
+                }
+            }
+
+            // ถ้าบรรเลงหมดเพลงแล้ว
+            if (demoPlaybackIndex >= demoNotes.length) {
+                setTimeout(() => {
+                    if (demoPlaying && !isDemoPaused) {
+                        stopDemoSong();
+                        showStatus("จบการเล่นเพลงสาธิต");
+                    }
+                }, 1000);
+                return;
+            }
+
+            demoTimer = requestAnimationFrame(demoLoop);
+        }
+
+        // ระบบสั่งหยุดชั่วคราวและกลับมาเล่นต่อ (Pause / Resume Toggle)
+        function toggleDemoPause() {
+            if (!demoPlaying) return;
+
+            const pauseBtn = document.getElementById('demoPlayPauseBtn');
+            if (isDemoPaused) {
+                // เล่นต่อ (Resume)
+                isDemoPaused = false;
+                lastUpdate = Date.now(); // รีเซ็ตตัวตั้งระยะเวลากระโดดเพี้ยน
+                pauseBtn.innerText = "⏸️ หยุดค้าง";
+                showStatus("บรรเลงต่อ...");
+                demoLoop();
+            } else {
+                // หยุดชั่วคราว (Pause)
+                isDemoPaused = true;
+                pauseBtn.innerText = "▶️ เล่นต่อ";
+                showStatus("หยุดชั่วคราว");
+            }
+        }
+
+        function stopDemoSong() {
+            if (demoTimer) {
+                cancelAnimationFrame(demoTimer);
+                demoTimer = null;
+            }
+            demoPlaying = false;
+            isDemoPaused = false;
+            demoPlaybackIndex = 0;
+            demoPlayOffset = 0;
+
+            document.getElementById('demoSelect').value = "";
+            document.getElementById('demoPlayPauseBtn').style.display = 'none';
+            document.getElementById('demoStopBtn').style.display = 'none';
         }
 
         // --- Recording Logic ---
