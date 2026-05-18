@@ -2,350 +2,386 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtual Violin Pro - บันทึกเสียงได้</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Virtual Violin Pro - บันทึกเสียงและฝึกเล่นตามโน้ตลอย</title>
+    <!-- Tailwind CSS for high-fidelity UI design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --wood-dark: #3e2723;
-            --wood-light: #5d4037;
-            --wood-texture: #8d6e63;
-            --string-color: #c0c0c0;
-            --fingerboard-color: #1a1a1a;
-            --active-glow: #ffd700;
-            --record-red: #ff4444;
+            --wood-dark: #1e0d07;
+            --wood-medium: #3d1b0c;
+            --wood-light: #6a3014;
+            --gold-primary: #dfb15b;
+            --gold-glow: rgba(223, 177, 91, 0.4);
+            --string-color: #e2e8f0;
+            --fingerboard-color: #111111;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #121212;
-            color: white;
             font-family: 'Sarabun', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
+            background-color: #0d0604;
+            color: #f7e7e2;
             overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none; 
-        }
-
-        header {
-            padding: 10px;
-            text-align: center;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: #deb887;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        p {
-            margin: 5px 0 0;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-
-        /* Controls Area */
-        #controls {
-            margin-top: 10px;
-            pointer-events: auto; /* Enable clicks */
-            z-index: 20;
-        }
-
-        #record-btn {
-            background-color: #333;
-            color: white;
-            border: 2px solid #555;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        #record-btn.recording {
-            background-color: var(--record-red);
-            border-color: var(--record-red);
-            animation: pulse-red 1.5s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
-        }
-
-        .rec-icon {
-            width: 12px;
-            height: 12px;
-            background-color: var(--record-red);
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        #record-btn.recording .rec-icon {
-            background-color: white;
-            border-radius: 2px; /* Square for stop */
-        }
-
-        /* Violin Body/Neck Container */
-        #violin-container {
-            position: relative;
-            width: 95%;
-            max-width: 500px;
-            flex-grow: 1;
-            margin: 10px 0 20px 0;
-            background: linear-gradient(to bottom, var(--wood-dark), var(--wood-light));
-            border-radius: 15px 15px 50px 50px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-            border: 4px solid #2a1b15;
             touch-action: none;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        /* The Fingerboard (Black part) */
-        #fingerboard {
-            width: 80%;
-            height: 100%;
-            background-color: var(--fingerboard-color);
+        .cinzel-font {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Ambient glowing backgrounds */
+        .bg-wood-gradient {
+            background: radial-gradient(circle at center, var(--wood-medium) 0%, var(--wood-dark) 100%);
+        }
+
+        /* Scrollbar styling for dropdown menus */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-primary);
+            border-radius: 3px;
+        }
+
+        /* Vibraiton effect keyframes */
+        @keyframes dynamic-vibrate {
+            0% { transform: translateX(-50%) scaleX(1); }
+            25% { transform: translateX(-50%) scaleX(1.15) skewX(-1deg); }
+            75% { transform: translateX(-50%) scaleX(0.85) skewX(1deg); }
+            100% { transform: translateX(-50%) scaleX(1); }
+        }
+
+        .vibrate-string {
+            animation: dynamic-vibrate 0.08s infinite ease-in-out;
+            box-shadow: 0 0 12px #fff, 0 0 4px var(--gold-primary);
+        }
+
+        /* F-Hole decorative designs */
+        .f-hole {
+            width: 25px;
+            height: 140px;
+            background: #000;
+            opacity: 0.65;
+            border-radius: 50% / 15% 15% 85% 85%;
             position: relative;
-            display: flex;
-            justify-content: space-around;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 100% 12%; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
         }
-
-        /* Strings */
-        .string-lane {
-            position: relative;
-            width: 25%;
-            height: 100%;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .string-lane:last-child {
-            border-right: none;
-        }
-
-        /* The physical string line */
-        .string-wire {
+        .f-hole::before {
+            content: '';
             position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 2px;
-            background: linear-gradient(to right, #999, #fff, #999);
-            transform: translateX(-50%);
-            pointer-events: none;
-            z-index: 5;
-            box-shadow: 2px 0 4px rgba(0,0,0,0.5);
+            width: 14px;
+            height: 14px;
+            background: #000;
+            border-radius: 50%;
+            top: 25px;
+            left: -5px;
         }
-
-        /* String Thickness variation */
-        .s-G .string-wire { width: 4px; } 
-        .s-D .string-wire { width: 3px; }
-        .s-A .string-wire { width: 2px; }
-        .s-E .string-wire { width: 1.5px; } 
-
-        /* Interaction Zones (Notes) */
-        .note-zone {
-            flex-grow: 1;
-            width: 100%;
-            border-bottom: 1px dashed rgba(255,255,255,0.1);
-            position: relative;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.05s;
-        }
-
-        .note-zone span {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.3);
-            pointer-events: none;
-            z-index: 6;
-            font-weight: bold;
-        }
-
-        /* Active State (Pressed) */
-        .note-zone.active {
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
-        }
-
-        .note-zone.active span {
-            color: #fff;
-            text-shadow: 0 0 5px gold;
-        }
-
-        /* String Vibration Animation */
-        @keyframes vibrate {
-            0% { transform: translateX(-50%) translateX(0); }
-            25% { transform: translateX(-50%) translateX(-1px); }
-            75% { transform: translateX(-50%) translateX(1px); }
-            100% { transform: translateX(-50%) translateX(0); }
-        }
-
-        .string-lane.vibrating .string-wire {
-            animation: vibrate 0.1s infinite linear;
-            background: #fff;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-        }
-
-        /* Bridge Area */
-        #bridge {
+        .f-hole::after {
+            content: '';
             position: absolute;
-            bottom: 50px;
-            width: 90%;
-            height: 15px;
-            background: #4a3b2a;
-            border-radius: 5px;
-            z-index: 4;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
-            pointer-events: none;
+            width: 14px;
+            height: 14px;
+            background: #000;
+            border-radius: 50%;
+            bottom: 25px;
+            right: -5px;
         }
 
-        /* Start Button overlay */
-        #start-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
+        /* Glow effects for active zones */
+        .glow-note-gold {
+            background: radial-gradient(circle, rgba(223, 177, 91, 0.45) 0%, transparent 75%);
         }
 
-        #start-btn {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            background: #deb887;
-            color: #3e2723;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 20px rgba(222, 184, 135, 0.5);
-            animation: pulse 2s infinite;
+        /* Custom toggle design */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: var(--gold-primary);
         }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(222, 184, 135, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(222, 184, 135, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(222, 184, 135, 0); }
+        .toggle-checkbox:checked + .toggle-label .toggle-dot {
+            transform: translateX(100%);
         }
-
-        .string-label {
-            position: absolute;
-            top: -25px;
-            width: 100%;
-            text-align: center;
-            color: #deb887;
-            font-weight: bold;
-            pointer-events: none;
-        }
-
     </style>
 </head>
-<body>
+<body class="w-full h-screen flex flex-col justify-between items-center p-3 md:p-6 overflow-hidden">
 
-    <header>
-        <h1>🎻 Violin Pro (Recorder)</h1>
-        <p>เล่นพร้อมกันได้หลายนิ้ว | บันทึกเสียงได้</p>
+    <!-- Header with Song selection and main configurations -->
+    <header class="w-full max-w-lg flex flex-col gap-2 z-30 select-none">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="cinzel-font text-xl md:text-2xl text-amber-100 tracking-wider font-bold drop-shadow-md flex items-center gap-1">
+                    🎻 VIOLIN <span class="text-[var(--gold-primary)] font-light">PRO</span>
+                </h1>
+                <p class="text-xs text-amber-200/60 font-light">สัมผัสเสียงอคูสติกเสมือนจริง พร้อมโน้ตลอยหัดเล่น</p>
+            </div>
+            
+            <!-- Quick Sound Settings Toggle Button -->
+            <button id="toggle-panel-btn" class="px-3 py-1.5 rounded-lg border border-[#dfb15b]/30 bg-black/40 hover:bg-black/70 transition text-xs text-[#dfb15b] flex items-center gap-1">
+                ⚙️ ตั้งค่าเสียง
+            </button>
+        </div>
+
+        <!-- Hidden/Expandable Settings Panel -->
+        <div id="settings-panel" class="hidden w-full bg-stone-900/95 border border-amber-900/40 p-4 rounded-xl flex flex-col gap-3 shadow-2xl transition duration-300">
+            <h3 class="text-xs font-semibold text-[#dfb15b] tracking-wider uppercase border-b border-stone-800 pb-1">🎛️ เครื่องผสมเสียง & โทนเสียง</h3>
+            
+            <!-- Tone Presets Selector -->
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="setSynthTone('acoustic')" id="preset-acoustic" class="preset-btn py-1.5 text-xs rounded-md bg-amber-950/80 text-[#dfb15b] border border-amber-500/40 font-semibold transition">Classic Bow</button>
+                <button onclick="setSynthTone('stradivarius')" id="preset-stradivarius" class="preset-btn py-1.5 text-xs rounded-md bg-stone-800 text-stone-400 border border-stone-700 transition">Stradivari</button>
+                <button onclick="setSynthTone('electric')" id="preset-electric" class="preset-btn py-1.5 text-xs rounded-md bg-stone-800 text-stone-400 border border-stone-700 transition">E-Violin</button>
+            </div>
+
+            <!-- Synth Parameter Controls -->
+            <div class="flex flex-col gap-2 mt-1">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-stone-300">ความดังหลัก (Volume)</span>
+                    <span id="vol-lbl" class="text-[#dfb15b]">75%</span>
+                </div>
+                <input type="range" id="master-volume" min="0" max="1" step="0.05" value="0.75" class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-[#dfb15b]">
+
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-stone-300">ลูกคอคีย์ (Vibrato Depth)</span>
+                    <span id="vib-lbl" class="text-[#dfb15b]">45%</span>
+                </div>
+                <input type="range" id="vibrato-depth" min="0" max="1" step="0.05" value="0.45" class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-[#dfb15b]">
+
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-stone-300">เสียงสะท้อนฮอลล์ (Delay Spatial)</span>
+                    <span id="space-lbl" class="text-[#dfb15b]">50%</span>
+                </div>
+                <input type="range" id="space-depth" min="0" max="1" step="0.05" value="0.5" class="w-full h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-[#dfb15b]">
+            </div>
+
+            <!-- Auto Pitch Correction Helper -->
+            <div class="flex justify-between items-center text-xs pt-1 border-t border-stone-800">
+                <div>
+                    <p class="text-stone-300 font-medium">ระบบปรับคีย์ตรง (Pitch Auto-Tune)</p>
+                    <p class="text-[10px] text-stone-500">ช่วยลากเสียงเมื่อลากนิ้วข้ามคีย์ให้เสียงนุ่มนวล</p>
+                </div>
+                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" id="pitch-tune-toggle" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-stone-900 appearance-none cursor-pointer checked:right-0 right-5 transition duration-300"/>
+                    <label for="pitch-tune-toggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-stone-700 cursor-pointer transition"></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Song selector & Recording controls -->
+        <div class="w-full bg-stone-950/60 backdrop-blur-md border border-stone-800/60 p-2.5 rounded-xl flex flex-col gap-2">
+            <div class="flex gap-2 items-center">
+                <div class="flex-1">
+                    <select id="song-select" class="w-full bg-stone-900 border border-stone-800 px-3 py-2 rounded-lg text-xs text-amber-100 outline-none focus:border-[#dfb15b] transition">
+                        <option value="none">-- เลือกเพลงหัดเล่น --</option>
+                        <option value="lao_duang_doen">ลาวดวงเดือน (Lao Duang Doen) 🇹🇭</option>
+                        <option value="canon_d">Canon in D - Pachelbel 🎻</option>
+                        <option value="twinkle">Twinkle Twinkle Little Star ⭐</option>
+                    </select>
+                </div>
+                
+                <button id="play-song-btn" class="px-4 py-2 bg-[#dfb15b] hover:bg-amber-400 text-stone-950 font-bold rounded-lg text-xs transition duration-200 shadow-md flex items-center gap-1 whitespace-nowrap">
+                    ▶️ เล่นสาธิต
+                </button>
+            </div>
+
+            <!-- Bottom bar of controller: Recording state and play-along options -->
+            <div class="flex justify-between items-center text-xs px-1">
+                <!-- Recording Button -->
+                <button id="record-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-900 border border-red-500/30 text-stone-300 hover:bg-stone-800 transition">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-500" id="rec-dot"></span>
+                    <span id="rec-text" class="text-[11px]">บันทึกเสียง</span>
+                </button>
+
+                <!-- Auto-Play along assistance settings -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] text-stone-400">โหมดช่วยเล่น:</span>
+                    <span id="assist-badge" class="px-2 py-0.5 rounded bg-amber-900/30 text-[#dfb15b] text-[10px] font-semibold border border-amber-700/30">ไกด์โน้ตลอย</span>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <div id="controls">
-        <button id="record-btn">
-            <span class="rec-icon"></span>
-            <span id="rec-text">บันทึกเสียง</span>
-        </button>
-    </div>
+    <!-- Violin Center Area -->
+    <main id="violin-stage" class="relative w-full max-w-sm flex-1 my-3 flex justify-center items-center overflow-hidden">
+        
+        <!-- Beautiful Decorative Wooden Body Curves on Left and Right -->
+        <div class="absolute left-2 top-1/4 bottom-1/4 flex flex-col justify-between items-end pointer-events-none opacity-40 z-0">
+            <div class="f-hole transform rotate-[-5deg]"></div>
+        </div>
+        <div class="absolute right-2 top-1/4 bottom-1/4 flex flex-col justify-between items-start pointer-events-none opacity-40 z-0">
+            <div class="f-hole transform scale-x-[-1] rotate-[5deg]"></div>
+        </div>
 
-    <div id="violin-container">
-        <!-- Visual Bridge -->
-        <div id="bridge" style="bottom: 0; height: 10px;"></div>
+        <!-- Absolute Layer: Waterfall/Note Scrolling Canvas -->
+        <!-- This is a seamless interactive canvas overlays on top of the fingerboard keys -->
+        <canvas id="scroller-canvas" class="absolute top-0 left-1/2 -translate-x-1/2 w-[85%] h-full z-10 pointer-events-none"></canvas>
 
-        <div id="fingerboard">
+        <!-- The Physical Wooden Violin Neck and Fingerboard -->
+        <div id="violin-neck" class="relative w-[85%] h-full bg-stone-950 rounded-b-3xl border-x-[5px] border-stone-900/60 shadow-[0_15px_35px_rgba(0,0,0,0.95)] z-20 flex justify-between overflow-hidden">
             
-            <!-- String G (Low) -->
-            <div class="string-lane s-G" data-string="G">
-                <div class="string-label">G</div>
-                <div class="string-wire"></div>
-                <div class="note-zone" data-note="G3"><span>G</span></div>
-                <div class="note-zone" data-note="A3"><span>A</span></div>
-                <div class="note-zone" data-note="B3"><span>B</span></div>
-                <div class="note-zone" data-note="C4"><span>C</span></div>
-                <div class="note-zone" data-note="D4"><span>D</span></div>
-                <div class="note-zone" data-note="E4"><span>E</span></div>
-                <div class="note-zone" data-note="F4"><span>F</span></div>
+            <!-- Wood Grain Gloss Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-b from-stone-950 via-stone-900 to-[#1e0d07]/40 pointer-events-none z-0"></div>
+
+            <!-- Fret Markers (Finger Position Tapes) -->
+            <div class="absolute w-full top-[12.5%] h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></div>
+            <div class="absolute w-full top-[25%] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></div>
+            <div class="absolute w-full top-[37.5%] h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></div>
+            <div class="absolute w-full top-[50%] h-[2px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none"></div>
+            <div class="absolute w-full top-[62.5%] h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></div>
+            <div class="absolute w-full top-[75%] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></div>
+            <div class="absolute w-full top-[87.5%] h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></div>
+
+            <!-- String G Lane (String Index 0) -->
+            <div class="string-lane flex-1 h-full relative flex flex-col justify-between border-r border-stone-900/50" data-string="G" data-idx="0">
+                <span class="absolute bottom-1 w-full text-center text-[10px] font-semibold text-stone-500/80 pointer-events-none z-10 select-none">G</span>
+                <div class="string-wire absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[3.5px] bg-gradient-to-r from-stone-500 via-stone-300 to-stone-500 shadow-[2px_0_4px_rgba(0,0,0,0.6)] pointer-events-none z-25"></div>
+                
+                <!-- Note buttons inside G lane -->
+                <div class="note-zone flex-1 flex items-center justify-center relative hover:bg-white/5 active:bg-white/10 transition" data-note="G3" data-string-idx="0">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">G3</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="A3" data-string-idx="0">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">A3</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="B3" data-string-idx="0">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">B3</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="C4" data-string-idx="0">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">C4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="D4" data-string-idx="0">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">D4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="E4" data-string-idx="0">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">E4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="F4" data-string-idx="0">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">F4</span>
+                </div>
             </div>
 
-            <!-- String D -->
-            <div class="string-lane s-D" data-string="D">
-                <div class="string-label">D</div>
-                <div class="string-wire"></div>
-                <div class="note-zone" data-note="D4"><span>D</span></div>
-                <div class="note-zone" data-note="E4"><span>E</span></div>
-                <div class="note-zone" data-note="F#4"><span>F#</span></div>
-                <div class="note-zone" data-note="G4"><span>G</span></div>
-                <div class="note-zone" data-note="A4"><span>A</span></div>
-                <div class="note-zone" data-note="B4"><span>B</span></div>
-                <div class="note-zone" data-note="C5"><span>C</span></div>
+            <!-- String D Lane (String Index 1) -->
+            <div class="string-lane flex-1 h-full relative flex flex-col justify-between border-r border-stone-900/50" data-string="D" data-idx="1">
+                <span class="absolute bottom-1 w-full text-center text-[10px] font-semibold text-stone-500/80 pointer-events-none z-10 select-none">D</span>
+                <div class="string-wire absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2.8px] bg-gradient-to-r from-stone-500 via-stone-300 to-stone-500 shadow-[2px_0_4px_rgba(0,0,0,0.6)] pointer-events-none z-25"></div>
+                
+                <div class="note-zone flex-1 flex items-center justify-center relative" data-note="D4" data-string-idx="1">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">D4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="E4" data-string-idx="1">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">E4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="F#4" data-string-idx="1">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">F#4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="G4" data-string-idx="1">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">G4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="A4" data-string-idx="1">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">A4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="B4" data-string-idx="1">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">B4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="C5" data-string-idx="1">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">C5</span>
+                </div>
             </div>
 
-            <!-- String A -->
-            <div class="string-lane s-A" data-string="A">
-                <div class="string-label">A</div>
-                <div class="string-wire"></div>
-                <div class="note-zone" data-note="A4"><span>A</span></div>
-                <div class="note-zone" data-note="B4"><span>B</span></div>
-                <div class="note-zone" data-note="C#5"><span>C#</span></div>
-                <div class="note-zone" data-note="D5"><span>D</span></div>
-                <div class="note-zone" data-note="E5"><span>E</span></div>
-                <div class="note-zone" data-note="F#5"><span>F#</span></div>
-                <div class="note-zone" data-note="G5"><span>G</span></div>
+            <!-- String A Lane (String Index 2) -->
+            <div class="string-lane flex-1 h-full relative flex flex-col justify-between border-r border-stone-900/50" data-string="A" data-idx="2">
+                <span class="absolute bottom-1 w-full text-center text-[10px] font-semibold text-stone-500/80 pointer-events-none z-10 select-none">A</span>
+                <div class="string-wire absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-r from-stone-500 via-stone-300 to-stone-500 shadow-[2px_0_4px_rgba(0,0,0,0.6)] pointer-events-none z-25"></div>
+                
+                <div class="note-zone flex-1 flex items-center justify-center relative" data-note="A4" data-string-idx="2">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">A4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="B4" data-string-idx="2">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">B4</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="C#5" data-string-idx="2">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">C#5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="D5" data-string-idx="2">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">D5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="E5" data-string-idx="2">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">E5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="F#5" data-string-idx="2">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">F#5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="G5" data-string-idx="2">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">G5</span>
+                </div>
             </div>
 
-            <!-- String E (High) -->
-            <div class="string-lane s-E" data-string="E">
-                <div class="string-label">E</div>
-                <div class="string-wire"></div>
-                <div class="note-zone" data-note="E5"><span>E</span></div>
-                <div class="note-zone" data-note="F#5"><span>F#</span></div>
-                <div class="note-zone" data-note="G#5"><span>G#</span></div>
-                <div class="note-zone" data-note="A5"><span>A</span></div>
-                <div class="note-zone" data-note="B5"><span>B</span></div>
-                <div class="note-zone" data-note="C#6"><span>C#</span></div>
-                <div class="note-zone" data-note="D6"><span>D</span></div>
+            <!-- String E Lane (String Index 3) -->
+            <div class="string-lane flex-1 h-full relative flex flex-col justify-between" data-string="E" data-idx="3">
+                <span class="absolute bottom-1 w-full text-center text-[10px] font-semibold text-stone-500/80 pointer-events-none z-10 select-none">E</span>
+                <div class="string-wire absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1.3px] bg-gradient-to-r from-stone-500 via-stone-300 to-stone-500 shadow-[2px_0_4px_rgba(0,0,0,0.6)] pointer-events-none z-25"></div>
+                
+                <div class="note-zone flex-1 flex items-center justify-center relative" data-note="E5" data-string-idx="3">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">E5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="F#5" data-string-idx="3">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">F#5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="G#5" data-string-idx="3">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">G#5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="A5" data-string-idx="3">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">A5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="B5" data-string-idx="3">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">B5</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="C#6" data-string-idx="3">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">C#6</span>
+                </div>
+                <div class="note-zone flex-1 flex items-center justify-center relative border-t border-stone-900/20" data-note="D6" data-string-idx="3">
+                    <span class="text-[10px] font-bold text-stone-600 pointer-events-none">D6</span>
+                </div>
             </div>
 
         </div>
-    </div>
 
-    <div id="start-overlay">
-        <button id="start-btn">🎵 แตะเพื่อเริ่มเล่น</button>
-        <p style="margin-top:15px; color:#ccc;">รองรับ Multi-touch</p>
+        <!-- Simulated Tailpiece and Bridge Visual Base -->
+        <div class="absolute bottom-0 w-[95%] h-[30px] bg-stone-900/85 border-t border-stone-700/50 rounded-t-full shadow-[0_-5px_15px_rgba(0,0,0,0.5)] z-25 flex justify-center items-center pointer-events-none">
+            <div class="w-2/3 h-2 bg-[#dfb15b] rounded shadow-inner opacity-80"></div>
+        </div>
+
+    </main>
+
+    <!-- Tips / Status bar -->
+    <footer class="w-full max-w-lg z-30 flex flex-col gap-1 select-none">
+        <div class="flex justify-between items-center bg-stone-950/80 border border-stone-800 px-3 py-2 rounded-xl text-[11px] text-stone-400">
+            <span class="flex items-center gap-1">💡 <span id="hint-text">เลื่อนนิ้วขึ้น-ลงเพื่อรูดคีย์ หรือขยับนิ้วซ้าย-ขวาเพื่อทำเสียงสั่นไหว (Vibrato)</span></span>
+        </div>
+        <p class="text-[10px] text-center text-stone-500 mt-1">Virtual Violin Pro. Created in 2026. Powered by Web Audio API & Canvas Engine</p>
+    </footer>
+
+    <!-- Sound Init Overlay (Required to grant AudioContext on user action) -->
+    <div id="start-overlay" class="fixed inset-0 bg-stone-950/95 backdrop-blur-md flex flex-col justify-center items-center z-50 p-6 text-center">
+        <div class="max-w-md bg-stone-900/40 p-8 rounded-3xl border border-amber-900/30 flex flex-col items-center gap-6 shadow-2xl">
+            <div class="text-6xl animate-bounce">🎻</div>
+            <h2 class="cinzel-font text-2xl md:text-3xl font-bold text-[#dfb15b] tracking-wider">VIRTUAL VIOLIN PRO</h2>
+            <p class="text-stone-300 text-sm leading-relaxed max-w-sm">
+                ยินดีต้อนรับสู่เครื่องดนตรีจำลองเสมือนจริงคุณภาพสูง มอบมิติเสียงไม้กังวานและฮอลล์สะท้อนเพื่อความสมจริงที่สุด
+            </p>
+            <button id="start-btn" class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-amber-500 to-[#dfb15b] hover:from-amber-400 hover:to-[#dfb15b] text-stone-950 font-bold text-base rounded-full shadow-lg hover:shadow-xl hover:shadow-[#dfb15b]/20 transition transform hover:-translate-y-0.5 active:translate-y-0 tracking-wider">
+                🎵 เริ่มต้นเปิดระบบเสียง
+            </button>
+            <p class="text-[11px] text-stone-500">รองรับระบบสัมผัสหลายนิ้วพร้อมกัน (Multi-Touch) และการเล่นผ่านหน้าจอมือถือแนวตั้ง</p>
+        </div>
     </div>
 
     <script>
-        // Note Frequencies
+        // Note Frequency Mapping
         const noteFreqs = {
             "G3": 196.00, "G#3": 207.65, "A3": 220.00, "A#3": 233.08, "B3": 246.94,
             "C4": 261.63, "C#4": 277.18, "D4": 293.66, "D#4": 311.13, "E4": 329.63,
@@ -356,250 +392,931 @@
             "C#6": 1108.73, "D6": 1174.66
         };
 
-        let audioCtx;
-        let mainCompressor;
-        let mediaStreamDest;
-        let mediaRecorder;
+        // Song Database (Note Highways & Falling Notes System)
+        // Structure: noteName, duration(ms), delayOffset(ms), stringIdx(0-3)
+        const songs = {
+            lao_duang_doen: [
+                { noteName: "E5", duration: 800, delay: 0, stringIdx: 3 },
+                { noteName: "D5", duration: 400, delay: 800, stringIdx: 2 },
+                { noteName: "E5", duration: 400, delay: 1200, stringIdx: 3 },
+                { noteName: "D5", duration: 800, delay: 1600, stringIdx: 2 },
+                { noteName: "B4", duration: 400, delay: 2400, stringIdx: 1 },
+                { noteName: "A4", duration: 400, delay: 2800, stringIdx: 1 },
+                { noteName: "B4", duration: 1200, delay: 3200, stringIdx: 1 },
+                
+                { noteName: "D5", duration: 800, delay: 4800, stringIdx: 2 },
+                { noteName: "B4", duration: 400, delay: 5600, stringIdx: 1 },
+                { noteName: "D5", duration: 400, delay: 6000, stringIdx: 2 },
+                { noteName: "B4", duration: 800, delay: 6400, stringIdx: 1 },
+                { noteName: "A4", duration: 400, delay: 7200, stringIdx: 1 },
+                { noteName: "G4", duration: 400, delay: 7600, stringIdx: 1 },
+                { noteName: "A4", duration: 1200, delay: 8000, stringIdx: 1 },
+
+                { noteName: "B4", duration: 800, delay: 9600, stringIdx: 1 },
+                { noteName: "A4", duration: 400, delay: 10400, stringIdx: 1 },
+                { noteName: "B4", duration: 400, delay: 10800, stringIdx: 1 },
+                { noteName: "A4", duration: 800, delay: 11200, stringIdx: 1 },
+                { noteName: "G4", duration: 400, delay: 12000, stringIdx: 1 },
+                { noteName: "E4", duration: 400, delay: 12400, stringIdx: 0 },
+                { noteName: "G4", duration: 1200, delay: 12800, stringIdx: 1 },
+
+                { noteName: "A4", duration: 600, delay: 14400, stringIdx: 1 },
+                { noteName: "B4", duration: 600, delay: 15000, stringIdx: 1 },
+                { noteName: "D5", duration: 600, delay: 15600, stringIdx: 2 },
+                { noteName: "E5", duration: 1200, delay: 16200, stringIdx: 3 }
+            ],
+            canon_d: [
+                { noteName: "F#5", duration: 1200, delay: 0, stringIdx: 2 },
+                { noteName: "E5", duration: 1200, delay: 1200, stringIdx: 2 },
+                { noteName: "D5", duration: 1200, delay: 2400, stringIdx: 2 },
+                { noteName: "C#5", duration: 1200, delay: 3600, stringIdx: 2 },
+                { noteName: "B4", duration: 1200, delay: 4800, stringIdx: 1 },
+                { noteName: "A4", duration: 1200, delay: 6000, stringIdx: 1 },
+                { noteName: "B4", duration: 1200, delay: 7200, stringIdx: 1 },
+                { noteName: "C#5", duration: 1200, delay: 8400, stringIdx: 2 },
+                
+                { noteName: "D5", duration: 600, delay: 9600, stringIdx: 2 },
+                { noteName: "C#5", duration: 600, delay: 10200, stringIdx: 2 },
+                { noteName: "D5", duration: 600, delay: 10800, stringIdx: 2 },
+                { noteName: "F#5", duration: 600, delay: 11400, stringIdx: 2 },
+                { noteName: "E5", duration: 600, delay: 12000, stringIdx: 2 },
+                { noteName: "D5", duration: 600, delay: 12600, stringIdx: 2 },
+                { noteName: "E5", duration: 600, delay: 13200, stringIdx: 2 },
+                { noteName: "C#5", duration: 600, delay: 13800, stringIdx: 2 },
+                { noteName: "D5", duration: 1200, delay: 14400, stringIdx: 2 }
+            ],
+            twinkle: [
+                { noteName: "D4", duration: 600, delay: 0, stringIdx: 1 },
+                { noteName: "D4", duration: 600, delay: 600, stringIdx: 1 },
+                { noteName: "A4", duration: 600, delay: 1200, stringIdx: 1 },
+                { noteName: "A4", duration: 600, delay: 1800, stringIdx: 1 },
+                { noteName: "B4", duration: 600, delay: 2400, stringIdx: 1 },
+                { noteName: "B4", duration: 600, delay: 3000, stringIdx: 1 },
+                { noteName: "A4", duration: 1200, delay: 3600, stringIdx: 1 },
+                
+                { noteName: "G4", duration: 600, delay: 4800, stringIdx: 1 },
+                { noteName: "G4", duration: 600, delay: 5400, stringIdx: 1 },
+                { noteName: "F#4", duration: 600, delay: 6000, stringIdx: 1 },
+                { noteName: "F#4", duration: 600, delay: 6600, stringIdx: 1 },
+                { noteName: "E4", duration: 600, delay: 7200, stringIdx: 1 },
+                { noteName: "E4", duration: 600, delay: 7800, stringIdx: 1 },
+                { noteName: "D4", duration: 1200, delay: 8400, stringIdx: 1 }
+            ]
+        };
+
+        // Global variables for AudioContext & Synthesizers
+        let audioCtx = null;
+        let masterGainNode = null;
+        let biquadBodyResonance = null;
+        let echoDelayNode = null;
+        let reverbFeedbackGain = null;
+        let compressor = null;
+        
+        let mediaStreamDest = null;
+        let mediaRecorder = null;
         let recordedChunks = [];
         let isRecording = false;
 
-        const activeNotes = new Map(); 
+        const activeVoices = new Map(); // Store dynamic synthesizers mapped to keys
+        let tonePreset = 'acoustic'; // Preset options: acoustic, stradivarius, electric
+        
+        // Settings / Parameters State
+        let masterVolumeVal = 0.75;
+        let vibratoDepthVal = 0.45;
+        let spaceDepthVal = 0.5;
+        let autoTuneEnabled = true;
 
-        document.getElementById('start-btn').addEventListener('click', () => {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Compressor chain
-                mainCompressor = audioCtx.createDynamicsCompressor();
-                mainCompressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
-                mainCompressor.knee.setValueAtTime(30, audioCtx.currentTime);
-                mainCompressor.ratio.setValueAtTime(12, audioCtx.currentTime);
-                mainCompressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
-                mainCompressor.release.setValueAtTime(0.25, audioCtx.currentTime);
-                
-                // 1. Connect to Speakers
-                mainCompressor.connect(audioCtx.destination);
+        // Note Scroller (Waterfall Game Engine) States
+        const scrollerCanvas = document.getElementById('scroller-canvas');
+        const ctx = scrollerCanvas.getContext('2d');
+        let activeSong = null;
+        let songStartTime = null;
+        let songTimer = null;
+        let demoPlaying = false;
+        let songNotesList = []; // Processed visual notes
+        let animFrameId = null;
 
-                // 2. Connect to Recorder Destination
-                mediaStreamDest = audioCtx.createMediaStreamDestination();
-                mainCompressor.connect(mediaStreamDest);
+        // Visual Coordinates Mapping helper
+        let laneRects = [];
+        let zoneMap = {};
 
-                // Setup Recorder
-                try {
-                    mediaRecorder = new MediaRecorder(mediaStreamDest.stream);
-                    
-                    mediaRecorder.ondataavailable = (e) => {
-                        if (e.data.size > 0) {
-                            recordedChunks.push(e.data);
-                        }
-                    };
-
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-                        const url = URL.createObjectURL(blob);
-                        
-                        // Create download link
-                        const a = document.createElement('a');
-                        a.style.display = 'none';
-                        a.href = url;
-                        // Timestamp in filename
-                        const date = new Date();
-                        const timestamp = `${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`;
-                        a.download = `violin-recording-${timestamp}.webm`;
-                        
-                        document.body.appendChild(a);
-                        a.click();
-                        
-                        setTimeout(() => {
-                            document.body.removeChild(a);
-                            window.URL.revokeObjectURL(url);
-                        }, 100);
-                        
-                        recordedChunks = []; // Reset chunks
-                    };
-                } catch (e) {
-                    console.error("MediaRecorder not supported", e);
-                    document.getElementById('record-btn').style.display = 'none';
-                }
-            }
-
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            document.getElementById('start-overlay').style.display = 'none';
+        // UI Action: Toggle Settings Panel
+        document.getElementById('toggle-panel-btn').addEventListener('click', () => {
+            const panel = document.getElementById('settings-panel');
+            panel.classList.toggle('hidden');
         });
 
-        // Recording Button Logic
+        // UI Action: Audio parameter sliders
+        const sliderVol = document.getElementById('master-volume');
+        sliderVol.addEventListener('input', (e) => {
+            masterVolumeVal = parseFloat(e.target.value);
+            document.getElementById('vol-lbl').textContent = Math.round(masterVolumeVal * 100) + '%';
+            if (masterGainNode) {
+                masterGainNode.gain.setValueAtTime(masterVolumeVal, audioCtx.currentTime);
+            }
+        });
+
+        const sliderVib = document.getElementById('vibrato-depth');
+        sliderVib.addEventListener('input', (e) => {
+            vibratoDepthVal = parseFloat(e.target.value);
+            document.getElementById('vib-lbl').textContent = Math.round(vibratoDepthVal * 100) + '%';
+        });
+
+        const sliderSpace = document.getElementById('space-depth');
+        sliderSpace.addEventListener('input', (e) => {
+            spaceDepthVal = parseFloat(e.target.value);
+            document.getElementById('space-lbl').textContent = Math.round(spaceDepthVal * 100) + '%';
+            if (echoDelayNode && reverbFeedbackGain) {
+                // Adjust delay/echo spatial mix
+                reverbFeedbackGain.gain.setValueAtTime(spaceDepthVal * 0.7, audioCtx.currentTime);
+            }
+        });
+
+        document.getElementById('pitch-tune-toggle').addEventListener('change', (e) => {
+            autoTuneEnabled = e.target.checked;
+        });
+
+        // Audio Engine Architecture Initialization
+        function initAudioEngine() {
+            if (audioCtx) return;
+
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContextClass();
+
+            // 1. Create Master Compressor for crisp output limiting
+            compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.setValueAtTime(-20, audioCtx.currentTime);
+            compressor.knee.setValueAtTime(15, audioCtx.currentTime);
+            compressor.ratio.setValueAtTime(10, audioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.01, audioCtx.currentTime);
+            compressor.release.setValueAtTime(0.15, audioCtx.currentTime);
+
+            // 2. Violin Acoustic Cabinet Formant Filtering (Simulates wooden hollow resonances)
+            // Stacking multiple bandpass peak filters to enrich raw sawtooth waves
+            biquadBodyResonance = audioCtx.createBiquadFilter();
+            biquadBodyResonance.type = 'peaking';
+            biquadBodyResonance.frequency.setValueAtTime(650, audioCtx.currentTime); // Standard violin air/f-hole resonance
+            biquadBodyResonance.Q.setValueAtTime(1.5, audioCtx.currentTime);
+            biquadBodyResonance.gain.setValueAtTime(4, audioCtx.currentTime);
+
+            const highBoost = audioCtx.createBiquadFilter();
+            highBoost.type = 'highpass';
+            highBoost.frequency.setValueAtTime(200, audioCtx.currentTime); // Low-end rumble rumble roll-off
+
+            // 3. Hall Reverberation & Echo Simulation Network
+            echoDelayNode = audioCtx.createDelay(1.5);
+            echoDelayNode.delayTime.setValueAtTime(0.35, audioCtx.currentTime); // Elegant echo gap
+
+            reverbFeedbackGain = audioCtx.createGain();
+            reverbFeedbackGain.gain.setValueAtTime(spaceDepthVal * 0.7, audioCtx.currentTime); // Feedbacks back gracefully
+
+            const echoFilter = audioCtx.createBiquadFilter();
+            echoFilter.type = 'lowpass';
+            echoFilter.frequency.setValueAtTime(1200, audioCtx.currentTime); // Damped acoustics of an authentic hall
+
+            // Delay Feedback Connections
+            echoDelayNode.connect(echoFilter);
+            echoFilter.connect(reverbFeedbackGain);
+            reverbFeedbackGain.connect(echoDelayNode);
+
+            // 4. Master Volume Controller
+            masterGainNode = audioCtx.createGain();
+            masterGainNode.gain.setValueAtTime(masterVolumeVal, audioCtx.currentTime);
+
+            // 5. Connect Signal Chains
+            highBoost.connect(biquadBodyResonance);
+            biquadBodyResonance.connect(masterGainNode);
+            
+            // Connect dry and wet space delay signals
+            masterGainNode.connect(compressor);
+            masterGainNode.connect(echoDelayNode);
+            echoDelayNode.connect(compressor);
+
+            compressor.connect(audioCtx.destination);
+
+            // 6. Setup MediaRecorder for high quality audio captures
+            mediaStreamDest = audioCtx.createMediaStreamDestination();
+            compressor.connect(mediaStreamDest);
+            initMediaRecorder();
+        }
+
+        // Change Preset Tones
+        function setSynthTone(type) {
+            tonePreset = type;
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-950/80', 'text-[#dfb15b]', 'border-amber-500/40', 'bg-stone-800', 'text-stone-400', 'border-stone-700');
+                btn.classList.add('bg-stone-800', 'text-stone-400', 'border-stone-700');
+            });
+            const selectedBtn = document.getElementById('preset-' + type);
+            selectedBtn.classList.remove('bg-stone-800', 'text-stone-400', 'border-stone-700');
+            selectedBtn.classList.add('bg-amber-950/80', 'text-[#dfb15b]', 'border-amber-500/40');
+
+            if (!audioCtx) return;
+
+            // Sculpt dynamic filters based on preset style selection
+            if (type === 'acoustic') {
+                biquadBodyResonance.frequency.setValueAtTime(650, audioCtx.currentTime);
+                biquadBodyResonance.Q.setValueAtTime(1.5, audioCtx.currentTime);
+                biquadBodyResonance.gain.setValueAtTime(4, audioCtx.currentTime);
+            } else if (type === 'stradivarius') {
+                biquadBodyResonance.frequency.setValueAtTime(950, audioCtx.currentTime); // Shines brighter highs
+                biquadBodyResonance.Q.setValueAtTime(2.2, audioCtx.currentTime);
+                biquadBodyResonance.gain.setValueAtTime(6, audioCtx.currentTime);
+            } else if (type === 'electric') {
+                biquadBodyResonance.frequency.setValueAtTime(1400, audioCtx.currentTime); // Aggressive synth resonance
+                biquadBodyResonance.Q.setValueAtTime(0.8, audioCtx.currentTime);
+                biquadBodyResonance.gain.setValueAtTime(2, audioCtx.currentTime);
+            }
+        }
+
+        // Start Sound Synthesis for a single Note
+        function triggerNoteStart(voiceId, frequency, customVolumeMultiplier = 1.0) {
+            if (!audioCtx) return;
+            if (activeVoices.has(voiceId)) return;
+
+            const now = audioCtx.currentTime;
+
+            // Multiple oscillators to mimic physical multi-string / bowed hair complexity
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+
+            // Standard bowed timber uses modified sawtooths & triangle waves
+            if (tonePreset === 'electric') {
+                osc1.type = 'sawtooth';
+                osc2.type = 'sawtooth';
+                osc2.frequency.setValueAtTime(frequency * 1.002 + 0.5, now); // Subtle Detuned wave for rich chorus
+            } else {
+                osc1.type = 'sawtooth';
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(frequency * 1.5, now); // Quint / fifth octave undertone
+            }
+            
+            osc1.frequency.setValueAtTime(frequency, now);
+
+            // Smooth bow attack and envelope
+            const attackTime = tonePreset === 'electric' ? 0.04 : 0.09; // Bow acceleration time
+            const sustainVolume = tonePreset === 'electric' ? 0.35 : 0.45;
+            
+            const envelopeGain = audioCtx.createGain();
+            envelopeGain.gain.setValueAtTime(0, now);
+            envelopeGain.gain.linearRampToValueAtTime(sustainVolume * customVolumeMultiplier, now + attackTime);
+
+            // Dynamic low-pass damping filter to shave raw harmonic buzzing
+            const toneFilter = audioCtx.createBiquadFilter();
+            toneFilter.type = 'lowpass';
+            toneFilter.frequency.setValueAtTime(tonePreset === 'stradivarius' ? 2400 : 1600, now);
+            toneFilter.Q.setValueAtTime(1.0, now);
+
+            // Real-time vibrato LFO (Delayed slightly, as violinists initiate vibrato post-bow attack)
+            const vibratoLFO = audioCtx.createOscillator();
+            vibratoLFO.type = 'sine';
+            vibratoLFO.frequency.setValueAtTime(6.2, now); // Standard 6.2Hz natural vibrato rate
+
+            const vibratoGain = audioCtx.createGain();
+            // Scaling physical pitch deviations
+            vibratoGain.gain.setValueAtTime(0, now);
+            // Swells depth up after bow strike
+            vibratoGain.gain.linearRampToValueAtTime(frequency * 0.015 * vibratoDepthVal, now + 0.18); 
+
+            // Connect Vibrato LFO paths
+            vibratoLFO.connect(vibratoGain);
+            vibratoGain.connect(osc1.frequency);
+            if (tonePreset === 'electric') {
+                vibratoGain.connect(osc2.frequency);
+            }
+
+            // Master Connections for the Voice
+            osc1.connect(toneFilter);
+            osc2.connect(toneFilter);
+            
+            // Connect Voice to Violin Body Resonance node
+            toneFilter.connect(envelopeGain);
+            envelopeGain.connect(biquadBodyResonance);
+
+            // Run Node clocks
+            osc1.start(now);
+            osc2.start(now);
+            vibratoLFO.start(now);
+
+            // Map and memorize running voice
+            activeVoices.set(voiceId, {
+                osc1, osc2, vibratoLFO, vibratoGain, toneFilter, envelopeGain, frequency, baseFreq: frequency
+            });
+        }
+
+        // Release/Stop Note cleanly to avoid acoustic pop sounds
+        function triggerNoteStop(voiceId) {
+            if (!audioCtx || !activeVoices.has(voiceId)) return;
+
+            const voice = activeVoices.get(voiceId);
+            const now = audioCtx.currentTime;
+            
+            const releaseTime = tonePreset === 'electric' ? 0.25 : 0.38; // Soft decay of string release
+
+            // Fade-out envelope
+            voice.envelopeGain.gain.cancelScheduledValues(now);
+            voice.envelopeGain.gain.setValueAtTime(voice.envelopeGain.gain.value, now);
+            voice.envelopeGain.gain.exponentialRampToValueAtTime(0.001, now + releaseTime);
+
+            // Delay node destruction
+            voice.osc1.stop(now + releaseTime);
+            voice.osc2.stop(now + releaseTime);
+            voice.vibratoLFO.stop(now + releaseTime);
+
+            setTimeout(() => {
+                try {
+                    voice.osc1.disconnect();
+                    voice.osc2.disconnect();
+                    voice.vibratoLFO.disconnect();
+                    voice.vibratoGain.disconnect();
+                    voice.toneFilter.disconnect();
+                    voice.envelopeGain.disconnect();
+                } catch(err){}
+            }, (releaseTime * 1000) + 100);
+
+            activeVoices.delete(voiceId);
+        }
+
+        // Adjust frequency mid-touch for glide-to-play glissando slide movements
+        function triggerNoteFrequencySlide(voiceId, targetFreq) {
+            if (!audioCtx || !activeVoices.has(voiceId)) return;
+            const voice = activeVoices.get(voiceId);
+            const now = audioCtx.currentTime;
+
+            if (autoTuneEnabled) {
+                // Ease smoothly to prevent harsh steps
+                voice.osc1.frequency.exponentialRampToValueAtTime(targetFreq, now + 0.12);
+                voice.vibratoGain.gain.setValueAtTime(targetFreq * 0.015 * vibratoDepthVal, now);
+            } else {
+                voice.osc1.frequency.setValueAtTime(targetFreq, now);
+            }
+            voice.baseFreq = targetFreq;
+        }
+
+        // Initialize WebM/Audio recording capability
+        function initMediaRecorder() {
+            try {
+                mediaRecorder = new MediaRecorder(mediaStreamDest.stream);
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create visual trigger to download audio file
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    
+                    const date = new Date();
+                    const timestamp = `${date.getFullYear()}${(date.getMonth()+1)}${date.getDate()}_${date.getHours()}${date.getMinutes()}`;
+                    a.download = `violin_pro_recording_${timestamp}.webm`;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Clean up cache
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 200);
+                    
+                    recordedChunks = [];
+                    showHint("บันทึกเสียงเสร็จสิ้น! บันทึกไฟล์ลงอุปกรณ์เรียบร้อย");
+                };
+            } catch (err) {
+                console.error("Recording not supported on browser:", err);
+                document.getElementById('record-btn').style.display = 'none';
+            }
+        }
+
+        // Record Button Click triggers
         const recordBtn = document.getElementById('record-btn');
         const recText = document.getElementById('rec-text');
+        const recDot = document.getElementById('rec-dot');
 
         recordBtn.addEventListener('click', () => {
+            initAudioEngine();
             if (!mediaRecorder) return;
 
             if (!isRecording) {
-                // Start Recording
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
+                // Starts session
                 recordedChunks = [];
                 mediaRecorder.start();
                 isRecording = true;
-                
-                // UI Update
-                recordBtn.classList.add('recording');
-                recText.textContent = "หยุดและบันทึก";
+                recordBtn.classList.add('border-red-500', 'bg-red-950/40');
+                recText.textContent = "หยุดบันทึก";
+                recText.classList.add('text-red-400');
+                recDot.classList.add('animate-ping');
+                showHint("🔴 ระบบกำลังบันทึกเสียงที่คุณเล่นเป็นไฟล์เพลง...");
             } else {
-                // Stop Recording
+                // Stops session
                 mediaRecorder.stop();
                 isRecording = false;
-                
-                // UI Update
-                recordBtn.classList.remove('recording');
+                recordBtn.classList.remove('border-red-500', 'bg-red-950/40');
                 recText.textContent = "บันทึกเสียง";
+                recText.classList.remove('text-red-400');
+                recDot.classList.remove('animate-ping');
             }
         });
 
-        function playNote(frequency, id) {
-            if (!audioCtx) return;
-            if (activeNotes.has(id)) return;
-
-            const t = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(frequency, t);
-
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(2200, t);
-            filter.Q.value = 1;
-
-            const lfo = audioCtx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.value = 6; 
-            const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = frequency * 0.01; 
-            lfo.connect(lfoGain);
-            lfoGain.connect(osc.frequency);
-            lfo.start(t);
-
-            const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(0.4, t + 0.05); 
+        // Responsive viewport adapter for Canvas Overlay resolution
+        function resizeCanvas() {
+            const violinNeck = document.getElementById('violin-neck');
+            scrollerCanvas.width = violinNeck.clientWidth;
+            scrollerCanvas.height = violinNeck.clientHeight;
             
-            osc.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(mainCompressor); // Goes to both speakers and recorder
-
-            osc.start(t);
-            activeNotes.set(id, { osc, gainNode, lfo, lfoGain, filter });
+            // Re-map lanes coordinates layout
+            recalculateCoordinates();
         }
 
-        function stopNote(id) {
-            if (!audioCtx || !activeNotes.has(id)) return;
-            const nodes = activeNotes.get(id);
-            const t = audioCtx.currentTime;
+        // Cache note positions and lane grids for render math
+        function recalculateCoordinates() {
+            laneRects = [];
+            zoneMap = {};
 
-            const releaseTime = 0.4;
-            nodes.gainNode.gain.cancelScheduledValues(t);
-            nodes.gainNode.gain.setValueAtTime(nodes.gainNode.gain.value, t);
-            nodes.gainNode.gain.exponentialRampToValueAtTime(0.001, t + releaseTime);
+            const neck = document.getElementById('violin-neck');
+            const neckLeft = neck.getBoundingClientRect().left;
+            const neckWidth = neck.clientWidth;
+            const neckHeight = neck.clientHeight;
 
-            nodes.osc.stop(t + releaseTime);
-            nodes.lfo.stop(t + releaseTime);
+            const lanes = document.querySelectorAll('.string-lane');
+            lanes.forEach((lane, sIdx) => {
+                const rect = lane.getBoundingClientRect();
+                const relativeX = rect.left - neckLeft;
+                
+                laneRects.push({
+                    idx: sIdx,
+                    left: relativeX,
+                    width: rect.width,
+                    centerX: relativeX + (rect.width / 2)
+                });
 
-            setTimeout(() => {
-                nodes.osc.disconnect();
-                nodes.lfo.disconnect();
-                nodes.lfoGain.disconnect();
-                nodes.filter.disconnect();
-                nodes.gainNode.disconnect();
-            }, (releaseTime * 1000) + 100);
-
-            activeNotes.delete(id);
+                // Map specific notes heights
+                const zones = lane.querySelectorAll('.note-zone');
+                zones.forEach((zone, zIdx) => {
+                    const zRect = zone.getBoundingClientRect();
+                    const noteName = zone.getAttribute('data-note');
+                    
+                    zoneMap[noteName] = {
+                        top: zRect.top - neck.getBoundingClientRect().top,
+                        bottom: zRect.bottom - neck.getBoundingClientRect().top,
+                        height: zRect.height,
+                        centerY: (zRect.top + zRect.height/2) - neck.getBoundingClientRect().top
+                    };
+                });
+            });
         }
 
-        const noteZones = document.querySelectorAll('.note-zone');
+        // Helper: Output text overlay on action bars
+        function showHint(text) {
+            document.getElementById('hint-text').innerHTML = text;
+        }
 
-        function updateVisuals(element, isActive) {
-            const stringLane = element.closest('.string-lane');
-            if (isActive) {
-                element.classList.add('active');
-                stringLane.classList.add('vibrating');
+        // Initialize active landing overlay
+        document.getElementById('start-btn').addEventListener('click', () => {
+            initAudioEngine();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            document.getElementById('start-overlay').style.display = 'none';
+            resizeCanvas();
+            showHint("แตะสายไวโอลินตามโน้ตสีส้มที่ลอยลงมาให้ตรงจังหวะ!");
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            setTimeout(resizeCanvas, 500); // Late delay initialization to ensure bounds loads properly
+        });
+
+        // Play selected Demo Song
+        const songSelect = document.getElementById('song-select');
+        const playSongBtn = document.getElementById('play-song-btn');
+
+        songSelect.addEventListener('change', () => {
+            stopCurrentSong();
+            const songName = songSelect.value;
+            if (songName !== 'none') {
+                prepareSong(songName);
+                playSongBtn.textContent = "▶️ เล่นเพลง";
             } else {
-                element.classList.remove('active');
-                const activeSiblings = stringLane.querySelectorAll('.note-zone.active');
-                if (activeSiblings.length === 0) {
-                    stringLane.classList.remove('vibrating');
+                playSongBtn.textContent = "▶️ เล่นสาธิต";
+            }
+        });
+
+        playSongBtn.addEventListener('click', () => {
+            initAudioEngine();
+            if (songSelect.value === 'none') {
+                showHint("⚠️ กรุณาเลือกบทเรียนเพลงในรายการก่อนเล่นสาธิต!");
+                return;
+            }
+
+            if (demoPlaying) {
+                stopCurrentSong();
+            } else {
+                startDemoPlayback();
+            }
+        });
+
+        function stopCurrentSong() {
+            demoPlaying = false;
+            if (songTimer) {
+                clearTimeout(songTimer);
+                songTimer = null;
+            }
+            // Stop all playing note voices
+            activeVoices.forEach((v, id) => {
+                if (typeof id === 'string' && id.startsWith('demo-')) {
+                    triggerNoteStop(id);
+                }
+            });
+            
+            // Clean active visual highlights
+            document.querySelectorAll('.note-zone').forEach(z => {
+                z.classList.remove('glow-note-gold', 'bg-gradient-to-r', 'from-amber-600/30', 'to-amber-500/20');
+                z.querySelector('span').classList.remove('text-[#dfb15b]', 'text-shadow-gold');
+            });
+            document.querySelectorAll('.string-wire').forEach(w => w.classList.remove('vibrate-string'));
+
+            playSongBtn.textContent = "▶️ เล่นเพลง";
+            playSongBtn.classList.remove('bg-red-500', 'text-white');
+            playSongBtn.classList.add('bg-[#dfb15b]', 'text-stone-950');
+            songStartTime = null;
+        }
+
+        // Setup notes timeline arrays for render loops
+        function prepareSong(songKey) {
+            const songData = songs[songKey];
+            if (!songData) return;
+
+            songNotesList = songData.map(note => {
+                return {
+                    ...note,
+                    y: -100, // Starts off-screen
+                    isHit: false,
+                    isFinished: false
+                };
+            });
+
+            songStartTime = null;
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            renderScrollerLoop();
+        }
+
+        // Audio autoplay engine for demo lessons
+        function startDemoPlayback() {
+            stopCurrentSong();
+            demoPlaying = true;
+            playSongBtn.textContent = "⏹️ หยุดเล่น";
+            playSongBtn.classList.remove('bg-[#dfb15b]', 'text-stone-950');
+            playSongBtn.classList.add('bg-red-500', 'text-white');
+
+            const songKey = songSelect.value;
+            const songData = songs[songKey];
+            prepareSong(songKey);
+
+            songStartTime = Date.now();
+            showHint("🎧 กำลังเล่นสาธิตอัตโนมัติ... แตะนิ้วตามโน้ตส้มเพื่อหัดซ้อมไปด้วยได้!");
+
+            // Schedule triggers for Web Audio synthesis
+            songData.forEach((note, index) => {
+                // Schedule start
+                const playTimer = setTimeout(() => {
+                    if (!demoPlaying) return;
+                    
+                    const freq = noteFreqs[note.noteName];
+                    const voiceId = `demo-${index}-${note.noteName}`;
+                    
+                    triggerNoteStart(voiceId, freq, 1.0);
+                    
+                    // Visual active triggers on targets
+                    highlightZone(note.noteName, note.stringIdx, true);
+
+                    // Schedule voice off
+                    setTimeout(() => {
+                        triggerNoteStop(voiceId);
+                        highlightZone(note.noteName, note.stringIdx, false);
+                    }, note.duration);
+
+                }, note.delay);
+
+                // Safe monitor storage to kill on aborts
+                songTimer = playTimer;
+            });
+
+            // Song finish monitor
+            const totalDuration = songData[songData.length - 1].delay + songData[songData.length - 1].duration + 1000;
+            setTimeout(() => {
+                if (demoPlaying) {
+                    stopCurrentSong();
+                    showHint("🎉 จบการเล่นเพลงสาธิตแล้ว! ลองเริ่มซ้อมด้วยตนเองได้เลย");
+                }
+            }, totalDuration);
+        }
+
+        // Highlight/Animate Target keys matching notes
+        function highlightZone(noteName, stringIdx, activate) {
+            const element = document.querySelector(`.note-zone[data-note="${noteName}"][data-string-idx="${stringIdx}"]`);
+            if (!element) return;
+
+            const lane = element.closest('.string-lane');
+            const stringWire = lane.querySelector('.string-wire');
+
+            if (activate) {
+                element.classList.add('glow-note-gold', 'bg-gradient-to-r', 'from-amber-600/30', 'to-amber-500/20');
+                element.querySelector('span').classList.add('text-[#dfb15b]', 'text-shadow-gold');
+                stringWire.classList.add('vibrate-string');
+            } else {
+                element.classList.remove('glow-note-gold', 'bg-gradient-to-r', 'from-amber-600/30', 'to-amber-500/20');
+                element.querySelector('span').classList.remove('text-[#dfb15b]', 'text-shadow-gold');
+                
+                // Keep vibrating wire only if other notes are active on lane
+                const activeSibs = lane.querySelectorAll('.glow-note-gold');
+                if (activeSibs.length === 0) {
+                    stringWire.classList.remove('vibrate-string');
                 }
             }
         }
 
+        // Main Canvas loop: draws falling notes like Synthesia
+        function renderScrollerLoop() {
+            if (!songSelect.value || songSelect.value === 'none') {
+                ctx.clearRect(0, 0, scrollerCanvas.width, scrollerCanvas.height);
+                return;
+            }
+
+            ctx.clearRect(0, 0, scrollerCanvas.width, scrollerCanvas.height);
+            
+            // Recalculate dimensions in case viewport shifted
+            if (laneRects.length === 0) recalculateCoordinates();
+
+            const currentTime = songStartTime ? (Date.now() - songStartTime) : 0;
+            const scrollSpeed = 0.25; // Pixels per millisecond
+            const hitLineY = scrollerCanvas.height - 35; // Position target just above the absolute bridge tailpiece
+
+            // Draw hit guidelines crossing strings
+            ctx.strokeStyle = 'rgba(223, 177, 91, 0.25)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, hitLineY);
+            ctx.lineTo(scrollerCanvas.width, hitLineY);
+            ctx.stroke();
+
+            // Render scrolling note blocks
+            songNotesList.forEach(note => {
+                const lane = laneRects[note.stringIdx];
+                const targetZone = zoneMap[note.noteName];
+
+                if (!lane || !targetZone) return;
+
+                // Mathematics for note highway trajectories
+                // Top boundary defines falling origins
+                const noteHeight = note.duration * scrollSpeed;
+                
+                // Calculated position over time delta
+                let noteY = 0;
+                if (demoPlaying) {
+                    // Sinks note directly to target zones synchronized to sound
+                    const targetCenter = targetZone.centerY;
+                    const timeDelta = note.delay - currentTime;
+                    noteY = targetCenter - (timeDelta * scrollSpeed);
+                } else {
+                    // Practice / Normal playback: scrolls based on a custom interval loop
+                    // If not running demo, notes scroll relative to manual start ticks
+                    noteY = (currentTime - note.delay) * scrollSpeed;
+                }
+
+                // Render note block styling
+                if (noteY + noteHeight > 0 && noteY < scrollerCanvas.height) {
+                    
+                    // Gradient neon color configurations
+                    const grad = ctx.createLinearGradient(lane.left, noteY, lane.left + lane.width, noteY + noteHeight);
+                    grad.addColorStop(0, '#f59e0b'); // Amber orange
+                    grad.addColorStop(1, '#dfb15b'); // Metallic gold
+
+                    ctx.fillStyle = grad;
+                    ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+                    ctx.shadowBlur = 10;
+
+                    // Draw rounded capsules representing strings duration
+                    const cornerRad = 8;
+                    const blockWidth = lane.width * 0.75;
+                    const blockX = lane.centerX - (blockWidth / 2);
+
+                    ctx.beginPath();
+                    ctx.roundRect(blockX, noteY, blockWidth, noteHeight, cornerRad);
+                    ctx.fill();
+                    
+                    // Note label overlay
+                    ctx.shadowBlur = 0; // Clear blur layer
+                    ctx.fillStyle = '#0a0503';
+                    ctx.font = 'bold 9px Sarabun, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(note.noteName, lane.centerX, noteY + (noteHeight / 2) + 3);
+                }
+            });
+
+            animFrameId = requestAnimationFrame(renderScrollerLoop);
+        }
+
+        // Responsive touch inputs & mouse gestures controller
+        // Supports full multi-touch glides and glissandos slide effects
+        const activeTouchPointers = new Map(); // Maps fingers IDs to target notes
         let isMouseDown = false;
 
-        noteZones.forEach(zone => {
-            const note = zone.dataset.note;
-            const freq = noteFreqs[note];
+        function getTouchNoteElement(y, stringLane) {
+            // Evaluates precise note zone within vertical bounds coordinate
+            const zones = stringLane.querySelectorAll('.note-zone');
+            const relativeY = y - stringLane.getBoundingClientRect().top;
+            const laneHeight = stringLane.clientHeight;
+            const segmentIdx = Math.floor((relativeY / laneHeight) * zones.length);
+            
+            if (segmentIdx >= 0 && segmentIdx < zones.length) {
+                return zones[segmentIdx];
+            }
+            return null;
+        }
 
-            zone.addEventListener('mousedown', (e) => {
-                isMouseDown = true;
-                handleInputStart('mouse', zone, freq);
-            });
-            zone.addEventListener('mouseenter', (e) => {
-                if(isMouseDown) handleInputStart('mouse', zone, freq);
-            });
-            zone.addEventListener('mouseleave', (e) => {
-                if(isMouseDown) handleInputEnd('mouse', zone);
-            });
-            zone.addEventListener('mouseup', (e) => {
-                isMouseDown = false;
-                handleInputEnd('mouse', zone);
-            });
+        // Handle Touch Actions
+        const stage = document.getElementById('violin-stage');
 
-            zone.addEventListener('touchstart', (e) => {
-                e.preventDefault(); 
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const t = e.changedTouches[i];
-                    handleInputStart('touch-' + t.identifier, zone, freq);
+        // Prevent natural gestures like page pinch/zooms
+        stage.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            initAudioEngine();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (!targetElement) continue;
+
+                const stringLane = targetElement.closest('.string-lane');
+                if (stringLane) {
+                    const stringIdx = stringLane.getAttribute('data-idx');
+                    const noteZone = getTouchNoteElement(touch.clientY, stringLane);
+                    
+                    if (noteZone) {
+                        const noteName = noteZone.getAttribute('data-note');
+                        const voiceId = `touch-${touch.identifier}`;
+                        
+                        // Fire sound synthesizers
+                        triggerNoteStart(voiceId, noteFreqs[noteName]);
+                        highlightZone(noteName, stringIdx, true);
+
+                        activeTouchPointers.set(touch.identifier, {
+                            stringLane,
+                            currentZone: noteZone,
+                            noteName: noteName,
+                            voiceId: voiceId,
+                            startX: touch.clientX,
+                            startY: touch.clientY,
+                            stringIdx: stringIdx
+                        });
+                    }
                 }
-            }, {passive: false});
+            }
+        }, { passive: false });
 
-            zone.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const t = e.changedTouches[i];
-                    handleInputEnd('touch-' + t.identifier, zone);
+        stage.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const session = activeTouchPointers.get(touch.identifier);
+                if (!session) continue;
+
+                // 1. Sliding movement across strings: updates Note Glissando Slide
+                const currentZone = getTouchNoteElement(touch.clientY, session.stringLane);
+                if (currentZone && currentZone !== session.currentZone) {
+                    // Turn off old note highlight
+                    highlightZone(session.noteName, session.stringIdx, false);
+                    
+                    const newNoteName = currentZone.getAttribute('data-note');
+                    session.noteName = newNoteName;
+                    session.currentZone = currentZone;
+
+                    // Glide synthesizer target frequency smoothly
+                    triggerNoteFrequencySlide(session.voiceId, noteFreqs[newNoteName]);
+                    highlightZone(newNoteName, session.stringIdx, true);
                 }
-            }, {passive: false});
 
-            zone.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const t = e.changedTouches[i];
-                    handleInputEnd('touch-' + t.identifier, zone);
+                // 2. Micro-Horizontal movement: modulates pitch depth to simulate Touch Vibrato!
+                const deltaX = touch.clientX - session.startX;
+                const activeVoice = activeVoices.get(session.voiceId);
+                if (activeVoice) {
+                    const pitchOffset = (deltaX / 100) * (activeVoice.baseFreq * 0.05); // Up to 5% pitch shift
+                    const targetFreq = activeVoice.baseFreq + pitchOffset;
+                    activeVoice.osc1.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
                 }
-            }, {passive: false});
-        });
+            }
+        }, { passive: false });
 
-        document.addEventListener('mouseup', () => {
-            if(isMouseDown) {
-                isMouseDown = false;
-                stopNote('mouse');
-                document.querySelectorAll('.note-zone.active').forEach(z => {
-                     z.classList.remove('active');
-                     z.closest('.string-lane').classList.remove('vibrating');
-                });
+        stage.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const session = activeTouchPointers.get(touch.identifier);
+                if (session) {
+                    triggerNoteStop(session.voiceId);
+                    highlightZone(session.noteName, session.stringIdx, false);
+                    activeTouchPointers.delete(touch.identifier);
+                }
+            }
+        }, { passive: false });
+
+        stage.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const session = activeTouchPointers.get(touch.identifier);
+                if (session) {
+                    triggerNoteStop(session.voiceId);
+                    highlightZone(session.noteName, session.stringIdx, false);
+                    activeTouchPointers.delete(touch.identifier);
+                }
+            }
+        }, { passive: false });
+
+
+        // Supporting mouse playbacks for desktop testing interfaces
+        const mouseSessions = new Map();
+
+        stage.addEventListener('mousedown', (e) => {
+            initAudioEngine();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            isMouseDown = true;
+
+            const stringLane = e.target.closest('.string-lane');
+            if (stringLane) {
+                const stringIdx = stringLane.getAttribute('data-idx');
+                const noteZone = getTouchNoteElement(e.clientY, stringLane);
+                if (noteZone) {
+                    const noteName = noteZone.getAttribute('data-note');
+                    const voiceId = 'mouse-click';
+                    
+                    triggerNoteStart(voiceId, noteFreqs[noteName]);
+                    highlightZone(noteName, stringIdx, true);
+
+                    mouseSessions.set('mouse', {
+                        stringLane,
+                        currentZone: noteZone,
+                        noteName: noteName,
+                        voiceId: voiceId,
+                        startX: e.clientX,
+                        stringIdx: stringIdx
+                    });
+                }
             }
         });
 
-        function handleInputStart(id, element, freq) {
-            updateVisuals(element, true);
-            playNote(freq, id);
-        }
+        stage.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            const session = mouseSessions.get('mouse');
+            if (!session) return;
 
-        function handleInputEnd(id, element) {
-            updateVisuals(element, false);
-            stopNote(id);
-        }
+            // Glide Note updates
+            const currentZone = getTouchNoteElement(e.clientY, session.stringLane);
+            if (currentZone && currentZone !== session.currentZone) {
+                highlightZone(session.noteName, session.stringIdx, false);
+                
+                const newNoteName = currentZone.getAttribute('data-note');
+                session.noteName = newNoteName;
+                session.currentZone = currentZone;
 
+                triggerNoteFrequencySlide(session.voiceId, noteFreqs[newNoteName]);
+                highlightZone(newNoteName, session.stringIdx, true);
+            }
+
+            // Mouse vibrato calculations
+            const deltaX = e.clientX - session.startX;
+            const activeVoice = activeVoices.get(session.voiceId);
+            if (activeVoice) {
+                const pitchOffset = (deltaX / 80) * (activeVoice.baseFreq * 0.04);
+                activeVoice.osc1.frequency.setValueAtTime(activeVoice.baseFreq + pitchOffset, audioCtx.currentTime);
+            }
+        });
+
+        const handleMouseRelease = () => {
+            if (isMouseDown) {
+                isMouseDown = false;
+                const session = mouseSessions.get('mouse');
+                if (session) {
+                    triggerNoteStop(session.voiceId);
+                    highlightZone(session.noteName, session.stringIdx, false);
+                    mouseSessions.delete('mouse');
+                }
+            }
+        };
+
+        window.addEventListener('mouseup', handleMouseRelease);
+
+        // Prevent context click behaviors from interrupting playing triggers
         document.addEventListener('contextmenu', e => e.preventDefault());
 
     </script>
