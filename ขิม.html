@@ -44,15 +44,11 @@
         }
 
         ::-webkit-scrollbar { width: 0px; height: 0px; }
-        
-        /* Drawer transitions */
-        .drawer-open { transform: translateX(0%); }
-        .drawer-closed { transform: translateX(100%); }
     </style>
 </head>
 <body class="flex flex-col text-stone-200 w-full relative">
 
-    <!-- Header Controls: ดีไซน์ให้บางกะทัดรัดสำหรับจอแนวตั้ง -->
+    <!-- Header Controls: ดีไซน์ให้บางกะทัดรัดสำหรับจอแนวตั้งบนมือถือ -->
     <header class="flex-none w-full bg-stone-900/95 p-2 md:p-3 shadow-lg z-30 flex items-center justify-between gap-1.5 border-b border-stone-800 relative">
         <div class="flex items-center gap-1">
             <i class="ph-fill ph-music-notes text-amber-500 text-lg md:text-xl"></i>
@@ -111,11 +107,11 @@
         </div>
     </div>
 
-    <!-- Settings & Archive Drawer (แผงตั้งค่าเสียงที่เก็บถาวรด้วย Local Storage และคลังอัดเสียงใน IndexedDB) -->
-    <aside id="settings-drawer" class="fixed inset-y-0 right-0 w-80 bg-stone-900 border-l border-stone-800 z-40 transform drawer-closed transition-transform duration-300 shadow-2xl flex flex-col pt-16">
+    <!-- Settings & Archive Drawer: แผงปรับจูนระบบเสียงแบบสไลด์เข้าออกจากขอบขวา ตั้งค่า z-index ระดับ 50 เพื่อป้องกันการซ้อนทับ -->
+    <aside id="settings-drawer" class="fixed inset-y-0 right-0 w-80 bg-stone-900 border-l border-stone-800 z-50 transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col pt-16">
         <div class="flex items-center justify-between p-4 border-b border-stone-800">
             <h2 class="font-bold text-amber-500 flex items-center gap-2"><i class="ph-bold ph-sliders"></i> แผงปรับจูนเครื่อง & คลังผลงาน</h2>
-            <button onclick="toggleSettingsPanel()" class="text-stone-400 hover:text-white p-1 rounded bg-stone-800">
+            <button onclick="toggleSettingsPanel()" class="text-stone-400 hover:text-white p-1 rounded bg-stone-800 hover:bg-stone-700 transition-colors">
                 <i class="ph-bold ph-x"></i>
             </button>
         </div>
@@ -211,7 +207,8 @@
         </div>
     </aside>
 
-    <div id="drawer-overlay" onclick="toggleSettingsPanel()" class="fixed inset-0 bg-black/70 z-30 hidden backdrop-blur-xs transition-opacity"></div>
+    <!-- Overlay สำหรับสไลด์ปิดแผงการตั้งค่า (z-index ระดับ 40) -->
+    <div id="drawer-overlay" onclick="toggleSettingsPanel()" class="fixed inset-0 bg-black/70 z-40 hidden backdrop-blur-xs transition-opacity duration-300"></div>
 
     <!-- Main Instrument Area (บอร์ดขิมแบบ 3 คอลัมน์แนวตั้ง ทัชสะดวกด้วยสองนิ้วหัวแม่มือ) -->
     <main class="flex-1 w-full p-2 md:p-6 flex items-center justify-center relative bg-gradient-to-b from-stone-950 to-black overflow-hidden z-10">
@@ -351,8 +348,9 @@
                     this.setupReverb();
                 }
                 if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
+                    return this.ctx.resume();
                 }
+                return Promise.resolve();
             }
 
             // สร้างมิติเสียงสะท้อนจากบอดี้กล่องไม้ขิมจริง
@@ -722,19 +720,20 @@
             }
         }
 
+        // ปรับปรุงลอจิกการเปิดปิด Drawer ด้วยความเข้ากันได้คลาสของ Tailwind (แก้ปัญหากดปิดไม่ได้)
         function toggleSettingsPanel() {
             const drawer = document.getElementById('settings-drawer');
             const overlay = document.getElementById('drawer-overlay');
             
-            if (drawer.classList.contains('drawer-closed')) {
-                drawer.classList.remove('drawer-closed');
-                drawer.classList.add('drawer-open');
+            if (drawer.classList.contains('translate-x-full')) {
+                drawer.classList.remove('translate-x-full');
+                drawer.classList.add('translate-x-0');
                 overlay.classList.remove('hidden');
                 // โหลดและรีเฟรชรายการไฟล์อัดใหม่เสมอที่เปิดแถบนี้
                 updateRecordingsListUI();
             } else {
-                drawer.classList.remove('drawer-open');
-                drawer.classList.add('drawer-closed');
+                drawer.classList.remove('translate-x-0');
+                drawer.classList.add('translate-x-full');
                 overlay.classList.add('hidden');
             }
         }
@@ -778,8 +777,13 @@
             }
         }
 
-        // บันทึกเสียงแบบเรียลไทม์
+        // ปรับปรุงระบบบันทึกเสียงสด และจำลองสเกลแบบ Async ป้องกันปัญหาระบบหลับ (แก้ปัญหาอัดไม่ได้)
         async function toggleRecording() {
+            if (typeof MediaRecorder === 'undefined') {
+                alert("อุปกรณ์หรือเว็บเบราว์เซอร์นี้ไม่สนับสนุนฟังก์ชันการจำลองบันทึกเสียงขิมได้");
+                return;
+            }
+
             const btn = document.getElementById('btn-record');
             const btnText = document.getElementById('text-record');
             const btnIcon = btn.querySelector('i');
@@ -792,12 +796,15 @@
                 btnText.textContent = "อัดเสียง";
                 
                 const recData = await engine.stopRecording();
-                if (recData && recData.blob) {
+                if (recData && recData.blob && recData.blob.size > 0) {
                     currentRecordBlob = recData.blob;
                     openSaveModal();
+                } else {
+                    alert("การอัดเสียงเสร็จสิ้นแต่ไม่มีสตรีมข้อมูลเสียงถูกส่งมา กรุณาลองแตะเคาะขิมระหว่างอัดอีกครั้ง");
                 }
             } else {
-                engine.init();
+                // ประกันความสมบูรณ์ในการปลุก Audio Context ก่อนรับสัญญาณ
+                await engine.init();
                 isRecording = true;
                 engine.startRecording();
                 
@@ -823,6 +830,9 @@
             const name = document.getElementById('input-record-name').value.trim();
             if (currentRecordBlob) {
                 try {
+                    if (!khimDb.db) {
+                        await khimDb.init();
+                    }
                     await khimDb.saveRecording(name, currentRecordBlob);
                     closeSaveModal();
                     updateRecordingsListUI();
@@ -898,7 +908,7 @@
                 player.play();
                 
                 const statusEl = document.getElementById('save-status');
-                statusEl.innerText = ` sedangเล่น: ${target.name}`;
+                statusEl.innerText = ` กำลังเล่น: ${target.name}`;
                 statusEl.classList.remove('hidden');
                 setTimeout(() => statusEl.classList.add('hidden'), 3000);
             }
