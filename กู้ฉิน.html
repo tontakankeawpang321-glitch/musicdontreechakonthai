@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>กู้ฉินเสมือนจริง (Realistic Virtual Guqin)</title>
+    <title>กู้ฉินเสมือนจริง (Realistic Virtual Guqin with Custom Composer)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;600;900&display=swap" rel="stylesheet">
     <style>
@@ -42,7 +42,7 @@
             background: linear-gradient(180deg, #120300 0%, #000000 100%);
             border-bottom: 2px solid rgba(223, 177, 91, 0.4);
         }
-        /* แถบตัวโน้ตไหล */
+        /* ซ่อน Scrollbar ของการเลื่อนโน้ต */
         .score-scroll-container::-webkit-scrollbar {
             display: none;
         }
@@ -79,17 +79,18 @@
 
     <!-- หน้าจอต้อนรับและเริ่มโหลดเสียงเพื่อความสมจริง -->
     <div id="start-overlay" class="fixed inset-0 bg-stone-950 z-50 flex flex-col justify-center items-center text-center p-6 backdrop-blur-md transition-all duration-700">
-        <div class="max-w-md space-y-8">
+        <div class="max-w-md space-y-6">
             <div class="space-y-2">
                 <span class="text-xs tracking-widest text-[#dfb15b] uppercase font-semibold">เครื่องดนตรีโบราณเสมือนจริง</span>
                 <h1 class="text-5xl font-extrabold text-[#dfb15b] tracking-wider font-serif">古琴</h1>
                 <h2 class="text-lg text-stone-300 font-light tracking-widest">REALISTIC VIRTUAL GUQIN</h2>
             </div>
             
-            <div class="p-6 bg-stone-900/60 rounded-2xl border border-stone-800/80 text-stone-300 space-y-4 text-sm leading-relaxed text-left">
-                <p class="text-center font-bold text-amber-400">🔊 ปรับปรุงพลังเสียงลำโพงมือถือใหม่แล้ว!</p>
-                <p>🎸 <strong class="text-[#dfb15b]">ระบบขับเสียงแบบไฮบริด (Hybrid Modeling):</strong> ช่วยให้ขับเสียงโทนกู่ฉินโบราณออกลำโพงมือถือขนาดเล็กได้พุ่งกังวานและคมชัดเป็นพิเศษ</p>
-                <p>📢 <strong class="text-[#dfb15b]">สำหรับผู้ใช้ iPhone/iPad:</strong> โปรดตรวจสอบว่าได้ <span class="underline text-amber-300 font-bold">เลื่อนสวิตช์ปิดเสียงด้านข้างเครื่องออก (เปิดเสียงสั่น/มีเสียง)</span> และเร่งระดับเสียงสื่อมีเดียให้เต็มร้อย</p>
+            <div class="p-5 bg-stone-900/80 rounded-2xl border border-stone-800 text-stone-300 space-y-3 text-sm leading-relaxed text-left">
+                <p class="text-center font-bold text-amber-400">⚡ เวอร์ชันอัปเกรด: คอนโพสเซอร์ & อัดเสียง ⚡</p>
+                <p>🎵 <strong class="text-[#dfb15b]">แต่งเพลงเองได้:</strong> แตะบันทึกเสียงสดขณะบรรเลง หรือเพิ่มชุดตัวโน้ตโบราณได้ทีละชิ้น!</p>
+                <p>💾 <strong class="text-[#dfb15b]">ระบบจัดเก็บแบบคลาวด์:</strong> เซฟชื่อเพลงและดึงกลับมาบรรเลงเมื่อไหร่ก็ได้</p>
+                <p>🎙️ <strong class="text-[#dfb15b]">บันทึกเสียง WebM:</strong> อัดไฟล์เสียงจริงและดาวน์โหลดเก็บลงอุปกรณ์ของคุณได้ทันที</p>
             </div>
 
             <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-600 text-stone-950 font-bold text-lg rounded-full transition-all duration-300 transform active:scale-95 shadow-[0_0_25px_rgba(223,177,91,0.3)] border border-[#dfb15b]">
@@ -106,63 +107,167 @@
         </div>
         
         <div class="flex items-center gap-2">
-            <!-- เลือกเพลงจากรายการ -->
-            <select id="song-select" class="bg-stone-900 border border-stone-700 text-stone-200 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-[#dfb15b]">
-                <option value="canghai">滄海一聲笑 (เพลงสุราเย้ยยุทธจักร)</option>
-                <option value="molihua">茉莉花 (ดอกมะลิโบราณ)</option>
-                <option value="guangling">广陵散 (บทนำกวางหลิงซาน)</option>
-            </select>
-
+            <!-- เมนูหลักในการสลับโหมด -->
+            <button id="btn-tab-play" class="px-2.5 py-1.5 bg-amber-600/20 text-[#dfb15b] border border-amber-600/40 text-xs rounded-lg font-bold">
+                🎼 โหมดเล่น/ฟัง
+            </button>
+            <button id="btn-tab-compose" class="px-2.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs rounded-lg">
+                ✍️ สร้างเพลงใหม่
+            </button>
             <button id="toggle-help" class="p-2 bg-stone-900 border border-stone-800 rounded-lg text-xs hover:bg-stone-800">
                 ℹ️
             </button>
         </div>
     </header>
 
-    <!-- แท่นระบบควบคุมเพลงและแถบเล่นโน้ตโบราณแบบไหล (Scrolling Score Panel) -->
+    <!-- แผงความคุมเพลง และ แถบอัดเสียงจริง -->
     <section class="bg-[#1c120d] border-b border-stone-800 p-3 flex flex-col gap-2 z-20 shadow-md">
-        <!-- บาร์ควบคุมการเล่นอัตโนมัติ -->
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
+        <!-- บาร์ควบคุมการเล่นอัตโนมัติ และอัดเสียงจริง -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
                 <button id="btn-play-auto" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#dfb15b] hover:bg-amber-400 text-stone-950 font-bold text-xs rounded-full transition-all transform active:scale-95">
                     <span id="play-icon">▶</span> <span id="play-text">เล่นอัตโนมัติ</span>
                 </button>
                 <button id="btn-stop-auto" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs rounded-full disabled:opacity-40 transition-all" disabled>
-                    Stop
+                    หยุด
+                </button>
+            </div>
+
+            <!-- กล่องควบคุมการบันทึกเสียงเครื่องกู่ฉิน -->
+            <div class="flex items-center gap-2 bg-stone-950/80 px-2.5 py-1 rounded-full border border-stone-800">
+                <button id="btn-rec-audio" class="flex items-center gap-1 text-[11px] text-red-400 font-bold hover:text-red-300 transition-all">
+                    <span id="rec-dot" class="inline-block w-2.5 h-2.5 bg-red-500 rounded-full"></span> 
+                    <span id="rec-audio-text">เริ่มอัดเสียงเล่น</span>
+                </button>
+                <button id="btn-dl-audio" class="hidden text-[11px] bg-amber-600 text-stone-950 font-bold px-2 py-0.5 rounded-full hover:bg-amber-500 transition-all">
+                    📥 ดาวน์โหลดไฟล์เสียง (.webm)
                 </button>
             </div>
             
-            <div class="flex items-center gap-3 text-xs text-stone-400">
-                <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-2 text-xs text-stone-400">
+                <div class="flex items-center gap-1">
                     <span class="text-stone-500">ความเร็ว:</span>
-                    <select id="tempo-select" class="bg-stone-900 border border-stone-700 text-stone-200 px-1.5 py-0.5 rounded">
-                        <option value="0.75">ช้ามาก</option>
+                    <select id="tempo-select" class="bg-stone-900 border border-stone-700 text-stone-200 px-1 py-0.5 rounded text-[11px]">
+                        <option value="0.75">ช้า</option>
                         <option value="1.0" selected>ปกติ</option>
-                        <option value="1.25">เร็วขึ้น</option>
+                        <option value="1.25">เร็ว</option>
                         <option value="1.5">เร็วมาก</option>
                     </select>
                 </div>
-                <div id="playback-timer" class="font-mono text-[11px] text-[#dfb15b]">00:00</div>
+                <div id="playback-timer" class="font-mono text-[11px] text-[#dfb15b]">โน้ต: 0/0</div>
             </div>
         </div>
 
-        <!-- หน้าต่างแผ่นโน้ตเลื่อน (Horizontal Scrolling Sheet Music) -->
-        <div class="relative w-full h-20 bg-stone-950/80 rounded-xl border border-stone-800/80 overflow-hidden flex items-center">
-            <!-- เส้นแนวกึ่งกลางบอกจุดดีดปัจจุบัน -->
-            <div class="absolute left-1/2 top-0 bottom-0 w-[2px] bg-amber-500/70 z-10 shadow-[0_0_8px_rgba(245,158,11,0.8)] flex flex-col justify-between items-center">
-                <span class="text-[8px] bg-amber-500 text-stone-950 px-1 rounded-b font-bold">PLAYHEAD</span>
-                <span class="text-[8px] bg-amber-500 text-stone-950 px-1 rounded-t font-bold">▲</span>
+        <!-- แถบเลือกเพลง และ หน้าต่างเลื่อนโน้ต -->
+        <div id="play-mode-panel" class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-stone-400 font-medium">เลือกเพลงบรรเลง:</span>
+                <select id="song-select" class="bg-stone-900 border border-stone-700 text-stone-200 text-xs px-2 py-1 rounded-lg focus:outline-none focus:border-[#dfb15b] max-w-xs">
+                    <option value="canghai">滄海一聲笑 (เพลงสุราเย้ยยุทธจักร)</option>
+                    <option value="molihua">茉莉花 (ดอกมะลิโบราณ)</option>
+                    <option value="guangling">广陵散 (บทนำกวางหลิงซาน)</option>
+                    <option value="custom_song_local" id="opt-custom-song" disabled>-- ยังไม่ได้สร้างเพลงของคุณเอง --</option>
+                </select>
             </div>
-            
-            <!-- โครงสร้างกลุ่มโน้ตที่เลื่อนได้จริงด้วย JS -->
-            <div id="score-scroll-area" class="score-scroll-container flex items-center gap-4 px-[50%] h-full overflow-x-auto scroll-smooth transition-all duration-300">
-                <!-- โน้ตเพลงจะถูกเรนเดอร์ลงในส่วนนี้แบบพลวัตด้วย JS -->
-                <div class="text-stone-500 text-xs italic shrink-0">เลือกเพลงและกดเริ่มเพื่อดูโน้ต...</div>
+
+            <!-- หน้าต่างแผ่นโน้ตเลื่อน (Horizontal Scrolling Sheet Music) -->
+            <div class="relative w-full h-16 bg-stone-950/80 rounded-xl border border-stone-800/80 overflow-hidden flex items-center">
+                <!-- เส้นแนวกึ่งกลางบอกจุดดีดปัจจุบัน -->
+                <div class="absolute left-1/2 top-0 bottom-0 w-[2px] bg-amber-500/70 z-10 shadow-[0_0_8px_rgba(245,158,11,0.8)] flex flex-col justify-between items-center">
+                    <span class="text-[7px] bg-amber-500 text-stone-950 px-1 rounded-b font-bold">PLAYHEAD</span>
+                    <span class="text-[7px] bg-amber-500 text-stone-950 px-1 rounded-t font-bold">▲</span>
+                </div>
+                
+                <!-- โครงสร้างกลุ่มโน้ตที่เลื่อนได้จริงด้วย JS -->
+                <div id="score-scroll-area" class="score-scroll-container flex items-center gap-3 px-[50%] h-full overflow-x-auto scroll-smooth transition-all duration-300">
+                    <div class="text-stone-500 text-xs italic shrink-0">เลือกเพลงและกดเริ่มเพื่อดูโน้ต...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- แผงผู้สร้างแต่งโน้ตเพลงใหม่ (Composer View Panel) -->
+        <div id="compose-mode-panel" class="hidden p-2.5 bg-stone-950/80 rounded-xl border border-stone-800 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-xs font-bold text-[#dfb15b] uppercase">✨ แต่งบทเพลงกู่ฉินของคุณ</h3>
+                    <span class="text-[10px] bg-red-950 text-red-400 px-2 py-0.5 rounded border border-red-900" id="live-rec-badge">บันทึกสดปิดอยู่</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button id="btn-toggle-live-rec" class="px-2 py-1 bg-red-600/20 text-red-300 hover:bg-red-600/30 text-[10px] rounded border border-red-500/30 font-bold transition-all">
+                        🔴 เปิดระบบบันทึกสดขณะแตะสาย
+                    </button>
+                    <button id="btn-clear-composer" class="px-2 py-1 bg-stone-900 hover:bg-stone-800 text-stone-400 text-[10px] rounded">
+                        ล้างทั้งหมด
+                    </button>
+                </div>
+            </div>
+
+            <!-- คอนโทรลเพิ่มโน้ตด้วยมือ -->
+            <div class="grid grid-cols-4 gap-2 text-[11px] bg-stone-900/40 p-2 rounded-lg border border-stone-800/60">
+                <div class="flex flex-col gap-1">
+                    <span class="text-stone-400">เลือกสายที่จะดีด:</span>
+                    <select id="composer-string" class="bg-stone-900 text-amber-100 rounded p-1 border border-stone-700">
+                        <option value="0">สาย 1 (宫 - Kung)</option>
+                        <option value="1">สาย 2 (商 - Shang)</option>
+                        <option value="2">สาย 3 (角 - Chiao)</option>
+                        <option value="3">สาย 4 (徵 - Chih)</option>
+                        <option value="4">สาย 5 (羽 - Yu)</option>
+                        <option value="5">สาย 6 (文 - Wen)</option>
+                        <option value="6">สาย 7 (武 - Wu)</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-stone-400">เอฟเฟกต์การสไลด์:</span>
+                    <select id="composer-glide" class="bg-stone-900 text-amber-100 rounded p-1 border border-stone-700">
+                        <option value="0">ไม่มีการสไลด์</option>
+                        <option value="1">สั่นพริ้วเบา (Yin 吟)</option>
+                        <option value="2">สั่นสะเทือนปานกลาง</option>
+                        <option value="3">สไลด์ลึกโบราณ (Nao 猱)</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-stone-400">ความยาวค้างเสียง:</span>
+                    <select id="composer-duration" class="bg-stone-900 text-amber-100 rounded p-1 border border-stone-700">
+                        <option value="400">เร็วมาก (400ms)</option>
+                        <option value="600" selected>ปกติ (600ms)</option>
+                        <option value="900">ยาวขึ้น (900ms)</option>
+                        <option value="1200">ยาวพิเศษ (1200ms)</option>
+                    </select>
+                </div>
+                <div class="flex flex-col justify-end">
+                    <button id="btn-add-note-manual" class="w-full py-1 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded text-[11px] transition-all">
+                        ➕ เพิ่มโน้ตนี้
+                    </button>
+                </div>
+            </div>
+
+            <!-- แสดงโน้ตทั้งหมดที่ถูกเพิ่มเข้ามา -->
+            <div class="space-y-1">
+                <span class="text-[10px] text-stone-500 block">โน้ตในบทเพลงของคุณขณะนี้:</span>
+                <div id="composer-notes-flow" class="flex gap-1.5 overflow-x-auto py-1.5 px-1 bg-stone-950 rounded-lg border border-stone-900 min-h-12 items-center">
+                    <span class="text-stone-600 text-[10px] italic p-1">ยังไม่มีโน้ตสะสม... ดีดสายด้านล่างหรือเพิ่มโน้ตด้านบนเพื่อเริ่มบรรเลง</span>
+                </div>
+            </div>
+
+            <!-- การบันทึกคลาวด์เก็บเพลง -->
+            <div class="flex items-center gap-2 bg-stone-900/50 p-2 rounded-lg border border-stone-800">
+                <input type="text" id="custom-song-name-input" placeholder="ตั้งชื่อบทเพลงกู่ฉินของคุณ..." class="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-[#dfb15b]">
+                <button id="btn-save-cloud" class="px-4 py-1.5 bg-[#dfb15b] hover:bg-amber-400 text-stone-950 font-bold text-xs rounded-lg transition-all">
+                    ☁️ บันทึกลงคลาวด์
+                </button>
+            </div>
+
+            <!-- ลิสต์ดึงเพลงที่บันทึกจากฐานข้อมูลคลาวด์ -->
+            <div class="space-y-1">
+                <span class="text-[10px] text-[#dfb15b] block">📂 บทเพลงกู่ฉินอื่นๆ บนระบบคลาวด์:</span>
+                <div id="cloud-songs-list" class="grid grid-cols-2 gap-1.5 text-[11px] max-h-24 overflow-y-auto pr-1">
+                    <div class="text-stone-600 italic">กำลังเชื่อมต่อคลาวด์ดนตรี...</div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- แผงกู่ฉินหลัก (Guqin Board) คอนฟิกแบบแนวตั้งสำหรับหน้าจอมือถือ -->
+    <!-- แผงกู่ฉินหลัก (Guqin Board) คอนฟิกแบบแนวตั้งสรีระนิ้วสำหรับหน้าจอมือถือ -->
     <main class="flex-1 relative wood-texture flex flex-col justify-between py-6 px-1 overflow-hidden select-none">
         
         <!-- แถบสะพานกู่ฉินด้านขวาสุด (Yueshan Bridge) สำหรับสายสะท้อน -->
@@ -188,13 +293,13 @@
 
         <!-- พื้นที่ของสายกู่ฉินทั้ง 7 สาย -->
         <div id="guqin-strings-wrapper" class="w-full h-full flex flex-col justify-around items-stretch px-4 relative z-20">
-            <!-- สายกู่ฉินจำลองเสมือนจริงจะถูกวาดที่นี่ด้วยสถิตินิ้วมือผ่าน JS -->
+            <!-- สายกู่ฉินจำลองเสมือนจริงจะถูกวาดลงตรงนี้ด้วย JS -->
         </div>
 
     </main>
 
     <!-- การตั้งค่าความดังและเอฟเฟกต์บรรยากาศกู่ฉินด้านล่าง -->
-    <footer class="bg-stone-950 p-3.5 border-t border-stone-800 flex flex-col gap-2 z-30">
+    <footer class="bg-stone-950 p-3 border-t border-stone-800 flex flex-col gap-2 z-30">
         <div class="grid grid-cols-2 gap-4">
             <!-- ระดับความอลังการของเสียงสะท้อน (Reverb Ambience) -->
             <div class="flex flex-col gap-1">
@@ -216,8 +321,8 @@
         </div>
         
         <div class="flex justify-between items-center text-[10px] text-stone-500 pt-1 border-t border-stone-900">
-            <span>แตะนิ้วเพื่อดีด ลากนิ้วขวางเพื่อกรีดกู่ฉิน</span>
-            <span>กู่ฉินสังเคราะห์เสียงฟิสิกส์ 7 สาย</span>
+            <span>แตะลากนิ้วขวางเพื่อกรีดกู่ฉิน • กดเล่นอัตโนมัติเพื่อดูโน้ตวิ่ง</span>
+            <span class="text-amber-500 font-bold">ระบบขับเสียง Hybrid High-Power</span>
         </div>
     </footer>
 
@@ -226,21 +331,152 @@
         <div class="bg-stone-900 border border-stone-700 p-6 rounded-2xl max-w-sm w-full space-y-4">
             <h3 class="text-lg font-bold text-[#dfb15b]">วิธีการเล่นและฝึกฝน</h3>
             <ul class="text-xs space-y-2 text-stone-300 list-disc pl-4 leading-relaxed">
+                <li><strong>ระบบแต่งโน้ต:</strong> สลับไปโหมด <strong class="text-amber-400">"สร้างเพลงใหม่"</strong> เพื่อดีดบันทึกสด หรือวางโน้ตเพลงทีละชิ้น และสั่งเล่นออโต้เพื่อทดสอบได้ทันที!</li>
+                <li><strong>ระบบอัดเสียง (.webm):</strong> กดปุ่ม <strong class="text-red-400">"เริ่มอัดเสียงเล่น"</strong> เพื่อบันทึกท่อนแจมของคุณ และกดอีกครั้งเพื่อดาวน์โหลดไฟล์จริง</li>
                 <li><strong>ดีดเดี่ยว:</strong> แตะสายกู่ฉินใดก็ได้บนหน้าจอเพื่อเริ่มเปล่งพลังเสียง</li>
                 <li><strong>กรีดกู่ฉิน (Strum/Strake):</strong> ปาดลากนิ้วผ่านสายบนลงล่างเพื่อสร้างโทนกระเพื่อมเสมือนการเกลา</li>
-                <li><strong>ฝึกตามโน้ต:</strong> เปิดระบบอัตโนมัติแล้วสังเกตโน้ตสีส้มที่กำลังวิ่ง หากต้องการฝึกช้าลงให้กด Pause แล้วดีดสายตามชื่อคีย์ที่ขึ้น</li>
-                <li><strong>โทนเสียง Yin (吟):</strong> หางเสียงจะมีการสั่นไหวและสไลด์ขึ้นลงเล็กน้อยเพื่อความอ่อนโยนสมจริงตามตำรา</li>
             </ul>
             <button id="close-help" class="w-full py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs rounded-xl">รับทราบ</button>
         </div>
     </div>
 
+    <!-- หน้าต่าง Toast สำหรับการแจ้งเตือนสวยงาม -->
+    <div id="toast-message" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-amber-600 text-stone-950 px-4 py-2 rounded-xl text-xs font-bold shadow-2xl z-50 pointer-events-none opacity-0 transition-all duration-300"></div>
+
+    <!-- ส่วนเชื่อมต่อฐานข้อมูลคลาวด์สำหรับบันทึกเพลง -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // กำหนดข้อมูล Config จากตัวแปร global หรือค่าดีฟอลต์
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'realistic-guqin-app';
+        const defaultFirebaseConfig = {
+            apiKey: "dummy-api-key",
+            authDomain: "dummy.firebaseapp.com",
+            projectId: "dummy-project",
+            storageBucket: "dummy.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123:web:123"
+        };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+
+        let app, db, auth;
+        let isFirebaseActive = false;
+
+        // ฟังก์ชันเริ่มระบบความปลอดภัยและการเชื่อมต่อฐานข้อมูลคลาวด์
+        async function initCloudDatabase() {
+            if (firebaseConfig.apiKey === "dummy-api-key") {
+                console.warn("ไม่ได้กำหนดค่าจริงสำหรับระบบคลาวด์เพลง จะใช้ระบบจำลองทดแทน");
+                renderCloudSongsListSimulated();
+                return;
+            }
+
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // ตรวจสอบ Custom Token หรือเข้าสู่ระบบแบบไม่ระบุชื่อเพื่อความปลอดภัย
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                isFirebaseActive = true;
+                listenToCloudSongs();
+                showNotification("เชื่อมต่อฐานข้อมูลเพลงบนระบบคลาวด์สำเร็จ! ☁️");
+            } catch (error) {
+                console.error("Firebase Connection Error: ", error);
+                renderCloudSongsListSimulated();
+            }
+        }
+
+        // ฟังการอัปเดตเพลงใหม่ๆ บนคลาวด์แบบเรียลไทม์ (Rule 1: Path /artifacts/{appId}/public/data/custom_songs)
+        function listenToCloudSongs() {
+            if (!isFirebaseActive) return;
+
+            const path = `artifacts/${appId}/public/data/custom_songs`;
+            const songsCol = collection(db, 'artifacts', appId, 'public', 'data', 'custom_songs');
+
+            // เคลียร์และรอรับฟีด
+            onSnapshot(songsCol, (snapshot) => {
+                const listContainer = document.getElementById("cloud-songs-list");
+                listContainer.innerHTML = "";
+
+                if (snapshot.empty) {
+                    listContainer.innerHTML = `<div class="text-stone-600 italic col-span-2">ยังไม่มีเพลงในคลาวด์ มาร่วมแต่งเพลงแรกกันเถอะ!</div>`;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const btn = document.createElement("button");
+                    btn.className = "text-left bg-stone-900 border border-stone-800 hover:border-amber-500/50 p-1.5 rounded text-amber-100 flex items-center justify-between transition-all";
+                    btn.innerHTML = `
+                        <span class="truncate block max-w-[120px] font-bold">🎵 ${data.title}</span>
+                        <span class="text-[9px] text-stone-500 font-normal shrink-0">${data.notes.length} โน้ต</span>
+                    `;
+                    btn.addEventListener("click", () => {
+                        loadCloudSong(data.title, data.notes);
+                    });
+                    listContainer.appendChild(btn);
+                });
+            }, (error) => {
+                console.error("Cloud snapshot fail: ", error);
+                renderCloudSongsListSimulated();
+            });
+        }
+
+        // บันทึกเพลงที่สร้างขึ้นใหม่ลงระบบคลาวด์ (Rule 1 & Rule 3: Auth Before Query)
+        window.saveSongToCloud = async function(songTitle, notesArray) {
+            if (!songTitle.trim()) {
+                showNotification("❌ กรุณากรอกชื่อเพลงก่อนบันทึก");
+                return;
+            }
+            if (notesArray.length === 0) {
+                showNotification("❌ เพลงจะต้องมีอย่างน้อย 1 โน้ต");
+                return;
+            }
+
+            if (!isFirebaseActive) {
+                // จำลองเซฟในเมมโมรีหากเชื่อม Firebase ไม่ได้
+                saveSongSimulated(songTitle, notesArray);
+                return;
+            }
+
+            try {
+                if (!auth.currentUser) {
+                    showNotification("❌ กรุณารอสักครู่ กำลังยืนยันตัวตน...");
+                    return;
+                }
+
+                const songsCol = collection(db, 'artifacts', appId, 'public', 'data', 'custom_songs');
+                await addDoc(songsCol, {
+                    title: songTitle,
+                    notes: notesArray,
+                    creatorId: auth.currentUser.uid,
+                    createdAt: new Date().toISOString()
+                });
+
+                showNotification(`🎉 บันทึกเพลง "${songTitle}" ลงระบบคลาวด์สำเร็จ!`);
+            } catch (error) {
+                console.error("Save to Cloud Fail: ", error);
+                showNotification("❌ บันทึกลงคลาวด์ไม่สำเร็จ จะใช้ระบบเซฟชั่วคราวแทน");
+                saveSongSimulated(songTitle, notesArray);
+            }
+        };
+
+        // เริ่มต้นการตรวจจับเชื่อมต่อคลาวด์เมื่อรันหน้าเว็บ
+        window.addEventListener("load", () => {
+            initCloudDatabase();
+        });
+    </script>
+
     <script>
-        // --- ฐานข้อมูลเพลงกู่ฉิน (Ancient Guqin Melodies) ---
-        // โน้ตเพลงกู่ฉิน pentatonic (C2, D2, F2, G2, A2, C3, D3)
-        // string mapping: 
-        // 0: C2 (宫 Kung), 1: D2 (商 Shang), 2: F2 (角 Chiao), 3: G2 (徵 Chih), 4: A2 (羽 Yu), 5: C3 (文 Wen), 6: D3 (武 Wu)
-        const SONGS_DATA = {
+        // --- ฐานข้อมูลเพลงดั้งเดิมของกู่ฉิน (Ancient Guqin Melodies) ---
+        const ORIGINAL_SONGS = {
             canghai: {
                 title: "滄海一聲笑 (Blue Sea Laughter)",
                 notes: [
@@ -249,26 +485,22 @@
                     { string: 3, name: "徵 (Chih)", duration: 600 },
                     { string: 2, name: "角 (Chiao)", duration: 600 },
                     { string: 1, name: "商 (Shang)", duration: 600 },
-                    { string: 0, name: "宮 (Kung)", duration: 1200, glide: 1 }, // สไลด์เสียง
-                    
+                    { string: 0, name: "宮 (Kung)", duration: 1200, glide: 1 },
                     { string: 1, name: "商 (Shang)", duration: 600 },
                     { string: 1, name: "商 (Shang)", duration: 300 },
                     { string: 2, name: "角 (Chiao)", duration: 600 },
                     { string: 1, name: "商 (Shang)", duration: 600 },
                     { string: 3, name: "徵 (Chih)", duration: 1200 },
-                    
                     { string: 4, name: "羽 (Yu)", duration: 600 },
                     { string: 3, name: "徵 (Chih)", duration: 600 },
                     { string: 2, name: "角 (Chiao)", duration: 600 },
                     { string: 1, name: "商 (Shang)", duration: 600 },
                     { string: 0, name: "宮 (Kung)", duration: 1200, glide: 1 },
-
                     { string: 1, name: "商 (Shang)", duration: 600 },
                     { string: 0, name: "宮 (Kung)", duration: 600 },
                     { string: 1, name: "商 (Shang)", duration: 600 },
                     { string: 2, name: "角 (Chiao)", duration: 600 },
                     { string: 3, name: "徵 (Chih)", duration: 1200 },
-                    
                     { string: 4, name: "羽 (Yu)", duration: 600 },
                     { string: 4, name: "羽 (Yu)", duration: 300 },
                     { string: 3, name: "徵 (Chih)", duration: 600 },
@@ -286,18 +518,15 @@
                     { string: 6, name: "武 (Wu)", duration: 600 },
                     { string: 5, name: "文 (Wen)", duration: 600 },
                     { string: 4, name: "羽 (Yu)", duration: 900 },
-                    
                     { string: 3, name: "徵 (Chih)", duration: 300 },
                     { string: 4, name: "羽 (Yu)", duration: 600 },
                     { string: 3, name: "徵 (Chih)", duration: 600 },
                     { string: 2, name: "角 (Chiao)", duration: 1200 },
-                    
                     { string: 3, name: "徵 (Chih)", duration: 600 },
                     { string: 2, name: "角 (Chiao)", duration: 300 },
                     { string: 3, name: "徵 (Chih)", duration: 600 },
                     { string: 4, name: "羽 (Yu)", duration: 600 },
                     { string: 3, name: "徵 (Chih)", duration: 900 },
-                    
                     { string: 2, name: "角 (Chiao)", duration: 300 },
                     { string: 1, name: "商 (Shang)", duration: 600 },
                     { string: 2, name: "角 (Chiao)", duration: 600 },
@@ -305,29 +534,24 @@
                 ]
             },
             guangling: {
-                title: "广陵散 (Guangling San Intro)",
+                title: "广陵散 (Guangling San)",
                 notes: [
                     { string: 0, name: "宮 (Kung)", duration: 1000 },
                     { string: 3, name: "徵 (Chih)", duration: 1000 },
                     { string: 1, name: "商 (Shang)", duration: 500, glide: 2 },
                     { string: 2, name: "角 (Chiao)", duration: 500 },
                     { string: 4, name: "羽 (Yu)", duration: 1000 },
-                    
                     { string: 2, name: "角 (Chiao)", duration: 500 },
                     { string: 3, name: "徵 (Chih)", duration: 500 },
                     { string: 5, name: "文 (Wen)", duration: 1000 },
                     { string: 4, name: "羽 (Yu)", duration: 500, glide: 3 },
                     { string: 3, name: "徵 (Chih)", duration: 500 },
-                    { string: 2, name: "角 (Chiao)", duration: 1000 },
-
-                    { string: 1, name: "商 (Shang)", duration: 500 },
-                    { string: 0, name: "宮 (Kung)", duration: 500 },
-                    { string: 1, name: "商 (Shang)", duration: 1500 }
+                    { string: 2, name: "角 (Chiao)", duration: 1000 }
                 ]
             }
         };
 
-        // --- กำหนดความถี่สาย (Silk String Tuning - Pentatonic) ---
+        // คอนฟิกความถี่สายกู่ฉิน 7 สายระดับสมบูรณ์แบบ
         const GUQIN_TUNING = [
             { note: "C2", freq: 65.41, name: "1 宫 (Kung)" },
             { note: "D2", freq: 73.42, name: "2 商 (Shang)" },
@@ -344,19 +568,29 @@
         let reverbNode = null;
         let reverbDry = null;
         let reverbWet = null;
+        let destNode = null; // Node ลิงก์สำหรับอัดไฟล์เสียง
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecordingAudio = false;
 
-        // คอนฟิกการสังเคราะห์เสียง
-        let currentReverbLevel = 0.5; // ปรับลดเพื่อไม่ให้เสียงเปียกจนเบาเกินไป
-        let currentVibratoLevel = 1;  // 0: ไม่มี, 1: ปานกลาง, 2: ลึกมาก
+        let currentReverbLevel = 0.7;
+        let currentVibratoLevel = 1;
+
+        // --- ระบบบันทึกสะสมและแต่งเพลง (Composer System Store) ---
+        let composerNotes = [];
+        let isLiveRecordingNotes = false;
+        let simulatedSavedSongs = []; // คลังเพลงจำลองสำรอง
 
         // --- ระบบเล่นเพลงอัตโนมัติ (State) ---
         let activeSongKey = "canghai";
+        let activeCustomSongNotes = null; // เก็บชุดโน้ตหากเล่นเพลงสร้างเอง
         let autoPlayInterval = null;
-        let songPlayhead = 0; // ลำดับโน้ตปัจจุบัน
+        let songPlayhead = 0;
         let isAutoPlaying = false;
         let playSpeedRatio = 1.0;
 
-        // --- เริ่มต้นระบบเสียง (Initialize Audio Web API) ---
+        // --- STREAMING_CHUNK: Synthesizer Initialization... ---
+        // เริ่มต้นบอร์ดระบบเสียง (Initialize Audio Engine)
         async function initAudioEngine() {
             if (audioCtx) return;
             
@@ -364,21 +598,20 @@
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
                 
-                // บูสต์ระดับเสียงขึ้นเป็น 1.6 เพื่อแก้เสียงเบาบนมือถือ
+                // ระบบ Gain ขยายเสียงหลักพุ่งสูงขึ้น
                 masterGain = audioCtx.createGain();
-                masterGain.gain.setValueAtTime(1.6, audioCtx.currentTime);
+                masterGain.gain.setValueAtTime(1.8, audioCtx.currentTime);
 
-                // ระบบก้องจำลองเวทีโบราณ (Convolver Reverb Node)
+                // คอนโวลเวอร์จำลองพื้นที่โบราณ (Convolver Reverb)
                 reverbNode = audioCtx.createConvolver();
-                reverbNode.buffer = await buildRealisticImpulseResponse(audioCtx, 3.2, 2.5);
+                reverbNode.buffer = await buildRealisticImpulseResponse(audioCtx, 3.5, 2.5);
 
-                // ระบบควบคุม Wet / Dry แบบขนานเพื่อให้สัญญาณเสียงตรงมีความคมชัดเสมอตลอดการเล่น
                 reverbDry = audioCtx.createGain();
                 reverbWet = audioCtx.createGain();
                 
                 updateReverbMix();
 
-                // ผสมผสานสัญญาณเสียง
+                // การมิกซ์สัญญาณเสียงออกลำโพงหลัก
                 masterGain.connect(reverbDry);
                 reverbDry.connect(audioCtx.destination);
 
@@ -386,12 +619,17 @@
                 reverbNode.connect(reverbWet);
                 reverbWet.connect(audioCtx.destination);
 
+                // ตั้งเป้าหมายอัดเสียงบันทึกจริง (Media Stream Recorder)
+                destNode = audioCtx.createMediaStreamDestination();
+                masterGain.connect(destNode);
+
             } catch (err) {
-                console.error("ไม่สามารถเริ่มระบบเสียงได้: ", err);
+                console.error("เริ่มระบบเสียงไม่สำเร็จ: ", err);
             }
         }
 
-        // --- การสังเคราะห์เสียงกู่ฉินแบบฟิสิกส์ (Physical Modeling Guqin Synthesizer) ---
+        // --- STREAMING_CHUNK: High-Fidelity Physics Synthesizer Function... ---
+        // ฟังก์ชันขับแต่งโทนคลื่นสายกู่ฉินสไตล์ฟิสิกส์ (Hybrid Synthesis)
         function triggerGuqinPluck(stringIndex, userGlideTo = null) {
             if (!audioCtx) return;
             if (audioCtx.state === 'suspended') {
@@ -402,126 +640,100 @@
             const config = GUQIN_TUNING[stringIndex];
             const baseFreq = config.freq;
 
-            // 1. จำลองหางสั่นพริ้วขยับนิ้วโบราณ (Subtle Vibrato LFO)
+            // 1. ตรวจสอบการบันทึกโน้ตสดลง Composer
+            if (isLiveRecordingNotes) {
+                recordNoteLive(stringIndex);
+            }
+
+            // 2. ปรับหางเสียงสั่นคลอนสั่นพริ้ว (Subtle Vibrato LFO)
             const lfo = audioCtx.createOscillator();
             const lfoGain = audioCtx.createGain();
-            
             let vibratoDepth = 0;
-            let vibratoRate = 4.8 + Math.random() * 1.2;
+            let vibratoRate = 4.8 + Math.random() * 1.5;
 
-            if (currentVibratoLevel === 1) vibratoDepth = baseFreq * 0.009;
-            if (currentVibratoLevel === 2) vibratoDepth = baseFreq * 0.022;
+            if (currentVibratoLevel === 1) vibratoDepth = baseFreq * 0.01;
+            if (currentVibratoLevel === 2) vibratoDepth = baseFreq * 0.024;
 
             lfo.frequency.setValueAtTime(vibratoRate, now);
             lfoGain.gain.setValueAtTime(vibratoDepth, now);
-            
             lfoGain.gain.setValueAtTime(0, now);
-            lfoGain.gain.linearRampToValueAtTime(vibratoDepth, now + 0.3);
+            lfoGain.gain.linearRampToValueAtTime(vibratoDepth, now + 0.35);
 
-            // 2. แหล่งคลื่นผสมความคมพุ่งชัด (Dynamic Hybrid Tone)
-            // ใช้ Sawtooth Wave เป็นแกนเสียงหลักเพราะมีความถี่ช่วงกลางสูงเยอะมาก ทำให้ได้ยินชัดบนมือถือเสียงลำโพงจิ๋ว
+            // 3. ผสมความคมของโทนเสียง (Sawtooth และ Triangle)
             const oscFundamental = audioCtx.createOscillator();
             oscFundamental.type = "sawtooth";
             oscFundamental.frequency.setValueAtTime(baseFreq, now);
 
-            // ดึงฮาร์มอนิกที่ 2 และ 3 เพิ่มมิติ
             const oscH2 = audioCtx.createOscillator();
-            const oscH3 = audioCtx.createOscillator();
             oscH2.type = "sine";
-            oscH3.type = "sine";
-            
-            oscH2.frequency.setValueAtTime(baseFreq * 2.001, now);
-            oscH3.frequency.setValueAtTime(baseFreq * 3.002, now);
+            oscH2.frequency.setValueAtTime(baseFreq * 2.002, now);
 
-            // โยงสาย LFO กับ Oscillator ทั้งหมด
             lfo.connect(lfoGain);
             lfoGain.connect(oscFundamental.frequency);
             lfoGain.connect(oscH2.frequency);
-            lfoGain.connect(oscH3.frequency);
 
-            // 3. ระบบสไลด์นิ้วลื่นไหลหากโน้ตกำหนดไว้ (Pitch Slide / Portamento - 吟猱)
-            if (userGlideTo !== null && userGlideTo !== undefined) {
-                const targetFreq = GUQIN_TUNING[userGlideTo].freq;
-                oscFundamental.frequency.exponentialRampToValueAtTime(targetFreq, now + 0.5);
-                oscH2.frequency.exponentialRampToValueAtTime(targetFreq * 2.001, now + 0.5);
-                oscH3.frequency.exponentialRampToValueAtTime(targetFreq * 3.002, now + 0.5);
+            // 4. สไลด์เสียงขึ้นลงหากกำหนดค่าไว้ (Pitch Slide - 吟猱)
+            if (userGlideTo) {
+                let glideTarget = baseFreq;
+                if (userGlideTo === 1) glideTarget = baseFreq * 1.02; // สั่นเบา
+                if (userGlideTo === 2) glideTarget = baseFreq * 1.05; // สั่นกลาง
+                if (userGlideTo === 3) glideTarget = baseFreq * 0.94; // สไลด์ลึกโบราณ
+                oscFundamental.frequency.exponentialRampToValueAtTime(glideTarget, now + 0.4);
+                oscH2.frequency.exponentialRampToValueAtTime(glideTarget * 2.002, now + 0.4);
             }
 
-            // 4. บรรจุภัณฑ์แอมปลิจูดแอดแวนซ์ (Dynamic Gain Envelope)
+            // 5. บรรจุภัณฑ์เสียงคลื่น (Amplitude Envelope)
             const ampFund = audioCtx.createGain();
-            const ampH2 = audioCtx.createGain();
-            const ampH3 = audioCtx.createGain();
-
-            // คลื่นเสียงหลัก: บูสต์ความดังขึ้น ปล่อยสลายตัวยาว
             ampFund.gain.setValueAtTime(0, now);
-            ampFund.gain.linearRampToValueAtTime(1.2, now + 0.015); // เร่งความดังช่วงเริ่มเตะสาย
-            ampFund.gain.exponentialRampToValueAtTime(0.001, now + 4.5);
+            ampFund.gain.linearRampToValueAtTime(1.4, now + 0.015); // เร่งความดังแรงเริ่มดีด
+            ampFund.gain.exponentialRampToValueAtTime(0.001, now + 4.2);
 
-            // ฮาร์มอนิกที่ 2: วูบวาบสั้นกว่าคลื่นหลัก
-            ampH2.gain.setValueAtTime(0, now);
-            ampH2.gain.linearRampToValueAtTime(0.6, now + 0.01);
-            ampH2.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-
-            // ฮาร์มอนิกที่ 3: แหลมใส สลายวับทันที
-            ampH3.gain.setValueAtTime(0, now);
-            ampH3.gain.linearRampToValueAtTime(0.4, now + 0.008);
-            ampH3.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
-
-            // 5. ตัวกรองบอดี้กล่องเสียงไม้โบราณ (Resonant Lowpass Filter)
-            // ส่วนสำคัญที่สุด: ใช้ Lowpass กรองกรีดเสียง Sawtooth คืนความนุ่มนวลแบบสายไหมโบราณ
+            // 6. ประมวลผ่านฟิลเตอร์จำลองกล่องบอดี้เนื้อไม้ (Resonant Lowpass Filter)
             const dynamicFilter = audioCtx.createBiquadFilter();
             dynamicFilter.type = "lowpass";
-            dynamicFilter.Q.setValueAtTime(1.2, now);
-            dynamicFilter.frequency.setValueAtTime(1600, now); // ตอนกดดีดจะได้ยินความใสนำร่องชัดเจน
-            dynamicFilter.frequency.exponentialRampToValueAtTime(150, now + 2.2); // แล้วลดลงเพื่อคงหางทุ้มอุ่น
+            dynamicFilter.Q.setValueAtTime(1.3, now);
+            dynamicFilter.frequency.setValueAtTime(1800, now);
+            dynamicFilter.frequency.exponentialRampToValueAtTime(140, now + 2.0); // คืนหางเสียงหนาอุ่น
 
-            // 6. ตัวจำลองนิ้วและเล็บดีดสัมผัส (Pluck Transient Scratch Generator)
-            const pluckNoise = audioCtx.createOscillator();
-            const pluckNoiseGain = audioCtx.createGain();
-            pluckNoise.type = "triangle";
-            pluckNoise.frequency.setValueAtTime(650, now);
-            
-            pluckNoiseGain.gain.setValueAtTime(0.5, now);
-            pluckNoiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            // 7. เสียงกระทบเล็บนิ้วตอนเริ่มกรีดสาย (Nail scratch transient)
+            const pluckScratch = audioCtx.createOscillator();
+            pluckScratch.type = "triangle";
+            pluckScratch.frequency.setValueAtTime(700, now);
+            const scratchGain = audioCtx.createGain();
+            scratchGain.gain.setValueAtTime(0.4, now);
+            scratchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
 
-            // เชื่อมโยงสายเสียง (Node Route Mapping)
+            // ต่อสัญญาณอุปกรณ์
             oscFundamental.connect(dynamicFilter);
             dynamicFilter.connect(ampFund);
-            
-            oscH2.connect(ampH2);
-            oscH3.connect(ampH3);
-
             ampFund.connect(masterGain);
-            ampH2.connect(masterGain);
-            ampH3.connect(masterGain);
 
-            pluckNoise.connect(pluckNoiseGain);
-            pluckNoiseGain.connect(masterGain);
+            oscH2.connect(ampFund);
 
-            // สั่งทำกิจกรรมเริ่มดีด
+            pluckScratch.connect(scratchGain);
+            scratchGain.connect(masterGain);
+
+            // สั่งเริ่มทำงาน
             lfo.start(now);
             oscFundamental.start(now);
             oscH2.start(now);
-            oscH3.start(now);
-            pluckNoise.start(now);
+            pluckScratch.start(now);
 
-            // หยุดทำงานตัดแรม
-            lfo.stop(now + 4.8);
-            oscFundamental.stop(now + 4.8);
-            oscH2.stop(now + 4.8);
-            oscH3.stop(now + 4.8);
-            pluckNoise.stop(now + 0.1);
+            // ปล่อยให้แรมหมดอายุ
+            lfo.stop(now + 4.5);
+            oscFundamental.stop(now + 4.5);
+            oscH2.stop(now + 4.5);
+            pluckScratch.stop(now + 0.1);
 
-            // สั่งเอฟเฟกต์บอร์ดและสายสั่นพริ้ว
             vibrateUiString(stringIndex);
         }
 
-        // --- ตัวสร้างเสียงก้อง Impulse Response คุณภาพสูง ---
+        // --- STREAMING_CHUNK: High decay Reverb impulse generator... ---
+        // ตัวสร้างสัญญาณจำลองเสียงสะท้อน (Impulse Buffer Creator)
         function buildRealisticImpulseResponse(ctx, duration, decay) {
             const sampleRate = ctx.sampleRate;
             const length = sampleRate * duration;
             const impulse = ctx.createBuffer(2, length, sampleRate);
-            
             for (let channel = 0; channel < 2; channel++) {
                 const channelData = impulse.getChannelData(channel);
                 for (let i = 0; i < length; i++) {
@@ -533,62 +745,60 @@
 
         function updateReverbMix() {
             if (!reverbDry || !reverbWet) return;
-            // คงเสียงดีดหลักแห้ง (Dry) ไว้ที่เต็ม 100% เสมอเพื่อให้ได้ยินดังชัดเจน
             reverbDry.gain.setValueAtTime(1.0, audioCtx.currentTime);
-            // ผสม Reverb เสริมจากด้านหลัง
-            reverbWet.gain.setValueAtTime(currentReverbLevel * 1.5, audioCtx.currentTime);
+            reverbWet.gain.setValueAtTime(currentReverbLevel * 1.6, audioCtx.currentTime);
         }
 
-        // --- การประมวลผลโน้ตในบทเพลงและโน้ตไหล ---
-        function selectSong(songKey) {
-            activeSongKey = songKey;
-            const song = SONGS_DATA[songKey];
-            document.getElementById("selected-song-title").innerText = song.title;
-            
-            // รีเซ็ตการเล่นและสร้างมุมมองโน้ตใหม่
-            stopAutoPlay();
-            renderScoreViewer();
-        }
-
-        // วาดแผ่นโน้ตบนวิวเวอร์เลื่อนได้
+        // --- STREAMING_CHUNK: Score Renderer & Navigation... ---
+        // วาดมุมมองแทร็กโน้ตปัจจุบัน (Render Scrolling Score Viewer)
         function renderScoreViewer() {
             const container = document.getElementById("score-scroll-area");
-            container.innerHTML = ""; // เคลียร์ของเก่า
+            container.innerHTML = "";
 
-            const song = SONGS_DATA[activeSongKey];
-            
-            song.notes.forEach((item, index) => {
-                const noteCard = document.createElement("div");
-                noteCard.id = `note-card-${index}`;
-                noteCard.className = `shrink-0 w-16 h-14 rounded-xl flex flex-col justify-center items-center border transition-all duration-300 ${
+            // ตรวจหาชุดโน้ตที่จะเล่น
+            let notesToRender = [];
+            if (activeSongKey === "custom_song_local" && activeCustomSongNotes) {
+                notesToRender = activeCustomSongNotes;
+            } else if (ORIGINAL_SONGS[activeSongKey]) {
+                notesToRender = ORIGINAL_SONGS[activeSongKey].notes;
+            }
+
+            if (notesToRender.length === 0) {
+                container.innerHTML = `<div class="text-stone-500 text-xs italic shrink-0">ไม่มีโน้ตสะสมในเพลงขณะนี้...</div>`;
+                return;
+            }
+
+            notesToRender.forEach((item, index) => {
+                const card = document.createElement("div");
+                card.id = `note-card-${index}`;
+                card.className = `shrink-0 w-14 h-11 rounded-lg flex flex-col justify-center items-center border transition-all duration-300 ${
                     index === songPlayhead 
                     ? "bg-[#dfb15b] border-amber-300 text-stone-950 scale-105 font-bold shadow-[0_0_12px_rgba(223,177,91,0.5)]" 
-                    : "bg-stone-900/90 border-stone-800 text-stone-300"
+                    : "bg-stone-900/95 border-stone-800 text-stone-300"
                 }`;
 
-                // แตะที่ตัวโน้ตเพื่อข้ามหัวอ่านไปเล่นช่วงนั้นได้อิสระ!
-                noteCard.addEventListener("click", () => {
+                card.addEventListener("click", () => {
                     jumpToNote(index);
                 });
 
-                const jianpuSymbol = document.createElement("span");
-                jianpuSymbol.className = "text-base font-bold font-serif";
-                jianpuSymbol.innerText = getStringChineseSymbol(item.string);
+                const symbol = document.createElement("span");
+                symbol.className = "text-sm font-bold font-serif";
+                symbol.innerText = getStringChineseSymbol(item.string);
 
-                const noteName = document.createElement("span");
-                noteName.className = "text-[9px] opacity-75 mt-0.5";
-                noteName.innerText = `สาย ${item.string + 1}`;
+                const desc = document.createElement("span");
+                desc.className = "text-[8px] opacity-75 mt-0.5";
+                desc.innerText = `สาย ${item.string + 1}`;
 
                 if (item.glide) {
                     const glideLabel = document.createElement("span");
-                    glideLabel.className = "absolute top-1 right-1 text-[7px] bg-amber-800 text-amber-200 px-0.5 rounded";
+                    glideLabel.className = "absolute top-0.5 right-0.5 text-[6px] bg-amber-800 text-amber-200 px-0.5 rounded";
                     glideLabel.innerText = "吟";
-                    noteCard.appendChild(glideLabel);
+                    card.appendChild(glideLabel);
                 }
 
-                noteCard.appendChild(jianpuSymbol);
-                noteCard.appendChild(noteName);
-                container.appendChild(noteCard);
+                card.appendChild(symbol);
+                card.appendChild(desc);
+                container.appendChild(card);
             });
 
             scrollScoreToCurrent();
@@ -599,18 +809,23 @@
             return symbols[index] || "•";
         }
 
-        // ข้ามหัวอ่านคัมภีร์โน้ต
         function jumpToNote(index) {
-            const song = SONGS_DATA[activeSongKey];
-            if (index >= 0 && index < song.notes.length) {
+            let notes = getActiveNotesArray();
+            if (index >= 0 && index < notes.length) {
                 songPlayhead = index;
                 renderScoreViewer();
-                triggerGuqinPluck(song.notes[index].string, song.notes[index].glide);
+                triggerGuqinPluck(notes[index].string, notes[index].glide);
                 updatePlaybackTimer();
             }
         }
 
-        // จัดตำแหน่งเลื่อนโน้ตให้อยู่ตรงกลางสายตาพอดีตามแนว Playhead
+        function getActiveNotesArray() {
+            if (activeSongKey === "custom_song_local" && activeCustomSongNotes) {
+                return activeCustomSongNotes;
+            }
+            return ORIGINAL_SONGS[activeSongKey] ? ORIGINAL_SONGS[activeSongKey].notes : [];
+        }
+
         function scrollScoreToCurrent() {
             const activeCard = document.getElementById(`note-card-${songPlayhead}`);
             if (activeCard) {
@@ -623,29 +838,30 @@
         }
 
         function updatePlaybackTimer() {
-            const song = SONGS_DATA[activeSongKey];
-            const percent = Math.floor((songPlayhead / song.notes.length) * 100);
-            document.getElementById("playback-timer").innerText = `โน้ต: ${songPlayhead + 1}/${song.notes.length} (${percent}%)`;
+            let notes = getActiveNotesArray();
+            if (notes.length === 0) {
+                document.getElementById("playback-timer").innerText = "ไม่มีโน้ต";
+                return;
+            }
+            const percent = Math.floor((songPlayhead / notes.length) * 100);
+            document.getElementById("playback-timer").innerText = `โน้ต: ${songPlayhead}/${notes.length} (${percent}%)`;
         }
 
-        // --- เริ่มต้น / หยุด ระบบเล่นเพลงอัตโนมัติ (Auto Play Core Loops) ---
+        // --- STREAMING_CHUNK: Automatic Play Loops... ---
+        // ระบบเล่นเพลงอัตโนมัติคัมภีร์โน้ต
         function startAutoPlay() {
             if (isAutoPlaying) return;
-            
             initAudioEngine();
             isAutoPlaying = true;
-            
             document.getElementById("play-icon").innerText = "⏸";
-            document.getElementById("play-text").innerText = "หยุดดูโน้ต";
+            document.getElementById("play-text").innerText = "หยุดเล่นชั่วคราว";
             document.getElementById("btn-stop-auto").disabled = false;
-
             playNextAutoNote();
         }
 
         function pauseAutoPlay() {
             if (!isAutoPlaying) return;
             isAutoPlaying = false;
-            
             clearTimeout(autoPlayInterval);
             document.getElementById("play-icon").innerText = "▶";
             document.getElementById("play-text").innerText = "เล่นต่อ";
@@ -654,44 +870,231 @@
         function stopAutoPlay() {
             isAutoPlaying = false;
             clearTimeout(autoPlayInterval);
-            
             songPlayhead = 0;
-            
             document.getElementById("play-icon").innerText = "▶";
             document.getElementById("play-text").innerText = "เล่นอัตโนมัติ";
             document.getElementById("btn-stop-auto").disabled = true;
-            
             updatePlaybackTimer();
             renderScoreViewer();
         }
 
         function playNextAutoNote() {
             if (!isAutoPlaying) return;
-
-            const song = SONGS_DATA[activeSongKey];
-            
-            if (songPlayhead >= song.notes.length) {
+            let notes = getActiveNotesArray();
+            if (songPlayhead >= notes.length) {
                 stopAutoPlay();
+                showNotification("🎵 บรรเลงเพลงจบเรียบร้อยแล้ว!");
                 return;
             }
 
-            const currentNote = song.notes[songPlayhead];
-            
+            const currentNote = notes[songPlayhead];
             triggerGuqinPluck(currentNote.string, currentNote.glide);
-            
             renderScoreViewer();
             updatePlaybackTimer();
 
             songPlayhead++;
-
             const delayTime = (currentNote.duration / playSpeedRatio);
-            
             autoPlayInterval = setTimeout(() => {
                 playNextAutoNote();
             }, delayTime);
         }
 
-        // --- ส่วนขับเคลื่อนหน้าตาอินเตอร์เฟสและทัชสกรีนบนจอแนวตั้งมือถือ ---
+        // --- STREAMING_CHUNK: Real-time Live Audio Recording (WebM Export)... ---
+        // ระบบอัดเสียงบรรเลงสดจริงเป็นไฟล์ WebM
+        function toggleAudioRecording() {
+            initAudioEngine();
+            if (!isRecordingAudio) {
+                // เริ่มอัดเสียง
+                recordedChunks = [];
+                const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg";
+                mediaRecorder = new MediaRecorder(destNode.stream, { mimeType });
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+                    const dlBtn = document.getElementById("btn-dl-audio");
+                    dlBtn.classList.remove("hidden");
+                    dlBtn.onclick = () => {
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `guqin-melody-${Date.now()}.webm`;
+                        a.click();
+                        showNotification("ดาวน์โหลดไฟล์เสียงกู่ฉินสำเร็จ! 🎸");
+                    };
+                };
+
+                mediaRecorder.start();
+                isRecordingAudio = true;
+                document.getElementById("rec-audio-text").innerText = "กำลังอัดเสียงเล่น... [กดเพื่อหยุด]";
+                document.getElementById("rec-dot").classList.add("animate-pulse");
+                showNotification("🔴 ระบบเริ่มบันทึกเสียงสดขณะบรรเลงแล้ว!");
+            } else {
+                // หยุดอัดเสียง
+                mediaRecorder.stop();
+                isRecordingAudio = false;
+                document.getElementById("rec-audio-text").innerText = "เริ่มอัดเสียงเล่น";
+                document.getElementById("rec-dot").classList.remove("animate-pulse");
+                showNotification("⏹️ หยุดบันทึกแล้ว! กดปุ่มข้างๆ เพื่อโหลดไฟล์");
+            }
+        }
+
+        // --- STREAMING_CHUNK: Note Composer & Local/Simulated Storage... ---
+        // ระบบบันทึกสดขณะแตะสาย และตัวโน้ตสะสม
+        function recordNoteLive(stringIndex) {
+            const now = Date.now();
+            let duration = 600; // ค่าเริ่มต้นระยะเวลาค้างเสียง
+            const lastNote = composerNotes[composerNotes.length - 1];
+            
+            // คัดเดาความเร็วระยะห่างของแต่ละครั้งที่เคาะ
+            if (lastNote && lastNote._timestamp) {
+                const diff = now - lastNote._timestamp;
+                // อัปเดตระยะค้างเสียงโน้ตก่อนหน้านี้ให้สอดคล้องกัน
+                lastNote.duration = Math.max(300, Math.min(1800, diff));
+            }
+
+            const names = ["宮", "商", "角", "徵", "羽", "文", "武"];
+            const noteObj = {
+                string: stringIndex,
+                name: `${names[stringIndex]}`,
+                duration: duration,
+                _timestamp: now
+            };
+
+            composerNotes.push(noteObj);
+            renderComposerNotesFlow();
+        }
+
+        // เพิ่มโน้ตด้วยตนเอง
+        function addNoteManually() {
+            const stringIdx = parseInt(document.getElementById("composer-string").value);
+            const glideVal = parseInt(document.getElementById("composer-glide").value);
+            const durationVal = parseInt(document.getElementById("composer-duration").value);
+
+            const names = ["宮", "商", "角", "徵", "羽", "文", "武"];
+            const noteObj = {
+                string: stringIdx,
+                name: `${names[stringIdx]}`,
+                duration: durationVal,
+                glide: glideVal > 0 ? glideVal : undefined
+            };
+
+            composerNotes.push(noteObj);
+            renderComposerNotesFlow();
+            showNotification("เพิ่มโน้ตใหม่ลงบทเพลงแล้ว");
+        }
+
+        // แสดงผลภาพแถวโน้ตใน Composer
+        function renderComposerNotesFlow() {
+            const flow = document.getElementById("composer-notes-flow");
+            flow.innerHTML = "";
+
+            if (composerNotes.length === 0) {
+                flow.innerHTML = `<span class="text-stone-600 text-[10px] italic p-1">ยังไม่มีโน้ตสะสม... ดีดสายด้านล่างหรือเพิ่มโน้ตด้านบนเพื่อเริ่มบรรเลง</span>`;
+                return;
+            }
+
+            composerNotes.forEach((item, index) => {
+                const bubble = document.createElement("div");
+                bubble.className = "relative flex-shrink-0 bg-stone-900 border border-stone-800 rounded px-2.5 py-1 text-center text-amber-100 flex items-center gap-1.5";
+                
+                // สัญลักษณ์สไลด์เสียง
+                let suffix = "";
+                if (item.glide === 1) suffix = " (吟)";
+                if (item.glide === 2) suffix = " (~ )";
+                if (item.glide === 3) suffix = " (猱)";
+
+                bubble.innerHTML = `
+                    <span class="text-xs font-serif font-bold text-[#dfb15b]">${getStringChineseSymbol(item.string)}${suffix}</span>
+                    <button class="text-red-500 hover:text-red-400 font-bold text-[10px] ml-1">×</button>
+                `;
+
+                // แตะเพื่อลบเฉพาะตัวโน้ตนั้นๆ
+                bubble.querySelector("button").addEventListener("click", () => {
+                    composerNotes.splice(index, 1);
+                    renderComposerNotesFlow();
+                });
+
+                flow.appendChild(bubble);
+            });
+        }
+
+        // บันทึกเพลงที่ทำเสร็จ
+        function submitCustomSong() {
+            const titleInput = document.getElementById("custom-song-name-input").value;
+            const finalTitle = titleInput.trim() || `เพลงกู่ฉินของฉัน-${Date.now().toString().slice(-4)}`;
+
+            // เรียกใช้ระบบคลาวด์จากฟังก์ชันที่เปิดเผยมุมกว้าง
+            if (window.saveSongToCloud) {
+                window.saveSongToCloud(finalTitle, composerNotes);
+            } else {
+                saveSongSimulated(finalTitle, composerNotes);
+            }
+        }
+
+        // ตัวสำรองหากคลาวด์ออฟไลน์
+        function saveSongSimulated(title, notes) {
+            if (notes.length === 0) {
+                showNotification("❌ ไม่มีโน้ตในเพลงสำหรับเซฟชั่วคราว");
+                return;
+            }
+            const songObj = { title, notes };
+            simulatedSavedSongs.push(songObj);
+            renderCloudSongsListSimulated();
+            loadCloudSong(title, notes);
+            showNotification(`💾 บันทึกเพลงแบบชั่วคราว "${title}" ในเซสชันสำรองสำเร็จ!`);
+        }
+
+        // การติดตั้งเพลงที่ต้องการเปิดฟัง
+        function loadCloudSong(title, notes) {
+            activeCustomSongNotes = notes;
+            activeSongKey = "custom_song_local";
+            
+            const opt = document.getElementById("opt-custom-song");
+            opt.disabled = false;
+            opt.value = "custom_song_local";
+            opt.innerText = `เพลงแต่งใหม่: ${title}`;
+            
+            document.getElementById("song-select").value = "custom_song_local";
+            document.getElementById("selected-song-title").innerText = title;
+
+            stopAutoPlay();
+            renderScoreViewer();
+            updatePlaybackTimer();
+            showNotification(`เปิดเพลงแต่งใหม่ "${title}" เรียบร้อย!`);
+        }
+
+        // เรนเดอร์เพลงสำรองชั่วคราวในหน้าจอแต่งเพลง
+        function renderCloudSongsListSimulated() {
+            const listContainer = document.getElementById("cloud-songs-list");
+            if (simulatedSavedSongs.length === 0) {
+                listContainer.innerHTML = `<div class="text-stone-600 italic col-span-2">เชื่อมต่อคลาวด์เพลงแบบจำลอง หรือกดเพิ่มเพลงใหม่ด้านบนได้ทันที</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = "";
+            simulatedSavedSongs.forEach((song) => {
+                const btn = document.createElement("button");
+                btn.className = "text-left bg-stone-900 border border-stone-800 hover:border-amber-500 p-1.5 rounded text-amber-100 flex items-center justify-between transition-all";
+                btn.innerHTML = `
+                    <span class="truncate block max-w-[120px] font-bold">🎵 ${song.title}</span>
+                    <span class="text-[9px] text-stone-500 shrink-0">${song.notes.length} โน้ต</span>
+                `;
+                btn.addEventListener("click", () => {
+                    loadCloudSong(song.title, song.notes);
+                });
+                listContainer.appendChild(btn);
+            });
+        }
+
+        // นำเข้าข้อมูลการเปิดฟีดจาก Firebase Script สู่ Core Audio Engine
+        window.loadCloudSong = loadCloudSong;
+
+        // --- STREAMING_CHUNK: Multi-Touch Core Event Bindings... ---
+        // วาดรูปร่างหน้าตาสายกู่ฉิน 7 เส้น
         function drawGuqinStrings() {
             const container = document.getElementById("guqin-strings-wrapper");
             container.innerHTML = "";
@@ -709,7 +1112,7 @@
                 stringLine.id = `string-line-${index}`;
                 stringLine.className = "absolute inset-x-0 h-[2px] bg-gradient-to-r from-yellow-700 via-amber-200 to-yellow-800 transition-shadow duration-300 string-glow";
                 
-                const thickness = 4.5 - (index * 0.5); 
+                const thickness = 4.8 - (index * 0.52); 
                 stringLine.style.height = `${thickness}px`;
                 stringLine.style.boxShadow = "0 3px 6px rgba(0,0,0,0.85)";
 
@@ -717,7 +1120,7 @@
                 stringTrack.appendChild(stringLine);
                 container.appendChild(stringTrack);
 
-                // พฤติกรรมคลิกสัมผัสด้วยเมาส์ (Fallback)
+                // คลิดเมาส์สัมผัส (Fallback)
                 stringTrack.addEventListener("mousedown", (e) => {
                     initAudioEngine();
                     triggerGuqinPluck(index);
@@ -732,10 +1135,9 @@
                 str.classList.remove("string-vibrating");
                 void str.offsetWidth;
                 str.classList.add("string-vibrating");
-                
                 setTimeout(() => {
                     str.classList.remove("string-vibrating");
-                }, 1200);
+                }, 1100);
             }
         }
 
@@ -749,7 +1151,6 @@
             rip.style.boxShadow = "0 0 15px rgba(223,177,91,0.6)";
 
             document.body.appendChild(rip);
-
             requestAnimationFrame(() => {
                 rip.style.transform = "translate(-50%, -50%) scale(2.8)";
                 rip.style.opacity = "0";
@@ -757,10 +1158,10 @@
 
             setTimeout(() => {
                 rip.remove();
-            }, 600);
+            }, 550);
         }
 
-        // --- รองรับระบบสไลด์เกลาสัมผัสพร้อมกัน (Multi-Touch / Strumming Stiction) ---
+        // ระบบจับความเคลื่อนไหวลากนิ้วเกลาร้อยนิ้วพร้อมกัน (Multi-Touch Interface)
         let lastPlayedStringMap = new Map();
 
         function setupMultiTouchStrum() {
@@ -804,11 +1205,24 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Connecting UI Event Listeners... ---
+        // กล่องแจ้งเตือนสวยงามลอยพริ้วบนหน้าจอ
+        function showNotification(msg) {
+            const toast = document.getElementById("toast-message");
+            toast.innerText = msg;
+            toast.style.opacity = "1";
+            toast.style.transform = "translate(-50%, -50%) scale(1.05)";
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translate(-50%, -50%) scale(1)";
+            }, 3000);
+        }
+
+        // --- STREAMING_CHUNK: Connecting DOM Listeners and Buttons... ---
         document.addEventListener("DOMContentLoaded", () => {
             drawGuqinStrings();
             renderScoreViewer();
 
+            // คอยจับเมนูปุ่มเริ่มดีดทัชหน้าแรก
             document.getElementById("start-btn").addEventListener("click", () => {
                 initAudioEngine();
                 const overlay = document.getElementById("start-overlay");
@@ -818,10 +1232,74 @@
                 }, 750);
             });
 
-            document.getElementById("song-select").addEventListener("change", (e) => {
-                selectSong(e.target.value);
+            // คอยสลับหน้าต่างการเล่น และการจัดแต่งโน้ต
+            const tabPlayBtn = document.getElementById("btn-tab-play");
+            const tabComposeBtn = document.getElementById("btn-tab-compose");
+            const playPanel = document.getElementById("play-mode-panel");
+            const composePanel = document.getElementById("compose-mode-panel");
+
+            tabPlayBtn.addEventListener("click", () => {
+                tabPlayBtn.className = "px-2.5 py-1.5 bg-amber-600/20 text-[#dfb15b] border border-amber-600/40 text-xs rounded-lg font-bold";
+                tabComposeBtn.className = "px-2.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs rounded-lg";
+                playPanel.classList.remove("hidden");
+                composePanel.classList.add("hidden");
             });
 
+            tabComposeBtn.addEventListener("click", () => {
+                tabComposeBtn.className = "px-2.5 py-1.5 bg-amber-600/20 text-[#dfb15b] border border-amber-600/40 text-xs rounded-lg font-bold";
+                tabPlayBtn.className = "px-2.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs rounded-lg";
+                composePanel.classList.remove("hidden");
+                playPanel.classList.add("hidden");
+                initAudioEngine();
+            });
+
+            // อัพเดทเพลงในสไลด์เปลี่ยนคีย์
+            document.getElementById("song-select").addEventListener("change", (e) => {
+                const val = e.target.value;
+                if (val === "custom_song_local" && activeCustomSongNotes) {
+                    activeSongKey = "custom_song_local";
+                    document.getElementById("selected-song-title").innerText = document.getElementById("opt-custom-song").innerText;
+                } else {
+                    activeSongKey = val;
+                    activeCustomSongNotes = null;
+                    document.getElementById("selected-song-title").innerText = ORIGINAL_SONGS[val].title;
+                }
+                stopAutoPlay();
+                renderScoreViewer();
+            });
+
+            // ปลั๊กระบบอัดไฟล์เสียง
+            document.getElementById("btn-rec-audio").addEventListener("click", () => {
+                toggleAudioRecording();
+            });
+
+            // ระบบบันทึกสดขณะแตะสายคอยตรวจสวิตช์เปิดปิด
+            const liveRecBtn = document.getElementById("btn-toggle-live-rec");
+            const liveRecBadge = document.getElementById("live-rec-badge");
+            liveRecBtn.addEventListener("click", () => {
+                isLiveRecordingNotes = !isLiveRecordingNotes;
+                if (isLiveRecordingNotes) {
+                    liveRecBtn.innerText = "⏹️ ปิดระบบบันทึกสด";
+                    liveRecBadge.innerText = "กำลังบันทึกสดขณะแตะสาย";
+                    liveRecBadge.className = "text-[10px] bg-red-600 text-stone-950 px-2 py-0.5 rounded font-bold";
+                    showNotification("เปิดระบบดีดสายเพื่อบันทึกสดแล้ว บรรเลงได้ทันที!");
+                } else {
+                    liveRecBtn.innerText = "🔴 เปิดระบบบันทึกสดขณะแตะสาย";
+                    liveRecBadge.innerText = "บันทึกสดปิดอยู่";
+                    liveRecBadge.className = "text-[10px] bg-stone-900 text-stone-400 px-2 py-0.5 rounded";
+                }
+            });
+
+            document.getElementById("btn-add-note-manual").addEventListener("click", addNoteManually);
+            document.getElementById("btn-clear-composer").addEventListener("click", () => {
+                composerNotes = [];
+                renderComposerNotesFlow();
+                showNotification("ล้างรายการโน้ตสะสมเรียบร้อย");
+            });
+
+            document.getElementById("btn-save-cloud").addEventListener("click", submitCustomSong);
+
+            // ปุ่มควบคุมการออโต้เพลย์
             document.getElementById("btn-play-auto").addEventListener("click", () => {
                 if (isAutoPlaying) {
                     pauseAutoPlay();
@@ -838,6 +1316,7 @@
                 playSpeedRatio = parseFloat(e.target.value);
             });
 
+            // สไลเดอร์จำลองความก้องกังวาน
             const sliderReverb = document.getElementById("slider-reverb");
             sliderReverb.addEventListener("input", (e) => {
                 currentReverbLevel = parseFloat(e.target.value) / 100;
@@ -845,6 +1324,7 @@
                 updateReverbMix();
             });
 
+            // ระดับความสั่นไหวของสาย
             const sliderVibrato = document.getElementById("slider-vibrato");
             const vibratoLabels = ["ไม่มี", "ปานกลาง", "สั่นกระสะเทือนลึก"];
             sliderVibrato.addEventListener("input", (e) => {
@@ -852,6 +1332,7 @@
                 document.getElementById("lbl-vibrato").innerText = vibratoLabels[currentVibratoLevel];
             });
 
+            // คู่มือช่วยเหลือ
             document.getElementById("toggle-help").addEventListener("click", () => {
                 document.getElementById("help-modal").classList.remove("hidden");
             });
@@ -864,5 +1345,3 @@
     </script>
 </body>
 </html>
-```
-eof
