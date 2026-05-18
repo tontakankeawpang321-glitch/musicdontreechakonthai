@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>น้ำเต้าปี่เสมือนจริง (Virtual Hulusi)</title>
+    <title>น้ำเต้าปี่เสมือนจริง (Virtual Hulusi Pro)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-
         :root {
-            --gourd-color: #d4a056;
-            --gourd-dark: #8c5e26;
-            --pipe-color: #3e2723;
-            --bg-color: #1a1a1a;
-            --text-color: #fff;
-            --accent-color: #ffb74d;
+            --gourd-color: #e5a952;
+            --gourd-dark: #915a1a;
+            --pipe-color: #4a2c11;
+            --bg-color: #0d0d0d;
+            --text-color: #f3f4f6;
+            --accent-color: #fbbf24;
+            --jade-color: #2e7d32;
         }
 
         body {
@@ -25,10 +30,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh; /* Fixed height for mobile */
-            overflow: hidden; /* Prevent scroll on mobile */
+            height: 100vh;
+            height: -webkit-fill-available; /* Safari mobile support */
+            overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
+        }
+
+        /* Ambient glow background */
+        .bg-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0;
+            pointer-events: none;
         }
 
         /* Start Overlay */
@@ -38,323 +57,469 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: radial-gradient(circle at center, rgba(30, 20, 10, 0.95) 0%, rgba(10, 5, 2, 0.98) 100%);
             z-index: 1000;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             text-align: center;
-            transition: opacity 0.5s;
+            transition: opacity 0.5s ease;
         }
 
         .start-btn {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: var(--accent-color);
-            color: #000;
+            padding: 16px 45px;
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #111;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 0 20px rgba(255, 183, 77, 0.5);
-            animation: pulse 2s infinite;
+            box-shadow: 0 10px 25px rgba(217, 119, 6, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Controls Area */
-        .controls {
-            width: 100%;
-            padding: 10px;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            z-index: 100;
-            flex-wrap: wrap;
-            flex-shrink: 0; /* Prevent controls from shrinking */
-        }
-
-        .btn {
-            padding: 8px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--accent-color);
-            background: transparent;
-            color: var(--accent-color);
-            cursor: pointer;
-            font-family: 'Sarabun', sans-serif;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s;
-        }
-
-        .btn:active {
+        .start-btn:active {
             transform: scale(0.95);
         }
 
-        .btn.recording {
-            background: #e53935;
-            color: white;
-            border-color: #e53935;
-            animation: blink 1s infinite;
+        /* Control bar styling */
+        .control-panel {
+            background: linear-gradient(to bottom, rgba(20, 15, 10, 0.95), rgba(10, 8, 5, 0.98));
+            border-bottom: 2px solid rgba(251, 191, 36, 0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
 
-        @keyframes blink {
-            50% { opacity: 0.5; }
+        /* Floating Note Bubbles & Waterfall */
+        #effectsCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            filter: grayscale(1);
-        }
-
-        /* Instrument Area */
+        /* Instrument Container setup */
         .instrument-container {
+            position: relative;
             flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
             width: 100%;
-            padding: 10px 0; /* Reduced padding */
+            padding: 5px 0;
             box-sizing: border-box;
-            height: 100%; /* Take remaining height */
+            min-height: 0; /* Allow resizing in flex parent */
+            z-index: 5;
         }
 
-        /* The Hulusi Graphic */
         .hulusi-body {
             position: relative;
-            width: 120px;
-            height: 98%; /* Fill container height */
+            width: 130px;
+            height: 98%;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* Gourd (Top) */
+        /* Gourd shape styles */
         .gourd-top {
-            width: 6vh; /* Responsive width based on height */
-            height: 8vh; /* Responsive height */
-            max-width: 60px;
-            max-height: 80px;
-            background: radial-gradient(circle at 30% 30%, var(--gourd-color), var(--gourd-dark));
+            width: 7vh;
+            height: 9vh;
+            max-width: 65px;
+            max-height: 85px;
+            background: radial-gradient(circle at 35% 35%, #fcd34d 0%, #d97706 50%, #78350f 100%);
             border-radius: 40px 40px 30px 30px;
             position: relative;
-            z-index: 2;
-            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.3);
+            z-index: 20;
+            box-shadow: inset -3px -3px 10px rgba(0,0,0,0.5), 0 4px 10px rgba(0,0,0,0.3);
             flex-shrink: 0;
         }
         
         .gourd-bottom {
-            width: 11vh; /* Responsive width */
-            height: 10vh; /* Responsive height */
-            max-width: 110px;
-            max-height: 100px;
-            background: radial-gradient(circle at 30% 30%, var(--gourd-color), var(--gourd-dark));
+            width: 12vh;
+            height: 11vh;
+            max-width: 115px;
+            max-height: 105px;
+            background: radial-gradient(circle at 35% 35%, #fcd34d 0%, #d97706 50%, #78350f 100%);
             border-radius: 50%;
-            margin-top: -1.5vh;
-            z-index: 2;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset -5px -5px 15px rgba(0,0,0,0.3);
+            margin-top: -1.8vh;
+            z-index: 20;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset -5px -5px 15px rgba(0,0,0,0.4);
             position: relative;
             flex-shrink: 0;
+            display: flex;
+            justify-content: center;
         }
 
-        /* Decorative Tassel */
+        /* Traditional Jade Ornament and Tassel */
+        .jade-ring {
+            position: absolute;
+            bottom: -5px;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle, #81c784 30%, #2e7d32 80%);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            z-index: 25;
+        }
+
         .tassel {
             position: absolute;
-            right: -15px;
-            top: 50%;
-            width: 30px;
-            height: 100px;
-            background: repeating-linear-gradient(to bottom, #d32f2f, #d32f2f 2px, #b71c1c 4px);
+            right: -12px;
+            top: 55%;
+            width: 25px;
+            height: 110px;
+            background: repeating-linear-gradient(to right, #dc2626, #dc2626 3px, #991b1b 6px);
             clip-path: polygon(40% 0, 60% 0, 100% 100%, 0% 100%);
-            z-index: 1;
-            transform: rotate(-10deg);
+            z-index: 15;
+            transform: rotate(-12deg);
             transform-origin: top center;
+            opacity: 0.95;
+            animation: swing 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes swing {
+            0% { transform: rotate(-8deg); }
+            100% { transform: rotate(-16deg); }
         }
 
         /* Main Pipe */
         .main-pipe {
-            width: 5vh; /* Responsive width */
-            max-width: 50px;
-            background: linear-gradient(90deg, #5d4037, #8d6e63, #5d4037);
-            flex-grow: 1; /* Allow pipe to fill remaining space */
-            margin-top: -1vh;
-            border-radius: 0 0 10px 10px;
+            width: 4.8vh;
+            max-width: 45px;
+            background: linear-gradient(90deg, #451a03, #7c2d12, #9a3412, #7c2d12, #451a03);
+            flex-grow: 1;
+            margin-top: -1.2vh;
+            border-radius: 0 0 15px 15px;
             position: relative;
-            z-index: 1;
+            z-index: 15;
             display: flex;
             flex-direction: column;
             justify-content: space-evenly;
             align-items: center;
-            padding-bottom: 2vh;
-            min-height: 0; /* Allow shrinking */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            padding-bottom: 2.5vh;
+            min-height: 0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            border: 1px solid rgba(251, 191, 36, 0.15);
         }
 
-        /* Bamboo texture rings */
+        /* Traditional golden bands */
         .pipe-ring {
             position: absolute;
-            width: 100%;
-            height: 4px;
-            background: #3e2723;
-            opacity: 0.6;
+            width: 104%;
+            height: 6px;
+            background: linear-gradient(90deg, #b45309, #f59e0b, #d97706, #b45309);
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
-        /* Finger Holes (Buttons) */
+        /* Note finger holes (Buttons) */
         .note-btn {
-            width: 7vh;  /* Size based on screen height */
-            height: 7vh; /* Size based on screen height */
-            max-width: 55px;
-            max-height: 55px;
-            min-width: 40px; /* Minimum size for touch */
-            min-height: 40px;
+            width: 6.2vh;
+            height: 6.2vh;
+            max-width: 50px;
+            max-height: 50px;
+            min-width: 38px;
+            min-height: 38px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #4a3b2a, #251d14);
-            border: 3px solid #8d6e63;
+            background: radial-gradient(circle at 35% 35%, #271406 0%, #0d0703 80%);
+            border: 2.5px solid #854d0e;
             cursor: pointer;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: transform 0.1s, background-color 0.1s;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.7);
+            transition: transform 0.08s, background-color 0.08s, border-color 0.08s;
+            box-shadow: inset 2px 2px 6px rgba(0,0,0,0.9), 0 4px 6px rgba(0,0,0,0.3);
             touch-action: none; 
-            margin: 2px 0; /* Small margin to prevent overlap */
+            margin: 1px 0;
+        }
+
+        .note-btn::before {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.8);
         }
 
         .note-btn.active {
-            background: radial-gradient(circle at 50% 50%, #ffcc80, #f57c00);
-            box-shadow: 0 0 15px #ffb74d;
-            transform: scale(0.95);
-            border-color: #ffb74d;
+            background: radial-gradient(circle at 45% 45%, #fde047 0%, #eab308 60%, #a16207 100%);
+            box-shadow: 0 0 18px rgba(251, 191, 36, 0.8), inset 0px 2px 5px rgba(255,255,255,0.4);
+            transform: scale(0.93);
+            border-color: #fde047;
         }
 
-        .note-label {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.7);
-            font-weight: bold;
-            pointer-events: none;
-            text-shadow: 1px 1px 2px black;
-        }
-        
-        .note-btn.active .note-label {
-            color: #3e2723;
-            text-shadow: none;
+        .note-btn.active::before {
+            background: transparent;
+            box-shadow: none;
         }
 
-        /* Visualizer */
-        canvas {
+        .note-label-container {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 15vh;
+            left: 7.5vh;
+            background: rgba(13, 13, 13, 0.85);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            padding: 2px 8px;
+            border-radius: 8px;
             pointer-events: none;
-            opacity: 0.3;
-            z-index: 0;
-        }
-        
-        .status-msg {
-            position: absolute;
-            top: 70px;
-            background: rgba(0,0,0,0.7);
-            padding: 5px 15px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            display: none;
-            z-index: 200;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
 
+        /* Drawer Customization */
+        .drawer {
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer.open {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
 
-    <!-- Overlay to start audio context -->
+    <div class="bg-glow"></div>
+    <canvas id="effectsCanvas"></canvas>
+
+    <!-- Overlay to start Audio Context -->
     <div id="overlay">
-        <div style="margin-bottom: 20px; font-size: 3rem;">🤠🎶</div>
-        <h1>น้ำเต้าปี่เสมือนจริง</h1>
-        <p>Virtual Hulusi Instrument</p>
-        <p style="font-size: 0.9rem; color: #ccc;">กรุณาเปิดเสียงอุปกรณ์ของท่าน</p>
-        <br>
-        <button class="start-btn" onclick="initAudio()">เริ่มใช้งาน / Start</button>
+        <div class="mb-5 text-6xl animate-bounce">🎶</div>
+        <h1 class="text-3xl font-bold text-amber-400 mb-1">น้ำเต้าปี่เสมือนจริง PRO</h1>
+        <p class="text-gray-300 text-sm mb-6">Virtual Hulusi Instrument & Tutorial</p>
+        <div class="bg-black/40 border border-amber-500/20 p-4 rounded-xl max-w-xs mb-8 text-center text-xs text-gray-400">
+            💡 แนะนำให้เปิดเสียงอุปกรณ์ของคุณ และสัมผัสหรือคลิกที่รูเพื่อปล่อยเสียงปี่แสนไพเราะ
+        </div>
+        <button class="start-btn" onclick="initAudio()">เริ่มใช้งาน / Enter App</button>
     </div>
 
-    <!-- Controls -->
-    <div class="controls">
-        <button id="btnRecord" class="btn" onclick="toggleRecording()">
-            <span>🔴</span> อัดเสียง
-        </button>
-        <button id="btnStop" class="btn" onclick="stopPlayback()" disabled>
-            <span>⏹️</span> หยุดเล่น
-        </button>
-        <button id="btnPlay" class="btn" onclick="playRecording()" disabled>
-            <span>▶️</span> ฟัง
-        </button>
-        <button id="btnDownload" class="btn" onclick="downloadRecording()" disabled>
-            <span>⬇️</span> โหลด
-        </button>
+    <!-- Top Control Panel -->
+    <div class="control-panel w-full p-3 px-4 flex flex-col gap-2 z-50">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-amber-500 text-xl font-bold">🪕 Virtual Hulusi</span>
+                <span id="demoBadge" class="hidden px-2 py-0.5 text-[10px] bg-green-600 text-white rounded-full animate-pulse">Auto Playing</span>
+            </div>
+            
+            <!-- Quick Settings Triggers -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleSettings()" class="bg-zinc-800/80 hover:bg-zinc-700 text-amber-400 p-2 rounded-lg text-xs flex items-center gap-1 border border-zinc-700/50">
+                    <i class="fa-solid fa-sliders"></i> ปรับแต่งเสียง
+                </button>
+            </div>
+        </div>
+
+        <!-- Recording & Playback Row -->
+        <div class="flex justify-between items-center gap-2 mt-1">
+            <div class="flex gap-1.5 flex-1">
+                <button id="btnRecord" onclick="toggleRecording()" class="flex-1 bg-red-950/40 text-red-400 border border-red-900/40 hover:bg-red-900/30 p-2 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all">
+                    <span id="recordDot" class="w-2.5 h-2.5 bg-red-500 rounded-full"></span> อัดเสียง
+                </button>
+                <button id="btnPlay" onclick="playRecording()" disabled class="flex-1 bg-zinc-800/50 text-zinc-500 border border-zinc-700/30 p-2 rounded-lg text-xs flex items-center justify-center gap-1 disabled:opacity-50 transition-all">
+                    <i class="fa-solid fa-play"></i> ฟัง
+                </button>
+                <button id="btnStop" onclick="stopPlayback()" disabled class="flex-1 bg-zinc-800/50 text-zinc-500 border border-zinc-700/30 p-2 rounded-lg text-xs flex items-center justify-center gap-1 disabled:opacity-50 transition-all">
+                    <i class="fa-solid fa-stop"></i> หยุด
+                </button>
+                <button id="btnDownload" onclick="downloadRecording()" disabled class="bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 p-2 rounded-lg text-xs flex items-center justify-center gap-1 disabled:opacity-40 transition-all">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Demo Songs Selector Row -->
+        <div class="flex items-center gap-2 mt-1 bg-zinc-900/60 p-1.5 rounded-lg border border-amber-500/10">
+            <span class="text-xs text-amber-500 font-medium whitespace-nowrap"><i class="fa-solid fa-graduation-cap"></i> เพลงสาธิต:</span>
+            <select id="songSelect" onchange="selectSong(this.value)" class="bg-zinc-950 text-gray-200 text-xs rounded p-1 flex-1 border border-zinc-800 outline-none">
+                <option value="">-- เลือกบทเรียนเพลงฝึกเป่า --</option>
+                <option value="moonlight">ขลุ่ยไม้ไผ่ใต้แสงจันทร์ (Moonlight Phoenix)</option>
+                <option value="jasmine">ดอกมะลิกุ้ยฮวา (Jasmine Flower)</option>
+                <option value="loykrathong">ลอยกระทงไทย (Loy Krathong)</option>
+            </select>
+            <button id="btnPlayDemo" onclick="toggleDemoPlayback()" class="bg-green-700/80 hover:bg-green-600 text-white text-xs px-3 py-1 rounded transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-play"></i> เล่น
+            </button>
+        </div>
     </div>
 
-    <div id="statusMsg" class="status-msg"></div>
+    <!-- Status Floating Toast -->
+    <div id="statusToast" class="fixed top-28 bg-amber-500 text-black font-bold text-xs py-1.5 px-4 rounded-full shadow-lg z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
 
-    <!-- Canvas for Visualizer -->
-    <canvas id="visualizer"></canvas>
-
-    <!-- Instrument Body -->
+    <!-- Instrument Main Area -->
     <div class="instrument-container">
+        <!-- Floating Guide Tracks (Lanes for falling nodes) -->
+        <div class="absolute left-6 top-0 bottom-0 w-16 pointer-events-none z-10 flex flex-col justify-between py-12 opacity-80">
+            <div class="text-[10px] text-zinc-500 text-center border-b border-zinc-800 pb-1">ไกด์ฝึกเป่า</div>
+            <div class="flex-grow relative" id="guideLaneContainer">
+                <!-- Waterfall markers will be drawn on canvas dynamically -->
+            </div>
+        </div>
+
         <div class="hulusi-body">
-            <!-- Gourd Shape -->
+            <!-- Gourd Design -->
             <div class="gourd-top"></div>
             <div class="gourd-bottom">
+                <div class="jade-ring"></div>
                 <div class="tassel"></div>
             </div>
             
-            <!-- Pipe & Holes -->
+            <!-- Main Pipe & Holes (Interactive note triggers) -->
             <div class="main-pipe">
                 <div class="pipe-ring" style="top: 10%"></div>
+                <div class="pipe-ring" style="top: 40%"></div>
+                <div class="pipe-ring" style="top: 75%"></div>
                 
-                <!-- Notes (Mapping typical Hulusi C/Bb scale range) -->
-                <!-- High notes on top, Low on bottom usually, but logical map for screen -->
-                
-                <div class="note-btn" data-note="A5" ontouchstart="startNote(event, 'A5')" ontouchend="stopNote(event, 'A5')" onmousedown="startNote(event, 'A5')" onmouseup="stopNote(event, 'A5')" onmouseleave="stopNote(event, 'A5')">
-                    <span class="note-label">ลา H</span>
+                <!-- Notes mappings (High pitch on top, Low pitch on bottom) -->
+                <!-- Note: A5 -->
+                <div class="note-btn" data-note="A5" 
+                     ontouchstart="handleTouchStart(event, 'A5')" ontouchend="handleTouchEnd(event, 'A5')" 
+                     onmousedown="handleMouseDown(event, 'A5')" onmouseup="handleMouseUp(event, 'A5')" onmouseleave="handleMouseUp(event, 'A5')">
+                    <div class="note-label-container">
+                        <span class="text-amber-400 font-bold text-xs">A5</span>
+                        <span class="text-zinc-400 text-[10px] ml-1">ลา สูง</span>
+                    </div>
                 </div>
                 
-                <div class="note-btn" data-note="G5" ontouchstart="startNote(event, 'G5')" ontouchend="stopNote(event, 'G5')" onmousedown="startNote(event, 'G5')" onmouseup="stopNote(event, 'G5')" onmouseleave="stopNote(event, 'G5')">
-                    <span class="note-label">ซอล H</span>
+                <!-- Note: G5 -->
+                <div class="note-btn" data-note="G5" 
+                     ontouchstart="handleTouchStart(event, 'G5')" ontouchend="handleTouchEnd(event, 'G5')" 
+                     onmousedown="handleMouseDown(event, 'G5')" onmouseup="handleMouseUp(event, 'G5')" onmouseleave="handleMouseUp(event, 'G5')">
+                    <div class="note-label-container">
+                        <span class="text-amber-400 font-bold text-xs">G5</span>
+                        <span class="text-zinc-400 text-[10px] ml-1">ซอล สูง</span>
+                    </div>
                 </div>
 
-                <div class="note-btn" data-note="E5" ontouchstart="startNote(event, 'E5')" ontouchend="stopNote(event, 'E5')" onmousedown="startNote(event, 'E5')" onmouseup="stopNote(event, 'E5')" onmouseleave="stopNote(event, 'E5')">
-                    <span class="note-label">มี H</span>
+                <!-- Note: E5 -->
+                <div class="note-btn" data-note="E5" 
+                     ontouchstart="handleTouchStart(event, 'E5')" ontouchend="handleTouchEnd(event, 'E5')" 
+                     onmousedown="handleMouseDown(event, 'E5')" onmouseup="handleMouseUp(event, 'E5')" onmouseleave="handleMouseUp(event, 'E5')">
+                    <div class="note-label-container">
+                        <span class="text-amber-400 font-bold text-xs">E5</span>
+                        <span class="text-zinc-400 text-[10px] ml-1">มี สูง</span>
+                    </div>
                 </div>
 
-                <div class="note-btn" data-note="D5" ontouchstart="startNote(event, 'D5')" ontouchend="stopNote(event, 'D5')" onmousedown="startNote(event, 'D5')" onmouseup="stopNote(event, 'D5')" onmouseleave="stopNote(event, 'D5')">
-                    <span class="note-label">เร H</span>
+                <!-- Note: D5 -->
+                <div class="note-btn" data-note="D5" 
+                     ontouchstart="handleTouchStart(event, 'D5')" ontouchend="handleTouchEnd(event, 'D5')" 
+                     onmousedown="handleMouseDown(event, 'D5')" onmouseup="handleMouseUp(event, 'D5')" onmouseleave="handleMouseUp(event, 'D5')">
+                    <div class="note-label-container">
+                        <span class="text-amber-400 font-bold text-xs">D5</span>
+                        <span class="text-zinc-400 text-[10px] ml-1">เร สูง</span>
+                    </div>
                 </div>
 
-                <div class="note-btn" data-note="C5" ontouchstart="startNote(event, 'C5')" ontouchend="stopNote(event, 'C5')" onmousedown="startNote(event, 'C5')" onmouseup="stopNote(event, 'C5')" onmouseleave="stopNote(event, 'C5')">
-                    <span class="note-label">โด M</span>
+                <!-- Note: C5 -->
+                <div class="note-btn" data-note="C5" 
+                     ontouchstart="handleTouchStart(event, 'C5')" ontouchend="handleTouchEnd(event, 'C5')" 
+                     onmousedown="handleMouseDown(event, 'C5')" onmouseup="handleMouseUp(event, 'C5')" onmouseleave="handleMouseUp(event, 'C5')">
+                    <div class="note-label-container">
+                        <span class="text-amber-400 font-bold text-xs">C5</span>
+                        <span class="text-zinc-400 text-[10px] ml-1">โด กลาง</span>
+                    </div>
                 </div>
 
-                <div class="note-btn" data-note="A4" ontouchstart="startNote(event, 'A4')" ontouchend="stopNote(event, 'A4')" onmousedown="startNote(event, 'A4')" onmouseup="stopNote(event, 'A4')" onmouseleave="stopNote(event, 'A4')">
-                    <span class="note-label">ลา L</span>
+                <!-- Note: A4 -->
+                <div class="note-btn" data-note="A4" 
+                     ontouchstart="handleTouchStart(event, 'A4')" ontouchend="handleTouchEnd(event, 'A4')" 
+                     onmousedown="handleMouseDown(event, 'A4')" onmouseup="handleMouseUp(event, 'A4')" onmouseleave="handleMouseUp(event, 'A4')">
+                    <div class="note-label-container">
+                        <span class="text-amber-400 font-bold text-xs">A4</span>
+                        <span class="text-zinc-400 text-[10px] ml-1">ลา ต่ำ</span>
+                    </div>
                 </div>
 
-                <div class="note-btn" data-note="G4" ontouchstart="startNote(event, 'G4')" ontouchend="stopNote(event, 'G4')" onmousedown="startNote(event, 'G4')" onmouseup="stopNote(event, 'G4')" onmouseleave="stopNote(event, 'G4')">
-                    <span class="note-label">ซอล L</span>
+                <!-- Note: G4 -->
+                <div class="note-btn" data-note="G4" 
+                     ontouchstart="handleTouchStart(event, 'G4')" ontouchend="handleTouchEnd(event, 'G4')" 
+                     onmousedown="handleMouseDown(event, 'G4')" onmouseup="handleMouseUp(event, 'G4')" onmouseleave="handleMouseUp(event, 'G4')">
+                    <div class="note-label-container">
+                        <span class="text-amber-400 font-bold text-xs">G4</span>
+                        <span class="text-zinc-400 text-[10px] ml-1">ซอล ต่ำ</span>
+                    </div>
                 </div>
 
                 <div class="pipe-ring" style="bottom: 5%"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Advanced Settings Drawer -->
+    <div id="settingsDrawer" class="drawer fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-amber-500/30 p-5 rounded-t-3xl z-50 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-amber-400 font-bold text-lg"><i class="fa-solid fa-sliders mr-1"></i> ระบบปรับแต่งเสียงปี่ขั้นสูง</h3>
+            <button onclick="toggleSettings()" class="text-gray-400 hover:text-white text-xl p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+            <!-- Drone Pipe Feature -->
+            <div class="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 flex justify-between items-center">
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-200">เปิดเสียงประสานปี่รอง (Drone Reed)</h4>
+                    <p class="text-[11px] text-gray-400">เสียงฮัมประสานโทนเสียงต่ำแบบน้ำเต้าปี่ของจริง</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="droneToggle" onchange="toggleDrone(this.checked)" class="sr-only peer">
+                    <div class="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                </label>
+            </div>
+
+            <!-- Tone Cutoff (Mellow/Bright) -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-300">โทนสีเสียงปี่ (Filter Cutoff)</span>
+                    <span id="valCutoff" class="text-amber-400 font-medium">1200 Hz</span>
+                </div>
+                <input type="range" id="slideCutoff" min="400" max="2500" value="1200" oninput="updateAudioSettings()" class="w-full accent-amber-500 h-1.5 bg-zinc-800 rounded-lg appearance-none">
+            </div>
+
+            <!-- Vibrato Setting -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-300">ความเร็วลูกคอสั่น (Vibrato Rate)</span>
+                    <span id="valVibRate" class="text-amber-400 font-medium">5.2 Hz</span>
+                </div>
+                <input type="range" id="slideVibRate" min="2" max="10" step="0.1" value="5.2" oninput="updateAudioSettings()" class="w-full accent-amber-500 h-1.5 bg-zinc-800 rounded-lg appearance-none">
+            </div>
+
+            <!-- Reverb/Resonance -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-300">ความก้องไม้ไผ่ (Bamboo Reverb Feedback)</span>
+                    <span id="valReverb" class="text-amber-400 font-medium">35%</span>
+                </div>
+                <input type="range" id="slideReverb" min="10" max="80" value="35" oninput="updateAudioSettings()" class="w-full accent-amber-500 h-1.5 bg-zinc-800 rounded-lg appearance-none">
+            </div>
+
+            <!-- Wind/Noise level -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-300">จำลองเสียงลมเป่า (Air Chiff Wind Level)</span>
+                    <span id="valNoise" class="text-amber-400 font-medium">15%</span>
+                </div>
+                <input type="range" id="slideNoise" min="0" max="40" value="15" oninput="updateAudioSettings()" class="w-full accent-amber-500 h-1.5 bg-zinc-800 rounded-lg appearance-none">
+            </div>
+            
+            <!-- Master Volume -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-300">ระดับเสียงหลัก (Master Gain)</span>
+                    <span id="valVolume" class="text-amber-400 font-medium">70%</span>
+                </div>
+                <input type="range" id="slideVolume" min="0" max="100" value="70" oninput="updateAudioSettings()" class="w-full accent-amber-500 h-1.5 bg-zinc-800 rounded-lg appearance-none">
+            </div>
+
+            <!-- Reset to Defaults Button -->
+            <button onclick="resetAudioToDefault()" class="w-full py-2 bg-zinc-900 border border-zinc-700/60 text-xs text-gray-300 rounded-xl hover:bg-zinc-800 transition-colors flex items-center justify-center gap-1">
+                <i class="fa-solid fa-rotate-left"></i> รีเซ็ตค่าเสียงเริ่มต้น
+            </button>
         </div>
     </div>
 
@@ -363,182 +528,662 @@
         let audioCtx;
         let masterGain;
         let compressor;
-        let reverbNode;
+        let delayNode;
+        let delayGain;
         let analyser;
+        let droneOscillator = null;
+        let droneGainNode = null;
+        let noiseBuffer = null;
+
         const activeOscillators = {};
         
-        // Frequencies (C Major Pentatonic oriented + typical Hulusi range)
-        // Using Just Intonation for smoother harmony if possible, but ET is safer for web
+        // Frequencies mapped standard Hulusi key (C / Bb scale oriented notes)
         const notes = {
-            'G4': 392.00, // Low Sol
-            'A4': 440.00, // Low La
-            'C5': 523.25, // Do
-            'D5': 587.33, // Re
-            'E5': 659.25, // Mi
-            'G5': 783.99, // High Sol
-            'A5': 880.00  // High La
+            'G4': 392.00,  // Low Sol
+            'A4': 440.00,  // Low La
+            'C5': 523.25,  // Do (Fundamental)
+            'D5': 587.33,  // Re
+            'E5': 659.25,  // Mi
+            'G5': 783.99,  // High Sol
+            'A5': 880.00   // High La
+        };
+
+        // Note indices for Waterfall visualization helper
+        const noteIndexes = {
+            'G4': 0, 'A4': 1, 'C5': 2, 'D5': 3, 'E5': 4, 'G5': 5, 'A5': 6
+        };
+
+        // Settings States
+        const state = {
+            droneEnabled: false,
+            filterCutoff: 1200,
+            vibratoRate: 5.2,
+            vibratoDepth: 4,
+            reverbFeedback: 0.35,
+            noiseLevel: 0.15,
+            masterVolume: 0.7
         };
 
         // Recorder variables
         let mediaRecorder;
         let recordedChunks = [];
-        let audioURL;
+        let audioURL = null;
         let audioPlaybackElement = new Audio();
         let isRecording = false;
-        let destStream; // Destination for recording
+        let destStream;
 
-        // Visualizer variables
-        const canvas = document.getElementById('visualizer');
-        const canvasCtx = canvas.getContext('2d');
-        let dataArray;
+        // Visualizer / Canvas variables
+        const canvas = document.getElementById('effectsCanvas');
+        const ctx = canvas.getContext('2d');
+        let bubbleParticles = [];
+        let upcomingNotes = []; // Notes currently falling down standard Synthesia-style
+        let isDemoPlaying = false;
+        let currentDemoTimeout = null;
+        let demoSongQueue = [];
+        let demoPlaybackStartTime = 0;
 
-        // --- Initialization ---
+        // --- Demo Songs Library ---
+        const songs = {
+            moonlight: [
+                { note: 'E5', time: 500, duration: 600 },
+                { note: 'G5', time: 1200, duration: 400 },
+                { note: 'A5', time: 1700, duration: 1000 },
+                { note: 'G5', time: 2800, duration: 600 },
+                { note: 'E5', time: 3500, duration: 400 },
+                { note: 'D5', time: 4000, duration: 1000 },
+                { note: 'C5', time: 5100, duration: 600 },
+                { note: 'D5', time: 5800, duration: 400 },
+                { note: 'E5', time: 6300, duration: 600 },
+                { note: 'G5', time: 7000, duration: 400 },
+                { note: 'E5', time: 7500, duration: 1200 },
+                { note: 'D5', time: 8800, duration: 600 },
+                { note: 'C5', time: 9500, duration: 1200 }
+            ],
+            jasmine: [
+                { note: 'C5', time: 500, duration: 400 },
+                { note: 'C5', time: 1000, duration: 400 },
+                { note: 'E5', time: 1500, duration: 400 },
+                { note: 'G5', time: 2000, duration: 400 },
+                { note: 'A5', time: 2500, duration: 400 },
+                { note: 'A5', time: 3000, duration: 400 },
+                { note: 'G5', time: 3500, duration: 800 },
+                { note: 'E5', time: 4400, duration: 400 },
+                { note: 'G5', time: 4900, duration: 400 },
+                { note: 'A5', time: 5400, duration: 400 },
+                { note: 'G5', time: 5900, duration: 400 },
+                { note: 'E5', time: 6400, duration: 400 },
+                { note: 'D5', time: 6900, duration: 800 },
+                { note: 'E5', time: 7800, duration: 400 },
+                { note: 'D5', time: 8300, duration: 400 },
+                { note: 'C5', time: 8800, duration: 1200 }
+            ],
+            loykrathong: [
+                { note: 'A4', time: 500, duration: 400 },
+                { note: 'A4', time: 1000, duration: 400 },
+                { note: 'A4', time: 1500, duration: 800 },
+                { note: 'C5', time: 2400, duration: 400 },
+                { note: 'E5', time: 2900, duration: 400 },
+                { note: 'D5', time: 3400, duration: 400 },
+                { note: 'C5', time: 3900, duration: 800 },
+                { note: 'D5', time: 4800, duration: 400 },
+                { note: 'E5', time: 5300, duration: 400 },
+                { note: 'D5', time: 5800, duration: 400 },
+                { note: 'C5', time: 6300, duration: 800 },
+                { note: 'A4', time: 7200, duration: 800 },
+                { note: 'G4', time: 8100, duration: 400 },
+                { note: 'A4', time: 8600, duration: 400 },
+                { note: 'C5', time: 9100, duration: 1200 }
+            ]
+        };
+
+        // --- STREAMING_CHUNK: Init Sound & Web Audio Synthesis ---
         function initAudio() {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
 
-            // Master Gain
-            masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.6;
+            // Set up Noise Buffer for Air blow sound (chiff)
+            const bufferSize = audioCtx.sampleRate * 2;
+            noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
 
-            // Dynamics Compressor (keeps volume even)
+            // Compressor
             compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -24;
-            compressor.knee.value = 30;
-            compressor.ratio.value = 12;
-            compressor.attack.value = 0.003;
-            compressor.release.value = 0.25;
+            compressor.threshold.value = -18;
+            compressor.knee.value = 15;
+            compressor.ratio.value = 8;
+            compressor.attack.value = 0.01;
+            compressor.release.value = 0.15;
 
-            // Simple Reverb (Convolver substitute using Delay for performance/stability)
-            // Creating a delay to simulate bamboo resonance
-            const delay = audioCtx.createDelay();
-            delay.delayTime.value = 0.04; // short delay for resonance
-            const delayGain = audioCtx.createGain();
-            delayGain.gain.value = 0.3;
-            
-            // Analyser for visuals
+            // Master volume control
+            masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(state.masterVolume, audioCtx.currentTime);
+
+            // Reverb Simulation (Short Feedback delay circuit)
+            delayNode = audioCtx.createDelay();
+            delayNode.delayTime.value = 0.08; 
+            delayGain = audioCtx.createGain();
+            delayGain.gain.value = state.reverbFeedback;
+
+            // Setup Analyzer
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 256;
-            const bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
 
-            // Routing
-            // Oscillators -> LocalGain -> Compressor -> Master -> Delay -> Destination
+            // Connecting Nodes:
+            // Sources -> Compressor -> MasterGain -> Speaker
+            // Output also goes to Delay Feedback loop
+            compressor.connect(masterGain);
+            masterGain.connect(audioCtx.destination);
             
-            masterGain.connect(compressor);
-            compressor.connect(audioCtx.destination); // Speaker
-            
-            // Effect routing
-            compressor.connect(delay);
-            delay.connect(delayGain);
-            delayGain.connect(compressor); // Feedback loop for resonance
-            
-            compressor.connect(analyser);
+            // Loop for Reverb
+            masterGain.connect(delayNode);
+            delayNode.connect(delayGain);
+            delayGain.connect(masterGain);
 
-            // Recorder setup routing
+            masterGain.connect(analyser);
+
+            // Record Destination Set
             destStream = audioCtx.createMediaStreamDestination();
-            compressor.connect(destStream);
+            masterGain.connect(destStream);
 
-            // Hide overlay
-            document.getElementById('overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('overlay').style.display = 'none';
-            }, 500);
+            // Close start overlay screen
+            const overlay = document.getElementById('overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 500);
 
-            // Start Visualizer
-            drawVisualizer();
-            
-            // Fix iOS Audio Context state
+            // Start Graphic Rendering loop
+            resizeCanvas();
+            requestAnimationFrame(renderLoop);
+
+            // Handle iOS audio context state resumption
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+
+            showToast("🎺 ยินดีต้อนรับสู่ระบบจำลองเสียงปี่พรีเมียม!");
         }
 
-        // --- Sound Synthesis (The Hulusi Sound) ---
+        // Generate customized Hulusi synthesizer tone
         function createHulusiSound(frequency) {
+            // 1. Core Reed Sound: Sawtooth rich in harmonics
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             const filter = audioCtx.createBiquadFilter();
 
-            // 1. Oscillator Type
-            // Sawtooth waves are rich in harmonics, good for reeds.
-            osc.type = 'sawtooth'; 
+            osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
 
-            // 2. Filter (The Gourd/Bamboo body simulation)
-            // Lowpass filter removes harsh high frequencies, making it "mellow"
+            // 2. Air / Wind noise layer (breath chiff on start)
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+            noise.loop = true;
+
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.value = frequency;
+            noiseFilter.Q.value = 6;
+
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(state.noiseLevel * 0.4, audioCtx.currentTime);
+
+            // Connect Noise source
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(filter);
+
+            // 3. Body Filter (Gourd acoustic resonance simulator)
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(800, audioCtx.currentTime); // Start closed
-            filter.Q.value = 1; // Resonance
+            filter.frequency.setValueAtTime(state.filterCutoff, audioCtx.currentTime);
+            filter.Q.value = 3.5; // High Q gives traditional reed characteristic
 
-            // 3. Envelope (ADSR)
-            const now = audioCtx.currentTime;
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.4, now + 0.05); // Attack (Soft but quick)
-            gainNode.gain.linearRampToValueAtTime(0.3, now + 0.2); // Decay
-            
-            // Filter Envelope (Wah effect for articulation)
-            filter.frequency.linearRampToValueAtTime(1500, now + 0.05);
-            filter.frequency.linearRampToValueAtTime(1200, now + 0.2);
-
-            // Vibrato (LFO) - Subtle pitch modulation
+            // 4. Subtle Vibrato (LFO Modulator)
             const lfo = audioCtx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.value = 5; // 5Hz vibrato
             const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = 3; // Depth
+            lfo.type = 'sine';
+            lfo.frequency.setValueAtTime(state.vibratoRate, audioCtx.currentTime);
+            lfoGain.gain.setValueAtTime(state.vibratoDepth, audioCtx.currentTime);
+
             lfo.connect(lfoGain);
             lfoGain.connect(osc.frequency);
-            lfo.start();
 
-            // Connections
+            // ADSR Envelopes
+            const now = audioCtx.currentTime;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.4, now + 0.08); // Sweet soft attack
+            gainNode.gain.linearRampToValueAtTime(0.32, now + 0.25); // Sustain drop
+
+            // Synthesizer connections
             osc.connect(filter);
             filter.connect(gainNode);
-            gainNode.connect(masterGain);
+            gainNode.connect(compressor);
 
-            osc.start();
+            osc.start(now);
+            lfo.start(now);
+            noise.start(now);
 
-            return { osc, gainNode, lfo, filter };
+            return { osc, gainNode, lfo, noise, filter };
         }
 
-        // --- Interaction Logic ---
-        function startNote(e, note) {
-            if (e.type === 'touchstart') e.preventDefault(); // Prevent ghost clicks
+        // --- STREAMING_CHUNK: Play & Stop Note Handlers ---
+        function startNote(note) {
             if (!audioCtx) return;
-            if (activeOscillators[note]) return; // Already playing
+            if (activeOscillators[note]) return; // Stop redundant play
 
             const freq = notes[note];
-            const soundObj = createHulusiSound(freq);
-            activeOscillators[note] = soundObj;
+            const sound = createHulusiSound(freq);
+            activeOscillators[note] = sound;
 
-            // Visual feedback
+            // Trigger Drone Pipe sound if active and not already playing
+            if (state.droneEnabled) {
+                playDroneReed();
+            }
+
+            // Set UI feedback
             const btn = document.querySelector(`.note-btn[data-note="${note}"]`);
-            if(btn) btn.classList.add('active');
+            if (btn) btn.classList.add('active');
+
+            // Spawn visual bubbles
+            createBubbleParticles(note);
         }
 
-        function stopNote(e, note) {
-            if (e.type === 'touchend') e.preventDefault();
+        function stopNote(note) {
             if (!activeOscillators[note]) return;
 
-            const { osc, gainNode, lfo } = activeOscillators[note];
+            const sound = activeOscillators[note];
             const now = audioCtx.currentTime;
 
-            // Release phase
-            gainNode.gain.cancelScheduledValues(now);
-            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1); // Quick release
+            // Soft release phase
+            sound.gainNode.gain.cancelScheduledValues(now);
+            sound.gainNode.gain.setValueAtTime(sound.gainNode.gain.value, now);
+            sound.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
-            osc.stop(now + 0.1);
-            lfo.stop(now + 0.1);
+            sound.osc.stop(now + 0.15);
+            sound.lfo.stop(now + 0.15);
+            sound.noise.stop(now + 0.15);
 
             delete activeOscillators[note];
 
-            // Visual feedback
+            // Trigger Drone stops only when all primary notes stopped
+            if (Object.keys(activeOscillators).length === 0) {
+                stopDroneReed();
+            }
+
+            // Remove UI visual feedback
             const btn = document.querySelector(`.note-btn[data-note="${note}"]`);
-            if(btn) btn.classList.remove('active');
+            if (btn) btn.classList.remove('active');
         }
 
-        // --- Recording Logic ---
+        // Real Hulusi Side Drone Pipe sound simulation
+        function playDroneReed() {
+            if (droneOscillator !== null) return; // Already on
+
+            droneOscillator = audioCtx.createOscillator();
+            droneGainNode = audioCtx.createGain();
+            const droneFilter = audioCtx.createBiquadFilter();
+
+            // Set to traditional G4 harmonizing drone note
+            droneOscillator.type = 'triangle'; 
+            droneOscillator.frequency.value = notes['G4'];
+
+            droneFilter.type = 'lowpass';
+            droneFilter.frequency.value = 600;
+
+            const now = audioCtx.currentTime;
+            droneGainNode.gain.setValueAtTime(0, now);
+            droneGainNode.gain.linearRampToValueAtTime(0.15, now + 0.2); // Soft slow fade in
+
+            droneOscillator.connect(droneFilter);
+            droneFilter.connect(droneGainNode);
+            droneGainNode.connect(compressor);
+
+            droneOscillator.start(now);
+        }
+
+        function stopDroneReed() {
+            if (droneOscillator === null) return;
+
+            const now = audioCtx.currentTime;
+            const tempOsc = droneOscillator;
+            const tempGain = droneGainNode;
+
+            droneOscillator = null;
+            droneGainNode = null;
+
+            tempGain.gain.setValueAtTime(tempGain.gain.value, now);
+            tempGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            tempOsc.stop(now + 0.2);
+        }
+
+        // Keyboard & Mouse / Touch Unified Handlers
+        function handleTouchStart(e, note) {
+            e.preventDefault();
+            startNote(note);
+        }
+        function handleTouchEnd(e, note) {
+            e.preventDefault();
+            stopNote(note);
+        }
+        function handleMouseDown(e, note) {
+            startNote(note);
+        }
+        function handleMouseUp(e, note) {
+            stopNote(note);
+        }
+
+        // --- STREAMING_CHUNK: Multi-Song Demo Player & Auto-Flow system ---
+        let selectedSongId = '';
+
+        function selectSong(songId) {
+            selectedSongId = songId;
+            stopAllDemoLogic();
+            if (!songId) return;
+
+            // Generate Guide/Falling waterfall bars for the select track
+            generateGuideBubbles(songId);
+            showToast("📖 เตรียมเป่าลมตามแนวแถบสีขอบหน้าจอได้เลย!");
+        }
+
+        function toggleDemoPlayback() {
+            if (!audioCtx) {
+                initAudio();
+                return;
+            }
+
+            if (isDemoPlaying) {
+                stopAllDemoLogic();
+                showToast("⏹️ หยุดเล่นเพลงสาธิตแล้ว");
+            } else {
+                if (!selectedSongId) {
+                    showToast("⚠️ กรุณาเลือกเพลงที่จะสาธิตก่อนครับ");
+                    return;
+                }
+                playSelectedDemo(selectedSongId);
+            }
+        }
+
+        function playSelectedDemo(songId) {
+            stopAllDemoLogic();
+            isDemoPlaying = true;
+            document.getElementById('btnPlayDemo').innerHTML = '<i class="fa-solid fa-square"></i> หยุดเล';
+            document.getElementById('demoBadge').classList.remove('hidden');
+
+            const demoData = songs[songId];
+            demoPlaybackStartTime = Date.now();
+            demoSongQueue = [];
+
+            // Enqueue audio plays
+            demoData.forEach(event => {
+                const timeoutStart = setTimeout(() => {
+                    startNote(event.note);
+                }, event.time);
+
+                const timeoutStop = setTimeout(() => {
+                    stopNote(event.note);
+                }, event.time + event.duration);
+
+                demoSongQueue.push(timeoutStart, timeoutStop);
+            });
+
+            // Handle completion toast and resets
+            const totalLength = demoData[demoData.length - 1].time + demoData[demoData.length - 1].duration;
+            const finishTimeout = setTimeout(() => {
+                stopAllDemoLogic();
+                showToast("🎉 จบเพลงสาธิตแล้ว ลองเป่าตามกันดูนะ!");
+            }, totalLength + 500);
+
+            demoSongQueue.push(finishTimeout);
+        }
+
+        function stopAllDemoLogic() {
+            isDemoPlaying = false;
+            document.getElementById('btnPlayDemo').innerHTML = '<i class="fa-solid fa-play"></i> เล่น';
+            document.getElementById('demoBadge').classList.add('hidden');
+
+            // Clear all timer loops
+            demoSongQueue.forEach(clearTimeout);
+            demoSongQueue = [];
+
+            // Kill any stuck notes
+            Object.keys(activeOscillators).forEach(stopNote);
+            stopDroneReed();
+        }
+
+        // Generates Synthesia-like guide blocks in real-time scrolling view
+        function generateGuideBubbles(songId) {
+            upcomingNotes = [];
+            const data = songs[songId];
+            const scaleYMultiplier = 0.55; // Speed / coordinate compression
+
+            data.forEach(item => {
+                upcomingNotes.push({
+                    note: item.note,
+                    y: -item.time * scaleYMultiplier,
+                    height: item.duration * scaleYMultiplier,
+                    played: false
+                });
+            });
+        }
+
+        // --- STREAMING_CHUNK: Advanced Control Configurations ---
+        function toggleSettings() {
+            document.getElementById('settingsDrawer').classList.toggle('open');
+        }
+
+        function updateAudioSettings() {
+            state.filterCutoff = parseFloat(document.getElementById('slideCutoff').value);
+            document.getElementById('valCutoff').innerText = state.filterCutoff + " Hz";
+
+            state.vibratoRate = parseFloat(document.getElementById('slideVibRate').value);
+            document.getElementById('valVibRate').innerText = state.vibratoRate + " Hz";
+
+            const feedbackPercent = parseInt(document.getElementById('slideReverb').value);
+            state.reverbFeedback = feedbackPercent / 100;
+            document.getElementById('valReverb').innerText = feedbackPercent + "%";
+            if (delayGain) delayGain.gain.setValueAtTime(state.reverbFeedback, audioCtx.currentTime);
+
+            const noisePercent = parseInt(document.getElementById('slideNoise').value);
+            state.noiseLevel = noisePercent / 100;
+            document.getElementById('valNoise').innerText = noisePercent + "%";
+
+            const volPercent = parseInt(document.getElementById('slideVolume').value);
+            state.masterVolume = volPercent / 100;
+            document.getElementById('valVolume').innerText = volPercent + "%";
+            if (masterGain) masterGain.gain.setValueAtTime(state.masterVolume, audioCtx.currentTime);
+        }
+
+        function toggleDrone(isChecked) {
+            state.droneEnabled = isChecked;
+            if (isChecked) {
+                if (Object.keys(activeOscillators).length > 0) {
+                    playDroneReed();
+                }
+                showToast("🔊 เปิดเสียงเป่าประสานหลักแล้ว");
+            } else {
+                stopDroneReed();
+                showToast("🔇 ปิดเสียงปี่รอง");
+            }
+        }
+
+        function resetAudioToDefault() {
+            document.getElementById('slideCutoff').value = 1200;
+            document.getElementById('slideVibRate').value = 5.2;
+            document.getElementById('slideReverb').value = 35;
+            document.getElementById('slideNoise').value = 15;
+            document.getElementById('slideVolume').value = 70;
+            document.getElementById('droneToggle').checked = false;
+            
+            state.droneEnabled = false;
+            stopDroneReed();
+            updateAudioSettings();
+            showToast("🔄 รีเซ็ตค่าเสียงระบบเริ่มต้นเรียบร้อย!");
+        }
+
+        // --- STREAMING_CHUNK: Particle FX and Waterfall Canvas Loop ---
+        function createBubbleParticles(note) {
+            const btn = document.querySelector(`.note-btn[data-note="${note}"]`);
+            if (!btn) return;
+
+            const rect = btn.getBoundingClientRect();
+            const startX = rect.left + rect.width / 2;
+            const startY = rect.top + rect.height / 2;
+
+            // Generate some decorative bubbles
+            for (let i = 0; i < 6; i++) {
+                bubbleParticles.push({
+                    x: startX + (Math.random() * 20 - 10),
+                    y: startY,
+                    vx: Math.random() * 2.4 - 1.2,
+                    vy: -(Math.random() * 2.5 + 1.2),
+                    radius: Math.random() * 9 + 4,
+                    hue: 35 + (Math.random() * 25), // Warm goldish bamboo spectrum
+                    alpha: 1.0,
+                    label: note
+                });
+            }
+        }
+
+        function renderLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Note Bubbles
+            for (let i = bubbleParticles.length - 1; i >= 0; i--) {
+                const p = bubbleParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.015;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${p.hue}, 95%, 60%, ${p.alpha})`;
+                ctx.shadowColor = `hsla(${p.hue}, 95%, 50%, 0.5)`;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+
+                // Draw tiny text label inside bubble
+                if (p.alpha > 0.4) {
+                    ctx.fillStyle = `rgba(0, 0, 0, ${p.alpha})`;
+                    ctx.font = 'bold 8px Sarabun';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(p.label, p.x, p.y);
+                }
+
+                if (p.alpha <= 0) {
+                    bubbleParticles.splice(i, 1);
+                }
+            }
+            ctx.shadowBlur = 0; // Clear shadow cache
+
+            // 2. Render Falling Note Guide Lanes (Synthesia Style) on the Left
+            if (selectedSongId && upcomingNotes.length > 0) {
+                const container = document.getElementById('guideLaneContainer');
+                const rect = container.getBoundingClientRect();
+                const laneX = rect.left;
+                const laneW = rect.width;
+                const bottomTargetY = rect.bottom;
+
+                // Speed / Velocity
+                const speed = 0.16; // Pxs per millisecond
+                const elapsed = Date.now() - demoPlaybackStartTime;
+
+                // Draw Lane Background
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+                ctx.fillRect(laneX, rect.top, laneW, rect.height);
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(laneX, rect.top, laneW, rect.height);
+
+                // Draw standard perfect match bar line
+                ctx.beginPath();
+                ctx.moveTo(laneX, bottomTargetY - 20);
+                ctx.lineTo(laneX + laneW, bottomTargetY - 20);
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                upcomingNotes.forEach(note => {
+                    let currentY;
+                    if (isDemoPlaying) {
+                        currentY = bottomTargetY - 20 + (note.y + (elapsed * speed));
+                    } else {
+                        // Stationary guide view on idle
+                        currentY = bottomTargetY - 20 + note.y;
+                    }
+
+                    // Render block if it's currently on screen viewport
+                    if (currentY + note.height > rect.top && currentY < bottomTargetY + 100) {
+                        const idx = noteIndexes[note.note] || 0;
+                        const blockHue = 30 + (idx * 30);
+
+                        ctx.fillStyle = `hsla(${blockHue}, 80%, 50%, 0.75)`;
+                        ctx.strokeStyle = `hsla(${blockHue}, 100%, 70%, 0.9)`;
+                        ctx.lineWidth = 1.5;
+
+                        // Rounded bar rect representing duration of note
+                        drawRoundedRect(ctx, laneX + 4, currentY, laneW - 8, note.height, 6);
+                        
+                        // Small text annotation
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 10px Sarabun';
+                        ctx.fillText(note.note, laneX + laneW / 2, currentY + Math.max(8, note.height / 2));
+                    }
+                });
+            }
+
+            // 3. Render traditional frequency waves at the bottom
+            if (analyser) {
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteFrequencyData(dataArray);
+
+                const waveHeight = 60;
+                const topPos = canvas.height - waveHeight;
+
+                ctx.beginPath();
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.04)';
+                ctx.fillRect(0, topPos, canvas.width, waveHeight);
+
+                const barWidth = (canvas.width / bufferLength) * 2.2;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * waveHeight;
+                    ctx.fillStyle = `rgba(217, 119, 6, ${0.1 + (barHeight / waveHeight) * 0.4})`;
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+                    x += barWidth;
+                }
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        // Draw Helper
+        function drawRoundedRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- STREAMING_CHUNK: High Fidelity Audio Recorder implementation ---
         function toggleRecording() {
             if (isRecording) {
                 stopRecording();
@@ -548,21 +1193,22 @@
         }
 
         function startRecording() {
+            if (!audioCtx) {
+                initAudio();
+                return;
+            }
+
             recordedChunks = [];
-            // Check supported types
             const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
             
             try {
                 mediaRecorder = new MediaRecorder(destStream.stream, { mimeType: mimeType });
             } catch (e) {
-                // Fallback for Safari/Basic
                 mediaRecorder = new MediaRecorder(destStream.stream);
             }
 
             mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    recordedChunks.push(e.data);
-                }
+                if (e.data.size > 0) recordedChunks.push(e.data);
             };
 
             mediaRecorder.onstop = () => {
@@ -572,41 +1218,48 @@
                 
                 document.getElementById('btnPlay').disabled = false;
                 document.getElementById('btnDownload').disabled = false;
-                showStatus("บันทึกเสร็จสิ้น");
+                document.getElementById('btnPlay').classList.remove('text-zinc-500', 'border-zinc-700/30');
+                document.getElementById('btnPlay').classList.add('text-amber-400', 'border-amber-500/30');
+                showToast("✅ บันทึกเสร็จเรียบร้อย! กด 'ฟัง' ได้เลย");
             };
 
             mediaRecorder.start();
             isRecording = true;
-            
-            // UI Update
+
+            // UI Adjustments
             const btnRec = document.getElementById('btnRecord');
-            btnRec.innerHTML = "<span>⬛</span> หยุดอัด";
-            btnRec.classList.add('recording');
+            btnRec.classList.add('bg-red-500/20', 'text-red-300', 'border-red-500/50');
+            btnRec.innerHTML = `<span id="recordDot" class="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span> กำลังบันทึก...`;
+            
             document.getElementById('btnPlay').disabled = true;
             document.getElementById('btnDownload').disabled = true;
-            showStatus("กำลังอัดเสียง...");
+            showToast("🔴 เริ่มต้นบันทึกเสียงเป่าของคุณ...");
         }
 
         function stopRecording() {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") return;
             mediaRecorder.stop();
             isRecording = false;
-            
-            // UI Update
+
+            // Reset UI
             const btnRec = document.getElementById('btnRecord');
-            btnRec.innerHTML = "<span>🔴</span> อัดเสียง";
-            btnRec.classList.remove('recording');
+            btnRec.classList.remove('bg-red-500/20', 'text-red-300', 'border-red-500/50');
+            btnRec.innerHTML = `<span id="recordDot" class="w-2.5 h-2.5 bg-red-500 rounded-full"></span> อัดเสียง`;
         }
 
         function playRecording() {
-            if (audioURL) {
-                audioPlaybackElement.play();
-                document.getElementById('btnStop').disabled = false;
-                showStatus("กำลังเล่นเสียงที่อัด...");
-                
-                audioPlaybackElement.onended = () => {
-                    document.getElementById('btnStop').disabled = true;
-                    showStatus("");
-                }
+            if (!audioURL) return;
+            audioPlaybackElement.play();
+            document.getElementById('btnStop').disabled = false;
+            document.getElementById('btnStop').classList.remove('text-zinc-500', 'border-zinc-700/30');
+            document.getElementById('btnStop').classList.add('text-red-400', 'border-red-500/30');
+
+            showToast("🔊 กำลังเล่นเพลงที่คุณอัดไว้");
+
+            audioPlaybackElement.onended = () => {
+                document.getElementById('btnStop').disabled = true;
+                document.getElementById('btnStop').classList.add('text-zinc-500', 'border-zinc-700/30');
+                showToast("⏹️ เล่นจบแล้ว");
             }
         }
 
@@ -614,69 +1267,52 @@
             audioPlaybackElement.pause();
             audioPlaybackElement.currentTime = 0;
             document.getElementById('btnStop').disabled = true;
-            showStatus("หยุดเล่นแล้ว");
+            document.getElementById('btnStop').classList.add('text-zinc-500', 'border-zinc-700/30');
+            showToast("หยุดเล่นแล้ว");
         }
 
         function downloadRecording() {
-            if (audioURL) {
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = audioURL;
-                a.download = `hulusi_recording_${new Date().getTime()}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    // window.URL.revokeObjectURL(audioURL); // Don't revoke immediately in case of multiple downloads
-                }, 100);
-                showStatus("ดาวน์โหลดเรียบร้อย");
-            }
+            if (!audioURL) return;
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = audioURL;
+            a.download = `hulusi_pro_recording_${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { document.body.removeChild(a); }, 100);
+            showToast("💾 ดาวน์โหลดไฟล์เสียงเรียบร้อย!");
         }
-        
-        function showStatus(msg) {
-            const el = document.getElementById('statusMsg');
+
+        // Action Toast helper
+        function showToast(msg) {
+            const el = document.getElementById('statusToast');
             el.innerText = msg;
-            el.style.display = 'block';
-            if(msg === "") el.style.display = 'none';
+            el.style.opacity = '1';
             
-            // Auto hide after 3 seconds if not generic status
-            if(msg !== "กำลังอัดเสียง...") {
-                 setTimeout(() => { if(!isRecording) el.style.display = 'none'; }, 3000);
-            }
+            // Clear prior timeouts
+            if (el.timeoutId) clearTimeout(el.timeoutId);
+            
+            el.timeoutId = setTimeout(() => {
+                el.style.opacity = '0';
+            }, 3000);
         }
 
-        // --- Visualizer ---
-        function drawVisualizer() {
-            requestAnimationFrame(drawVisualizer);
-
-            const width = canvas.width = window.innerWidth;
-            const height = canvas.height;
-
-            analyser.getByteFrequencyData(dataArray);
-
-            canvasCtx.fillStyle = '#1a1a1a';
-            canvasCtx.clearRect(0, 0, width, height);
-
-            const barWidth = (width / dataArray.length) * 2.5;
-            let barHeight;
-            let x = 0;
-
-            for(let i = 0; i < dataArray.length; i++) {
-                barHeight = dataArray[i] / 2;
-
-                // Gradient color based on frequency volume
-                canvasCtx.fillStyle = `rgb(${barHeight + 100}, ${183}, 77)`;
-                canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
-
-                x += barWidth + 1;
+        // --- STREAMING_CHUNK: Multi-tab and Visibility exit safety reset ---
+        // Ensure absolutely everything kills immediately when application loses focus or is closed
+        window.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                stopAllDemoLogic();
+                stopRecording();
+                stopPlayback();
+                if (audioCtx) {
+                    audioCtx.suspend();
+                }
+            } else {
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
             }
-        }
-
-        // Window resize handler
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
         });
-
     </script>
 </body>
 </html>
