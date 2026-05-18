@@ -427,6 +427,89 @@
             high: null
         };
 
+        // ฟังก์ชันล้างและปิดเสียงทั้งหมดทันทีเมื่อออกจากหน้าเบราว์เซอร์ หรือสลับแอป
+        function stopAllActiveAudio() {
+            stopSound('low');
+            stopSound('high');
+            stopDemoSongPlayback();
+
+            // ล้างเอฟเฟกต์สั่นบนสายจำลอง
+            const lowVisual = document.getElementById('string-low-visual');
+            const highVisual = document.getElementById('string-high-visual');
+            if (lowVisual) lowVisual.classList.remove('vibrating');
+            if (highVisual) highVisual.classList.remove('vibrating');
+
+            // เคลียร์ตำแหน่งไฟโน้ตที่กดค้างอยู่บนจอ
+            highlightSelectedNote(null, 'low');
+            highlightSelectedNote(null, 'high');
+        }
+
+        // ระบบตรวจจับการเปลี่ยนสถานะของหน้าจอ (Visibility API) และการสลับแท็บ
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // หยุดเล่นทันทีเมื่อปิดหรือสลับหน้าจอไปที่อื่น
+                stopAllActiveAudio();
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend();
+                }
+            } else {
+                // ฟื้นฟูการเชื่อมต่อและทำ Re-cache เสียงใหม่เมื่อกลับมาเปิดหน้าเว็บ
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {
+                        // ป้องกันข้อผิดพลาดบางเคสของเบราว์เซอร์มือถือ
+                    });
+                }
+            }
+        });
+
+        // จัดการเมื่อเบราว์เซอร์สูญเสียความโฟกัส (เช่น สไลด์แถบแจ้งเตือนลงมา)
+        window.addEventListener('blur', () => {
+            stopAllActiveAudio();
+            if (audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend();
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        });
+
+        // ปิดทรัพยากรเสียงทั้งหมดเมื่อผู้ใช้ปิดหน้านี้อย่างถาวร (ป้องกันปัญหาระบบเสียงค้างในระบบ)
+        window.addEventListener('pagehide', () => {
+            stopAllActiveAudio();
+            if (audioCtx) {
+                audioCtx.close();
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            stopAllActiveAudio();
+            if (audioCtx) {
+                audioCtx.close();
+            }
+        });
+
+        // จัดการและรีพิกัดเครื่องดนตรีเมื่อหมุนหน้าจอ (Orientation Change Support)
+        let orientationTimeout;
+        function onViewportDimensionChange() {
+            // หยุดเสียงเพื่อป้องกันเสียงหวีดสะท้อนพิกัดเพี้ยนขณะหน้าจอกำลังบิดหมุน
+            stopAllActiveAudio();
+            
+            // หน่วงเวลาเล็กน้อยเพื่อให้เบราว์เซอร์จัดสรรสัดส่วน CSS หน้าจอใหม่เสร็จสิ้น 
+            clearTimeout(orientationTimeout);
+            orientationTimeout = setTimeout(() => {
+                if (audioCtx) {
+                    // ทำการวาดตำแหน่งมาร์กเกอร์และคำนวณ Bounds จุดสัมผัสใหม่ให้พอดีจออัตโนมัติ
+                    initInstrumentUI();
+                }
+            }, 150);
+        }
+
+        window.addEventListener('resize', onViewportDimensionChange);
+        window.addEventListener('orientationchange', onViewportDimensionChange);
+
         // สถานะการจูนด้วย Key Tuning Engine
         const PITCH_MAP = {
             'C':  { root: 261.63, lowOpen: 196.00, highOpen: 293.66 },  // G3 - D4
