@@ -3,650 +3,1011 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>จะเข้ไทยจำลอง (Virtual Jakhe)</title>
+    <title>จะเข้ไทยจำลองระดับโปร (Virtual Jakhe Pro Vertical)</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Playfair+Display:ital,wght=1,600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --wood-dark: #3e2723;
-            --wood-light: #8d6e63;
-            --wood-red: #5d4037;
-            --string-nylon: #fff9c4; /* สีสายเอ็น */
-            --string-brass: #ffd700; /* สีสายลวด */
-            --fret-color: #d7ccc8;
-            --gold: #ffb300;
+            --gold-primary: #ffd700;
+            --gold-dark: #b8860b;
+            --wood-base: #27120c;
         }
-
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #1a1a1a;
             font-family: 'Sarabun', sans-serif;
-            display: flex;
-            flex-direction: column;
-            color: white;
-            touch-action: none; /* ป้องกันการเลื่อนหน้าจอ */
-        }
-
-        /* --- Header / Controls --- */
-        header {
-            height: 60px;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            flex-shrink: 0;
-        }
-
-        h1 {
-            font-size: 1.2rem;
-            margin: 0;
-            color: var(--gold);
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            border: 1px solid var(--gold);
-            background: transparent;
-            color: var(--gold);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn:active {
-            background: var(--gold);
-            color: #000;
-            transform: scale(0.95);
-        }
-
-        .btn.recording {
-            background: #d32f2f;
-            border-color: #d32f2f;
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
-
-        /* --- Main Jakhe Body --- */
-        #jakhe-board {
-            flex-grow: 1;
-            position: relative;
-            background: linear-gradient(90deg, #3e2723 0%, #5d4037 20%, #8d6e63 50%, #5d4037 80%, #3e2723 100%);
-            display: flex;
-            flex-direction: column;
-            /* box-shadow: inset 0 0 50px rgba(0,0,0,0.8); */
+            touch-action: none; /* Prevent browser pull-to-refresh & double tap zoom */
+            background-color: #0b0604;
+            height: 100vh;
+            width: 100vw;
             overflow: hidden;
         }
-
-        /* Wood Texture Overlay */
-        #jakhe-board::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
-            opacity: 0.4;
-            pointer-events: none;
+        .wood-gradient {
+            background: linear-gradient(180deg, #3d1b10 0%, #220f09 50%, #110704 100%);
         }
-
-        /* --- Fret Layout (Nom) --- */
-        .fret-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column-reverse; /* Note Low to High (Bottom to Top) */
-            padding-bottom: 20px; /* Space for bridge/open strings */
-            padding-top: 10px;
+        .thai-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L45 15 L30 30 L15 15 Z' fill='%23ffd700' fill-opacity='0.02'/%3E%3Cpath d='M30 30 L45 45 L30 60 L15 45 Z' fill='%23ffd700' fill-opacity='0.02'/%3E%3C/svg%3E");
         }
-
-        .fret-row {
-            position: relative;
-            flex-grow: 1;
-            border-top: 6px solid transparent; /* The Nom (Fret) visual handled by pseudo */
-            display: flex;
-            align-items: center;
+        /* Vibration animations for strings */
+        @keyframes vibrate-low {
+            0% { transform: scaleX(1) translateX(0); }
+            25% { transform: scaleX(1.02) translateX(-1.5px); }
+            50% { transform: scaleX(0.98) translateX(1.5px); }
+            75% { transform: scaleX(1.01) translateX(-0.5px); }
+            100% { transform: scaleX(1) translateX(0); }
         }
-
-        /* The Nom (Raised Fret) Visual */
-        .fret-row::after {
-            content: "";
-            position: absolute;
-            top: -5px; /* Adjust based on border/height */
-            left: 15%; /* Only covers melody strings */
-            width: 70%;
-            height: 8px;
-            background: linear-gradient(to bottom, #d7ccc8, #8d6e63);
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            z-index: 1;
-            pointer-events: none;
+        @keyframes vibrate-mid {
+            0% { transform: scaleX(1) translateX(-50%) translateX(0); }
+            25% { transform: scaleX(1.03) translateX(-50%) translateX(-2px); }
+            50% { transform: scaleX(0.97) translateX(-50%) translateX(2px); }
+            75% { transform: scaleX(1.01) translateX(-50%) translateX(-0.5px); }
+            100% { transform: scaleX(1) translateX(-50%) translateX(0); }
         }
-        
-        /* The "Bridge" area at the bottom for Open Strings */
-        .bridge-area {
-            height: 12vh;
-            background: #281813;
-            border-top: 4px solid #1a1a1a;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.6);
-            z-index: 5;
+        .vibrating-left {
+            animation: vibrate-low 0.1s linear infinite;
         }
-        
-        .bridge-wood {
-            width: 80%;
-            height: 20px;
-            background: #d7ccc8;
-            border-radius: 10px;
-            position: absolute;
+        .vibrating-center {
+            animation: vibrate-mid 0.1s linear infinite;
         }
-
-        /* --- Strings --- */
-        .strings-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Clicks pass through to touch areas */
-            z-index: 10;
+        .vibrating-right {
+            animation: vibrate-low 0.08s linear infinite;
         }
-
-        .string {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 4px; /* Thickness */
-            box-shadow: 2px 0 5px rgba(0,0,0,0.6);
+        /* Fret wood styling */
+        .fret-shadow {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.08);
         }
-
-        /* Sai Lo (Drone) - Left */
-        .string.sai-lo {
-            left: 20%;
-            background: linear-gradient(90deg, #b8860b, var(--string-brass), #b8860b);
-            width: 5px; /* Thicker */
-        }
-
-        /* Sai Thum (Middle) */
-        .string.sai-thum {
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(90deg, #ddd, var(--string-nylon), #ddd);
-        }
-
-        /* Sai Ek (High) - Right */
-        .string.sai-ek {
-            right: 20%;
-            background: linear-gradient(90deg, #ddd, var(--string-nylon), #ddd);
-            width: 3px; /* Thinner */
-        }
-
-        /* String Vibration Animation */
-        @keyframes vibrate {
-            0% { transform: translateX(0); }
-            20% { transform: translateX(-2px); }
-            40% { transform: translateX(2px); }
-            60% { transform: translateX(-1px); }
-            80% { transform: translateX(1px); }
-            100% { transform: translateX(0); }
-        }
-        
-        @keyframes vibrate-center {
-             0% { transform: translateX(-50%) translateX(0); }
-            20% { transform: translateX(-50%) translateX(-2px); }
-            40% { transform: translateX(-50%) translateX(2px); }
-            100% { transform: translateX(-50%) translateX(0); }
-        }
-
-        .vibrating {
-            animation: vibrate 0.15s linear infinite;
-        }
-        .vibrating.sai-thum {
-            animation: vibrate-center 0.15s linear infinite;
-        }
-
-        /* --- Touch Zones --- */
-        .touch-grid {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: flex;
-            z-index: 20;
-        }
-
-        .string-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column-reverse; /* Match visual fret layout */
-            height: 100%;
-        }
-        
-        /* Specific column widths to match visual strings */
-        .col-lo { flex: 1; } /* Left */
-        .col-thum { flex: 1; } /* Center */
-        .col-ek { flex: 1; } /* Right */
-
-        .note-zone {
-            flex-grow: 1; /* Distribute height equally */
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0); /* Hidden by default */
-            font-weight: bold;
-            text-shadow: 0 0 3px black;
-        }
-        
-        .note-zone.open-string {
-            height: 12vh; /* Match bridge area */
-            flex-grow: 0;
-            border-top: 1px solid rgba(255,215,0,0.3);
-            background: rgba(0,0,0,0.1);
-        }
-
-        /* Show Notes Mode */
-        body.show-notes .note-zone {
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        /* Note names for Sai Lo (Drone) are usually not fret-based, so hide upper zones or make them same sound */
-        .col-lo .note-zone:not(.open-string) {
-            pointer-events: none; /* Only play open string for drone for simplicity */
-        }
-        
-        /* Visual feedback on touch */
-        .note-zone:active, .note-zone.active-touch {
-            background: rgba(255, 215, 0, 0.2);
-        }
-
-        /* Label on fretboard */
-        .fret-number {
-            position: absolute;
-            right: 5px;
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            pointer-events: none;
-        }
-
-        /* Modal/Overlay */
-        #start-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            text-align: center;
-            color: var(--gold);
-        }
-        
-        .big-btn {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: var(--gold);
-            color: #3e2723;
-            border: none;
-            border-radius: 50px;
-            margin-top: 20px;
-            font-weight: bold;
-            box-shadow: 0 0 20px rgba(255, 179, 0, 0.4);
-            cursor: pointer;
-        }
-
     </style>
 </head>
-<body>
+<body class="w-screen h-screen flex flex-col text-gray-100 select-none relative thai-pattern">
 
-    <!-- Start Overlay (Required for AudioContext) -->
-    <div id="start-overlay">
-        <h1>จะเข้จำลอง</h1>
-        <p>Virtual Jakhe</p>
-        <button class="big-btn" id="start-btn">เริ่มเล่น (Start)</button>
-        <p style="font-size: 0.8rem; margin-top: 20px; opacity: 0.7;">แนะนำให้ใช้แนวนอน หรือแนวตั้งตามถนัด<br>ใส่หูฟังเพื่อเสียงที่ดีที่สุด</p>
+    <!-- Start & Audio Activation Screen Overlay -->
+    <div id="start-overlay" class="absolute inset-0 bg-black/95 z-[9999] flex flex-col justify-center items-center text-center p-4">
+        <div class="max-w-md w-full bg-[#25110a] border-2 border-[#ffd700]/40 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden wood-gradient">
+            <div class="absolute inset-0 bg-black/10 pointer-events-none"></div>
+            
+            <div class="text-[#ffd700] mb-2 text-4xl">🪕</div>
+            <h1 class="text-2xl md:text-3xl font-bold text-[#ffd700] mb-1 tracking-wide font-serif">จะเข้ไทยจำลอง PRO</h1>
+            <p class="text-gray-400 text-xs tracking-widest uppercase mb-4 font-bold">Virtual Jakhe Heptatonic Studio</p>
+            
+            <div class="bg-black/40 border border-amber-900/40 rounded-xl p-4 text-left text-xs text-amber-200/90 mb-6 space-y-2.5">
+                <p class="font-semibold text-center text-[#ffd700] mb-1">📱 ระบบจำลองและจัดหน้าจอสมบูรณ์แบบ:</p>
+                <p>• <b>ห้ามเกินขอบจอ:</b> คอจะเข้และตัวโน้ตรวมสายเปิดถูกคำนวณสัดส่วนแบบเต็มหน้าจอพอดี 100% โดยตัดปุ่มสายเปล่าแยกที่เกะกะด้านล่างออกแล้ว</p>
+                <p>• <b>ดีดสายเปิดได้ง่ายขึ้น:</b> แถวล่างสุดของคอจะเข้คือช่องดีดสายเปล่า (โดทุ้ม / ซอล / โด) ที่ทัชเล่นควบคู่กับโน้ตปกติได้อย่างลื่นไหล</p>
+                <p>• <b>แผงปรับจูนด่วนด้านบน:</b> แตะนมตัวไหน แผงจูนเสียงจะล็อกเข้าตัวนั้นทันทีเพื่อปรับแต่ง Cent ได้ตามจริง</p>
+            </div>
+
+            <button id="start-btn" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-amber-950 font-bold text-base md:text-lg rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all duration-150">
+                เริ่มบรรเลงดนตรี
+            </button>
+            <p class="text-[10px] text-gray-500 mt-3">แนะนำให้สวมหูฟังเพื่อมิติเสียงซันหยัดแบนแอนะล็อกที่ดีที่สุด</p>
+        </div>
     </div>
 
-    <header>
-        <h1><span style="font-size:1.5rem;">🎼</span> จะเข้</h1>
-        <div class="controls">
-            <button class="btn" id="toggle-notes">แสดงโน้ต</button>
-            <button class="btn" id="record-btn">● อัดเสียง</button>
-            <button class="btn" id="play-btn" style="display:none;">▶ เล่น</button>
-            <button class="btn" id="download-btn" style="display:none;">⬇</button>
+    <!-- Main Header Panel (Optimized for Mobile Heights) -->
+    <header class="h-[45px] bg-[#1a0c07] border-b border-amber-950 px-3 flex items-center justify-between z-40 shrink-0 shadow-md">
+        <div class="flex items-center gap-1.5">
+            <div class="text-base text-[#ffd700]">🪕</div>
+            <div>
+                <h1 class="text-xs font-bold text-[#ffd700] leading-none flex items-center gap-1">จะเข้จำลอง <span class="text-[9px] font-normal text-amber-300">V4.3 Pro Fit</span></h1>
+                <p class="text-[7px] text-amber-500/80 tracking-wider uppercase mt-0.5">Top-Docked Tuner Studio</p>
+            </div>
+        </div>
+
+        <!-- Global Action Panel -->
+        <div class="flex items-center gap-1">
+            <button id="toggle-tuner-btn" class="px-2 py-1 rounded bg-[#ffd700]/10 border border-[#ffd700]/30 text-[#ffd700] text-[9px] md:text-xs flex items-center gap-1 font-semibold">
+                ⚙️ จูนคีย์
+            </button>
+            <button id="toggle-notes-btn" class="px-2 py-1 rounded bg-amber-950/40 border border-amber-600/50 text-amber-300 text-[9px] md:text-xs flex items-center gap-1">
+                👁️ โน้ต
+            </button>
+            <button id="demo-songs-btn" class="px-2 py-1 rounded bg-yellow-950/40 border border-yellow-600/50 text-[#ffd700] text-[9px] md:text-xs flex items-center gap-1">
+                🎼 เพลง
+            </button>
+            <div class="h-4 w-[1px] bg-amber-900/60 mx-0.5"></div>
+            <button id="rec-btn" class="px-2 py-1 rounded bg-red-950/50 border border-red-700/50 text-red-400 text-[9px] md:text-xs font-medium flex items-center gap-1 transition">
+                <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping inline-block" id="rec-indicator" style="display:none;"></span>
+                ● อัด
+            </button>
+            <button id="playback-btn" class="px-2 py-1 rounded bg-emerald-950/50 border border-emerald-700/50 text-emerald-400 text-[9px] md:text-xs font-medium flex items-center gap-1 transition" style="display:none;">
+                ▶ ฟัง
+            </button>
+            <button id="download-btn" class="p-1 rounded bg-blue-950/50 border border-blue-700/50 text-blue-400 text-[9px] md:text-xs transition" style="display:none;">
+                💾
+            </button>
         </div>
     </header>
 
-    <div id="jakhe-board">
-        <!-- Visual Layer for Frets -->
-        <div class="fret-container" id="visual-frets">
-            <!-- Frets will be generated by JS -->
-        </div>
+    <!-- TOP-DOCKED TUNER PANEL (Compact & zero scroll guaranteed) -->
+    <div id="top-tuner-panel" class="w-full bg-[#1c0c06] border-b border-amber-950/80 p-2 z-50 text-xs shadow-lg shrink-0">
+        <div class="max-w-2xl mx-auto flex flex-col gap-1.5">
+            <!-- Row 1: Strings tabs & Scale Switcher -->
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex gap-0.5 bg-black/40 p-0.5 rounded border border-amber-950 shrink-0">
+                    <button id="tuner-tab-ek" class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-[#ffd700] text-black transition-all">สายเอก</button>
+                    <button id="tuner-tab-thum" class="px-1.5 py-0.5 text-[9px] font-bold text-gray-400 hover:text-amber-200 transition-all">สายทุ้ม</button>
+                    <button id="tuner-tab-lo" class="px-1.5 py-0.5 text-[9px] font-bold text-gray-400 hover:text-amber-200 transition-all">สายลวด</button>
+                </div>
 
-        <!-- The Strings Visuals -->
-        <div class="strings-layer">
-            <div class="string sai-lo" id="str-lo"></div>
-            <div class="string sai-thum" id="str-thum"></div>
-            <div class="string sai-ek" id="str-ek"></div>
-        </div>
+                <!-- Scale Mode Presets -->
+                <div class="flex gap-0.5 bg-black/30 p-0.5 rounded border border-amber-900/20 shrink-0">
+                    <button id="scale-traditional" class="px-1.5 py-0.5 text-[8px] font-bold rounded bg-amber-900/50 border border-[#ffd700]/30 text-[#ffd700]">ไทยเดิม</button>
+                    <button id="scale-diatonic" class="px-1.5 py-0.5 text-[8px] font-bold text-gray-400">สากล</button>
+                    <button id="scale-pentatonic" class="px-1.5 py-0.5 text-[8px] font-bold text-gray-400">ห้าเสียง</button>
+                </div>
 
-        <!-- Bridge Area (Visual) -->
-        <div class="bridge-area">
-            <div class="bridge-wood"></div>
-        </div>
-
-        <!-- Touch Interaction Layer -->
-        <div class="touch-grid">
-            <!-- Left: Sai Lo (Drone) -->
-            <div class="string-column col-lo" id="col-lo">
-                <!-- Zones generated by JS -->
+                <button id="reset-current-note-btn" class="px-2 py-0.5 bg-amber-950 border border-amber-900/40 rounded text-[8px] text-amber-400 hover:text-[#ffd700] transition shrink-0">
+                    คืนค่านมนี้
+                </button>
             </div>
-            
-            <!-- Center: Sai Thum (Mid) -->
-            <div class="string-column col-thum" id="col-thum"></div>
-            
-            <!-- Right: Sai Ek (High) -->
-            <div class="string-column col-ek" id="col-ek"></div>
+
+            <!-- Row 2: Selected Note and Microtuning Slider (Compact Grid) -->
+            <div class="grid grid-cols-12 gap-1.5 items-center bg-black/30 px-2 py-1 rounded border border-amber-950/40">
+                <!-- Info label -->
+                <div class="col-span-12 sm:col-span-4 flex justify-between items-center text-[9px]">
+                    <span class="font-bold text-[#ffd700] flex items-center gap-1">
+                        📌 <span id="lbl-active-note">สายเอก (สายเปิด) : โด</span>
+                    </span>
+                    <span class="text-amber-400 font-mono font-bold" id="lbl-active-freq">261.6 Hz</span>
+                </div>
+
+                <!-- Slider -->
+                <div class="col-span-9 sm:col-span-6 flex items-center gap-1.5">
+                    <span class="text-[8px] text-gray-500 font-semibold">-100c</span>
+                    <input type="range" id="param-active-cent" min="-100" max="100" step="1" value="0" class="flex-grow accent-yellow-500 bg-amber-950 h-1.5 rounded cursor-pointer">
+                    <span class="text-[8px] text-gray-500 font-semibold">+100c</span>
+                </div>
+
+                <div class="col-span-3 sm:col-span-2 text-right font-bold text-[#ffd700] font-mono text-[10px]" id="lbl-active-cent">
+                    0 cent
+                </div>
+            </div>
+
+            <!-- Expandable Advanced Drawer (For Sanyat Buzz / Physical customizer) -->
+            <div class="flex justify-between items-center text-[8px] pt-1 border-t border-amber-950/20">
+                <div class="flex gap-2 text-gray-400">
+                    <span>สะท้อน: <span id="lbl-decay-quick" class="text-amber-400 font-bold">2.0s</span></span>
+                    <span>ซันหยัด (Buzz): <span id="lbl-buzz-quick" class="text-amber-400 font-bold">4.0</span></span>
+                    <span>บันไดเสียง: <span id="lbl-scale-quick" class="text-amber-400 font-bold">ไทยเดิม</span></span>
+                </div>
+                <button id="btn-toggle-advanced" class="text-amber-500 hover:text-amber-300 font-semibold flex items-center gap-0.5 transition">
+                    🛠️ ฟิสิกส์เชิงลึก ▾
+                </button>
+            </div>
+
+            <!-- Advanced Panel -->
+            <div id="advanced-physics-panel" class="hidden grid grid-cols-2 gap-2 bg-[#110704] p-2 rounded border border-amber-950 mt-1">
+                <div class="space-y-1 text-[8px]">
+                    <div class="flex justify-between text-gray-300">
+                        <span>ความยาวหางเสียง (Decay)</span>
+                        <span class="text-[#ffd700]" id="val-decay">2.0s</span>
+                    </div>
+                    <input type="range" id="param-decay" min="0.5" max="4.0" step="0.1" value="2.0" class="w-full accent-amber-500 bg-amber-950 h-1">
+                </div>
+                <div class="space-y-1 text-[8px]">
+                    <div class="flex justify-between text-gray-300">
+                        <span>เสียงกระพือซันหยัด (Buzz)</span>
+                        <span class="text-[#ffd700]" id="val-buzz">4.0</span>
+                    </div>
+                    <input type="range" id="param-buzz" min="0.0" max="10.0" step="0.5" value="4.0" class="w-full accent-amber-500 bg-amber-950 h-1">
+                </div>
+                <div class="space-y-1 text-[8px]">
+                    <div class="flex justify-between text-gray-300">
+                        <span>ความสว่างเสียง (Damping)</span>
+                        <span class="text-[#ffd700]" id="val-damping">3500Hz</span>
+                    </div>
+                    <input type="range" id="param-damping" min="1000" max="8000" step="100" value="3500" class="w-full accent-amber-500 bg-amber-950 h-1">
+                </div>
+                <div class="space-y-1 text-[8px]">
+                    <div class="flex justify-between text-gray-300">
+                        <span>คีย์รวม (Master Pitch)</span>
+                        <span class="text-[#ffd700]" id="val-pitch">0 cent</span>
+                    </div>
+                    <input type="range" id="param-pitch" min="-300" max="300" step="10" value="0" class="w-full accent-amber-500 bg-amber-950 h-1">
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Main Workspace (Guaranteed No-Scroll Fit) -->
+    <div class="flex-grow w-full relative flex flex-col bg-stone-950 wood-gradient shadow-inner overflow-hidden">
+        
+        <!-- Left & Right Gold Teak Borders -->
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#ffd700] via-[#b8860b] to-[#ffd700] opacity-40 z-30"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#ffd700] via-[#b8860b] to-[#ffd700] opacity-40 z-30"></div>
+
+        <!-- Screen Fit Playboard Container -->
+        <div id="jakhe-board" class="w-full h-full relative">
+            
+            <!-- raised Fret visuals (Golden wood dividers between notes) -->
+            <div class="absolute inset-0 flex flex-col pointer-events-none z-10 px-4 md:px-12 py-1" id="visual-fret-bars">
+                <!-- Dynamically generated fret rows layout -->
+            </div>
+
+            <!-- Resonance Strings Visual Layers -->
+            <div class="absolute inset-0 pointer-events-none z-20">
+                <!-- Left: สายลวด Brass Drone -->
+                <div id="str-lo" class="absolute top-0 bottom-0 w-[4px] bg-gradient-to-r from-yellow-700 via-amber-300 to-yellow-600 shadow-[2px_0_4px_rgba(0,0,0,0.8)] left-[20%] md:left-[28%]"></div>
+                <!-- Center: สายทุ้ม Silk Bass -->
+                <div id="str-thum" class="absolute top-0 bottom-0 w-[3px] bg-gradient-to-r from-yellow-100 via-stone-200 to-amber-50 shadow-[0_0_3px_rgba(255,255,255,0.4),2px_0_4px_rgba(0,0,0,0.8)] left-1/2 -translate-x-1/2"></div>
+                <!-- Right: สายเอก Nylon Treble -->
+                <div id="str-ek" class="absolute top-0 bottom-0 w-[2px] bg-gradient-to-r from-yellow-50 via-white to-amber-50 shadow-[0_0_3px_rgba(255,255,255,0.5),1.5px_0_3px_rgba(0,0,0,0.8)] right-[20%] md:right-[28%]"></div>
+            </div>
+
+            <!-- Touch Interactive Grid (Fully mapped 3 Columns x 12 Rows: Fret 0 to 11) -->
+            <div class="absolute inset-0 flex z-30 h-full">
+                <!-- Column Left: Sai Lo (Drone) -->
+                <div id="touch-col-lo" class="h-full flex flex-col-reverse relative pointer-events-auto" style="width: 36%;"></div>
+
+                <!-- Column Center: Sai Thum (Bass) -->
+                <div id="touch-col-thum" class="h-full flex flex-col-reverse relative pointer-events-auto" style="width: 28%;"></div>
+
+                <!-- Column Right: Sai Ek (Melody) -->
+                <div id="touch-col-ek" class="h-full flex flex-col-reverse relative pointer-events-auto" style="width: 36%;"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Demo Songs Panel -->
+    <div id="demo-drawer" class="absolute bottom-0 left-0 right-0 bg-[#160a06]/98 border-t-2 border-[#ffd700]/30 z-[80] p-4 flex flex-col transition-all duration-300 transform translate-y-full shadow-2xl">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-bold text-[#ffd700] flex items-center gap-1.5">🎵 บรรเลงเพลงไทยสาธิต (Autoplay)</span>
+            <button id="close-demo-drawer" class="text-gray-400 hover:text-white text-[10px] px-2 py-0.5 rounded bg-amber-950">✕ ปิด</button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <button id="demo-song-1" class="py-2 px-3 rounded-xl border border-amber-800 bg-amber-950/40 hover:bg-[#ffd700]/10 text-left flex items-center gap-2 transition">
+                <span class="text-xl">🦇</span>
+                <div>
+                    <p class="font-bold text-[#ffd700] text-[11px]">ค้างคาวกินกล้วย</p>
+                    <p class="text-[8px] text-gray-400">สนุกสนาน โชว์ซันหยัดพริ้ว</p>
+                </div>
+            </button>
+            <button id="demo-song-2" class="py-2 px-3 rounded-xl border border-amber-800 bg-amber-950/40 hover:bg-[#ffd700]/10 text-left flex items-center gap-2 transition">
+                <span class="text-xl">🌙</span>
+                <div>
+                    <p class="font-bold text-[#ffd700] text-[11px]">ลาวดวงเดือน</p>
+                    <p class="text-[8px] text-gray-400">เนิบช้า หวานประณีต</p>
+                </div>
+            </button>
+        </div>
+        <div id="song-playing-banner" class="hidden mt-3 p-1.5 bg-yellow-950/50 border border-yellow-700/30 rounded text-center text-[10px] text-yellow-300 animate-pulse">
+            กำลังดีดเพลงอัตโนมัติ... แตะบนบอร์ดจะเข้เพื่อหยุดทันที
+        </div>
+    </div>
+
+    <!-- Audio Synthesis & Scientific Tuning Logic -->
     <script>
-        // --- Audio Context & Variables ---
-        let audioCtx;
-        let masterGain;
-        let dest; // For recording
-        let mediaRecorder;
-        let audioChunks = [];
-        let audioBlob;
-        let audioUrl;
+        let audioCtx = null;
+        let masterGain = null;
+        let recordingDest = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordedBlob = null;
+        let recordedUrl = null;
         let playbackAudio = new Audio();
 
-        // Thai Scale Frequencies (Approximate C Major for simplicity relative to Jakhe)
-        // Jakhe Standard Tuning:
-        // Sai Lo (Drone): C3
-        // Sai Thum (Mid): G3
-        // Sai Ek (High): C4
-        
-        // Fret mapping (Nom 1 to 11 approx):
-        // Note: Thai scales are equidistant 7-tone. Here we map to closest Western Chromatic/Diatonic for web compatibility.
-        // Scale: C, D, E, F, G, A, B, C...
-        
-        const tuning = {
-            lo: 130.81, // C3
-            thum: 196.00, // G3
-            ek: 261.63  // C4
+        // Authentic Scientific Frequencies of Jakhe standard anchors
+        const BASE_C4_FREQ = 261.63; // Sai Ek root C4
+
+        // NOTE NAMES (Traditional Thai music system notation)
+        const THAI_NOTE_LABELS = {
+            ek: ["โด", "เร", "มี", "ฟา", "ซอล", "ลา", "ที", "โด(สูง)", "เร(สูง)", "มี(สูง)", "ฟา(สูง)", "ซอล(สูง)"],
+            thum: ["ซอล(ต่ำ)", "ลา(ต่ำ)", "ที(ต่ำ)", "โด", "เร", "มี", "ฟา", "ซอล", "ลา", "ที", "โด(สูง)", "เร(สูง)"],
+            lo: ["โด(ทุ้ม)", "เร(ทุ้ม)", "มี(ทุ้ม)", "ฟา(ทุ้ม)", "ซอล(ทุ้ม)", "ลา(ทุ้ม)", "ที(ทุ้ม)", "โด", "เร", "มี", "ฟา", "ซอล"]
         };
 
-        // Note map for frets (Semitone steps from open string, adjusted for Diatonic feel)
-        // 0 = Open, 1 = Fret 1, etc.
-        // Simplified Diatonic C Major map for playability:
-        // Fret: 1(D), 2(E), 3(F), 4(G), 5(A), 6(B), 7(C), 8(D), 9(E), 10(F), 11(G)
-        
-        const scaleSteps = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19]; // Semitones from root
-        const noteNamesC = ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G"];
-        const noteNamesG = ["G", "A", "B", "C", "D", "E", "F#", "G", "A", "B", "C", "D"];
-        const noteNamesDrone = ["C (L)"];
+        // Microtuning offset state (fret 0-11 for 3 strings)
+        const tuningOffsets = {
+            ek: new Array(12).fill(0),
+            thum: new Array(12).fill(0),
+            lo: new Array(12).fill(0)
+        };
 
-        const totalFrets = 11;
+        // Advanced physical parameters
+        const physicalSettings = {
+            decay: 2.0,
+            buzz: 4.0,
+            damping: 3500,
+            masterPitch: 0 // global pitch offset in cent
+        };
 
-        // --- Init Function ---
+        // Active microtuner editor focus states
+        let selectedTunerString = 'ek';
+        let selectedTunerFret = 0;
+
+        // SCALE SYSTEMS DEFINITION
+        const SCALES = {
+            // Traditional Thai 7-Tone Heptatonic Equal Temperament (Perfect 1/7 Octave Steps)
+            traditional: {
+                name: "ไทยเดิม",
+                steps: {
+                    ek:   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],       // Root C4 (fret 0)
+                    thum: [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8],      // Root G3 (3 steps below C4)
+                    lo:   [-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4]   // Root C3 (7 steps below C4)
+                },
+                calc: (root, step) => root * Math.pow(2, step / 7)
+            },
+            // Diatonic Major scale (Western adaptation)
+            diatonic: {
+                name: "สากล",
+                steps: {
+                    ek:   [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19],     // Semitones relative to C4
+                    thum: [-5, -3, -1, 0, 2, 4, 5, 7, 9, 11, 12, 14],     // G3 relative semitones
+                    lo:   [-12, -10, -8, -7, -5, -3, -1, 0, 2, 4, 5, 7]   // C3 relative semitones
+                },
+                calc: (root, step) => root * Math.pow(2, step / 12)
+            },
+            // Thai Pentatonic (Classic 5-tone scale skipping 4th and 7th degrees)
+            pentatonic: {
+                name: "ห้าเสียง",
+                steps: {
+                    ek:   [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14, 15],
+                    thum: [-3, -2, -1, 1, 2, 4, 5, 6, 8, 9, 11, 12],
+                    lo:   [-7, -6, -5, -3, -2, 0, 1, 2, 4, 5, 7, 8]
+                },
+                calc: (root, step) => root * Math.pow(2, step / 7)
+            }
+        };
+
+        let currentScaleKey = 'traditional';
+
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
-                
-                // Master Gain (Volume)
+
                 masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.8;
+                masterGain.gain.setValueAtTime(0.75, audioCtx.currentTime);
                 masterGain.connect(audioCtx.destination);
 
-                // Recording Destination
-                dest = audioCtx.createMediaStreamDestination();
-                masterGain.connect(dest);
+                recordingDest = audioCtx.createMediaStreamDestination();
+                masterGain.connect(recordingDest);
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // --- Sound Synthesis ---
-        function playNote(freq, type = 'nylon') {
+        // Emulates collision of the string with flat "Sanyat" bone block
+        function createSanyatBuzzCurve(intensity) {
+            const size = 44100;
+            const curve = new Float32Array(size);
+            const k = intensity * 12;
+            for (let i = 0; i < size; ++i) {
+                const x = (i * 2) / size - 1;
+                if (x < 0) {
+                    curve[i] = ((3 + k) * x * Math.PI) / (180 + k * Math.abs(x));
+                } else {
+                    curve[i] = ((3 + k * 0.3) * x * Math.PI) / (180 + k * 0.25 * Math.abs(x));
+                }
+            }
+            return curve;
+        }
+
+        // Real-time acoustic synthesis pluck engine
+        function playJakhePluck(freq, stringType) {
             if (!audioCtx) return;
 
-            const osc = audioCtx.createOscillator();
-            const osc2 = audioCtx.createOscillator(); // Harmonics
-            const gainNode = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
+            const decay = physicalSettings.decay;
+            const buzz = physicalSettings.buzz;
+            const damping = physicalSettings.damping;
 
-            // Configure oscillators
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            osc2.frequency.setValueAtTime(freq * 2, audioCtx.currentTime); // Octave up for brightness
-            
-            if (type === 'brass') {
-                // Sai Lo (Brass/Metal string) - Richer, buzzier
-                osc.type = 'sawtooth';
-                osc2.type = 'triangle';
-                filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
-                filter.Q.value = 5;
+            const voiceGain = audioCtx.createGain();
+            voiceGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+            const oscBase = audioCtx.createOscillator();
+            const oscHarmonic = audioCtx.createOscillator();
+            const filterNode = audioCtx.createBiquadFilter();
+
+            const shaperNode = audioCtx.createWaveShaper();
+            const shaperGain = audioCtx.createGain();
+
+            // Sanyat Buzz Node
+            if (buzz > 0) {
+                shaperNode.curve = createSanyatBuzzCurve(buzz);
+                shaperNode.oversample = '4x';
+                shaperGain.gain.setValueAtTime(0.18 * (buzz / 4.5), audioCtx.currentTime);
             } else {
-                // Sai Ek/Thum (Nylon/Silk) - Warmer, plucky
-                osc.type = 'triangle';
-                osc2.type = 'sine';
-                filter.frequency.setValueAtTime(3000, audioCtx.currentTime);
-                filter.Q.value = 1; 
+                shaperGain.gain.setValueAtTime(0, audioCtx.currentTime);
             }
 
-            // Envelope (Pluck effect)
-            // Start silent
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            // Attack (Immediate)
-            gainNode.gain.linearRampToValueAtTime(type === 'brass' ? 0.6 : 0.5, audioCtx.currentTime + 0.01);
-            // Decay (Exponential fade out)
-            const duration = type === 'brass' ? 2.5 : 1.5; // Drone lasts longer
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            filterNode.type = 'lowpass';
+            filterNode.frequency.setValueAtTime(damping, audioCtx.currentTime);
 
-            // Filter Envelope (The "Twang")
-            filter.type = 'lowpass';
-            filter.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + (duration * 0.8));
+            // Synthesize based on string density
+            if (stringType === 'lo') {
+                oscBase.type = 'sawtooth';
+                oscHarmonic.type = 'triangle';
+                oscBase.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                oscHarmonic.frequency.setValueAtTime(freq * 1.998, audioCtx.currentTime);
+            } else if (stringType === 'thum') {
+                oscBase.type = 'sine';
+                oscHarmonic.type = 'triangle';
+                oscBase.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                oscHarmonic.frequency.setValueAtTime(freq * 3.0, audioCtx.currentTime);
+            } else {
+                oscBase.type = 'triangle';
+                oscHarmonic.type = 'sine';
+                oscBase.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                oscHarmonic.frequency.setValueAtTime(freq * 2.002, audioCtx.currentTime);
+            }
 
-            // Connections
-            osc.connect(filter);
-            osc2.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(masterGain);
+            // Pluck plectrum simulation (Physical transient noise burst)
+            const noiseLength = audioCtx.sampleRate * 0.012;
+            const noiseBuffer = audioCtx.createBuffer(1, noiseLength, audioCtx.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseLength; i++) {
+                noiseData[i] = Math.random() * 2 - 1;
+            }
+            const noiseSource = audioCtx.createBufferSource();
+            noiseSource.buffer = noiseBuffer;
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.setValueAtTime(freq * 3.5, audioCtx.currentTime);
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.015);
 
-            // Start & Stop
-            osc.start();
-            osc2.start();
-            osc.stop(audioCtx.currentTime + duration);
-            osc2.stop(audioCtx.currentTime + duration);
-            
-            // Cleanup
+            noiseSource.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(voiceGain);
+
+            oscBase.connect(filterNode);
+            oscHarmonic.connect(filterNode);
+            filterNode.connect(voiceGain);
+
+            if (buzz > 0) {
+                filterNode.connect(shaperNode);
+                shaperNode.connect(shaperGain);
+                shaperGain.connect(voiceGain);
+            }
+
+            voiceGain.connect(masterGain);
+
+            // Acoustic envelope decay shaping
+            const now = audioCtx.currentTime;
+            voiceGain.gain.setValueAtTime(0.0, now);
+            voiceGain.gain.linearRampToValueAtTime(stringType === 'lo' ? 0.75 : 0.65, now + 0.005);
+            voiceGain.gain.exponentialRampToValueAtTime(0.001, now + decay);
+
+            filterNode.frequency.exponentialRampToValueAtTime(80, now + (decay * 0.8));
+
+            oscBase.start(now);
+            oscHarmonic.start(now);
+            noiseSource.start(now);
+
+            oscBase.stop(now + decay);
+            oscHarmonic.stop(now + decay);
+
             setTimeout(() => {
-                osc.disconnect();
-                osc2.disconnect();
-                gainNode.disconnect();
-                filter.disconnect();
-            }, duration * 1000 + 100);
-        }
-
-        function getFrequency(rootFreq, semitones) {
-            return rootFreq * Math.pow(2, semitones / 12);
-        }
-
-        // --- UI Generation ---
-        function generateBoard() {
-            const visualContainer = document.getElementById('visual-frets');
-            const colLo = document.getElementById('col-lo');
-            const colThum = document.getElementById('col-thum');
-            const colEk = document.getElementById('col-ek');
-
-            // Create Visual Frets (Nom)
-            for (let i = totalFrets; i >= 1; i--) {
-                const fretRow = document.createElement('div');
-                fretRow.className = 'fret-row';
-                
-                const label = document.createElement('div');
-                label.className = 'fret-number';
-                label.innerText = i;
-                fretRow.appendChild(label);
-                
-                visualContainer.appendChild(fretRow);
-            }
-
-            // Create Touch Zones (Open string at bottom, then frets going up)
-            // Loop 0 to totalFrets (0 is open)
-            for (let i = 0; i <= totalFrets; i++) {
-                
-                // Sai Lo (Drone)
-                const zoneLo = createZone(i, 'lo', tuning.lo, noteNamesC[0]); // Usually just C
-                if (i === 0) {
-                     colLo.appendChild(zoneLo); // Only Open string for Lo
-                } else {
-                     const spacer = document.createElement('div');
-                     spacer.className = 'note-zone'; // Empty invisible filler
-                     colLo.appendChild(spacer);
+                oscBase.disconnect();
+                oscHarmonic.disconnect();
+                filterNode.disconnect();
+                if (buzz > 0) {
+                    shaperNode.disconnect();
+                    shaperGain.disconnect();
                 }
+                voiceGain.disconnect();
+                noiseSource.disconnect();
+                noiseFilter.disconnect();
+                noiseGain.disconnect();
+            }, (decay * 1000) + 150);
+        }
 
-                // Sai Thum (Middle)
-                const freqThum = getFrequency(tuning.thum, scaleSteps[i]);
-                const noteThum = noteNamesG[i % 12];
-                colThum.appendChild(createZone(i, 'thum', freqThum, noteThum));
+        // Microtonal calculation
+        function getFrequency(stringType, fretIndex) {
+            const scale = SCALES[currentScaleKey];
+            const relativeStep = scale.steps[stringType][fretIndex];
+            const rawFreq = scale.calc(BASE_C4_FREQ, relativeStep);
+            const centsOffset = tuningOffsets[stringType][fretIndex] + physicalSettings.masterPitch;
+            return rawFreq * Math.pow(2, centsOffset / 1200);
+        }
+    </script>
 
-                // Sai Ek (High)
-                const freqEk = getFrequency(tuning.ek, scaleSteps[i]);
-                const noteEk = noteNamesC[i % 12];
-                colEk.appendChild(createZone(i, 'ek', freqEk, noteEk));
+    <!-- Soundboard Builder & Touch Interactions -->
+    <script>
+        const totalFrets = 11;
+
+        function buildTouchSoundboard() {
+            const fretVisualContainer = document.getElementById('visual-fret-bars');
+            const colLo = document.getElementById('touch-col-lo');
+            const colThum = document.getElementById('touch-col-thum');
+            const colEk = document.getElementById('touch-col-ek');
+
+            fretVisualContainer.innerHTML = '';
+            colLo.innerHTML = '';
+            colThum.innerHTML = '';
+            colEk.innerHTML = '';
+
+            // Generate Fret Visual Dividers (นมไม้จะเข้ 1-11)
+            // Use flex layout to perfectly divide heights and auto-fit all screens
+            for (let i = totalFrets; i >= 1; i--) {
+                const fretRowVisual = document.createElement('div');
+                fretRowVisual.className = 'flex-1 w-full border-t border-amber-950/20 relative';
+                
+                // Wooden Fret block design
+                const woodBar = document.createElement('div');
+                woodBar.className = 'absolute -top-1 left-[5%] right-[5%] h-2.5 bg-gradient-to-b from-amber-700 via-amber-600 to-amber-950 rounded border-y border-amber-900/60 fret-shadow flex justify-between items-center px-4';
+                
+                const barLabelL = document.createElement('span');
+                barLabelL.className = 'text-[7px] text-[#ffd700] font-bold tracking-widest pointer-events-none opacity-40';
+                barLabelL.innerText = `นม ${i}`;
+
+                const barLabelR = document.createElement('span');
+                barLabelR.className = 'text-[6px] text-amber-300 font-bold pointer-events-none opacity-30';
+                barLabelR.innerText = `N${i}`;
+
+                woodBar.appendChild(barLabelL);
+                woodBar.appendChild(barLabelR);
+                fretRowVisual.appendChild(woodBar);
+                fretVisualContainer.appendChild(fretRowVisual);
+            }
+
+            // Create Fret columns interactive grids (Fret 0 is open strings row, then Frets 1 to 11)
+            for (let i = 0; i <= totalFrets; i++) {
+                colLo.appendChild(createFretCell(i, 'lo'));
+                colThum.appendChild(createFretCell(i, 'thum'));
+                colEk.appendChild(createFretCell(i, 'ek'));
             }
         }
 
-        function createZone(index, stringType, freq, noteName) {
-            const el = document.createElement('div');
-            el.className = 'note-zone';
-            if (index === 0) el.classList.add('open-string');
-            el.dataset.freq = freq;
-            el.dataset.type = stringType;
-            el.innerText = noteName;
+        // Generates an interactive cell grid fitting the screens dynamically
+        function createFretCell(fretIndex, stringType) {
+            const cell = document.createElement('div');
+            // Equal flex distribution guarantees no overflow vertical limits!
+            cell.className = 'flex-1 flex flex-col items-center justify-center border-t border-white/[0.03] active:bg-[#ffd700]/15 hover:bg-white/[0.01] cursor-pointer transition-colors duration-500 font-bold relative';
+            
+            // Add identifying attributes
+            cell.dataset.fret = fretIndex;
+            cell.dataset.string = stringType;
 
-            // Touch Event
-            const trigger = (e) => {
-                if(e.cancelable) e.preventDefault(); // Stop scroll
-                
-                // Visual feedback on string
-                const visualString = document.getElementById(`str-${stringType}`);
-                visualString.classList.remove('vibrating');
-                void visualString.offsetWidth; // trigger reflow
-                visualString.classList.add('vibrating');
-                
-                // Visual feedback on zone
-                el.classList.add('active-touch');
-                setTimeout(() => el.classList.remove('active-touch'), 150);
+            // Open strings row style differences
+            if (fretIndex === 0) {
+                cell.classList.add('bg-black/35');
+                cell.style.borderTop = '2px solid rgba(255, 215, 0, 0.25)';
+            }
 
-                // Sound
-                const soundType = stringType === 'lo' ? 'brass' : 'nylon';
-                playNote(freq, soundType);
+            // Thai Label Text
+            const txt = document.createElement('span');
+            txt.className = 'note-label-text transition-opacity text-[10px] font-bold tracking-wide';
+            txt.style.color = fretIndex === 0 ? '#ffd700' : '#e5c100';
+            txt.innerText = THAI_NOTE_LABELS[stringType][fretIndex];
+            
+            // Extra tag for open strings row
+            if (fretIndex === 0) {
+                const subTxt = document.createElement('span');
+                subTxt.className = 'text-[7px] text-amber-500 font-normal leading-none pointer-events-none opacity-70';
+                subTxt.innerText = "สายเปิด";
+                cell.appendChild(subTxt);
+            }
+
+            // Initial hide state
+            if (!document.body.classList.contains('show-notes-activated')) {
+                txt.style.opacity = '0';
+            }
+
+            cell.appendChild(txt);
+
+            // Play Trigger Pluck
+            const triggerPluck = (e) => {
+                if (e.cancelable) e.preventDefault();
+                initAudio();
+                
+                const freq = getFrequency(stringType, fretIndex);
+                playJakhePluck(freq, stringType);
+
+                // Instantly lock and highlight this specific note on the tuner at the top
+                focusTunerTarget(stringType, fretIndex);
+
+                cell.classList.add('bg-gradient-to-r', 'from-amber-500/20', 'to-yellow-500/25');
+                setTimeout(() => {
+                    cell.classList.remove('bg-gradient-to-r', 'from-amber-500/20', 'to-yellow-500/25');
+                }, 200);
+
+                animateStringVibration(stringType);
             };
 
-            el.addEventListener('touchstart', trigger, {passive: false});
-            el.addEventListener('mousedown', trigger);
+            // Touch & Mouse bindings
+            cell.addEventListener('touchstart', triggerPluck, {passive: false});
+            cell.addEventListener('mousedown', triggerPluck);
 
-            return el;
+            return cell;
         }
 
-        // --- Recorder Logic ---
-        const recBtn = document.getElementById('record-btn');
-        const playBtn = document.getElementById('play-btn');
-        const dlBtn = document.getElementById('download-btn');
+        // Visual feedback representing string density vibratos
+        function animateStringVibration(stringType) {
+            const el = document.getElementById(`str-${stringType}`);
+            let vibClass = 'vibrating-right';
+            if (stringType === 'lo') vibClass = 'vibrating-left';
+            else if (stringType === 'thum') vibClass = 'vibrating-center';
 
-        recBtn.addEventListener('click', () => {
-            if (recBtn.classList.contains('recording')) {
-                // Stop Recording
+            el.classList.remove(vibClass);
+            void el.offsetWidth; // trigger reflow
+            el.classList.add(vibClass);
+            setTimeout(() => el.classList.remove(vibClass), 350);
+        }
+    </script>
+
+    <!-- Top Tuner Update Loops -->
+    <script>
+        // Set focus coordinates on the Top-Docked tuner
+        function focusTunerTarget(stringType, fretIndex) {
+            selectedTunerString = stringType;
+            selectedTunerFret = fretIndex;
+            syncTunerToActiveNote();
+        }
+
+        // Syncs the active layout data representation to slider
+        function syncTunerToActiveNote() {
+            // Update Tab Highlight Classes
+            ['ek', 'thum', 'lo'].forEach(key => {
+                const el = document.getElementById(`tuner-tab-${key}`);
+                if (key === selectedTunerString) {
+                    el.className = "px-1.5 py-0.5 text-[9px] font-bold rounded bg-[#ffd700] text-black transition-all shadow";
+                } else {
+                    el.className = "px-1.5 py-0.5 text-[9px] font-bold text-gray-400 hover:text-amber-200 transition-all";
+                }
+            });
+
+            // Text Label representation
+            let strName = 'สายเอก';
+            if (selectedTunerString === 'thum') strName = 'สายทุ้ม';
+            else if (selectedTunerString === 'lo') strName = 'สายลวด';
+
+            const activeOffset = tuningOffsets[selectedTunerString][selectedTunerFret];
+            const currentFreq = getFrequency(selectedTunerString, selectedTunerFret);
+
+            const activeNoteName = THAI_NOTE_LABELS[selectedTunerString][selectedTunerFret];
+            const displayTitle = selectedTunerFret === 0 
+                ? `${strName} (สายเปิด) : ${activeNoteName}` 
+                : `${strName} นม ${selectedTunerFret} : ${activeNoteName}`;
+
+            document.getElementById('lbl-active-note').innerText = displayTitle;
+            document.getElementById('lbl-active-freq').innerText = `${currentFreq.toFixed(1)} Hz`;
+
+            // Slider Sync
+            const slider = document.getElementById('param-active-cent');
+            slider.value = activeOffset;
+            document.getElementById('lbl-active-cent').innerText = `${activeOffset > 0 ? '+' : ''}${activeOffset} cent`;
+        }
+
+        // Slider value update listener
+        document.getElementById('param-active-cent').addEventListener('input', (e) => {
+            const offsetValue = parseInt(e.target.value);
+            tuningOffsets[selectedTunerString][selectedTunerFret] = offsetValue;
+
+            const updatedFreq = getFrequency(selectedTunerString, selectedTunerFret);
+            document.getElementById('lbl-active-freq').innerText = `${updatedFreq.toFixed(1)} Hz`;
+            document.getElementById('lbl-active-cent').innerText = `${offsetValue > 0 ? '+' : ''}${offsetValue} cent`;
+        });
+
+        // Pluck note on slider release to audit changes
+        document.getElementById('param-active-cent').addEventListener('change', () => {
+            initAudio();
+            const freq = getFrequency(selectedTunerString, selectedTunerFret);
+            playJakhePluck(freq, selectedTunerString);
+        });
+
+        // Tab Event Binders
+        document.getElementById('tuner-tab-ek').addEventListener('click', () => {
+            focusTunerTarget('ek', selectedTunerFret);
+        });
+        document.getElementById('tuner-tab-thum').addEventListener('click', () => {
+            focusTunerTarget('thum', selectedTunerFret);
+        });
+        document.getElementById('tuner-tab-lo').addEventListener('click', () => {
+            focusTunerTarget('lo', selectedTunerFret);
+        });
+
+        // Reset Focused Tuning
+        document.getElementById('reset-current-note-btn').addEventListener('click', () => {
+            tuningOffsets[selectedTunerString][selectedTunerFret] = 0;
+            syncTunerToActiveNote();
+
+            initAudio();
+            const freq = getFrequency(selectedTunerString, selectedTunerFret);
+            playJakhePluck(freq, selectedTunerString);
+        });
+    </script>
+
+    <!-- Recorder & Autoplay Mechanics -->
+    <script>
+        const recordBtn = document.getElementById('rec-btn');
+        const playbackBtn = document.getElementById('playback-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const recIndicator = document.getElementById('rec-indicator');
+
+        // Recording Session Controls
+        recordBtn.addEventListener('click', () => {
+            initAudio();
+
+            if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
-                recBtn.classList.remove('recording');
-                recBtn.innerText = '● อัดเสียง';
+                recordBtn.classList.remove('bg-red-600', 'text-white');
+                recordBtn.classList.add('bg-red-950/50', 'text-red-400');
+                recordBtn.innerHTML = '● อัดเสียง';
+                recIndicator.style.display = 'none';
             } else {
-                // Start Recording
-                initAudio();
-                audioChunks = [];
-                mediaRecorder = new MediaRecorder(dest.stream);
-                
-                mediaRecorder.ondataavailable = (e) => {
-                    audioChunks.push(e.data);
+                recordedChunks = [];
+                const options = { mimeType: 'audio/webm;codecs=opus' };
+                try {
+                    mediaRecorder = new MediaRecorder(recordingDest.stream, options);
+                } catch (e) {
+                    mediaRecorder = new MediaRecorder(recordingDest.stream);
+                }
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
                 };
-                
+
                 mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    audioUrl = URL.createObjectURL(audioBlob);
-                    playbackAudio.src = audioUrl;
-                    playBtn.style.display = 'inline-flex';
-                    dlBtn.style.display = 'inline-flex';
+                    recordedBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    recordedUrl = URL.createObjectURL(recordedBlob);
+                    playbackAudio.src = recordedUrl;
+                    playbackBtn.style.display = 'inline-flex';
+                    downloadBtn.style.display = 'inline-flex';
                 };
 
                 mediaRecorder.start();
-                recBtn.classList.add('recording');
-                recBtn.innerText = '■ หยุด';
-                playBtn.style.display = 'none';
-                dlBtn.style.display = 'none';
+                recordBtn.classList.add('bg-red-600', 'text-white');
+                recordBtn.classList.remove('bg-red-950/50', 'text-red-400');
+                recordBtn.innerHTML = '■ หยุดอัด';
+                recIndicator.style.display = 'inline-block';
+                playbackBtn.style.display = 'none';
+                downloadBtn.style.display = 'none';
             }
         });
 
-        playBtn.addEventListener('click', () => {
-            playbackAudio.play();
+        playbackBtn.addEventListener('click', () => {
+            if (recordedUrl) {
+                playbackAudio.currentTime = 0;
+                playbackAudio.play();
+            }
         });
 
-        dlBtn.addEventListener('click', () => {
-            const a = document.createElement('a');
-            a.href = audioUrl;
-            a.download = 'my_jakhe_solo.wav';
-            a.click();
+        downloadBtn.addEventListener('click', () => {
+            if (recordedUrl) {
+                const link = document.createElement('a');
+                link.href = recordedUrl;
+                link.download = 'บันทึกดีดจะเข้ไทย.webm';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         });
 
-        // --- Other UI Controls ---
+        // Traditional Song Loops Autoplay
+        let demoTimer = null;
+        let isDemoActive = false;
+
+        function stopDemoAutoplay() {
+            if (demoTimer) {
+                clearTimeout(demoTimer);
+                demoTimer = null;
+            }
+            isDemoActive = false;
+            document.getElementById('song-playing-banner').classList.add('hidden');
+        }
+
+        // Interrupt demo if player touches any note
+        document.getElementById('jakhe-board').addEventListener('touchstart', () => {
+            if (isDemoActive) stopDemoAutoplay();
+        }, {passive: true});
+
+        function runSongSequence(notes) {
+            stopDemoAutoplay();
+            initAudio();
+            isDemoActive = true;
+
+            const banner = document.getElementById('song-playing-banner');
+            banner.classList.remove('hidden');
+
+            let index = 0;
+            const playStep = () => {
+                if (!isDemoActive || index >= notes.length) {
+                    stopDemoAutoplay();
+                    return;
+                }
+
+                const node = notes[index];
+                if (node.fret !== null) {
+                    const freq = getFrequency(node.string, node.fret);
+                    playJakhePluck(freq, node.string);
+
+                    focusTunerTarget(node.string, node.fret);
+                    animateStringVibration(node.string);
+
+                    // Touch visualization trigger on the main grid (including fret 0)
+                    const colId = node.string === 'lo' ? 'touch-col-lo' : (node.string === 'thum' ? 'touch-col-thum' : 'touch-col-ek');
+                    const cells = document.getElementById(colId).children;
+                    
+                    // Search and highlight target cell
+                    if (cells[node.fret]) {
+                        cells[node.fret].classList.add('bg-yellow-400/35');
+                        setTimeout(() => cells[node.fret].classList.remove('bg-yellow-400/35'), 180);
+                    }
+                }
+
+                index++;
+                demoTimer = setTimeout(playStep, node.delay);
+            };
+
+            playStep();
+        }
+
+        // Song 1: ค้างคาวกินกล้วย (Energetic traditional buzz showpiece)
+        document.getElementById('demo-song-1').addEventListener('click', () => {
+            const notes = [
+                { string: 'ek', fret: 0, delay: 180 },
+                { string: 'ek', fret: 2, delay: 180 },
+                { string: 'ek', fret: 4, delay: 180 },
+                { string: 'ek', fret: 0, delay: 180 },
+                { string: 'ek', fret: 4, delay: 180 },
+                { string: 'ek', fret: 0, delay: 180 },
+                { string: 'ek', fret: 4, delay: 350 },
+                { string: 'thum', fret: 4, delay: 180 },
+                { string: 'thum', fret: 5, delay: 180 },
+                { string: 'thum', fret: 7, delay: 180 },
+                { string: 'thum', fret: 4, delay: 180 },
+                { string: 'thum', fret: 7, delay: 180 },
+                { string: 'thum', fret: 4, delay: 180 },
+                { string: 'thum', fret: 7, delay: 350 },
+                { string: 'ek', fret: 0, delay: 180 },
+                { string: 'ek', fret: 2, delay: 180 },
+                { string: 'ek', fret: 4, delay: 180 },
+                { string: 'ek', fret: 7, delay: 180 },
+                { string: 'ek', fret: 9, delay: 180 },
+                { string: 'ek', fret: 7, delay: 180 },
+                { string: 'ek', fret: 9, delay: 180 },
+                { string: 'ek', fret: 11, delay: 350 },
+                { string: 'lo', fret: 0, delay: 400 }
+            ];
+            runSongSequence(notes);
+            document.getElementById('demo-drawer').classList.add('translate-y-full');
+        });
+
+        // Song 2: ลาวดวงเดือน (Lamenting beautiful slow traditional piece)
+        document.getElementById('demo-song-2').addEventListener('click', () => {
+            const notes = [
+                { string: 'thum', fret: 7, delay: 600 },
+                { string: 'ek', fret: 0, delay: 600 },
+                { string: 'ek', fret: 2, delay: 600 },
+                { string: 'ek', fret: 4, delay: 1200 },
+                { string: 'ek', fret: 2, delay: 300 },
+                { string: 'ek', fret: 4, delay: 300 },
+                { string: 'ek', fret: 2, delay: 600 },
+                { string: 'ek', fret: 0, delay: 1200 },
+                { string: 'thum', fret: 9, delay: 600 },
+                { string: 'thum', fret: 7, delay: 600 },
+                { string: 'thum', fret: 9, delay: 600 },
+                { string: 'ek', fret: 0, delay: 1200 },
+                { string: 'ek', fret: 2, delay: 600 },
+                { string: 'ek', fret: 0, delay: 600 },
+                { string: 'thum', fret: 9, delay: 600 },
+                { string: 'thum', fret: 7, delay: 1200 },
+                { string: 'lo', fret: 0, delay: 1000 }
+            ];
+            runSongSequence(notes);
+            document.getElementById('demo-drawer').classList.add('translate-y-full');
+        });
+    </script>
+
+    <!-- Menu Controls & UI Toggles -->
+    <script>
+        // Toggle top docked tuner panel
+        document.getElementById('toggle-tuner-btn').addEventListener('click', () => {
+            const panel = document.getElementById('top-tuner-panel');
+            panel.classList.toggle('hidden');
+        });
+
+        // Toggle notes display representation
+        document.getElementById('toggle-notes-btn').addEventListener('click', () => {
+            document.body.classList.toggle('show-notes-activated');
+            const active = document.body.classList.contains('show-notes-activated');
+
+            const btn = document.getElementById('toggle-notes-btn');
+            btn.classList.toggle('bg-[#ffd700]', active);
+            btn.classList.toggle('text-black', active);
+
+            const labels = document.querySelectorAll('.note-label-text');
+            labels.forEach(l => {
+                l.style.opacity = active ? '1' : '0';
+            });
+        });
+
+        // Toggle song lists drawer panel
+        document.getElementById('demo-songs-btn').addEventListener('click', () => {
+            const panel = document.getElementById('demo-drawer');
+            panel.classList.toggle('translate-y-full');
+        });
+        document.getElementById('close-demo-drawer').addEventListener('click', () => {
+            document.getElementById('demo-drawer').classList.add('translate-y-full');
+        });
+
+        // Expand physics panel
+        document.getElementById('btn-toggle-advanced').addEventListener('click', () => {
+            const panel = document.getElementById('advanced-physics-panel');
+            const trigger = document.getElementById('btn-toggle-advanced');
+            panel.classList.toggle('hidden');
+            if (panel.classList.contains('hidden')) {
+                trigger.innerHTML = "🛠️ ฟิสิกส์เชิงลึก ▾";
+            } else {
+                trigger.innerHTML = "🛠️ ปิดหน้าต่างฟิสิกส์ ▴";
+            }
+        });
+
+        // Sliders Input Bindings
+        document.getElementById('param-decay').addEventListener('input', (e) => {
+            physicalSettings.decay = parseFloat(e.target.value);
+            document.getElementById('val-decay').innerText = `${e.target.value}s`;
+            document.getElementById('lbl-decay-quick').innerText = `${e.target.value}s`;
+        });
+        document.getElementById('param-buzz').addEventListener('input', (e) => {
+            physicalSettings.buzz = parseFloat(e.target.value);
+            document.getElementById('val-buzz').innerText = e.target.value;
+            document.getElementById('lbl-buzz-quick').innerText = e.target.value;
+        });
+        document.getElementById('param-damping').addEventListener('input', (e) => {
+            physicalSettings.damping = parseInt(e.target.value);
+            document.getElementById('val-damping').innerText = `${e.target.value}Hz`;
+        });
+        document.getElementById('param-pitch').addEventListener('input', (e) => {
+            physicalSettings.masterPitch = parseInt(e.target.value);
+            document.getElementById('val-pitch').innerText = `${e.target.value > 0 ? '+' : ''}${e.target.value} cent`;
+            syncTunerToActiveNote();
+        });
+
+        // Scales Switch Controls
+        function resetScaleClasses() {
+            ['scale-traditional', 'scale-diatonic', 'scale-pentatonic'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = "px-1.5 py-0.5 text-[8px] font-bold text-gray-400";
+            });
+        }
+        document.getElementById('scale-traditional').addEventListener('click', () => {
+            resetScaleClasses();
+            document.getElementById('scale-traditional').className = "px-1.5 py-0.5 text-[8px] font-bold rounded bg-amber-900/50 border border-[#ffd700]/30 text-[#ffd700]";
+            currentScaleKey = 'traditional';
+            document.getElementById('lbl-scale-quick').innerText = 'ไทยเดิม';
+            buildTouchSoundboard();
+            syncTunerToActiveNote();
+        });
+        document.getElementById('scale-diatonic').addEventListener('click', () => {
+            resetScaleClasses();
+            document.getElementById('scale-diatonic').className = "px-1.5 py-0.5 text-[8px] font-bold rounded bg-amber-900/50 border border-[#ffd700]/30 text-[#ffd700]";
+            currentScaleKey = 'diatonic';
+            document.getElementById('lbl-scale-quick').innerText = 'สากล';
+            buildTouchSoundboard();
+            syncTunerToActiveNote();
+        });
+        document.getElementById('scale-pentatonic').addEventListener('click', () => {
+            resetScaleClasses();
+            document.getElementById('scale-pentatonic').className = "px-1.5 py-0.5 text-[8px] font-bold rounded bg-amber-900/50 border border-[#ffd700]/30 text-[#ffd700]";
+            currentScaleKey = 'pentatonic';
+            document.getElementById('lbl-scale-quick').innerText = 'ห้าเสียง';
+            buildTouchSoundboard();
+            syncTunerToActiveNote();
+        });
+
+        // Start screen trigger
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio();
             document.getElementById('start-overlay').style.display = 'none';
         });
 
-        document.getElementById('toggle-notes').addEventListener('click', () => {
-            document.body.classList.toggle('show-notes');
-            const btn = document.getElementById('toggle-notes');
-            btn.style.background = document.body.classList.contains('show-notes') ? 'var(--gold)' : 'transparent';
-            btn.style.color = document.body.classList.contains('show-notes') ? 'black' : 'var(--gold)';
-        });
+        // Startup Hooks
+        window.onload = () => {
+            buildTouchSoundboard();
+            syncTunerToActiveNote();
+        };
 
-        // Initialize Board
-        generateBoard();
-
+        window.onresize = () => {
+            buildTouchSoundboard();
+        };
     </script>
 </body>
 </html>
