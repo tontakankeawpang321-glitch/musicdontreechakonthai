@@ -2,559 +2,1736 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Hybrid Guitar Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siam Guitar Pro - แอพกีตาร์เสียงสมจริง</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt & Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
-
         body {
-            font-family: 'Kanit', sans-serif;
-            background-color: #1a1a1a;
-            color: #fff;
-            overflow: hidden;
-            touch-action: none; /* Disable native touch gestures */
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+            background-color: #0c0a09;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            /* Fit Screen Logic */
-            height: 100vh; 
-            height: 100dvh; /* Dynamic Viewport Height for mobile browsers */
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-            overscroll-behavior: none; /* Prevent pull-to-refresh */
+            touch-action: manipulation;
         }
-
-        /* --- Layout --- */
-        .top-controls {
-            height: 50px;
-            background: #262626;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            gap: 8px;
-            border-bottom: 2px solid #444;
-            z-index: 50;
-            overflow-x: auto;
-            flex-shrink: 0; /* Prevent shrinking */
-            scrollbar-width: none; /* Hide scrollbar Firefox */
-        }
-        .top-controls::-webkit-scrollbar {
-            display: none; /* Hide scrollbar Chrome/Safari */
-        }
-
-        /* Fretboard Section (Top Half) */
-        .neck-container {
-            flex: 1; /* Takes available space */
-            background: #3e2723;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 -20px 40px rgba(0,0,0,0.8);
-            border-bottom: 8px solid #1a1a1a; /* Separator */
-        }
-
-        /* Strum Section (Bottom Half) */
-        .body-container {
-            height: 38%; /* Adjusted for better proportion */
-            min-height: 200px;
-            background: #5d4037;
-            position: relative;
-            overflow: hidden;
-            background: radial-gradient(circle at 50% 120%, #8d6e63 10%, #5d4037 60%, #3e2723 100%);
-            flex-shrink: 0; /* Prevent shrinking */
-        }
-
-        .soundhole {
-            position: absolute;
-            bottom: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 300px;
-            height: 300px;
-            background: #111;
-            border-radius: 50%;
-            border: 15px solid #3e2723;
-            box-shadow: inset 0 0 40px #000;
-        }
-
-        /* --- Guitar Elements --- */
-        
-        /* Strings (Horizontal) */
-        .string-row {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 24px; /* Increased Hit area height for easier touch */
-            transform: translateY(-50%);
-            display: flex;
-            align-items: center;
-            z-index: 20;
-            pointer-events: none; /* Logic handles touch */
-        }
-
-        .string-line {
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(to bottom, #ddd, #fff, #999);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        /* String Thicknesses */
-        .s5 .string-line { height: 5px; background: #d4af37; } /* Low E */
-        .s4 .string-line { height: 4px; background: #d4af37; }
-        .s3 .string-line { height: 3px; background: #d4af37; }
-        .s2 .string-line { height: 2px; background: #fff; }
-        .s1 .string-line { height: 1.5px; background: #fff; }
-        .s0 .string-line { height: 1px; background: #fff; }
-
-        /* Frets (Vertical Lines) */
-        .fret-line {
-            position: absolute;
-            top: 0;
-            bottom: 0;
+        /* Custom scrollbar for mobile feel */
+        ::-webkit-scrollbar {
             width: 4px;
-            background: linear-gradient(to right, #90a4ae, #b0bec5, #78909c);
-            z-index: 10;
-            pointer-events: none;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.3);
         }
-
-        .nut {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            width: 12px;
-            background: #d7ccc8;
-            z-index: 15;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        ::-webkit-scrollbar-track {
+            background: #1c1917;
         }
-
-        /* Markers */
-        .fret-marker {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
+        ::-webkit-scrollbar-thumb {
+            background: #78350f;
+            border-radius: 4px;
         }
-
-        /* Finger Press Indicator */
-        .finger-dot {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            background: rgba(255, 193, 7, 0.9);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(255,193,7, 0.8);
-            z-index: 30;
-            display: none;
+        /* Glow animations */
+        .glowing-string {
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.9);
         }
-        .finger-dot.active { display: block; }
-
-        /* Animation */
-        @keyframes vibrate-v {
-            0% { transform: translateY(0); }
-            25% { transform: translateY(-2px); }
-            50% { transform: translateY(0); }
-            75% { transform: translateY(2px); }
-            100% { transform: translateY(0); }
+        .wood-pattern {
+            background-color: #291303;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0),
+                              radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
+            background-size: 8px 8px;
+            background-position: 0 0, 4px 4px;
         }
-        .vibrating .string-line {
-            animation: vibrate-v 0.08s infinite linear;
+        /* Fretboard custom styling */
+        .fretboard-bg {
+            background: linear-gradient(to right, #2a1810, #1b0e0a, #2a1810);
         }
-
-        /* Buttons */
-        .btn-control {
-            background: #333;
-            border: 1px solid #555;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            white-space: nowrap;
+        .fret-wire {
+            box-shadow: 1px 0 2px rgba(0,0,0,0.8), -1px 0 1px rgba(255,255,255,0.2);
         }
-        .chord-btn {
-            background: #4e342e;
-            color: #ffccbc;
-            border: 1px solid #6d4c41;
-            padding: 6px 14px;
-            border-radius: 14px;
-            font-size: 14px;
-            min-width: 44px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .chord-btn:active { background: #6d4c41; }
-        
-        .fret-number {
-            position: absolute;
-            bottom: 4px;
-            font-size: 10px;
-            color: #aaa;
-            transform: translateX(-50%);
-        }
-
-        /* Touch Layers */
-        #neckTouch, #bodyTouch {
-            position: absolute;
-            inset: 0;
-            z-index: 50;
+        .pulse-fast {
+            animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
     </style>
 </head>
-<body>
+<body class="text-stone-100 min-h-screen flex justify-center">
 
-    <!-- Controls -->
-    <div class="top-controls">
-        <button id="recordBtn" class="btn-control text-red-400 border-red-900/50 bg-red-900/20 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-red-500 block"></span> Rec
-        </button>
-        <div class="w-[1px] h-6 bg-gray-600 mx-1"></div>
-        <button class="chord-btn" onclick="setChord('C')">C</button>
-        <button class="chord-btn" onclick="setChord('D')">D</button>
-        <button class="chord-btn" onclick="setChord('E')">E</button>
-        <button class="chord-btn" onclick="setChord('F')">F</button>
-        <button class="chord-btn" onclick="setChord('G')">G</button>
-        <button class="chord-btn" onclick="setChord('A')">A</button>
-        <button class="chord-btn" onclick="setChord('Em')">Em</button>
-        <button class="chord-btn bg-stone-700 border-stone-600 text-stone-300" onclick="clearChords()">Free</button>
+    <!-- Main Mobile Container (Vertical Portrait View) -->
+    <div class="w-full max-w-md bg-stone-950 flex flex-col h-screen overflow-hidden shadow-2xl border-x border-stone-850 relative">
+        
+        <!-- Urgent Audio Warning Bar for iOS/Mobile users -->
+        <div id="audio-unlock-banner" class="bg-rose-600 hover:bg-rose-700 text-white p-3 text-center text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer z-40 transition-all pulse-fast shrink-0" onclick="initAudioContext()">
+            <i class="fa-solid fa-volume-high animate-bounce text-sm"></i>
+            <span>แตะตรงนี้เพื่อเปิดระบบเสียงกีตาร์ก่อนเล่น! (Tap to Enable Sound)</span>
+        </div>
+
+        <!-- Header / Logo Panel -->
+        <header class="wood-pattern p-4 border-b-2 border-amber-900 flex justify-between items-center shrink-0">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-stone-950 shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-guitar text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-md font-bold text-amber-400 tracking-wide uppercase leading-none">Siam Guitar</h1>
+                    <span class="text-[10px] text-amber-200/70 font-light">PRO PHYSICAL SYNTH v3.1</span>
+                </div>
+            </div>
+            
+            <!-- Quick Preset Switcher -->
+            <div class="flex items-center space-x-1">
+                <button id="btn-audio-init" class="px-3 py-1.5 text-xs font-semibold rounded bg-amber-500 text-stone-950 shadow-md flex items-center" onclick="initAudioContext()">
+                    <i class="fa-solid fa-power-off mr-1"></i> เริ่มเสียง
+                </button>
+                <div id="sound-indicator" class="hidden flex items-center space-x-1 bg-emerald-950/80 px-2 py-1.5 rounded border border-emerald-850">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-[10px] font-bold text-emerald-400">AUDIO ACTIVE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex border-b border-stone-800 bg-stone-900 text-xs text-center shrink-0">
+            <button onclick="switchTab('guitar')" id="tab-guitar" class="flex-1 py-3 font-semibold text-amber-400 border-b-2 border-amber-500 bg-stone-950/40 transition-all">
+                <i class="fa-solid fa-music mb-1 block text-base"></i> กีตาร์ & โน้ต
+            </button>
+            <button onclick="switchTab('songs')" id="tab-songs" class="flex-1 py-3 font-semibold text-stone-400 hover:text-amber-400 border-b-2 border-transparent transition-all">
+                <i class="fa-solid fa-book-open mb-1 block text-base"></i> เพลงสาธิต (10)
+            </button>
+            <button onclick="switchTab('fx')" id="tab-fx" class="flex-1 py-3 font-semibold text-stone-400 hover:text-amber-400 border-b-2 border-transparent transition-all">
+                <i class="fa-solid fa-sliders mb-1 block text-base"></i> ปรับแต่งขั้นสูง
+            </button>
+            <button onclick="switchTab('record')" id="tab-record" class="flex-1 py-3 font-semibold text-stone-400 hover:text-amber-400 border-b-2 border-transparent transition-all">
+                <i class="fa-solid fa-microphone mb-1 block text-base"></i> อัดเสียง
+            </button>
+        </nav>
+
+        <!-- Main Dynamic Content Scrollview -->
+        <main class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+            
+            <!-- ================= TAB: GUITAR & CHORDS ================= -->
+            <section id="section-guitar" class="space-y-4">
+                
+                <!-- Play Mode Selector Segment -->
+                <div class="bg-stone-900/80 p-1 rounded-xl border border-stone-800 flex">
+                    <button onclick="setPlayMode('chord')" id="btn-mode-chord" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1 bg-amber-500 text-stone-950">
+                        <i class="fa-solid fa-layer-group"></i> <span>โหมดดีดคอร์ด (Chord)</span>
+                    </button>
+                    <button onclick="setPlayMode('solo')" id="btn-mode-solo" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1 text-stone-400 hover:text-stone-200">
+                        <i class="fa-solid fa-fingerprint"></i> <span>โหมดโน้ตเดี่ยว (Solo Note)</span>
+                    </button>
+                </div>
+
+                <!-- 1. GUITAR BODY CHORD INTERFACE (Visible in 'chord' playmode) -->
+                <div id="chord-play-container" class="space-y-4">
+                    <!-- Guitar Body Visual Representation with Soundhole -->
+                    <div class="relative rounded-2xl border-4 border-amber-950 bg-stone-900 p-4 shadow-inner overflow-hidden flex flex-col items-center">
+                        <div class="absolute inset-0 bg-gradient-to-b from-amber-950/30 via-stone-900/60 to-amber-950/40 pointer-events-none"></div>
+                        
+                        <!-- Soundhole Background -->
+                        <div class="relative w-28 h-28 rounded-full bg-stone-950 border-8 border-amber-900 flex items-center justify-center shadow-[inset_0_4px_12px_rgba(0,0,0,0.9)] my-2">
+                            <div class="w-20 h-20 rounded-full border border-dashed border-amber-600/30"></div>
+                            <!-- Current Chord indicator in Soundhole -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-xs text-amber-500/60 uppercase">CHORD</span>
+                                <span id="current-chord-label" class="text-3xl font-extrabold text-amber-400 tracking-wider">C</span>
+                            </div>
+                        </div>
+
+                        <!-- Virtual Strings Trigger Area -->
+                        <div class="w-full bg-stone-950/60 rounded-xl border border-stone-800 p-2 relative" id="strum-pad-container">
+                            <div class="text-[10px] text-amber-500/80 text-center uppercase tracking-widest mb-1.5 font-bold animate-pulse">สไลด์รูดสายกีตาร์ลงมาเพื่อดีดเสียง</div>
+                            
+                            <!-- 6 Guitar Strings -->
+                            <div class="relative flex flex-col space-y-4 py-2" id="strings-trigger-box">
+                                <!-- E 1st -->
+                                <div class="relative group cursor-pointer flex items-center py-1" data-string="0">
+                                    <span class="w-4 text-[9px] text-stone-400 font-bold">E1</span>
+                                    <div class="flex-1 h-[1.5px] bg-amber-100 shadow-[0_0_1px_rgba(251,243,219,0.8)] transition-all string-line"></div>
+                                </div>
+                                <!-- B 2nd -->
+                                <div class="relative group cursor-pointer flex items-center py-1" data-string="1">
+                                    <span class="w-4 text-[9px] text-stone-400 font-bold">B2</span>
+                                    <div class="flex-1 h-[2px] bg-amber-200 shadow-[0_0_1px_rgba(251,243,219,0.8)] transition-all string-line"></div>
+                                </div>
+                                <!-- G 3rd -->
+                                <div class="relative group cursor-pointer flex items-center py-1" data-string="2">
+                                    <span class="w-4 text-[9px] text-stone-400 font-bold">G3</span>
+                                    <div class="flex-1 h-[2.5px] bg-amber-300 shadow-[0_0_1px_rgba(251,243,219,0.8)] transition-all string-line"></div>
+                                </div>
+                                <!-- D 4th -->
+                                <div class="relative group cursor-pointer flex items-center py-1" data-string="3">
+                                    <span class="w-4 text-[9px] text-stone-400 font-bold">D4</span>
+                                    <div class="flex-1 h-[3px] bg-amber-400 shadow-[0_0_2px_rgba(251,243,219,0.8)] transition-all string-line"></div>
+                                </div>
+                                <!-- A 5th -->
+                                <div class="relative group cursor-pointer flex items-center py-1" data-string="4">
+                                    <span class="w-4 text-[9px] text-stone-400 font-bold">A5</span>
+                                    <div class="flex-1 h-[3.5px] bg-amber-500/80 shadow-[0_0_2px_rgba(251,243,219,0.8)] transition-all string-line"></div>
+                                </div>
+                                <!-- E 6th -->
+                                <div class="relative group cursor-pointer flex items-center py-1" data-string="5">
+                                    <span class="w-4 text-[9px] text-stone-400 font-bold">E6</span>
+                                    <div class="flex-1 h-[4.5px] bg-amber-600/80 shadow-[0_0_3px_rgba(251,243,219,0.8)] transition-all string-line"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Strum Action Buttons -->
+                        <div class="w-full flex space-x-2 mt-3">
+                            <button onclick="strumChord('down')" class="flex-1 py-3 rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 active:from-amber-500 active:to-amber-400 text-stone-950 font-bold text-sm shadow-md transition-all uppercase flex items-center justify-center space-x-1 border border-amber-400">
+                                <i class="fa-solid fa-arrow-down"></i> <span>ดีดลง (Strum Down)</span>
+                            </button>
+                            <button onclick="strumChord('up')" class="flex-1 py-3 rounded-lg bg-gradient-to-r from-stone-800 to-stone-700 active:from-stone-700 active:to-stone-600 text-amber-200 font-bold text-sm shadow-md transition-all uppercase flex items-center justify-center space-x-1 border border-stone-600">
+                                <i class="fa-solid fa-arrow-up"></i> <span>ดีดขึ้น (Strum Up)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chords Selection Pads Grid -->
+                    <div class="bg-stone-900/40 p-3 rounded-xl border border-stone-800 space-y-2">
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-xs font-semibold text-amber-500 tracking-wider">เลือกคอร์ด</span>
+                            <span class="text-[10px] text-stone-400">คลิกเพื่อเลือกคอร์ดที่ต้องการเล่น</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2" id="chords-grid">
+                            <!-- Custom chord generation by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. INTERACTIVE SOLO & TOUCH FRETBOARD (Visible in 'solo' playmode) -->
+                <div id="solo-play-container" class="space-y-4 hidden">
+                    
+                    <!-- Touch Fretboard (Rosewood Style) -->
+                    <div class="fretboard-bg rounded-2xl border-4 border-amber-950 p-3 shadow-2xl relative overflow-hidden">
+                        <div class="text-[10px] text-amber-500/80 text-center uppercase tracking-widest mb-2 font-semibold">
+                            <i class="fa-solid fa-fingerprint animate-pulse mr-1"></i> จิ้มเฟรตบนคอกีตาร์เพื่อเล่นทีละโน้ต
+                        </div>
+
+                        <!-- Grid Layout of Strings & Frets -->
+                        <div class="relative flex flex-col space-y-3.5 pb-2 pt-1" id="fretboard-grid">
+                            <!-- Fret Numbers Header -->
+                            <div class="flex text-[9px] text-stone-400 font-bold text-center border-b border-stone-800 pb-1">
+                                <span class="w-10">สายเปล่า</span>
+                                <span class="flex-1">เฟรต 1</span>
+                                <span class="flex-1">เฟรต 2</span>
+                                <span class="flex-1">เฟรต 3</span>
+                                <span class="flex-1">เฟรต 4</span>
+                                <span class="flex-1">เฟรต 5</span>
+                            </div>
+
+                            <!-- Interactive Strings on Fretboard -->
+                            <div id="fretboard-interactive-rows" class="space-y-4 relative">
+                                <!-- Dynamic rows for E1 to E6 with fret buttons will be built by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Melody Note Keyboard Pad -->
+                    <div class="bg-stone-900/40 p-3 rounded-xl border border-stone-800 space-y-3">
+                        <div class="flex justify-between items-center px-1">
+                            <div class="flex items-center space-x-1">
+                                <i class="fa-solid fa-music text-amber-500"></i>
+                                <span class="text-xs font-semibold text-amber-500 tracking-wider">แป้นกดคีย์โน้ตดนตรีสำเร็จรูป</span>
+                            </div>
+                            <span class="text-[10px] text-stone-400">แตะเพื่อเล่นทำนอง</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="playMelodyKey(261.63, 'โด (C)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">โด</span>
+                                <span class="text-[9px] text-stone-500">C4</span>
+                            </button>
+                            <button onclick="playMelodyKey(293.66, 'เร (D)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">เร</span>
+                                <span class="text-[9px] text-stone-500">D4</span>
+                            </button>
+                            <button onclick="playMelodyKey(329.63, 'มี (E)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">มี</span>
+                                <span class="text-[9px] text-stone-500">E4</span>
+                            </button>
+                            <button onclick="playMelodyKey(349.23, 'ฟา (F)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">ฟา</span>
+                                <span class="text-[9px] text-stone-500">F4</span>
+                            </button>
+                            <button onclick="playMelodyKey(392.00, 'ซอล (G)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">ซอล</span>
+                                <span class="text-[9px] text-stone-500">G4</span>
+                            </button>
+                            <button onclick="playMelodyKey(440.00, 'ลา (A)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">ลา</span>
+                                <span class="text-[9px] text-stone-500">A4</span>
+                            </button>
+                            <button onclick="playMelodyKey(493.88, 'ที (B)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">ที</span>
+                                <span class="text-[9px] text-stone-500">B4</span>
+                            </button>
+                            <button onclick="playMelodyKey(523.25, 'โด+ (C5)')" class="py-4 bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-850 active:from-amber-500 active:to-amber-600 active:text-stone-950 active:border-amber-400 rounded-xl flex flex-col items-center justify-center transition-all shadow-md">
+                                <span class="text-lg font-bold">โด+</span>
+                                <span class="text-[9px] text-stone-500">C5</span>
+                            </button>
+                        </div>
+
+                        <!-- Dynamic Song Solo Guides -->
+                        <div class="mt-3 p-3 bg-stone-950 rounded-lg border border-stone-800 space-y-2">
+                            <span class="text-xs text-amber-500 font-bold block"><i class="fa-solid fa-graduation-cap mr-1"></i> แท็บสอนโซโล่กีตาร์ง่ายๆ (Melody Tabs Guide)</span>
+                            <div class="flex flex-wrap gap-2 pb-1 text-[10px]">
+                                <button onclick="selectMelodyTab('som-san')" class="px-2 py-1 rounded bg-stone-900 border border-stone-850 text-stone-300 hover:border-amber-500/40">อินโทร ซมซาน 🎸</button>
+                                <button onclick="selectMelodyTab('hbd')" class="px-2 py-1 rounded bg-stone-900 border border-stone-850 text-stone-300 hover:border-amber-500/40">Happy Birthday 🎂</button>
+                                <button onclick="selectMelodyTab('canon')" class="px-2 py-1 rounded bg-stone-900 border border-stone-850 text-stone-300 hover:border-amber-500/40">Canon in D 🎻</button>
+                            </div>
+                            <div id="melody-guide-display" class="p-2.5 bg-stone-900 rounded border border-stone-800 text-center text-xs font-mono text-amber-300">
+                                คลิกปุ่มเพลงด้านบนเพื่อเริ่มหัดเล่นโน้ตเดี่ยว!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Presets selection -->
+                <div class="grid grid-cols-4 gap-1">
+                    <button onclick="changeGuitarPreset('acoustic')" id="preset-acoustic" class="preset-btn py-2 text-xs font-semibold rounded bg-amber-500 text-stone-950 border border-amber-500">Acoustic</button>
+                    <button onclick="changeGuitarPreset('nylon')" id="preset-nylon" class="preset-btn py-2 text-xs font-semibold rounded bg-stone-900 text-stone-300 border border-stone-700">Nylon</button>
+                    <button onclick="changeGuitarPreset('electric')" id="preset-electric" class="preset-btn py-2 text-xs font-semibold rounded bg-stone-900 text-stone-300 border border-stone-700">Elec Clean</button>
+                    <button onclick="changeGuitarPreset('distorted')" id="preset-distorted" class="preset-btn py-2 text-xs font-semibold rounded bg-stone-900 text-stone-300 border border-stone-700">Metal Crunch</button>
+                </div>
+
+                <!-- Auto-Strummer rhythm configurer -->
+                <div class="bg-stone-900/40 p-3 rounded-xl border border-stone-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-1">
+                            <i class="fa-solid fa-rotate text-amber-500"></i>
+                            <span class="text-xs font-semibold text-amber-500 tracking-wider">ระบบช่วยดีดจังหวะอัตโนมัติ</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggle-autostrum" class="sr-only peer" onchange="toggleAutoStrum(this)">
+                            <div class="w-9 h-5 bg-stone-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="text-[10px] text-stone-400 block mb-1">ความเร็ว (BPM): <span id="bpm-val" class="text-amber-400 font-bold">110</span></label>
+                            <input type="range" min="60" max="180" value="110" id="strum-bpm" class="w-full accent-amber-500 h-1 bg-stone-700 rounded-lg appearance-none cursor-pointer" oninput="updateBPM(this.value)">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-[10px] text-stone-400 block mb-1">รูปแบบดีด (Rhythm):</label>
+                            <select id="strum-pattern" class="w-full bg-stone-950 border border-stone-800 rounded px-2 py-1 text-xs text-amber-200 focus:outline-none" onchange="changeStrumPattern(this.value)">
+                                <option value="folk">โฟล์คเบาๆ (D - D - U - U - D - U)</option>
+                                <option value="pop">ป็อบร็อค (D - D - U - D - U)</option>
+                                <option value="slow">สโลว์บูลส์ (D - U - D - U)</option>
+                                <option value="jo">สามช่า / โจ๊ะโจ๊ะ (D - U - D - D)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TAB: DEMO SONGS ================= -->
+            <section id="section-songs" class="space-y-4 hidden">
+                <div class="bg-stone-900/40 p-3 rounded-xl border border-stone-800 space-y-3">
+                    <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-list-ol mr-1"></i> เลือกเพลงสาธิต (10 เพลงยอดนิยม)</h3>
+                    
+                    <!-- Scrolling List of Demo Songs -->
+                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1" id="songs-list">
+                        <!-- Filled by Javascript dynamically -->
+                    </div>
+                </div>
+
+                <!-- Dynamic Lyrics & Chords Viewer -->
+                <div id="lyrics-viewer-panel" class="bg-stone-900 border border-stone-800 rounded-xl p-4 space-y-3 relative hidden">
+                    <div class="absolute top-2 right-2 flex space-x-1">
+                        <button onclick="toggleAutoPlaySong()" id="btn-autoplay-song" class="px-3 py-1 bg-amber-600 active:bg-amber-500 text-stone-950 text-xs font-bold rounded-lg flex items-center space-x-1 border border-amber-500">
+                            <i id="autoplay-icon" class="fa-solid fa-play"></i> <span id="autoplay-text">เล่นตามคอร์ดอัตโนมัติ</span>
+                        </button>
+                    </div>
+
+                    <div class="border-b border-stone-800 pb-2">
+                        <h4 id="song-detail-title" class="text-base font-bold text-amber-400 leading-tight">ซมซาน</h4>
+                        <p id="song-detail-artist" class="text-xs text-stone-400 font-medium">เสก โลโซ</p>
+                    </div>
+
+                    <!-- Highlight Chords Area -->
+                    <div class="flex flex-wrap gap-2 py-1">
+                        <span class="text-xs text-stone-400 self-center">คอร์ดหลัก:</span>
+                        <div id="song-chords-container" class="flex gap-1.5 flex-wrap">
+                            <!-- Chords array badges -->
+                        </div>
+                    </div>
+
+                    <!-- Interactive Scrolling Lyrics with Chords -->
+                    <div class="bg-stone-950 rounded-lg p-3 h-56 overflow-y-auto space-y-4 text-center text-sm font-mono scroll-smooth" id="song-lyrics-container">
+                        <!-- Interactive lyrics loaded dynamically -->
+                    </div>
+                    <p class="text-[10px] text-center text-amber-500/60 font-light"><i class="fa-solid fa-info-circle mr-1"></i> แตะคอร์ดกีตาร์ด้านบนเพื่อเล่นตามได้เลย!</p>
+                </div>
+            </section>
+
+            <!-- ================= TAB: ADVANCED EFFECTS ================= -->
+            <section id="section-fx" class="space-y-4 hidden">
+                <div class="bg-stone-900/40 p-4 rounded-xl border border-stone-800 space-y-4">
+                    <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-toggle-on mr-1"></i> ปรับแต่งโทนเสียง & เอฟเฟกต์ (Advanced FX)</h3>
+                    
+                    <!-- Volume Controller -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs text-stone-300">
+                            <span>ระดับความดังหลัก (Master Volume)</span>
+                            <span id="val-master-volume" class="font-bold text-amber-400">80%</span>
+                        </div>
+                        <input type="range" min="0" max="150" value="80" class="w-full accent-amber-500 h-1.5 bg-stone-700 rounded-lg appearance-none cursor-pointer" oninput="updateMasterVolume(this.value)">
+                    </div>
+
+                    <hr class="border-stone-800 my-2">
+
+                    <!-- EQ controls -->
+                    <div class="space-y-3">
+                        <span class="text-xs text-stone-400 block font-semibold"><i class="fa-solid fa-sliders mr-1"></i> อีควอไลเซอร์ (3-Band EQ)</span>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-stone-950 p-2 rounded border border-stone-800 text-center">
+                                <span class="text-[10px] text-stone-400 block mb-1">Low (เบส)</span>
+                                <input type="range" min="-12" max="12" value="0" class="h-20 accent-amber-500 w-1 bg-stone-700 rounded-lg cursor-pointer" style="writing-mode: vertical-lr; direction: rtl;" oninput="updateEQ('low', this.value)">
+                                <span class="text-[10px] text-amber-500 block mt-1" id="val-eq-low">0dB</span>
+                            </div>
+                            <div class="bg-stone-950 p-2 rounded border border-stone-800 text-center">
+                                <span class="text-[10px] text-stone-400 block mb-1">Mid (กลาง)</span>
+                                <input type="range" min="-12" max="12" value="2" class="h-20 accent-amber-500 w-1 bg-stone-700 rounded-lg cursor-pointer" style="writing-mode: vertical-lr; direction: rtl;" oninput="updateEQ('mid', this.value)">
+                                <span class="text-[10px] text-amber-500 block mt-1" id="val-eq-mid">+2dB</span>
+                            </div>
+                            <div class="bg-stone-950 p-2 rounded border border-stone-800 text-center">
+                                <span class="text-[10px] text-stone-400 block mb-1">High (แหลม)</span>
+                                <input type="range" min="-12" max="12" value="4" class="h-20 accent-amber-500 w-1 bg-stone-700 rounded-lg cursor-pointer" style="writing-mode: vertical-lr; direction: rtl;" oninput="updateEQ('high', this.value)">
+                                <span class="text-[10px] text-amber-500 block mt-1" id="val-eq-high">+4dB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-stone-800 my-2">
+
+                    <!-- Effects sliders -->
+                    <div class="space-y-3">
+                        <!-- Distortion Crunch -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs text-stone-300">
+                                <span>ความแตกกีต้าร์ไฟฟ้า (Distortion Level)</span>
+                                <span id="val-distortion" class="font-bold text-amber-400">10%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="10" class="w-full accent-amber-500 h-1.5 bg-stone-700 rounded-lg appearance-none cursor-pointer" oninput="updateDistortion(this.value)">
+                        </div>
+
+                        <!-- Delay Effect -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs text-stone-300">
+                                <span>เสียงสะท้อน (Delay Time)</span>
+                                <span id="val-delay-time" class="font-bold text-amber-400">0.3s</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="30" class="w-full accent-amber-500 h-1.5 bg-stone-700 rounded-lg appearance-none cursor-pointer" oninput="updateDelayTime(this.value)">
+                        </div>
+
+                        <!-- Reverb Mix -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs text-stone-300">
+                                <span>มิติห้องสะท้อน (Reverb Ambient Mix)</span>
+                                <span id="val-reverb-mix" class="font-bold text-amber-400">25%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="25" class="w-full accent-amber-500 h-1.5 bg-stone-700 rounded-lg appearance-none cursor-pointer" oninput="updateReverbMix(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= TAB: RECORDING ================= -->
+            <section id="section-record" class="space-y-4 hidden">
+                <!-- Visualizer Area -->
+                <div class="bg-stone-900 border border-stone-800 p-4 rounded-xl space-y-3 flex flex-col items-center justify-center">
+                    <span class="text-xs text-stone-400 uppercase tracking-widest"><i class="fa-solid fa-chart-simple mr-1"></i> ตัวตรวจสอบสัญญาณคลื่น (Waveform Visualizer)</span>
+                    <canvas id="visualizer-canvas" class="w-full h-24 bg-stone-950 rounded-lg border border-stone-800"></canvas>
+                </div>
+
+                <!-- Recorder Controls -->
+                <div class="bg-stone-900/40 p-4 rounded-xl border border-stone-800 space-y-4">
+                    <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-circle-dot mr-1"></i> บันทึกเสียง</h3>
+                    <p class="text-xs text-stone-300 leading-relaxed">กดปุ่มสีแดงเพื่อเริ่มบันทึกเสียงเมโลดี้ที่คุณดีดได้ทันที โดยจะประมวลผลเซฟเก็บเป็นไฟล์เสียงจากตัวประมวลผลโดยตรง</p>
+                    
+                    <div class="flex justify-center space-x-2">
+                        <button id="btn-rec-start" onclick="startRecording()" class="flex-1 py-3 bg-red-600 active:bg-red-500 hover:bg-red-700 text-white text-xs font-bold rounded-lg flex items-center justify-center space-x-2 shadow-lg shadow-red-600/20">
+                            <i class="fa-solid fa-circle text-[8px] animate-ping mr-1"></i> บันทึกเสียงเลย
+                        </button>
+                        <button id="btn-rec-stop" onclick="stopRecording()" class="flex-1 py-3 bg-stone-700 text-stone-400 text-xs font-bold rounded-lg flex items-center justify-center space-x-2 cursor-not-allowed" disabled>
+                            <i class="fa-solid fa-stop"></i> หยุดการบันทึก
+                        </button>
+                    </div>
+
+                    <!-- Recording Status Banner -->
+                    <div id="recording-status" class="hidden bg-red-950/40 border border-red-800 p-3 rounded-lg text-center flex items-center justify-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                        <span class="text-xs text-red-300 font-semibold" id="rec-timer">กำลังบันทึกเสียง... 00:00</span>
+                    </div>
+
+                    <!-- Recordings Playback List -->
+                    <div class="space-y-2">
+                        <span class="text-xs text-stone-400 block font-semibold"><i class="fa-solid fa-folder-open mr-1"></i> ไฟล์เสียงที่จัดเก็บบนเครื่องปัจจุบัน</span>
+                        <div id="recordings-list" class="space-y-2 max-h-40 overflow-y-auto">
+                            <div class="text-xs text-stone-500 text-center py-4 bg-stone-950 rounded border border-stone-900">ไม่มีประวัติการบันทึกเสียงในขณะนี้</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Dynamic Visual Feedback Status Bar -->
+        <footer class="bg-stone-950 border-t border-stone-900 px-4 py-3 flex justify-between items-center text-[10px] text-stone-500 shrink-0">
+            <div>
+                สถานะโทน: <span id="status-tone" class="text-amber-500 font-bold uppercase">Acoustic</span>
+            </div>
+            <div>
+                ตัวตั้งจังหวะ: <span id="status-tuning" class="text-amber-500 font-bold">Standard (EADGBE)</span>
+            </div>
+        </footer>
+
     </div>
 
-    <!-- Top: Neck (Fretboard) -->
-    <div class="neck-container" id="neckContainer">
-        <div class="nut"></div>
-        <!-- Generated via JS -->
-        <div id="neckTouch"></div>
-    </div>
-
-    <!-- Bottom: Body (Strumming) -->
-    <div class="body-container" id="bodyContainer">
-        <div class="soundhole"></div>
-        <!-- Generated via JS -->
-        <div id="bodyTouch"></div>
-        <div class="absolute bottom-4 w-full text-center text-white/30 text-sm font-light pointer-events-none tracking-wider">
-            STRUM HERE
+    <!-- Alert Modal component -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-stone-900 border-2 border-amber-900 p-6 rounded-2xl max-w-xs w-full text-center space-y-4 shadow-2xl">
+            <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                <i id="modal-icon" class="fa-solid fa-volume-high text-2xl"></i>
+            </div>
+            <div class="space-y-1">
+                <h4 id="modal-title" class="font-bold text-amber-400 text-base">ระบบเสียง</h4>
+                <p id="modal-desc" class="text-xs text-stone-300 leading-relaxed"></p>
+            </div>
+            <button onclick="initAudioContext(); closeModal();" class="w-full py-2 bg-amber-500 active:bg-amber-400 hover:bg-amber-600 text-stone-950 font-bold text-xs rounded-xl transition-all border border-amber-400">
+                เริ่มใช้งานเลย
+            </button>
         </div>
     </div>
 
-    <!-- Start Overlay -->
-    <div id="startOverlay" class="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center cursor-pointer backdrop-blur-md">
-        <div class="bg-amber-700 p-6 rounded-full mb-4 animate-pulse shadow-[0_0_30px_rgba(180,83,9,0.5)]">
-            <span class="text-4xl text-white">▶</span>
-        </div>
-        <h2 class="text-xl font-bold text-white mb-2">แตะเพื่อเล่น (Tap to Start)</h2>
-        <p class="text-gray-400 text-xs">Full Screen Experience</p>
-    </div>
-
+    <!-- Audio Synthesis & Dynamic GUI JS Script -->
     <script>
-        // --- Configuration ---
-        const config = {
-            strings: 6,
-            visibleFrets: 5, 
-            baseFreqs: [82.41, 110.00, 146.83, 196.00, 246.94, 329.63].reverse() 
+        // App State & Audio Management Global Objects
+        let audioCtx = null;
+        let masterGain = null;
+        let reverbNode = null;
+        let reverbWetGain = null;
+        let delayNode = null;
+        let delayFeedback = null;
+        let delayWetGain = null;
+        let filterLow = null;
+        let filterMid = null;
+        let filterHigh = null;
+        
+        let distortionNode = null;
+        let cabinetFilter = null;
+        
+        let recorderDestination = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordings = [];
+        let recTimerInterval = null;
+        let recSeconds = 0;
+
+        let selectedPreset = 'acoustic'; 
+        let selectedTuning = 'standard';
+        let currentChord = 'C';
+        let isAutoStrumming = false;
+        let autoStrumInterval = null;
+        let currentStrumPattern = 'folk';
+        let currentBPM = 110;
+        let playMode = 'chord';
+
+        const tunings = {
+            standard: [82.41, 110.00, 146.83, 196.00, 246.94, 329.63], 
+            dropD: [73.42, 110.00, 146.83, 196.00, 246.94, 329.63]     
         };
 
-        const stringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63]; 
+        const chordsMap = {
+            'C': [null, 3, 2, 0, 1, 0],
+            'G': [3, 2, 0, 0, 3, 3],
+            'Am': [null, 0, 2, 2, 1, 0],
+            'F': [1, 3, 3, 2, 1, 1],
+            'Em': [0, 2, 2, 0, 0, 0],
+            'D': [null, null, 0, 2, 3, 2],
+            'Dm': [null, null, 0, 2, 3, 1],
+            'E': [0, 2, 2, 1, 0, 0],
+            'Bm': [null, 2, 4, 4, 3, 2],
+            'G7': [3, 2, 0, 0, 0, 1],
+            'C#m': [null, 4, 6, 6, 5, 4],
+            'A': [null, 0, 2, 2, 2, 0]
+        };
 
-        let stringState = [0, 0, 0, 0, 0, 0];
-        let isChordMode = false;
-        const markers = [];
+        const melodyTabs = {
+            'som-san': {
+                title: 'อินโทร ซมซาน - เสก โลโซ',
+                sequence: 'มี ➔ ซอล ➔ ลา ➔ โด+ ➔ ลา ➔ ซอล ➔ มี ➔ เร ➔ โด',
+                hint: 'แป้นกดคีย์สำเร็จรูป: มี ➔ ซอล ➔ ลา ➔ โด+ ➔ ลา ➔ ซอล ➔ มี ➔ เร ➔ โด'
+            },
+            'hbd': {
+                title: 'Happy Birthday',
+                sequence: 'โด ➔ โด ➔ เร ➔ โด ➔ ฟา ➔ มี | โด ➔ โด ➔ เร ➔ โด ➔ ซอล ➔ ฟา',
+                hint: 'แป้นกดคีย์สำเร็จรูป: โด ➔ โด ➔ เร ➔ โด ➔ ฟา ➔ มี'
+            },
+            'canon': {
+                title: 'Canon in D',
+                sequence: 'ฟา ➔ มี ➔ เร ➔ โด ➔ ที ➔ ลา ➔ ที ➔ โด+',
+                hint: 'แป้นกดคีย์สำเร็จรูป: ฟา ➔ มี ➔ เร ➔ โด ➔ ที ➔ ลา'
+            }
+        };
 
-        // --- Audio Context ---
-        let audioCtx;
-        let masterGain;
-        let compressor;
-        let noiseBuffer;
-        const activeVoices = new Array(6).fill(null);
+        const demoSongs = [
+            {
+                title: "ซมซาน",
+                artist: "เสก โลโซ",
+                tempo: 105,
+                chords: ["G", "D", "Em", "Bm", "C", "G", "Am", "D"],
+                lyrics: [
+                    { chords: "G          D          Em         Bm", text: "เกิดมาไม่เคยเจอใคร เหมือนเธอ..." },
+                    { chords: "C          G          Am         D", text: "หลับตาก็ฝันละเมอ ภาพเธอคอยหลอนจิตใจ..." },
+                    { chords: "G          D          Em         Bm", text: "ตกหลุมรักเธอเข้าแล้ว ตั้งแต่แรกพบสบตา..." },
+                    { chords: "C          G          Am    D    G", text: "ช่วยบอกฉันหน่อยเถิดหนา ว่าฉันไม่ได้ฝันไป..." }
+                ]
+            },
+            {
+                title: "My Heart Will Go On (Titanic)",
+                artist: "Celine Dion",
+                tempo: 98,
+                chords: ["C", "G", "F", "G", "Am", "G", "F", "G"],
+                lyrics: [
+                    { chords: "C         G          F          G", text: "Every night in my dreams, I see you, I feel you..." },
+                    { chords: "C         G          F          G", text: "That is how I know you go on..." },
+                    { chords: "Am        G          F          G", text: "Far across the distance and spaces between us..." },
+                    { chords: "Am        G          F          G", text: "You have come to show you go on..." }
+                ]
+            },
+            {
+                title: "คุกเข่า",
+                artist: "Cocktail",
+                tempo: 125,
+                chords: ["Am", "F", "C", "G"],
+                lyrics: [
+                    { chords: "Am         F", text: "ฉันกำลังขอร้องอ้อนวอนเธอเธออย่าไป..." },
+                    { chords: "C          G", text: "ส่งเสียงส่งสายตาขอร้องให้เธอเห็นใจ..." }
+                ]
+            },
+            {
+                title: "วัดใจ",
+                artist: "Silly Fools",
+                tempo: 130,
+                chords: ["Em", "C", "G", "D"],
+                lyrics: [
+                    { chords: "Em         C", text: "มีคนมากมาย บอกให้เธอยอมแพ้..." },
+                    { chords: "G          D", text: "แต่ใจของเธอยังพร้อมจะสู้ต่อ..." }
+                ]
+            },
+            {
+                title: "ไกลแค่ไหน คือ ใกล้",
+                artist: "Getsunova",
+                tempo: 85,
+                chords: ["C", "G", "Am", "F"],
+                lyrics: [
+                    { chords: "C          G          Am         F", text: "อีกไกลแค่ไหน จนกว่าฉันจะใกล้บอกที..." }
+                ]
+            },
+            {
+                title: "เล่นของสูง",
+                artist: "Big Ass",
+                tempo: 124,
+                chords: ["G", "Bm", "C", "D"],
+                lyrics: [
+                    { chords: "G          Bm", text: "รู้ว่าเสี่ยง แต่คงต้องขอลอง..." }
+                ]
+            },
+            {
+                title: "ใกล้",
+                artist: "Scrubb",
+                tempo: 112,
+                chords: ["C", "Em", "F", "G"],
+                lyrics: [
+                    { chords: "C          Em", text: "ใกล้เกินกว่าที่จะพูดคำใดๆ ออกไป..." }
+                ]
+            },
+            {
+                title: "ชะตาชีวิต (Oh I Say)",
+                artist: "เพลงพระราชนิพนธ์",
+                tempo: 90,
+                chords: ["C", "Am", "Dm", "G"],
+                lyrics: [
+                    { chords: "C          Am         Dm         G", text: "นกน้อยคล้อยบินสู่เวหา..." }
+                ]
+            },
+            {
+                title: "จันทร์เจ้า",
+                artist: "Slot Machine",
+                tempo: 128,
+                chords: ["Am", "F", "C", "G"],
+                lyrics: [
+                    { chords: "Am         F", text: "ขอบคุณเวลาที่พาเรามาเจอกัน..." }
+                ]
+            },
+            {
+                title: "ลมแล้ง",
+                artist: "YEW",
+                tempo: 80,
+                chords: ["C", "G", "Am", "F"],
+                lyrics: [
+                    { chords: "C          G", text: "ฝากลมแล้งพัดพาความรักไป..." }
+                ]
+            }
+        ];
 
-        // Recording
-        let recorderDest;
-        let mediaRecorder;
-        let chunks = [];
-        let isRecording = false;
+        let selectedSong = null;
+        let isSongAutoPlaying = false;
+        let songAutoPlayIndex = 0;
+        let songAutoPlayInterval = null;
 
-        function initAudio() {
-            if (audioCtx) return;
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext({ latencyHint: 'interactive' });
-            
-            masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.8;
-
-            compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -18;
-            compressor.ratio.value = 10;
-
-            recorderDest = audioCtx.createMediaStreamDestination();
-
-            compressor.connect(masterGain);
-            masterGain.connect(audioCtx.destination);
-            masterGain.connect(recorderDest);
-
-            const size = audioCtx.sampleRate * 0.05;
-            noiseBuffer = audioCtx.createBuffer(1, size, audioCtx.sampleRate);
-            const data = noiseBuffer.getChannelData(0);
-            for(let i=0; i<size; i++) data[i] = (Math.random()*2 - 1) * 0.5;
-
-            document.getElementById('startOverlay').classList.add('opacity-0', 'pointer-events-none');
+        // Custom Modal UI helper
+        function showModal(title, text, icon = "fa-circle-info") {
+            document.getElementById("modal-title").innerText = title;
+            document.getElementById("modal-desc").innerText = text;
+            const iconElem = document.getElementById("modal-icon");
+            iconElem.className = `fa-solid ${icon} text-2xl`;
+            document.getElementById("custom-modal").classList.remove("hidden");
+        }
+        function closeModal() {
+            document.getElementById("custom-modal").classList.add("hidden");
         }
 
-        function playString(index, velocity = 1.0) {
+        // Initialize Audio context on user gesture
+        async function initAudioContext() {
+            if (audioCtx) {
+                // Ensure state is unblocked on iOS
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                    unlockSilenceBuffer();
+                }
+                return;
+            }
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Master Gain Control Node (Boosted value to 1.1 for loud output)
+                masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(1.1, audioCtx.currentTime);
+
+                // Setup Filters (3-Band EQ)
+                filterLow = audioCtx.createBiquadFilter();
+                filterLow.type = 'lowshelf';
+                filterLow.frequency.setValueAtTime(200, audioCtx.currentTime);
+                filterLow.gain.setValueAtTime(0, audioCtx.currentTime);
+
+                filterMid = audioCtx.createBiquadFilter();
+                filterMid.type = 'peaking';
+                filterMid.Q.setValueAtTime(1.0, audioCtx.currentTime);
+                filterMid.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                filterMid.gain.setValueAtTime(2, audioCtx.currentTime);
+
+                filterHigh = audioCtx.createBiquadFilter();
+                filterHigh.type = 'highshelf';
+                filterHigh.frequency.setValueAtTime(4000, audioCtx.currentTime);
+                filterHigh.gain.setValueAtTime(4, audioCtx.currentTime);
+
+                // Setup Distortion Graph
+                distortionNode = audioCtx.createWaveShaper();
+                distortionNode.curve = makeDistortionCurve(10);
+                distortionNode.oversample = '4x';
+
+                cabinetFilter = audioCtx.createBiquadFilter();
+                cabinetFilter.type = 'lowpass';
+                cabinetFilter.frequency.setValueAtTime(5000, audioCtx.currentTime);
+
+                // Setup Delay Graph
+                delayNode = audioCtx.createDelay(1.0);
+                delayNode.delayTime.setValueAtTime(0.3, audioCtx.currentTime);
+                delayFeedback = audioCtx.createGain();
+                delayFeedback.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                delayWetGain = audioCtx.createGain();
+                delayWetGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+
+                // Setup Delay feedback loop
+                delayNode.connect(delayFeedback);
+                delayFeedback.connect(delayNode);
+
+                // Setup Reverb Node (using procedural impulse response)
+                reverbNode = audioCtx.createConvolver();
+                reverbNode.buffer = createReverbImpulseResponse(audioCtx, 1.5, 2.0);
+                reverbWetGain = audioCtx.createGain();
+                reverbWetGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+
+                // Connection Routing
+                masterGain.connect(filterLow);
+                filterLow.connect(filterMid);
+                filterMid.connect(filterHigh);
+
+                const destination = audioCtx.destination;
+                
+                // Set up recorder output destination node
+                recorderDestination = audioCtx.createMediaStreamDestination();
+
+                // Connect dry direct
+                filterHigh.connect(destination);
+                filterHigh.connect(recorderDestination);
+
+                // Connect Delay route
+                filterHigh.connect(delayNode);
+                delayNode.connect(delayWetGain);
+                delayWetGain.connect(destination);
+                delayWetGain.connect(recorderDestination);
+
+                // Connect Reverb route
+                filterHigh.connect(reverbNode);
+                reverbNode.connect(reverbWetGain);
+                reverbWetGain.connect(destination);
+                reverbWetGain.connect(recorderDestination);
+
+                // Start Visualizer analysis loop
+                setupVisualizer();
+
+                // Unhide Active indicator elements
+                document.getElementById('btn-audio-init').classList.add('hidden');
+                document.getElementById('sound-indicator').classList.remove('hidden');
+                document.getElementById('audio-unlock-banner').classList.add('hidden');
+
+                unlockSilenceBuffer();
+            } catch (error) {
+                console.error("Audio Context initialization failed", error);
+            }
+        }
+
+        // Silent Buffer Player to unlock audio context in Safari iOS
+        function unlockSilenceBuffer() {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+        }
 
-            const fret = stringState[index];
-            if (fret === -1) return;
-
-            const freq = stringFreqs[index] * Math.pow(2, fret / 12);
-            const t = audioCtx.currentTime;
-
-            if (activeVoices[index]) {
-                try {
-                    const v = activeVoices[index];
-                    v.gain.gain.cancelScheduledValues(t);
-                    v.gain.gain.setValueAtTime(v.gain.gain.value, t);
-                    v.gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-                    v.osc.stop(t + 0.05);
-                } catch(e) {}
+        // Physical Modeling Buffer Generator (Karplus-Strong)
+        function createPluckedStringBuffer(frequency, duration, presetType) {
+            if (!audioCtx) return null;
+            
+            // Safety guard for frequency values
+            if (!frequency || isNaN(frequency) || frequency <= 0) {
+                frequency = 220;
             }
 
-            const osc = audioCtx.createOscillator();
-            const filter = audioCtx.createBiquadFilter();
-            const gain = audioCtx.createGain();
+            const sampleRate = audioCtx.sampleRate;
+            const numSamples = Math.floor(sampleRate * duration);
+            const buffer = audioCtx.createBuffer(1, numSamples, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            // Period in samples for Karplus-Strong loop
+            const period = Math.round(sampleRate / frequency);
+            
+            // 1. Initial burst: White noise excitation simulating pluck pick
+            for (let i = 0; i < period; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            
+            // 2. Wave decay damping params
+            let decay = 0.993; // Acoustic
+            if (presetType === 'nylon') decay = 0.983;
+            if (presetType === 'electric') decay = 0.995;
+            if (presetType === 'distorted') decay = 0.998;
+            
+            // 3. Lowpass feedback filter loop
+            for (let i = period; i < numSamples; i++) {
+                const s1 = data[i - period];
+                // CRITICAL FIX: Avoid accessing index -1 which evaluates to undefined and creates NaN values
+                const s2 = data[i - period - 1] !== undefined ? data[i - period - 1] : 0;
+                data[i] = decay * (s1 + s2) * 0.5;
+                
+                // Add minor string resonance
+                if (presetType === 'acoustic' || presetType === 'nylon') {
+                    if (i > 2) {
+                        const prevVal = data[i-1] !== undefined ? data[i-1] : 0;
+                        data[i] = data[i] * 0.96 + (data[i] - prevVal) * 0.04;
+                    }
+                }
+            }
+            
+            return buffer;
+        }
 
-            osc.type = 'sawtooth';
-            osc.frequency.value = freq;
+        // Fallback Synthesis Method (Synthesized string pluck)
+        function playFallbackSynth(frequency, duration, stringIndex) {
+            if (!audioCtx) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.8 - (stringIndex * 0.05), audioCtx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
 
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(3000, t);
-            filter.frequency.exponentialRampToValueAtTime(100, t + 4.0);
-
-            gain.gain.setValueAtTime(0, t);
-            gain.gain.linearRampToValueAtTime(0.4 * velocity, t + 0.005);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + 3.0);
-
-            const nSrc = audioCtx.createBufferSource();
-            nSrc.buffer = noiseBuffer;
-            const nGain = audioCtx.createGain();
-            nGain.gain.setValueAtTime(0.15 * velocity, t);
-            nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+            filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + duration);
 
             osc.connect(filter);
             filter.connect(gain);
-            gain.connect(compressor);
-            nSrc.connect(nGain);
-            nGain.connect(compressor);
+            gain.connect(masterGain);
 
-            osc.start(t);
-            nSrc.start(t);
-            osc.stop(t + 5);
-
-            activeVoices[index] = { osc, gain };
-
-            animateString(index);
-            if(navigator.vibrate) navigator.vibrate(10);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + duration);
         }
 
-        // --- UI Construction ---
-        const neckContainer = document.getElementById('neckContainer');
-        const bodyContainer = document.getElementById('bodyContainer');
+        // Procedural Reverb Impulse Response Generator
+        function createReverbImpulseResponse(ctx, duration, decay) {
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = ctx.createBuffer(2, length, sampleRate);
+            const left = impulse.getChannelData(0);
+            const right = impulse.getChannelData(1);
+            
+            for (let i = 0; i < length; i++) {
+                const percent = i / length;
+                const envelope = Math.pow(1 - percent, decay);
+                left[i] = (Math.random() * 2 - 1) * envelope;
+                right[i] = (Math.random() * 2 - 1) * envelope;
+            }
+            
+            return impulse;
+        }
 
-        function buildUI() {
-            for(let s=0; s<6; s++) {
-                const topPos = (s + 0.5) * (100 / 6);
-                const strN = createStringEl(s, topPos, true); 
-                neckContainer.appendChild(strN);
-                const strB = createStringEl(s, topPos, false);
-                bodyContainer.appendChild(strB);
+        // Custom rock distortion waveshaper curve
+        function makeDistortionCurve(amount) {
+            const k = typeof amount === 'number' ? amount : 50;
+            const n_samples = 44100;
+            const curve = new Float32Array(n_samples);
+            const deg = Math.PI / 180;
+            for (let i = 0; i < n_samples; ++i) {
+                const x = (i * 2) / n_samples - 1;
+                curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+            }
+            return curve;
+        }
 
-                const dot = document.createElement('div');
-                dot.className = 'finger-dot';
-                neckContainer.appendChild(dot);
-                markers.push(dot);
+        // Visual animation for string plucks
+        function animateStringUI(stringIndex, delayOffset = 0) {
+            setTimeout(() => {
+                const stringLines = document.querySelectorAll('.string-line');
+                const line = stringLines[stringIndex];
+                if (!line) return;
+
+                line.classList.add('bg-amber-400', 'glowing-string', 'scale-y-125');
+                setTimeout(() => {
+                    line.classList.remove('bg-amber-400', 'glowing-string', 'scale-y-125');
+                }, 150);
+            }, delayOffset * 1000);
+        }
+
+        // Play individual Guitar String (Used in Chord Strum Mode)
+        function playStringNote(stringIndex, delayOffset = 0) {
+            if (!audioCtx) {
+                initAudioContext();
+                return;
             }
 
-            const fretWidth = 100 / (config.visibleFrets + 0.5); 
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
 
-            for(let f=1; f<=config.visibleFrets; f++) {
-                const line = document.createElement('div');
-                line.className = 'fret-line';
-                line.style.left = `${f * fretWidth}%`;
-                neckContainer.appendChild(line);
+            const chordFingerings = chordsMap[currentChord];
+            const fret = chordFingerings[stringIndex];
+            
+            if (fret === null) {
+                return; // String muted
+            }
 
-                const num = document.createElement('div');
-                num.className = 'fret-number';
-                num.textContent = f;
-                num.style.left = `${(f - 0.5) * fretWidth}%`;
-                neckContainer.appendChild(num);
+            const baseFreq = tunings[selectedTuning][stringIndex];
+            const noteFreq = baseFreq * Math.pow(2, fret / 12);
 
-                if(f===3 || f===5) {
-                   const dot = document.createElement('div');
-                   dot.className = 'fret-marker';
-                   dot.style.left = `${(f - 0.5) * fretWidth}%`;
-                   dot.style.top = '50%';
-                   neckContainer.appendChild(dot);
+            playPhysicalNote(noteFreq, stringIndex, delayOffset);
+        }
+
+        // Play an exact fret on a specific string (Used in Fretboard Solo Mode)
+        function playFretNote(stringIndex, fret, delayOffset = 0) {
+            if (!audioCtx) {
+                initAudioContext();
+                return;
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const baseFreq = tunings[selectedTuning][stringIndex];
+            const noteFreq = baseFreq * Math.pow(2, fret / 12);
+
+            playPhysicalNote(noteFreq, stringIndex, delayOffset);
+        }
+
+        // Internal engine to play the note via buffer synthesis
+        function playPhysicalNote(noteFreq, stringIndex, delayOffset = 0) {
+            const duration = (stringIndex <= 2) ? 2.5 : 1.5;
+            
+            try {
+                const buffer = createPluckedStringBuffer(noteFreq, duration, selectedPreset);
+                if (!buffer) {
+                    playFallbackSynth(noteFreq, duration, stringIndex);
+                    return;
                 }
+
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+
+                const pluckGain = audioCtx.createGain();
+                let gainValue = 0.95 - (stringIndex * 0.05);
+                pluckGain.gain.setValueAtTime(gainValue, audioCtx.currentTime + delayOffset);
+
+                if (selectedPreset === 'distorted') {
+                    source.connect(distortionNode);
+                    distortionNode.connect(cabinetFilter);
+                    cabinetFilter.connect(pluckGain);
+                } else {
+                    source.connect(pluckGain);
+                }
+
+                pluckGain.connect(masterGain);
+                source.start(audioCtx.currentTime + delayOffset);
+            } catch (e) {
+                console.warn("Plucked buffer failed, running fallback synthesizer...", e);
+                playFallbackSynth(noteFreq, duration, stringIndex);
+            }
+
+            animateStringUI(stringIndex, delayOffset);
+        }
+
+        // Plays custom melody keyboards
+        function playMelodyKey(frequency, noteName) {
+            if (!audioCtx) {
+                initAudioContext();
+                return;
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            try {
+                const buffer = createPluckedStringBuffer(frequency, 2.0, selectedPreset);
+                if (!buffer) {
+                    playFallbackSynth(frequency, 2.0, 1);
+                    return;
+                }
+
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+
+                const pluckGain = audioCtx.createGain();
+                pluckGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+
+                if (selectedPreset === 'distorted') {
+                    source.connect(distortionNode);
+                    distortionNode.connect(cabinetFilter);
+                    cabinetFilter.connect(pluckGain);
+                } else {
+                    source.connect(pluckGain);
+                }
+
+                pluckGain.connect(masterGain);
+                source.start(audioCtx.currentTime);
+            } catch (e) {
+                playFallbackSynth(frequency, 2.0, 1);
+            }
+
+            const label = document.getElementById('current-chord-label');
+            if (label) {
+                label.innerText = noteName;
+                label.classList.add('scale-125', 'text-amber-300');
+                setTimeout(() => {
+                    label.classList.remove('scale-125', 'text-amber-300');
+                }, 200);
             }
         }
 
-        function createStringEl(index, topPerc, isNeck) {
-            const el = document.createElement('div');
-            el.className = `string-row`;
-            el.style.top = `${topPerc}%`;
-            const thicknessClass = `s${5 - index}`; 
-            el.dataset.idx = index;
-            el.dataset.loc = isNeck ? 'neck' : 'body';
-            const line = document.createElement('div');
-            line.className = `string-line ${thicknessClass}`;
-            el.appendChild(line);
-            return el;
-        }
-
-        function animateString(idx) {
-            const targets = document.querySelectorAll(`.string-row[data-idx="${idx}"]`);
-            targets.forEach(el => {
-                el.classList.remove('vibrating');
-                void el.offsetWidth;
-                el.classList.add('vibrating');
-                setTimeout(() => el.classList.remove('vibrating'), 300);
+        // Strum all chord notes
+        function strumChord(direction = 'down') {
+            const sequence = direction === 'down' ? [5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5];
+            const strumSpeed = 0.04; 
+            
+            sequence.forEach((stringIndex, index) => {
+                const delay = index * strumSpeed;
+                playStringNote(stringIndex, delay);
             });
         }
 
-        // --- Interaction ---
-        const neckTouch = document.getElementById('neckTouch');
-        neckTouch.addEventListener('touchstart', handleNeck, {passive:false});
-        neckTouch.addEventListener('touchmove', handleNeck, {passive:false});
-        neckTouch.addEventListener('touchend', handleNeck, {passive:false});
+        // Switch Play Mode (Chord <-> Solo Note)
+        function setPlayMode(mode) {
+            playMode = mode;
+            
+            const btnChord = document.getElementById('btn-mode-chord');
+            const btnSolo = document.getElementById('btn-mode-solo');
+            const chordContainer = document.getElementById('chord-play-container');
+            const soloContainer = document.getElementById('solo-play-container');
 
-        function handleNeck(e) {
-            e.preventDefault();
-            initAudio();
-            const currentTouches = {}; 
-            const rect = neckContainer.getBoundingClientRect();
-            for(let i=0; i<e.touches.length; i++) {
-                const t = e.touches[i];
-                if(t.clientY >= rect.top && t.clientY <= rect.bottom) {
-                    const yPerc = (t.clientY - rect.top) / rect.height;
-                    const sIdx = Math.floor(yPerc * 6);
-                    const xPerc = (t.clientX - rect.left) / rect.width;
-                    const fretWidthPerc = 1 / (config.visibleFrets + 0.5);
-                    const fretNum = Math.ceil(xPerc / fretWidthPerc);
-                    if(sIdx >=0 && sIdx < 6 && fretNum > 0 && fretNum <= config.visibleFrets) {
-                        currentTouches[sIdx] = fretNum;
-                    }
-                }
-            }
-            for(let s=0; s<6; s++) {
-                if(currentTouches[s]) {
-                    stringState[s] = currentTouches[s];
-                    const fretWidth = 100 / (config.visibleFrets + 0.5);
-                    markers[s].style.left = `${(stringState[s] - 0.5) * fretWidth}%`;
-                    markers[s].style.top = `${(s + 0.5) * (100/6)}%`;
-                    markers[s].classList.add('active');
-                } else if(!isChordMode) {
-                    stringState[s] = 0;
-                    markers[s].classList.remove('active');
-                }
-            }
-        }
-
-        const bodyTouch = document.getElementById('bodyTouch');
-        const lastStrum = [0,0,0,0,0,0];
-
-        bodyTouch.addEventListener('touchstart', handleStrum, {passive:false});
-        bodyTouch.addEventListener('touchmove', handleStrum, {passive:false});
-
-        function handleStrum(e) {
-            e.preventDefault();
-            initAudio();
-            const rect = bodyContainer.getBoundingClientRect();
-            for(let i=0; i<e.touches.length; i++) {
-                const t = e.touches[i];
-                if(t.clientY >= rect.top && t.clientY <= rect.bottom) {
-                    const yPerc = (t.clientY - rect.top) / rect.height;
-                    const sIdx = Math.floor(yPerc * 6);
-                    if(sIdx >=0 && sIdx < 6) {
-                        const now = Date.now();
-                        if(now - lastStrum[sIdx] > 60) {
-                            playString(sIdx);
-                            lastStrum[sIdx] = now;
-                        }
-                    }
-                }
-            }
-        }
-
-        const chords = {
-            'C': [-1, 3, 2, 0, 1, 0],
-            'D': [-1, -1, 0, 2, 3, 2],
-            'E': [0, 2, 2, 1, 0, 0],
-            'F': [1, 3, 3, 2, 1, 1],
-            'G': [3, 2, 0, 0, 0, 3],
-            'A': [-1, 0, 2, 2, 2, 0],
-            'Em': [0, 2, 2, 0, 0, 0]
-        };
-
-        window.setChord = function(name) {
-            isChordMode = true;
-            const shape = chords[name];
-            if(shape) {
-                markers.forEach(m => m.classList.remove('active'));
-                for(let s=0; s<6; s++) {
-                    stringState[s] = shape[s];
-                    if(shape[s] > 0) {
-                        const fretWidth = 100 / (config.visibleFrets + 0.5);
-                        markers[s].style.left = `${(shape[s] - 0.5) * fretWidth}%`;
-                        markers[s].style.top = `${(s + 0.5) * (100/6)}%`;
-                        markers[s].classList.add('active');
-                    }
-                }
-            }
-        };
-
-        window.clearChords = function() {
-            isChordMode = false;
-            stringState = [0,0,0,0,0,0];
-            markers.forEach(m => m.classList.remove('active'));
-        };
-
-        const recordBtn = document.getElementById('recordBtn');
-        recordBtn.addEventListener('click', () => {
-            initAudio();
-            if(!isRecording) {
-                chunks = [];
-                mediaRecorder = new MediaRecorder(recorderDest.stream);
-                mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(chunks, {'type':'audio/wav'});
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display='none';
-                    a.href=url;
-                    a.download = `rec-${Date.now()}.wav`;
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(()=>a.remove(), 100);
-                };
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-white animate-pulse block"></span> Stop';
-                recordBtn.classList.add('bg-red-600', 'text-white');
+            if (mode === 'chord') {
+                btnChord.className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1 bg-amber-500 text-stone-950";
+                btnSolo.className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1 text-stone-400 hover:text-stone-200";
+                chordContainer.classList.remove('hidden');
+                soloContainer.classList.add('hidden');
             } else {
-                mediaRecorder.stop();
-                isRecording = false;
-                recordBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500 block"></span> Rec';
-                recordBtn.classList.remove('bg-red-600', 'text-white');
+                btnChord.className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1 text-stone-400 hover:text-stone-200";
+                btnSolo.className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1 bg-amber-500 text-stone-950";
+                chordContainer.classList.add('hidden');
+                soloContainer.classList.remove('hidden');
+                renderInteractiveFretboard();
+            }
+        }
+
+        // Render interactive fretboard matrix
+        function renderInteractiveFretboard() {
+            const container = document.getElementById('fretboard-interactive-rows');
+            container.innerHTML = '';
+
+            const stringLabels = ['E1', 'B2', 'G3', 'D4', 'A5', 'E6'];
+            
+            for (let sIdx = 0; sIdx < 6; sIdx++) {
+                let rowHtml = `
+                    <div class="flex items-center relative py-1.5 group">
+                        <!-- String Name -->
+                        <span class="w-10 text-[10px] text-amber-500/80 font-black text-center">${stringLabels[sIdx]}</span>
+                        
+                        <!-- Fret 0 Button (Open String) -->
+                        <button onclick="playFretNote(${sIdx}, 0)" class="w-10 h-7 mx-0.5 rounded bg-amber-900/30 border border-amber-900/40 text-[9px] font-bold text-amber-200 active:bg-amber-500 active:text-stone-950 transition-all">0</button>
+                        
+                        <!-- Fret 1-5 Columns -->
+                        <div class="flex-1 grid grid-cols-5 gap-1.5 px-1 relative">
+                            <!-- Metal String wire representation -->
+                            <div class="absolute left-0 right-0 h-[2px] bg-yellow-600/60 top-1/2 -translate-y-1/2 z-0"></div>
+                            
+                            <button onclick="playFretNote(${sIdx}, 1)" class="h-8 rounded bg-stone-950/80 hover:bg-stone-900/90 border border-stone-800 text-[10px] font-semibold text-stone-300 active:bg-amber-500 active:text-stone-950 transition-all z-10">1</button>
+                            <button onclick="playFretNote(${sIdx}, 2)" class="h-8 rounded bg-stone-950/80 hover:bg-stone-900/90 border border-stone-800 text-[10px] font-semibold text-stone-300 active:bg-amber-500 active:text-stone-950 transition-all z-10">2</button>
+                            <button onclick="playFretNote(${sIdx}, 3)" class="h-8 rounded bg-amber-950/40 hover:bg-amber-900/30 border border-amber-900/40 text-[10px] font-semibold text-amber-300 active:bg-amber-500 active:text-stone-950 transition-all z-10">3 •</button>
+                            <button onclick="playFretNote(${sIdx}, 4)" class="h-8 rounded bg-stone-950/80 hover:bg-stone-900/90 border border-stone-800 text-[10px] font-semibold text-stone-300 active:bg-amber-500 active:text-stone-950 transition-all z-10">4</button>
+                            <button onclick="playFretNote(${sIdx}, 5)" class="h-8 rounded bg-amber-950/40 hover:bg-amber-900/30 border border-amber-900/40 text-[10px] font-semibold text-amber-300 active:bg-amber-500 active:text-stone-950 transition-all z-10">5 •</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += rowHtml;
+            }
+        }
+
+        // Select pre-set melody guide tabs
+        function selectMelodyTab(key) {
+            const data = melodyTabs[key];
+            const display = document.getElementById('melody-guide-display');
+            if (data && display) {
+                display.innerHTML = `
+                    <div class="space-y-1 text-center animate-fade-in">
+                        <p class="font-bold text-amber-400 text-xs">${data.title}</p>
+                        <p class="text-xs text-stone-100 font-medium tracking-wider">${data.sequence}</p>
+                        <p class="text-[9px] text-stone-400 font-light italic mt-1">${data.hint}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Setup Chord Buttons Grid
+        function renderChordsGrid() {
+            const grid = document.getElementById('chords-grid');
+            grid.innerHTML = '';
+            
+            Object.keys(chordsMap).forEach(chord => {
+                const isSelected = chord === currentChord;
+                const activeClasses = isSelected 
+                    ? 'bg-amber-500 text-stone-950 border-amber-400 font-black shadow-lg shadow-amber-500/20' 
+                    : 'bg-stone-950 text-stone-300 border-stone-800 hover:border-stone-700';
+
+                const fingerings = chordsMap[chord];
+                let summary = "";
+                fingerings.forEach((f, i) => {
+                    if (f === null) summary += "x";
+                    else summary += f;
+                });
+
+                grid.innerHTML += `
+                    <button onclick="selectChord('${chord}')" id="chord-btn-${chord}" class="chord-btn py-3 px-1 border rounded-lg text-sm text-center flex flex-col items-center justify-center transition-all ${activeClasses}">
+                        <span class="text-base uppercase">${chord}</span>
+                        <span class="text-[8px] text-stone-500 mt-0.5 tracking-tighter">${summary}</span>
+                    </button>
+                `;
+            });
+        }
+
+        function selectChord(chord) {
+            currentChord = chord;
+            const label = document.getElementById('current-chord-label');
+            if (label) label.innerText = chord;
+            
+            document.querySelectorAll('.chord-btn').forEach(btn => {
+                btn.className = "chord-btn py-3 px-1 border rounded-lg text-sm text-center flex flex-col items-center justify-center transition-all bg-stone-950 text-stone-300 border-stone-800 hover:border-stone-700";
+            });
+
+            const activeBtn = document.getElementById(`chord-btn-${chord}`);
+            if (activeBtn) {
+                activeBtn.className = "chord-btn py-3 px-1 border rounded-lg text-sm text-center flex flex-col items-center justify-center transition-all bg-amber-500 text-stone-950 border-amber-400 font-black shadow-lg shadow-amber-500/20";
+            }
+        }
+
+        // Switch Tab UI Content Panel
+        function switchTab(tabName) {
+            const tabs = ['guitar', 'songs', 'fx', 'record'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabName) {
+                    btn.className = "flex-1 py-3 font-semibold text-amber-400 border-b-2 border-amber-500 bg-stone-950/40 transition-all";
+                } else {
+                    btn.className = "flex-1 py-3 font-semibold text-stone-400 hover:text-amber-400 border-b-2 border-transparent transition-all";
+                }
+            });
+
+            tabs.forEach(t => {
+                const sec = document.getElementById(`section-${t}`);
+                if (t === tabName) {
+                    sec.classList.remove('hidden');
+                } else {
+                    sec.classList.add('hidden');
+                }
+            });
+        }
+
+        // Change Guitar Preset Tone
+        function changeGuitarPreset(preset) {
+            selectedPreset = preset;
+            
+            if (distortionNode) {
+                if (preset === 'distorted') {
+                    distortionNode.curve = makeDistortionCurve(60);
+                } else {
+                    distortionNode.curve = makeDistortionCurve(10);
+                }
+            }
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.className = "preset-btn py-2 text-xs font-semibold rounded bg-stone-900 text-stone-300 border border-stone-700";
+            });
+
+            const activeBtn = document.getElementById(`preset-${preset}`);
+            if (activeBtn) {
+                activeBtn.className = "preset-btn py-2 text-xs font-semibold rounded bg-amber-500 text-stone-950 border border-amber-500";
+            }
+
+            document.getElementById('status-tone').innerText = preset;
+        }
+
+        // Change Tuning
+        function changeTuning(tuning) {
+            selectedTuning = tuning;
+            
+            document.querySelectorAll('[id^="btn-tuning-"]').forEach(btn => {
+                btn.className = "py-2 text-[11px] font-semibold rounded bg-stone-950 text-stone-300 border border-stone-800";
+            });
+
+            const activeBtn = document.getElementById(`btn-tuning-${tuning}`);
+            if (activeBtn) {
+                activeBtn.className = "py-2 text-[11px] font-semibold rounded bg-amber-500 text-stone-950 border border-amber-500";
+            }
+
+            document.getElementById('status-tuning').innerText = tuning === 'standard' ? 'Standard (EADGBE)' : 'Drop D (DADGBE)';
+        }
+
+        // Effects Settings Controllers
+        function updateMasterVolume(val) {
+            const gain = val / 100;
+            if (masterGain) {
+                masterGain.gain.setValueAtTime(gain, audioCtx.currentTime);
+            }
+            document.getElementById('val-master-volume').innerText = val + "%";
+        }
+
+        function updateEQ(band, val) {
+            if (!audioCtx) return;
+            if (band === 'low' && filterLow) {
+                filterLow.gain.setValueAtTime(val, audioCtx.currentTime);
+                document.getElementById('val-eq-low').innerText = (val > 0 ? "+" : "") + val + "dB";
+            }
+            if (band === 'mid' && filterMid) {
+                filterMid.gain.setValueAtTime(val, audioCtx.currentTime);
+                document.getElementById('val-eq-mid').innerText = (val > 0 ? "+" : "") + val + "dB";
+            }
+            if (band === 'high' && filterHigh) {
+                filterHigh.gain.setValueAtTime(val, audioCtx.currentTime);
+                document.getElementById('val-eq-high').innerText = (val > 0 ? "+" : "") + val + "dB";
+            }
+        }
+
+        function updateDistortion(val) {
+            document.getElementById('val-distortion').innerText = val + "%";
+            if (distortionNode) {
+                distortionNode.curve = makeDistortionCurve(val * 1.5);
+            }
+        }
+
+        // Updates Delay parameters
+        function updateDelayTime(val) {
+            const delayTime = (val / 100) * 0.8;
+            document.getElementById('val-delay-time').innerText = delayTime.toFixed(2) + "s";
+            if (delayNode) {
+                delayNode.delayTime.setValueAtTime(delayTime, audioCtx.currentTime);
+            }
+        }
+
+        // Updates Reverb parameters
+        function updateReverbMix(val) {
+            const wetGain = val / 100;
+            document.getElementById('val-reverb-mix').innerText = val + "%";
+            if (reverbWetGain) {
+                reverbWetGain.gain.setValueAtTime(wetGain, audioCtx.currentTime);
+            }
+        }
+
+        // Auto-Strummer Engine Loop
+        function toggleAutoStrum(checkbox) {
+            isAutoStrumming = checkbox.checked;
+            if (isAutoStrumming) {
+                if (!audioCtx) initAudioContext();
+                startAutoStrumLoop();
+            } else {
+                stopAutoStrumLoop();
+            }
+        }
+
+        function updateBPM(val) {
+            currentBPM = val;
+            document.getElementById('bpm-val').innerText = val;
+            if (isAutoStrumming) {
+                stopAutoStrumLoop();
+                startAutoStrumLoop();
+            }
+        }
+
+        function changeStrumPattern(pattern) {
+            currentStrumPattern = pattern;
+            if (isAutoStrumming) {
+                stopAutoStrumLoop();
+                startAutoStrumLoop();
+            }
+        }
+
+        function startAutoStrumLoop() {
+            const msPerBeat = (60 / currentBPM) * 1000;
+
+            const patterns = {
+                folk: [
+                    { action: 'down', delay: 0 },
+                    { action: 'down', delay: 1.0 },
+                    { action: 'up', delay: 1.5 },
+                    { action: 'up', delay: 2.5 },
+                    { action: 'down', delay: 3.0 },
+                    { action: 'up', delay: 3.5 }
+                ],
+                pop: [
+                    { action: 'down', delay: 0 },
+                    { action: 'down', delay: 1.0 },
+                    { action: 'up', delay: 1.5 },
+                    { action: 'down', delay: 2.0 },
+                    { action: 'up', delay: 2.5 }
+                ],
+                slow: [
+                    { action: 'down', delay: 0 },
+                    { action: 'up', delay: 1.0 },
+                    { action: 'down', delay: 2.0 },
+                    { action: 'up', delay: 3.0 }
+                ],
+                jo: [
+                    { action: 'down', delay: 0 },
+                    { action: 'up', delay: 0.5 },
+                    { action: 'down', delay: 1.0 },
+                    { action: 'down', delay: 1.5 }
+                ]
+            };
+
+            const activePattern = patterns[currentStrumPattern];
+            const patternTotalBeats = currentStrumPattern === 'jo' ? 2 : 4;
+            const totalCycleTime = patternTotalBeats * msPerBeat;
+
+            autoStrumInterval = setInterval(() => {
+                activePattern.forEach(stroke => {
+                    setTimeout(() => {
+                        if (isAutoStrumming) {
+                            strumChord(stroke.action);
+                        }
+                    }, stroke.delay * (msPerBeat / (currentStrumPattern === 'jo' ? 1 : 2)));
+                });
+            }, totalCycleTime);
+        }
+
+        function stopAutoStrumLoop() {
+            if (autoStrumInterval) {
+                clearInterval(autoStrumInterval);
+                autoStrumInterval = null;
+            }
+        }
+
+        // Demo Songs Rendering & Auto-Play Systems
+        function renderSongsList() {
+            const listContainer = document.getElementById('songs-list');
+            listContainer.innerHTML = '';
+
+            demoSongs.forEach((song, idx) => {
+                listContainer.innerHTML += `
+                    <div onclick="selectDemoSong(${idx})" class="p-3 bg-stone-950 hover:bg-amber-950/20 rounded-lg border border-stone-800 hover:border-amber-950/50 flex justify-between items-center transition-all cursor-pointer">
+                        <div>
+                            <h4 class="text-xs font-bold text-stone-100">${song.title}</h4>
+                            <p class="text-[10px] text-stone-400 font-medium">${song.artist}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[9px] bg-amber-950 text-amber-500 font-bold px-1.5 py-0.5 rounded border border-amber-900/30">${song.tempo} BPM</span>
+                            <i class="fa-solid fa-circle-play text-amber-500 text-sm"></i>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function selectDemoSong(index) {
+            selectedSong = demoSongs[index];
+            
+            document.getElementById('song-detail-title').innerText = selectedSong.title;
+            document.getElementById('song-detail-artist').innerText = selectedSong.artist;
+            document.getElementById('lyrics-viewer-panel').classList.remove('hidden');
+
+            updateBPM(selectedSong.tempo);
+            document.getElementById('strum-bpm').value = selectedSong.tempo;
+
+            const chordsContainer = document.getElementById('song-chords-container');
+            chordsContainer.innerHTML = '';
+            
+            selectedSong.chords.forEach(chord => {
+                chordsContainer.innerHTML += `
+                    <button onclick="selectChord('${chord}')" class="px-2.5 py-1 text-xs font-black rounded bg-amber-950 text-amber-400 border border-amber-900/40 uppercase hover:bg-amber-500 hover:text-stone-950 transition-all">
+                        ${chord}
+                    </button>
+                `;
+            });
+
+            const lyricsContainer = document.getElementById('song-lyrics-container');
+            lyricsContainer.innerHTML = '';
+            
+            selectedSong.lyrics.forEach((line, lineIdx) => {
+                lyricsContainer.innerHTML += `
+                    <div id="lyric-line-${lineIdx}" class="py-2 px-1 transition-all rounded duration-300 border border-transparent">
+                        <pre class="text-xs font-bold text-amber-400 tracking-wider whitespace-pre-wrap leading-tight select-none">${line.chords}</pre>
+                        <p class="text-xs text-stone-300 font-light mt-1 select-none">${line.text}</p>
+                    </div>
+                `;
+            });
+
+            stopAutoPlaySong();
+        }
+
+        function toggleAutoPlaySong() {
+            if (!selectedSong) return;
+            
+            if (isSongAutoPlaying) {
+                stopAutoPlaySong();
+            } else {
+                startAutoPlaySong();
+            }
+        }
+
+        function startAutoPlaySong() {
+            if (!audioCtx) initAudioContext();
+            
+            isSongAutoPlaying = true;
+            songAutoPlayIndex = 0;
+            document.getElementById('autoplay-text').innerText = "กำลังบรรเลงตามคอร์ด...";
+            document.getElementById('autoplay-icon').className = "fa-solid fa-stop-circle text-rose-500";
+            document.getElementById('btn-autoplay-song').className = "px-3 py-1 bg-red-950 text-red-400 text-xs font-bold rounded-lg flex items-center space-x-1 border border-red-800 animate-pulse";
+
+            const beatInterval = (60 / selectedSong.tempo) * 1000;
+            const msPerChord = beatInterval * 4;
+
+            function playNextSongChord() {
+                if (!isSongAutoPlaying) return;
+
+                const progressionChord = selectedSong.chords[songAutoPlayIndex % selectedSong.chords.length];
+                selectChord(progressionChord);
+                
+                strumChord('down');
+
+                const totalLines = selectedSong.lyrics.length;
+                const activeLineIdx = Math.floor(songAutoPlayIndex / 2) % totalLines;
+
+                document.querySelectorAll('[id^="lyric-line-"]').forEach(line => {
+                    line.className = "py-2 px-1 transition-all rounded duration-300 border border-transparent";
+                });
+
+                const activeLine = document.getElementById(`lyric-line-${activeLineIdx}`);
+                if (activeLine) {
+                    activeLine.className = "py-2 px-1 bg-amber-950/20 border border-amber-900/30 text-amber-300 scale-105 rounded-xl font-semibold";
+                    activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                songAutoPlayIndex++;
+            }
+
+            playNextSongChord();
+            songAutoPlayInterval = setInterval(playNextSongChord, msPerChord);
+        }
+
+        function stopAutoPlaySong() {
+            isSongAutoPlaying = false;
+            if (songAutoPlayInterval) {
+                clearInterval(songAutoPlayInterval);
+                songAutoPlayInterval = null;
+            }
+            
+            document.getElementById('autoplay-text').innerText = "เล่นตามคอร์ดอัตโนมัติ";
+            document.getElementById('autoplay-icon').className = "fa-solid fa-play";
+            document.getElementById('btn-autoplay-song').className = "px-3 py-1 bg-amber-600 active:bg-amber-500 text-stone-950 text-xs font-bold rounded-lg flex items-center space-x-1";
+            
+            document.querySelectorAll('[id^="lyric-line-"]').forEach(line => {
+                line.className = "py-2 px-1 transition-all rounded duration-300 border border-transparent";
+            });
+        }
+
+        // Internal Audio Recording Pipeline
+        function startRecording() {
+            if (!audioCtx) {
+                initAudioContext();
+                return;
+            }
+
+            if (!recorderDestination) {
+                showModal("การแจ้งเตือน", "กรุณาเปิดการเชื่อมต่อระบบสัญญาณเสียงก่อนเริ่มอัด!", "fa-circle-exclamation");
+                return;
+            }
+
+            recordedChunks = [];
+            
+            try {
+                let options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                    options = { mimeType: 'audio/ogg' };
+                }
+
+                mediaRecorder = new MediaRecorder(recorderDestination.stream, options);
+                
+                mediaRecorder.ondataavailable = function(e) {
+                    if (e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = function() {
+                    const audioBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    const recordName = `สยามกีตาร์อัดเอง #${recordings.length + 1}`;
+                    recordings.unshift({
+                        id: Date.now(),
+                        name: recordName,
+                        url: audioUrl,
+                        date: new Date().toLocaleTimeString('th-TH')
+                    });
+
+                    renderRecordingsList();
+                };
+
+                mediaRecorder.start();
+
+                document.getElementById('btn-rec-start').classList.add('hidden');
+                document.getElementById('btn-rec-stop').classList.remove('cursor-not-allowed');
+                document.getElementById('btn-rec-stop').classList.add('bg-red-600', 'text-white');
+                document.getElementById('btn-rec-stop').disabled = false;
+                document.getElementById('recording-status').classList.remove('hidden');
+
+                recSeconds = 0;
+                recTimerInterval = setInterval(() => {
+                    recSeconds++;
+                    const minutes = Math.floor(recSeconds / 60).toString().padStart(2, '0');
+                    const seconds = (recSeconds % 60).toString().padStart(2, '0');
+                    document.getElementById('rec-timer').innerText = `กำลังบันทึกเสียง... ${minutes}:${seconds}`;
+                }, 1000);
+
+            } catch (err) {
+                console.error("Failed to start media recorder", err);
+            }
+        }
+
+        function stopRecording() {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+
+            mediaRecorder.stop();
+            clearInterval(recTimerInterval);
+
+            document.getElementById('btn-rec-start').classList.remove('hidden');
+            document.getElementById('btn-rec-stop').classList.add('cursor-not-allowed');
+            document.getElementById('btn-rec-stop').classList.remove('bg-red-600', 'text-white');
+            document.getElementById('btn-rec-stop').disabled = true;
+            document.getElementById('recording-status').classList.add('hidden');
+        }
+
+        function renderRecordingsList() {
+            const list = document.getElementById('recordings-list');
+            list.innerHTML = '';
+
+            if (recordings.length === 0) {
+                list.innerHTML = `<div class="text-xs text-stone-500 text-center py-4 bg-stone-950 rounded border border-stone-900">ไม่มีประวัติการบันทึกเสียงในขณะนี้</div>`;
+                return;
+            }
+
+            recordings.forEach((rec, idx) => {
+                list.innerHTML += `
+                    <div class="bg-stone-950 p-3 rounded-lg border border-stone-850 flex flex-col space-y-2">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-xs font-bold text-amber-400 block">${rec.name}</span>
+                                <span class="text-[9px] text-stone-500 block">บันทึกเมื่อ: ${rec.date}</span>
+                            </div>
+                            <button onclick="deleteRecording(${rec.id})" class="text-xs text-stone-500 hover:text-rose-500 transition-all p-1">
+                                <i class="fa-solid fa-trash-can"></i> ลบ
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <audio src="${rec.url}" controls class="w-full h-8 accent-amber-500 text-stone-950 bg-stone-900 rounded"></audio>
+                            <a href="${rec.url}" download="${rec.name}.webm" class="px-3 py-2 bg-amber-500 text-stone-950 rounded-lg text-xs font-bold flex items-center justify-center hover:bg-amber-400 transition-all">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteRecording(id) {
+            recordings = recordings.filter(rec => rec.id !== id);
+            renderRecordingsList();
+        }
+
+        // Canvas Oscilloscope/Spectrum Visualizer
+        function setupVisualizer() {
+            if (!audioCtx) return;
+
+            const canvas = document.getElementById('visualizer-canvas');
+            const canvasCtx = canvas.getContext('2d');
+            
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            masterGain.connect(analyser);
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            const resizeCanvas = () => {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = 96;
+            };
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            function draw() {
+                requestAnimationFrame(draw);
+
+                analyser.getByteFrequencyData(dataArray);
+
+                canvasCtx.fillStyle = '#0c0a09';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let barHeight;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 1.5;
+
+                    const r = 245;
+                    const g = 158 - (i * 0.5);
+                    const b = 11 + (i * 1.5);
+
+                    canvasCtx.fillStyle = `rgb(${r},${g},${b})`;
+                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+
+                    x += barWidth;
+                }
+            }
+
+            draw();
+        }
+
+        // Mobile Strum / Pluck Interaction Handler
+        function setupTouchListeners() {
+            const stringsContainer = document.getElementById('strings-trigger-box');
+            let isStrummingActive = false;
+            let lastStringStrummed = -1;
+
+            stringsContainer.addEventListener('touchstart', (e) => {
+                isStrummingActive = true;
+                handleTouchPosition(e);
+            });
+
+            stringsContainer.addEventListener('touchmove', (e) => {
+                if (!isStrummingActive) return;
+                handleTouchPosition(e);
+            });
+
+            stringsContainer.addEventListener('touchend', () => {
+                isStrummingActive = false;
+                lastStringStrummed = -1;
+            });
+
+            stringsContainer.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+
+            const strings = stringsContainer.children;
+            for (let i = 0; i < strings.length; i++) {
+                strings[i].addEventListener('mousedown', () => {
+                    playStringNote(i);
+                });
+            }
+
+            function handleTouchPosition(e) {
+                const touch = e.touches[0];
+                const rect = stringsContainer.getBoundingClientRect();
+                
+                const y = touch.clientY - rect.top;
+                const totalHeight = rect.height;
+                
+                const stringCount = 6;
+                let estimatedIndex = Math.floor((y / totalHeight) * stringCount);
+                
+                estimatedIndex = Math.max(0, Math.min(stringCount - 1, estimatedIndex));
+
+                if (estimatedIndex !== lastStringStrummed) {
+                    playStringNote(estimatedIndex);
+                    lastStringStrummed = estimatedIndex;
+                }
+            }
+        }
+
+        // Auto-run unlockers on document-wide click/touch interactions to guarantee mobile sound is ON
+        document.body.addEventListener('click', () => {
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+                unlockSilenceBuffer();
+            }
+        });
+        document.body.addEventListener('touchstart', () => {
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+                unlockSilenceBuffer();
             }
         });
 
-        document.getElementById('startOverlay').addEventListener('click', initAudio);
-        document.getElementById('startOverlay').addEventListener('touchstart', initAudio);
-        buildUI();
+        // Initial setup on window load
+        window.onload = function() {
+            renderChordsGrid();
+            renderSongsList();
+            setupTouchListeners();
+            
+            // Show alert prompting manual button press for safety compliance
+            showModal(
+                "เปิดใช้งานระบบเสียงกีตาร์", 
+                "ยินดีต้อนรับสู่สยามกีตาร์โปร! ระบบจำลองเสียงฟิสิคัลสมจริงต้องการสิทธิ์การเริ่มใช้สัญญาณเสียง กรุณากดปุ่มด้านล่างเพื่อปลดล็อกเสียงให้ออกลำโพงของคุณทันที", 
+                "fa-guitar"
+            );
+        };
+
     </script>
 </body>
 </html>
