@@ -2,487 +2,1156 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>กลองเทเนอร์จำลอง (Pro Audio Engine)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Marching Tenor Drums Pro - กลองชุดเทเนอร์มือถือ</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for nice icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter & Kanit Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --drum-rim: #e0e0e0; 
-            --drum-head: #ffffff; 
-            --drum-shell: #263238; 
-            --highlight: #00bcd4; 
-            --record-color: #ff5252;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Sarabun', sans-serif;
-            touch-action: none;
+            font-family: 'Kanit', 'Inter', sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: manipulation;
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+            overflow: hidden;
         }
-
-        #start-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-            text-align: center;
-            transition: opacity 0.5s;
+        /* Drum rim glow active effect */
+        .drum-active {
+            transform: scale(0.94) translateY(2px);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.4) !important;
         }
-
-        .btn-start {
-            padding: 15px 30px;
-            font-size: 1.5rem;
-            background: var(--highlight);
-            border: none;
-            color: white;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 20px;
-            box-shadow: 0 0 20px rgba(0, 188, 212, 0.5);
-            font-weight: bold;
-        }
-
-        .controls {
-            position: absolute;
-            top: 20px;
-            display: flex;
-            gap: 15px;
-            z-index: 50;
-            background: rgba(0,0,0,0.5);
-            padding: 10px 20px;
-            border-radius: 30px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .btn-control {
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.1);
-            color: white;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .btn-control:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-record.recording {
-            background-color: var(--record-color);
-            border-color: var(--record-color);
-            animation: pulse 1.5s infinite;
-        }
-
-        .status-text {
-            color: var(--record-color);
-            font-weight: bold;
+        /* Custom scrollbar for advanced panel */
+        .no-scrollbar::-webkit-scrollbar {
             display: none;
-            align-items: center;
-            margin-left: 10px;
-            font-size: 0.9rem;
         }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-
-        .drum-container {
-            position: relative;
-            width: 95vw;
-            height: 60vh;
-            max-width: 800px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .drum {
-            position: absolute;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffffff, #eceff1);
-            border: 8px solid var(--drum-shell);
-            box-shadow: 
-                0 0 0 4px var(--drum-rim),
-                0 15px 25px rgba(0,0,0,0.6),
-                inset 0 0 20px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: transform 0.05s, border-color 0.05s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: rgba(0,0,0,0.4);
-            font-size: 1.5rem;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .drum:active, .drum.hit {
-            transform: scale(0.96);
-            background: radial-gradient(circle at 30% 30%, #fff, #fafafa);
-            border-color: var(--highlight);
-        }
-
-        #drum-1 { width: 18vmin; height: 18vmin; right: 32%; top: 15%; z-index: 2; }
-        #drum-2 { width: 20vmin; height: 20vmin; left: 30%; top: 15%; z-index: 2; }
-        #drum-3 { width: 24vmin; height: 24vmin; right: 5%; top: 25%; z-index: 1; }
-        #drum-4 { width: 26vmin; height: 26vmin; left: 2%; top: 25%; z-index: 1; }
-        #drum-spock {
-            width: 14vmin; height: 14vmin;
-            left: 50%; top: 5%;
-            transform: translateX(-50%);
-            z-index: 3;
-            background: radial-gradient(circle at 30% 30%, #455a64, #263238); 
-            border-color: #000;
-            color: rgba(255,255,255,0.3);
-        }
-        #drum-spock:active, #drum-spock.hit {
-            transform: translateX(-50%) scale(0.95);
-        }
-
-        .footer {
-            position: absolute;
-            bottom: 20px;
-            color: #666;
-            font-size: 0.8rem;
-        }
-        
-        #loading-text {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-
-        @media (orientation: portrait) {
-            .drum-container { height: 50vh; width: 100vw; }
-            #drum-1 { right: 28%; top: 20%; }
-            #drum-2 { left: 28%; top: 20%; }
-            #drum-3 { right: 2%; top: 35%; }
-            #drum-4 { left: 2%; top: 35%; }
-            #drum-spock { top: 8%; }
-            .controls { top: 10px; flex-wrap: wrap; justify-content: center; }
-        }
-
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col text-white select-none overflow-hidden relative">
 
-    <div id="start-overlay">
-        <h1>กลองเทเนอร์จำลอง</h1>
-        <p style="color: #aaa; margin-bottom: 20px;">ระบบเสียง Pro: Preload + Trim Silence + Fade</p>
-        <button id="btn-start-init" class="btn-start" onclick="initAudio()">
-             เริ่มเล่น
-        </button>
-        <div id="loading-text"></div>
+    <!-- Header Section -->
+    <header class="w-full px-4 pt-3 pb-2 flex items-center justify-between z-10 bg-gray-900/60 backdrop-blur-md border-b border-gray-800">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-drum text-white text-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-extrabold tracking-wide uppercase bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Marching Tenors Pro</h1>
+                <p class="text-[9px] text-gray-400 font-light">เสียงดุริยางค์ความสมจริงระดับกลองมาร์ชชิ่งแท้</p>
+            </div>
+        </div>
+        <div class="flex space-x-2">
+            <button id="btn-reset" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all active:scale-95">
+                <i class="fa-solid fa-rotate-left"></i> รีเซ็ต
+            </button>
+            <button id="btn-tuning-toggle" class="bg-gray-800 hover:bg-gray-700 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition-all active:scale-95">
+                <i class="fa-solid fa-sliders"></i> จูนเสียงโยฯ
+            </button>
+        </div>
+    </header>
+
+    <!-- Visualizer and Note Falling Canvas -->
+    <div class="flex-1 w-full relative overflow-hidden bg-black/40 border-b border-gray-900 flex flex-col">
+        <!-- Canvas for scrolling notes -->
+        <canvas id="notes-canvas" class="w-full flex-1 touch-none"></canvas>
+        
+        <!-- Score & Status Overlay -->
+        <div class="absolute top-2 left-3 pointer-events-none flex items-center space-x-4">
+            <div class="bg-black/60 px-3 py-1 rounded-full border border-gray-800 text-[11px] font-mono">
+                <span class="text-gray-400 mr-1">คะแนน:</span>
+                <span id="score-display" class="text-amber-400 font-bold">0</span>
+            </div>
+            <div id="combo-container" class="opacity-0 transition-opacity duration-200 bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded text-[10px] font-bold text-amber-300">
+                <span id="combo-display">0</span> COMBO!
+            </div>
+        </div>
+
+        <div id="hit-feedback" class="absolute left-1/2 bottom-8 -translate-x-1/2 pointer-events-none font-extrabold text-xl tracking-widest text-amber-400 drop-shadow-[0_2px_8px_rgba(0,0,0,1)] scale-75 opacity-0 transition-all duration-150">
+            PERFECT!
+        </div>
     </div>
 
-    <div class="controls">
-        <button id="btn-record" class="btn-control btn-record" onclick="toggleRecord()">
-            <span class="icon">●</span> บันทึก
-        </button>
-        <button id="btn-stop" class="btn-control" onclick="stopRecord()" disabled>
-            <span class="icon">■</span> หยุด & โหลด
-        </button>
-        <span id="record-status" class="status-text">กำลังบันทึก...</span>
+    <!-- Demo Play & Controls Panel -->
+    <section class="w-full bg-gray-950 px-4 py-2 border-t border-gray-900 flex flex-col space-y-2 z-10">
+        <div class="flex items-center justify-between gap-2">
+            <!-- Song selector -->
+            <div class="flex-1">
+                <select id="song-select" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1.5 text-xs text-gray-200 outline-none focus:border-amber-500">
+                    <option value="cadence-1">Cadence: จังหวะเดินแถวมาตรฐานวงโยฯ</option>
+                    <option value="double-stroke">Rudiment: ดับเบิ้ลสโตรกโรล (รัวสองชั้นแบบแห้งคม)</option>
+                    <option value="paradiddle">Rudiment: พาราดิดเดิลเดี่ยว (ซ้อมมือแยกประสาท)</option>
+                    <option value="samba-march">March: แซมบ้ามาร์ชทริปเปิล (กระแทกขอบกลอง)</option>
+                </select>
+            </div>
+            
+            <!-- Play/Pause Button -->
+            <button id="btn-play-demo" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 active:scale-95 transition-all">
+                <i class="fa-solid fa-play" id="play-icon"></i> <span id="play-text">เล่นอัตโนมัติ</span>
+            </button>
+        </div>
+
+        <!-- Speed / Tempo & Metronome Controls -->
+        <div class="flex items-center justify-between text-xs text-gray-400 px-1">
+            <div class="flex items-center space-x-2 flex-1 mr-4">
+                <span>ความเร็ว (BPM):</span>
+                <input type="range" id="tempo-slider" min="60" max="180" value="116" class="flex-1 accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer">
+                <span id="tempo-display" class="font-mono text-amber-400 w-8 text-right">116</span>
+            </div>
+            <label class="flex items-center space-x-1.5 cursor-pointer">
+                <input type="checkbox" id="chk-metronome" class="rounded accent-amber-500 bg-gray-900 border-gray-800">
+                <span>เมโทรนอม</span>
+            </label>
+        </div>
+    </section>
+
+    <!-- The Tenor Drum Kit (Sextet Layout optimized for vertical mobile screens) -->
+    <div class="w-full bg-gray-950/90 pb-safe-bottom px-2 pt-2 pb-4 flex flex-col justify-end select-none relative z-10">
+        <!-- Top row: Spocks (High pitch inner drums - Gongs of the drumline) -->
+        <div class="flex justify-center space-x-3 mb-2">
+            <!-- Spock 2 (Shot 2 / Left center tiny drum) -->
+            <div id="pad-spock2" class="drum-pad relative w-[18vw] h-[18vw] max-w-[70px] max-h-[70px] rounded-full border-4 border-gray-700 bg-gradient-to-b from-gray-800 to-gray-950 flex flex-col items-center justify-center shadow-lg shadow-black/60 transition-all cursor-pointer" data-drum="spock2">
+                <div class="absolute inset-1 rounded-full border border-gray-800/50 bg-radial-center opacity-30 pointer-events-none"></div>
+                <div class="text-[10px] font-extrabold text-purple-400">S2</div>
+                <div class="text-[8px] text-gray-500 font-mono mt-0.5">S</div>
+                <!-- Rim click hit zone -->
+                <div class="rim-zone absolute inset-0 rounded-full border border-purple-500/10 hover:border-purple-500/30 pointer-events-none"></div>
+            </div>
+
+            <!-- Spock 1 (Shot 1 / Right center tiny drum) -->
+            <div id="pad-spock1" class="drum-pad relative w-[18vw] h-[18vw] max-w-[70px] max-h-[70px] rounded-full border-4 border-gray-700 bg-gradient-to-b from-gray-800 to-gray-950 flex flex-col items-center justify-center shadow-lg shadow-black/60 transition-all cursor-pointer" data-drum="spock1">
+                <div class="absolute inset-1 rounded-full border border-gray-800/50 bg-radial-center opacity-30 pointer-events-none"></div>
+                <div class="text-[10px] font-extrabold text-pink-400">S1</div>
+                <div class="text-[8px] text-gray-500 font-mono mt-0.5">D</div>
+                <div class="rim-zone absolute inset-0 rounded-full border border-pink-500/10 pointer-events-none"></div>
+            </div>
+        </div>
+
+        <!-- Main Arc Row: Drums 3, 1, 2, 4 (Standard Marching Layout) -->
+        <div class="grid grid-cols-4 gap-1.5 justify-center items-end px-1">
+            <!-- Drum 3 (Lowest mid-left tom) -->
+            <div id="pad-drum3" class="drum-pad relative aspect-square w-full rounded-full border-[5px] border-zinc-600 bg-gradient-to-b from-zinc-800 to-zinc-950 flex flex-col items-center justify-center shadow-xl shadow-black/70 transition-all cursor-pointer" data-drum="drum3">
+                <div class="absolute inset-1.5 rounded-full border border-zinc-700/50 pointer-events-none"></div>
+                <div class="text-xs font-black text-cyan-400">3</div>
+                <div class="text-[9px] text-gray-500 font-mono">A</div>
+                <div class="rim-zone absolute inset-0 rounded-full border border-cyan-500/10 pointer-events-none"></div>
+            </div>
+
+            <!-- Drum 1 (High tom left-mid) -->
+            <div id="pad-drum1" class="drum-pad relative aspect-square w-full rounded-full border-[5px] border-zinc-600 bg-gradient-to-b from-zinc-800 to-zinc-950 flex flex-col items-center justify-center shadow-xl shadow-black/70 transition-all cursor-pointer" data-drum="drum1">
+                <div class="absolute inset-1.5 rounded-full border border-zinc-700/50 pointer-events-none"></div>
+                <div class="text-xs font-black text-yellow-400">1</div>
+                <div class="text-[9px] text-gray-500 font-mono">F</div>
+                <div class="rim-zone absolute inset-0 rounded-full border border-yellow-500/10 pointer-events-none"></div>
+            </div>
+
+            <!-- Drum 2 (Mid tom right-mid) -->
+            <div id="pad-drum2" class="drum-pad relative aspect-square w-full rounded-full border-[5px] border-zinc-600 bg-gradient-to-b from-zinc-800 to-zinc-950 flex flex-col items-center justify-center shadow-xl shadow-black/70 transition-all cursor-pointer" data-drum="drum2">
+                <div class="absolute inset-1.5 rounded-full border border-zinc-700/50 pointer-events-none"></div>
+                <div class="text-xs font-black text-orange-400">2</div>
+                <div class="text-[9px] text-gray-500 font-mono">J</div>
+                <div class="rim-zone absolute inset-0 rounded-full border border-orange-500/10 pointer-events-none"></div>
+            </div>
+
+            <!-- Drum 4 (Lowest tom far-right) -->
+            <div id="pad-drum4" class="drum-pad relative aspect-square w-full rounded-full border-[5px] border-zinc-600 bg-gradient-to-b from-zinc-800 to-zinc-950 flex flex-col items-center justify-center shadow-xl shadow-black/70 transition-all cursor-pointer" data-drum="drum4">
+                <div class="absolute inset-1.5 rounded-full border border-zinc-700/50 pointer-events-none"></div>
+                <div class="text-xs font-black text-rose-500">4</div>
+                <div class="text-[9px] text-gray-500 font-mono">K</div>
+                <div class="rim-zone absolute inset-0 rounded-full border border-rose-500/10 pointer-events-none"></div>
+            </div>
+        </div>
+
+        <!-- Touch Area Assist Help Overlay / Labels -->
+        <p class="text-center text-[10px] text-gray-500 mt-2 tracking-wide font-light">
+            แตะ <span class="text-amber-400 font-bold">ตรงกลาง</span> เพื่อตีปกติ หรือ <span class="text-red-400 font-bold">รอบนอกวงกลม</span> เพื่อเคาะริมช็อตขอบเหล็ก (Rim Shot)
+        </p>
     </div>
 
-    <div class="drum-container">
-        <!-- Spock (S) -->
-        <div id="drum-spock" class="drum" data-note="spock">S</div>
-        <!-- Drum 2 -->
-        <div id="drum-2" class="drum" data-note="2">2</div>
-        <!-- Drum 1 -->
-        <div id="drum-1" class="drum" data-note="1">1</div>
-        <!-- Drum 4 -->
-        <div id="drum-4" class="drum" data-note="4">4</div>
-        <!-- Drum 3 -->
-        <div id="drum-3" class="drum" data-note="3">3</div>
+    <!-- Sound Customization Tuning Panel Drawer -->
+    <div id="tuning-panel" class="fixed inset-y-0 right-0 w-80 max-w-full bg-gray-900/98 border-l border-gray-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-950">
+            <h2 class="font-bold text-amber-400 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-sliders"></i> แผงจูนเสียงวงโยธวาทิต (Studio)
+            </h2>
+            <button id="btn-tuning-close" class="text-gray-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-5 no-scrollbar">
+            <!-- Global Acoustics Mixer -->
+            <div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">มิติเสียง & สิ่งแวดล้อม</h3>
+                <div class="bg-gray-950/50 p-3 rounded-lg border border-gray-800 space-y-3">
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span>ความก้องสะท้อนสนามกีฬากลางแจ้ง</span>
+                            <span id="reverb-val" class="text-amber-400 font-mono">45%</span>
+                        </div>
+                        <input type="range" id="tuning-reverb" min="0" max="100" value="45" class="w-full accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span>แรงกระแทกหัวไม้กลอง (Nylon Stick Crack)</span>
+                            <span id="attack-val" class="text-amber-400 font-mono">80%</span>
+                        </div>
+                        <input type="range" id="tuning-attack" min="0" max="100" value="80" class="w-full accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span>ความสว่างเสียงขอบกลองเหล็ก (Rim Shot Ring)</span>
+                            <span id="rimshot-val" class="text-amber-400 font-mono">85%</span>
+                        </div>
+                        <input type="range" id="tuning-rimshot" min="0" max="100" value="85" class="w-full accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per Drum Adjustments -->
+            <div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">จูนความตึงแยกใบ</h3>
+                <div class="space-y-4">
+                    <!-- Dynamic Drum Customizer Selector -->
+                    <div class="flex bg-gray-950 p-1 rounded-lg border border-gray-800 text-xs">
+                        <button class="flex-1 py-1 text-center font-bold rounded bg-amber-500 text-gray-950" id="tune-select-spocks">Spocks</button>
+                        <button class="flex-1 py-1 text-center font-bold text-gray-400 rounded" id="tune-select-drums">Drums 1-4</button>
+                    </div>
+
+                    <!-- Spock Tuning Block -->
+                    <div id="tune-block-spocks" class="space-y-3">
+                        <div class="bg-gray-950/50 p-3 rounded-lg border border-gray-800 space-y-2">
+                            <h4 class="text-[11px] font-bold text-purple-400 flex justify-between">
+                                <span>Spock 1 & 2 (ลูกจิ๋วแปดนิ้ว)</span>
+                                <span>ความถี่ความตึงสูง</span>
+                            </h4>
+                            <div class="flex justify-between text-[11px]">
+                                <span>ระดับจูนความถี่คู่แปด (Tension)</span>
+                                <span id="spock-pitch-val" class="font-mono text-amber-400">460Hz</span>
+                            </div>
+                            <input type="range" id="tune-spock-pitch" min="350" max="550" value="460" class="w-full accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+
+                            <div class="flex justify-between text-[11px] mt-2">
+                                <span>ความกระชับหางเสียงแห้ง (Decay)</span>
+                                <span id="spock-decay-val" class="font-mono text-amber-400">0.07s</span>
+                            </div>
+                            <input type="range" id="tune-spock-decay" min="3" max="25" value="7" class="w-full accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                        </div>
+                    </div>
+
+                    <!-- Main Drums Tuning Block -->
+                    <div id="tune-block-drums" class="space-y-3 hidden">
+                        <div class="bg-gray-950/50 p-3 rounded-lg border border-gray-800 space-y-4">
+                            <div>
+                                <h4 class="text-[11px] font-bold text-yellow-400 mb-2">Drum 1 (สิบแปดนิ้ว - เสียงแหลมกระชับ)</h4>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span>ความถี่หนังกลอง: <span id="drum1-pitch-val" class="text-amber-400 font-mono">245Hz</span></span>
+                                    <span>หางเสียง: <span id="drum1-decay-val" class="text-amber-400 font-mono">0.11s</span></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="range" id="tune-drum1-pitch" min="200" max="300" value="245" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                    <input type="range" id="tune-drum1-decay" min="5" max="30" value="11" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-800/60">
+
+                            <div>
+                                <h4 class="text-[11px] font-bold text-orange-400 mb-2">Drum 2 (สิบสองนิ้ว - เสียงกลางสว่าง)</h4>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span>ความถี่หนังกลอง: <span id="drum2-pitch-val" class="text-amber-400 font-mono">205Hz</span></span>
+                                    <span>หางเสียง: <span id="drum2-decay-val" class="text-amber-400 font-mono">0.13s</span></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="range" id="tune-drum2-pitch" min="170" max="240" value="205" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                    <input type="range" id="tune-drum2-decay" min="5" max="35" value="13" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-800/60">
+
+                            <div>
+                                <h4 class="text-[11px] font-bold text-cyan-400 mb-2">Drum 3 (สิบสามนิ้ว - กลางต่ำแน่น)</h4>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span>ความถี่หนังกลอง: <span id="drum3-pitch-val" class="text-amber-400 font-mono">165Hz</span></span>
+                                    <span>หางเสียง: <span id="drum3-decay-val" class="text-amber-400 font-mono">0.15s</span></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="range" id="tune-drum3-pitch" min="130" max="190" value="165" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                    <input type="range" id="tune-drum3-decay" min="5" max="40" value="15" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-800/60">
+
+                            <div>
+                                <h4 class="text-[11px] font-bold text-rose-500 mb-2">Drum 4 (สิบสี่นิ้ว - ใหญ่สุด แน่นลึก)</h4>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span>ความถี่หนังกลอง: <span id="drum4-pitch-val" class="text-amber-400 font-mono">130Hz</span></span>
+                                    <span>หางเสียง: <span id="drum4-decay-val" class="text-amber-400 font-mono">0.18s</span></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="range" id="tune-drum4-pitch" min="100" max="150" value="130" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                    <input type="range" id="tune-drum4-decay" min="8" max="50" value="18" class="accent-amber-500 h-1 bg-gray-800 rounded-lg appearance-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 bg-gray-950 border-t border-gray-800">
+            <button id="btn-tuning-reset" class="w-full py-2 bg-gray-800 hover:bg-gray-700 text-xs font-bold text-white rounded-lg transition-colors">
+                รีเซ็ตปรับแต่งกลับสู่มาตรฐานวงโยธวาทิต
+            </button>
+        </div>
     </div>
-     
+
+    <!-- First Tap Cover Overlay for Web Audio activation -->
+    <div id="start-overlay" class="absolute inset-0 bg-gray-950/95 flex flex-col items-center justify-center p-6 text-center z-50 transition-opacity duration-300">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-2xl shadow-amber-500/30 animate-pulse mb-6">
+            <i class="fa-solid fa-drum text-white text-3xl"></i>
+        </div>
+        <h2 class="text-2xl font-black text-amber-400 tracking-wider">MARCHING TENOR PRO</h2>
+        <p class="text-xs text-gray-400 max-w-xs mt-2 leading-relaxed font-light">
+            ยินดีต้อนรับสู่แอปจำลองกลองสิบแต้ม (Sextet Tenors) ซิมูเลเตอร์จูนระบบคลื่นกลองมาร์ชชิ่งแบบดุริยางค์สมบูรณ์ กรุณาแตะปุ่มเพื่อเปิดเสียงความหน่วงต่ำสุดของเครื่อง
+        </p>
+        <button id="btn-start" class="mt-8 px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-gray-950 font-black tracking-widest text-sm rounded-full shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
+            แตะเพื่อเข้าแถวซ้อม
+        </button>
+    </div>
+
     <script>
-        // ==========================================
-        // การตั้งค่าไฟล์เสียง
-        // ==========================================
-        const soundFiles = {
-            'spock': 'tenors/stenor.wav',
-            '1': 'tenors/1tenor.wav',
-            '2': 'tenors/tenors.wav',
-            '3': 'tenors/tenors.wav',
-            '4': 'tenors/4tenors.wav'
+        // High-fidelity marching drum synth nodes
+        let audioCtx = null;
+        let masterGain = null;
+        let delayNode = null; 
+        let noiseBuffer = null; // High quality white noise source buffer for stick hitting/rim-shot snap
+
+        // High-tension drum corps defaults for crisp play
+        const DEFAULTS = {
+            reverb: 45,
+            attack: 80,
+            rimshot: 85,
+            spockPitch: 460,
+            spockDecay: 0.07,
+            drum1Pitch: 245,
+            drum1Decay: 0.11,
+            drum2Pitch: 205,
+            drum2Decay: 0.13,
+            drum3Pitch: 165,
+            drum3Decay: 0.15,
+            drum4Pitch: 130,
+            drum4Decay: 0.18
         };
 
-        const tuning = {
-            'spock': 1.0, 
-            '1': 1.0,     
-            '2': 1.0,     
-            '3': 1.0,     
-            '4': 1.0      
+        let config = { ...DEFAULTS };
+
+        // Drum configuration matching field layouts
+        const DRUM_MAP = {
+            'drum3': { color: '#06b6d4', index: 0, laneX: 0.15 }, 
+            'spock2': { color: '#a855f7', index: 1, laneX: 0.32 }, 
+            'spock1': { color: '#ec4899', index: 2, laneX: 0.50 }, 
+            'drum1': { color: '#eab308', index: 3, laneX: 0.65 }, 
+            'drum2': { color: '#f97316', index: 4, laneX: 0.80 }, 
+            'drum4': { color: '#ef4444', index: 5, laneX: 0.93 }  
         };
 
-        let audioCtx;
-        let masterGain;
-        let audioBuffers = {}; 
+        const DRUM_KEYS = {
+            'KeyA': 'drum3',
+            'KeyS': 'spock2',
+            'KeyD': 'spock1',
+            'KeyF': 'drum1',
+            'KeyJ': 'drum2',
+            'KeyK': 'drum4'
+        };
 
-        // Recording Variables
-        let mediaRecorder;
-        let audioChunks = [];
-        let destNode; 
-        let isRecording = false;
+        // Initialize Web Audio context and generate synthetic transients
+        function initAudio() {
+            if (audioCtx) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
 
-        // ✅ ฟังก์ชันตัดเสียงเงียบหัว-ท้าย (Trim Silence)
-        function trimAudioBuffer(buffer) {
-            const threshold = 0.002; // ระดับความดังขั้นต่ำที่จะเริ่มนับว่าเป็นเสียง (-54dB โดยประมาณ)
-            const numChannels = buffer.numberOfChannels;
-            let start = buffer.length;
-            let end = 0;
-
-            // วนลูปหาจุดเริ่มต้นและจุดสิ้นสุดของเสียงจริง
-            for (let c = 0; c < numChannels; c++) {
-                const data = buffer.getChannelData(c);
-                
-                // หา Start
-                for (let i = 0; i < data.length; i++) {
-                    if (Math.abs(data[i]) > threshold) {
-                        if (i < start) start = i;
-                        break;
-                    }
-                }
-                
-                // หา End
-                for (let i = data.length - 1; i >= 0; i--) {
-                    if (Math.abs(data[i]) > threshold) {
-                        if (i > end) end = i;
-                        break;
-                    }
-                }
+            // Create organic White Noise buffer on load for high fidelity brush / click
+            const bufferSize = audioCtx.sampleRate * 1.0; 
+            noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const dataChannel = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                dataChannel[i] = Math.random() * 2 - 1;
             }
 
-            // ถ้าหาไม่เจอ หรือไฟล์เงียบสนิท ให้คืนค่าเดิม
-            if (start >= end) return buffer;
+            // Dynamics compressor to guarantee solid punches without audio distortion/clipping
+            const compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.setValueAtTime(-8, audioCtx.currentTime);
+            compressor.knee.setValueAtTime(4, audioCtx.currentTime);
+            compressor.ratio.setValueAtTime(15, audioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.001, audioCtx.currentTime);
+            compressor.release.setValueAtTime(0.05, audioCtx.currentTime);
 
-            // สร้าง Buffer ใหม่เฉพาะส่วนที่มีเสียง
-            const newLength = end - start + 1;
-            const newBuffer = audioCtx.createBuffer(numChannels, newLength, buffer.sampleRate);
+            masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(0.9, audioCtx.currentTime);
 
-            for (let c = 0; c < numChannels; c++) {
-                const data = buffer.getChannelData(c);
-                newBuffer.getChannelData(c).set(data.subarray(start, end + 1));
-            }
-            
-            // console.log(`Trimmed silence: ${start} samples removed from start.`);
-            return newBuffer;
+            // Recreate stadium soundscape using ping-pong delay routing
+            delayNode = audioCtx.createDelay();
+            delayNode.delayTime.setValueAtTime(0.12, audioCtx.currentTime);
+
+            const delayFeedback = audioCtx.createGain();
+            delayFeedback.gain.setValueAtTime(0.24, audioCtx.currentTime);
+
+            const delayFilter = audioCtx.createBiquadFilter();
+            delayFilter.type = 'bandpass';
+            delayFilter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            delayFilter.Q.setValueAtTime(1.0, audioCtx.currentTime);
+
+            masterGain.connect(compressor);
+            compressor.connect(audioCtx.destination);
+
+            // Parallel outdoor reverberation path
+            masterGain.connect(delayNode);
+            delayNode.connect(delayFilter);
+            delayFilter.connect(delayFeedback);
+            delayFeedback.connect(delayNode);
+            delayFeedback.connect(compressor);
+
+            updateAcousticTuning();
         }
 
-        async function loadSound(note, url) {
-            try {
-                // ✅ Preload: โหลดไฟล์
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const arrayBuffer = await response.arrayBuffer();
-                
-                // ✅ Decode: แปลงเป็น AudioBuffer
-                const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                
-                // ✅ Process: ตัดเสียงเงียบ (Trim) ก่อนเก็บ
-                const trimmedBuffer = trimAudioBuffer(decodedBuffer);
-                
-                audioBuffers[note] = trimmedBuffer;
-                return true;
-            } catch (error) {
-                console.warn(`ไม่สามารถโหลดไฟล์เสียง: ${url}`);
-                console.error(error);
-                return false;
-            }
-        }
-
-        async function initAudio() {
-            const btnStart = document.getElementById('btn-start-init');
-            const loadingText = document.getElementById('loading-text');
-            
-            btnStart.disabled = true;
-            btnStart.innerText = "กำลังประมวลผล...";
-            loadingText.innerText = "กำลังโหลด, Decode และตัดเสียงเงียบ...";
-
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
-
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 1.0;
-                masterGain.connect(audioCtx.destination);
-
-                destNode = audioCtx.createMediaStreamDestination();
-                masterGain.connect(destNode);
-
-                setupRecorder();
-
-                const promises = Object.keys(soundFiles).map(note => loadSound(note, soundFiles[note]));
-                await Promise.all(promises);
-
-                const overlay = document.getElementById('start-overlay');
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.remove(), 500);
-
-            } catch (e) {
-                alert("เกิดข้อผิดพลาดในการโหลดเสียง");
-                console.error(e);
-                btnStart.innerText = "Error";
-            }
-        }
-
-        function setupRecorder() {
-            try {
-                mediaRecorder = new MediaRecorder(destNode.stream);
-                mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = audioUrl;
-                    const now = new Date();
-                    const timestamp = `${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
-                    a.download = `tenor_rec_${timestamp}.webm`; 
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(audioUrl);
-                    }, 100);
-                    audioChunks = [];
-                    alert('บันทึกเสียงเรียบร้อย!');
-                };
-            } catch (e) {
-                console.error("MediaRecorder Error:", e);
-                const btnRec = document.getElementById('btn-record');
-                if(btnRec) {
-                    btnRec.disabled = true;
-                    btnRec.innerText = "ไม่รองรับการอัด";
-                }
-            }
-        }
-
-        function toggleRecord() {
-            if (!audioCtx) { alert('กรุณากดเริ่มใช้งานก่อน'); return; }
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            if (!isRecording) {
-                audioChunks = [];
-                mediaRecorder.start();
-                isRecording = true;
-                document.getElementById('btn-record').classList.add('recording');
-                document.getElementById('btn-record').innerHTML = '<span class="icon">●</span> กำลังอัด...';
-                document.getElementById('btn-stop').disabled = false;
-                document.getElementById('record-status').style.display = 'flex';
-            }
-        }
-
-        function stopRecord() {
-            if (isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-                document.getElementById('btn-record').classList.remove('recording');
-                document.getElementById('btn-record').innerHTML = '<span class="icon">●</span> บันทึก';
-                document.getElementById('btn-stop').disabled = true;
-                document.getElementById('record-status').style.display = 'none';
-            }
-        }
-
-        function playDrumSound(note) {
+        function updateAcousticTuning() {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            // Config-based delay feedback mapping
+            const delayFeedbackGain = (config.reverb / 100) * 0.42;
+            const actualDelayTime = 0.05 + (config.reverb / 100) * 0.18;
+            delayNode.delayTime.setValueAtTime(actualDelayTime, audioCtx.currentTime);
+        }
 
-            if (audioBuffers[note]) {
-                // ✅ 1. สร้าง Source Node
-                const source = audioCtx.createBufferSource();
-                source.buffer = audioBuffers[note];
+        // Synthesis of high tension marching drumline strike
+        function playDrumTone(drumName, isRimShot = false) {
+            if (!audioCtx) return;
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+
+            // Get the precise tuned pitch & decay parameters
+            let pitch = 200;
+            let decay = 0.15;
+
+            if (drumName === 'spock1' || drumName === 'spock2') {
+                pitch = config.spockPitch + (drumName === 'spock2' ? -40 : 0);
+                decay = config.spockDecay;
+            } else if (drumName === 'drum1') {
+                pitch = config.drum1Pitch;
+                decay = config.drum1Decay;
+            } else if (drumName === 'drum2') {
+                pitch = config.drum2Pitch;
+                decay = config.drum2Decay;
+            } else if (drumName === 'drum3') {
+                pitch = config.drum3Pitch;
+                decay = config.drum3Decay;
+            } else if (drumName === 'drum4') {
+                pitch = config.drum4Pitch;
+                decay = config.drum4Decay;
+            }
+
+            // --- 1. Organic Nylon Tip Impact (White Noise Crack) ---
+            const stickSource = audioCtx.createBufferSource();
+            stickSource.buffer = noiseBuffer;
+
+            const stickFilter = audioCtx.createBiquadFilter();
+            stickFilter.type = 'highpass';
+            // Highly tuned highpass filtering for the dry wood/nylon crack
+            stickFilter.frequency.setValueAtTime(isRimShot ? 2800 : 1800, now);
+
+            const stickGain = audioCtx.createGain();
+            const strokePower = (config.attack / 100) * (isRimShot ? 1.1 : 0.65);
+            stickGain.gain.setValueAtTime(strokePower, now);
+            stickGain.gain.exponentialRampToValueAtTime(0.0001, now + (isRimShot ? 0.02 : 0.01));
+
+            stickSource.connect(stickFilter);
+            stickFilter.connect(stickGain);
+            stickGain.connect(masterGain);
+            stickSource.start(now);
+
+            // --- 2. Fundamental Drum Membrane Tone ---
+            const fundamentalOsc = audioCtx.createOscillator();
+            const fundamentalGain = audioCtx.createGain();
+            const membraneFilter = audioCtx.createBiquadFilter();
+
+            fundamentalOsc.type = 'sine';
+            
+            // Dramatic downward pitch sweep imitating extremely tight skin expansion
+            const sweepStartFactor = isRimShot ? 3.0 : 2.5;
+            fundamentalOsc.frequency.setValueAtTime(pitch * sweepStartFactor, now);
+            fundamentalOsc.frequency.exponentialRampToValueAtTime(pitch, now + 0.025);
+
+            const baseVolume = isRimShot ? 0.45 : 0.85;
+            fundamentalGain.gain.setValueAtTime(baseVolume, now);
+            fundamentalGain.gain.exponentialRampToValueAtTime(0.0001, now + (isRimShot ? decay * 0.5 : decay));
+
+            // High tension bandpass to cut out low-end bass-drum muddiness (giving marching tom focus)
+            membraneFilter.type = 'bandpass';
+            membraneFilter.frequency.setValueAtTime(pitch * 1.1, now);
+            membraneFilter.Q.setValueAtTime(1.8, now);
+
+            fundamentalOsc.connect(membraneFilter);
+            membraneFilter.connect(fundamentalGain);
+            fundamentalGain.connect(masterGain);
+            
+            fundamentalOsc.start(now);
+            fundamentalOsc.stop(now + decay + 0.05);
+
+            // --- 3. Shell Harmonic Overtones (The "Ping" Ring) ---
+            // Real marching tenors have iconic metallic/plastic ringing
+            const overtoneOsc = audioCtx.createOscillator();
+            const overtoneGain = audioCtx.createGain();
+            const overtoneFilter = audioCtx.createBiquadFilter();
+
+            overtoneOsc.type = 'triangle';
+            // Drum shell physics: strong overtone peaks near 1.6x the fundamental
+            const harmonicFreq = pitch * 1.62;
+            overtoneOsc.frequency.setValueAtTime(harmonicFreq * 1.5, now);
+            overtoneOsc.frequency.exponentialRampToValueAtTime(harmonicFreq, now + 0.02);
+
+            const overtoneVol = (isRimShot ? 0.35 : 0.18) * (config.rimshot / 100);
+            overtoneGain.gain.setValueAtTime(overtoneVol, now);
+            overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + (decay * 0.4));
+
+            overtoneFilter.type = 'lowpass';
+            overtoneFilter.frequency.setValueAtTime(harmonicFreq * 2.2, now);
+
+            overtoneOsc.connect(overtoneFilter);
+            overtoneFilter.connect(overtoneGain);
+            overtoneGain.connect(masterGain);
+
+            overtoneOsc.start(now);
+            overtoneOsc.stop(now + decay);
+
+            // --- 4. Metal Rim Edge Resonance (Specific for Rim Shot Hits) ---
+            if (isRimShot) {
+                const rimOsc = audioCtx.createOscillator();
+                const rimGain = audioCtx.createGain();
+                const rimFilter = audioCtx.createBiquadFilter();
+
+                rimOsc.type = 'sawtooth';
+                rimOsc.frequency.setValueAtTime(pitch * 4.4, now);
                 
-                // ✅ 2. สร้าง Envelope (Gain) สำหรับ Fade In/Out
-                const envelope = audioCtx.createGain();
+                rimFilter.type = 'bandpass';
+                rimFilter.frequency.setValueAtTime(pitch * 4.4, now);
+                rimFilter.Q.setValueAtTime(18, now);
 
-                // Pitch Tuning
-                let rate = 1.0;
-                if (tuning[note]) {
-                    rate = tuning[note];
-                    source.playbackRate.value = rate;
-                }
+                const rimFactor = (config.rimshot / 100) * 0.38;
+                rimGain.gain.setValueAtTime(rimFactor, now);
+                rimGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
 
-                // เชื่อมต่อ: Source -> Envelope -> Master
-                source.connect(envelope);
-                envelope.connect(masterGain);
+                rimOsc.connect(rimFilter);
+                rimFilter.connect(rimGain);
+                rimGain.connect(masterGain);
 
-                // ✅ 3. คำนวณเวลาและทำ Fade (ระดับ ms)
-                const now = audioCtx.currentTime;
-                // คำนวณความยาวจริงหลังปรับ Pitch
-                const actualDuration = source.buffer.duration / rate;
-
-                // Fade In: 3ms (เร็วมาก) เพื่อลบเสียง Click ตอนเริ่ม แต่ยังคง Attack ของกลองไว้
-                envelope.gain.setValueAtTime(0, now);
-                envelope.gain.linearRampToValueAtTime(1, now + 0.003);
-
-                // Fade Out: 5ms ก่อนจบไฟล์จริง เพื่อให้เสียงจบสนิท
-                if (actualDuration > 0.005) {
-                    envelope.gain.setValueAtTime(1, now + actualDuration - 0.005);
-                    envelope.gain.linearRampToValueAtTime(0, now + actualDuration);
-                }
-
-                source.start(now);
-            } else {
-                console.log("Audio buffer not ready for: " + note);
+                rimOsc.start(now);
+                rimOsc.stop(now + 0.05);
             }
         }
 
-        // Event Handling
-        const drums = document.querySelectorAll('.drum');
-        drums.forEach(drum => {
-            const note = drum.dataset.note;
-
-            const hit = (e) => {
-                if(e.cancelable && e.type === 'touchstart') e.preventDefault();
-                
-                drum.classList.add('hit');
-                const animTime = (note === 'spock') ? 50 : 80;
-                setTimeout(() => drum.classList.remove('hit'), animTime);
-                
-                playDrumSound(note);
-            };
-
-            drum.addEventListener('touchstart', hit, { passive: false });
-            drum.addEventListener('mousedown', hit);
-        });
-
-        document.addEventListener('touchmove', function(e) { 
-            if (e.target.closest('.drum-container')) {
-                e.preventDefault(); 
+        // Song Library / Marching Drumline Rudiment Sequences
+        const SONGS = {
+            'cadence-1': {
+                name: 'จังหวะเดินแถวมาตรฐานวงโยฯ',
+                tempo: 116,
+                notes: [
+                    {beat: 0.0, drum: 'drum3'}, {beat: 0.5, drum: 'drum3'},
+                    {beat: 1.0, drum: 'drum1'}, {beat: 1.5, drum: 'drum1'},
+                    {beat: 2.0, drum: 'drum2'}, {beat: 2.5, drum: 'drum2'},
+                    {beat: 3.0, drum: 'drum4'}, {beat: 3.5, drum: 'drum4'},
+                    
+                    {beat: 4.0, drum: 'spock2'}, {beat: 4.25, drum: 'spock2'}, {beat: 4.5, drum: 'spock1'}, {beat: 4.75, drum: 'spock1'},
+                    {beat: 5.0, drum: 'drum1'}, {beat: 5.5, drum: 'drum2'},
+                    {beat: 6.0, drum: 'drum3', rim: true}, {beat: 6.5, drum: 'drum4', rim: true},
+                    {beat: 7.0, drum: 'drum1'}, {beat: 7.5, drum: 'drum1', rim: true},
+                    
+                    {beat: 8.0, drum: 'drum3'}, {beat: 8.25, drum: 'drum1'}, {beat: 8.5, drum: 'drum2'}, {beat: 8.75, drum: 'drum4'},
+                    {beat: 9.0, drum: 'spock1'}, {beat: 9.5, drum: 'spock2'},
+                    {beat: 10.0, drum: 'drum1', rim: true}, {beat: 10.5, drum: 'drum1'},
+                    {beat: 11.0, drum: 'drum4', rim: true}, {beat: 11.5, drum: 'drum4'},
+                    
+                    {beat: 12.0, drum: 'drum3'}, {beat: 12.5, drum: 'drum1'},
+                    {beat: 13.0, drum: 'drum2'}, {beat: 13.5, drum: 'drum4'},
+                    {beat: 14.0, drum: 'spock1', rim: true}, {beat: 14.25, drum: 'spock1', rim: true},
+                    {beat: 14.5, drum: 'spock2', rim: true}, {beat: 14.75, drum: 'spock2', rim: true},
+                    {beat: 15.0, drum: 'drum1', rim: true}, {beat: 15.5, drum: 'drum2', rim: true}
+                ]
+            },
+            'double-stroke': {
+                name: 'ดับเบิ้ลสโตรกโรล (รัวสองชั้นแบบแห้งคม)',
+                tempo: 108,
+                notes: [
+                    {beat: 0.0, drum: 'drum3'}, {beat: 0.25, drum: 'drum3'},
+                    {beat: 0.5, drum: 'drum1'}, {beat: 0.75, drum: 'drum1'},
+                    {beat: 1.0, drum: 'drum2'}, {beat: 1.25, drum: 'drum2'},
+                    {beat: 1.5, drum: 'drum4'}, {beat: 1.75, drum: 'drum4'},
+                    
+                    {beat: 2.0, drum: 'spock2'}, {beat: 2.25, drum: 'spock2'},
+                    {beat: 2.5, drum: 'spock1'}, {beat: 2.75, drum: 'spock1'},
+                    {beat: 3.0, drum: 'drum1'}, {beat: 3.25, drum: 'drum1'},
+                    {beat: 3.5, drum: 'drum2'}, {beat: 3.75, drum: 'drum2'},
+                    
+                    {beat: 4.0, drum: 'drum3', rim: true}, {beat: 4.25, drum: 'drum3', rim: true},
+                    {beat: 4.5, drum: 'drum1', rim: true}, {beat: 4.75, drum: 'drum1', rim: true},
+                    {beat: 5.0, drum: 'drum2', rim: true}, {beat: 5.25, drum: 'drum2', rim: true},
+                    {beat: 5.5, drum: 'drum4', rim: true}, {beat: 5.75, drum: 'drum4', rim: true},
+                    
+                    {beat: 6.0, drum: 'spock2'}, {beat: 6.25, drum: 'spock2'},
+                    {beat: 6.5, drum: 'spock1'}, {beat: 6.75, drum: 'spock1'},
+                    {beat: 7.0, drum: 'drum1', rim: true}, {beat: 7.25, drum: 'drum1', rim: true},
+                    {beat: 7.5, drum: 'drum2', rim: true}, {beat: 7.75, drum: 'drum2', rim: true}
+                ]
+            },
+            'paradiddle': {
+                name: 'พาราดิดเดิลเดี่ยว (ซ้อมมือแยกประสาท)',
+                tempo: 120,
+                notes: [
+                    {beat: 0.0, drum: 'drum3'}, {beat: 0.25, drum: 'drum1'}, {beat: 0.5, drum: 'drum3'}, {beat: 0.75, drum: 'drum3'}, 
+                    {beat: 1.0, drum: 'drum4'}, {beat: 1.25, drum: 'drum2'}, {beat: 1.5, drum: 'drum4'}, {beat: 1.75, drum: 'drum4'}, 
+                    
+                    {beat: 2.0, drum: 'spock2'}, {beat: 2.25, drum: 'drum1'}, {beat: 2.5, drum: 'spock2'}, {beat: 2.75, drum: 'spock2'},
+                    {beat: 3.0, drum: 'spock1'}, {beat: 3.25, drum: 'drum2'}, {beat: 3.5, drum: 'spock1'}, {beat: 3.75, drum: 'spock1'},
+                    
+                    {beat: 4.0, drum: 'drum1'}, {beat: 4.25, drum: 'drum2'}, {beat: 4.5, drum: 'drum1'}, {beat: 4.75, drum: 'drum1'},
+                    {beat: 5.0, drum: 'drum2'}, {beat: 5.25, drum: 'drum1'}, {beat: 5.5, drum: 'drum2'}, {beat: 5.75, drum: 'drum2'},
+                    
+                    {beat: 6.0, drum: 'drum3', rim: true}, {beat: 6.25, drum: 'spock2'}, {beat: 6.5, drum: 'drum3', rim: true}, {beat: 6.75, drum: 'drum3', rim: true},
+                    {beat: 7.0, drum: 'drum4', rim: true}, {beat: 7.25, drum: 'spock1'}, {beat: 7.5, drum: 'drum4', rim: true}, {beat: 7.75, drum: 'drum4', rim: true}
+                ]
+            },
+            'samba-march': {
+                name: 'แซมบ้ามาร์ชทริปเปิล (กระแทกขอบกลอง)',
+                tempo: 126,
+                notes: [
+                    {beat: 0.0, drum: 'drum3'}, {beat: 0.33, drum: 'drum1'}, {beat: 0.66, drum: 'drum2'},
+                    {beat: 1.0, drum: 'drum4'}, {beat: 1.33, drum: 'drum2'}, {beat: 1.66, drum: 'drum1'},
+                    {beat: 2.0, drum: 'spock2'}, {beat: 2.5, drum: 'spock1'},
+                    {beat: 3.0, drum: 'drum1', rim: true}, {beat: 3.25, drum: 'drum2', rim: true}, {beat: 3.5, drum: 'drum3', rim: true}, {beat: 3.75, drum: 'drum4', rim: true},
+                    
+                    {beat: 4.0, drum: 'drum3'}, {beat: 4.33, drum: 'drum1'}, {beat: 4.66, drum: 'drum2'},
+                    {beat: 5.0, drum: 'drum4'}, {beat: 5.33, drum: 'drum2'}, {beat: 5.66, drum: 'drum1'},
+                    {beat: 6.0, drum: 'spock1', rim: true}, {beat: 6.33, drum: 'spock2', rim: true}, {beat: 6.66, drum: 'drum1'},
+                    {beat: 7.0, drum: 'drum4'}, {beat: 7.5, drum: 'drum4', rim: true}
+                ]
             }
-        }, { passive: false });
+        };
+
+        // UI & Floating Note Game State Variables
+        let isDemoPlaying = false;
+        let selectedSongKey = 'cadence-1';
+        let currentBpm = 116;
+        let demoPlaybackStartTime = 0;
+        let metronomeActive = false;
+        let score = 0;
+        let combo = 0;
+
+        // Visual Engine Variable Definitions
+        const canvas = document.getElementById('notes-canvas');
+        const ctx = canvas.getContext('2d');
+        let hitParticles = [];
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8 - 4;
+                this.alpha = 1.0;
+                this.size = Math.random() * 4 + 3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 0.045;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function spawnParticles(x, y, color) {
+            for (let i = 0; i < 14; i++) {
+                hitParticles.push(new Particle(x, y, color));
+            }
+        }
+
+        // Falling notes render loop
+        function drawVisualizer() {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            ctx.clearRect(0, 0, w, h);
+
+            const targetY = h * 0.82;
+
+            // Draw lanes indicator lines
+            const laneKeys = Object.keys(DRUM_MAP);
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1.5;
+            laneKeys.forEach(key => {
+                const laneX = w * DRUM_MAP[key].laneX;
+                ctx.beginPath();
+                ctx.moveTo(laneX, 0);
+                ctx.lineTo(laneX, h);
+                ctx.stroke();
+            });
+
+            // Draw Hit Line target guides
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
+            ctx.fillRect(0, targetY - 18, w, 36);
+
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.5)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(0, targetY);
+            ctx.lineTo(w, targetY);
+            ctx.stroke();
+
+            // Label columns matching physical layout
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 10px Kanit';
+            ctx.textAlign = 'center';
+            laneKeys.forEach(key => {
+                const laneX = w * DRUM_MAP[key].laneX;
+                const configName = key.replace('spock', 'S').replace('drum', '');
+                ctx.fillText(configName, laneX, targetY + 28);
+            });
+
+            // Update & Draw falling notes
+            if (isDemoPlaying) {
+                const elapsedBeats = ((audioCtx.currentTime - demoPlaybackStartTime) * (currentBpm / 60));
+                const song = SONGS[selectedSongKey];
+                const totalBeats = 16; 
+
+                song.notes.forEach(noteData => {
+                    const beatOffset = noteData.beat;
+                    
+                    const beatsAhead = 4.0; 
+                    const beatDiff = beatOffset - (elapsedBeats % totalBeats);
+                    
+                    if (beatDiff > -0.5 && beatDiff < beatsAhead) {
+                        const laneX = w * DRUM_MAP[noteData.drum].laneX;
+                        const y = targetY - (beatDiff / beatsAhead) * targetY;
+
+                        // Check sound trigger near center crossing target line
+                        if (beatDiff <= 0 && !noteData.playedInCycle) {
+                            noteData.playedInCycle = true;
+                            playDrumTone(noteData.drum, noteData.rim);
+                            triggerVisualTap(noteData.drum);
+                            
+                            spawnParticles(laneX, targetY, DRUM_MAP[noteData.drum].color);
+                            showHitText('AUTO-PLAY');
+                        }
+
+                        // Draw falling indicator circle
+                        ctx.beginPath();
+                        ctx.arc(laneX, y, 14, 0, Math.PI * 2);
+                        ctx.fillStyle = DRUM_MAP[noteData.drum].color;
+                        ctx.fill();
+
+                        if (noteData.rim) {
+                            // Ring outline signifying Rim Shot
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = 3.5;
+                            ctx.stroke();
+                        } else {
+                            ctx.strokeStyle = '#000000';
+                            ctx.lineWidth = 1.5;
+                            ctx.stroke();
+                        }
+
+                        // Display rim shot letter tag
+                        ctx.fillStyle = '#000000';
+                        ctx.font = 'bold 9px Inter';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(noteData.rim ? 'R' : '', laneX, y);
+                    }
+                });
+
+                // Reset note playback registers once a new cycle starts
+                if (elapsedBeats % totalBeats < 0.1) {
+                    song.notes.forEach(n => {
+                        if (elapsedBeats % totalBeats < 0.05) n.playedInCycle = false;
+                    });
+                }
+            }
+
+            // Render and update touch burst particles
+            hitParticles.forEach((p, idx) => {
+                p.update();
+                p.draw(ctx);
+                if (p.alpha <= 0) hitParticles.splice(idx, 1);
+            });
+
+            requestAnimationFrame(drawVisualizer);
+        }
+
+        // Visually trigger drum element animation glows on touch/play
+        function triggerVisualTap(drumId) {
+            const pad = document.getElementById(`pad-${drumId}`);
+            if (!pad) return;
+
+            pad.classList.add('drum-active');
+            const color = DRUM_MAP[drumId].color;
+            pad.style.boxShadow = `0 0 22px ${color}`;
+            pad.style.borderColor = color;
+
+            setTimeout(() => {
+                pad.classList.remove('drum-active');
+                pad.style.boxShadow = '';
+                pad.style.borderColor = '';
+            }, 85);
+        }
+
+        // Show Score Feedback (Perfect/Good)
+        function showHitText(txt) {
+            const el = document.getElementById('hit-feedback');
+            el.innerText = txt;
+            el.style.opacity = '1';
+            el.style.transform = 'translateX(-50%) scale(1.1)';
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(-50%) scale(0.75)';
+            }, 300);
+        }
+
+        // User Manual Play Handling with Dynamic Accuracy evaluation
+        function userTapDrum(drumId, isRim = false) {
+            initAudio();
+            playDrumTone(drumId, isRim);
+            triggerVisualTap(drumId);
+
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            const targetY = h * 0.82;
+            const laneX = w * DRUM_MAP[drumId].laneX;
+            spawnParticles(laneX, targetY, DRUM_MAP[drumId].color);
+
+            if (isDemoPlaying) {
+                const elapsedBeats = ((audioCtx.currentTime - demoPlaybackStartTime) * (currentBpm / 60));
+                const song = SONGS[selectedSongKey];
+                const totalBeats = 16;
+                const currentCycleBeat = elapsedBeats % totalBeats;
+
+                let minDiff = 999;
+                song.notes.forEach(n => {
+                    if (n.drum === drumId) {
+                        const diff = Math.abs(n.beat - currentCycleBeat);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                        }
+                    }
+                });
+
+                if (minDiff < 0.15) {
+                    score += 100;
+                    combo++;
+                    showHitText('PERFECT!');
+                    updateScoreDisplay();
+                } else if (minDiff < 0.35) {
+                    score += 50;
+                    combo++;
+                    showHitText('GOOD');
+                    updateScoreDisplay();
+                } else {
+                    combo = 0;
+                    updateScoreDisplay();
+                }
+            } else {
+                score += 10;
+                updateScoreDisplay();
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').innerText = score;
+            const comboContainer = document.getElementById('combo-container');
+            if (combo > 2) {
+                document.getElementById('combo-display').innerText = combo;
+                comboContainer.style.opacity = '1';
+            } else {
+                comboContainer.style.opacity = '0';
+            }
+        }
+
+        // Configure event listeners and handle Multi-Touch ergonomics
+        function setupEventListeners() {
+            document.getElementById('btn-start').addEventListener('click', () => {
+                initAudio();
+                document.getElementById('start-overlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('start-overlay').style.display = 'none';
+                }, 300);
+            });
+
+            const pads = document.querySelectorAll('.drum-pad');
+            pads.forEach(pad => {
+                const drumName = pad.getAttribute('data-drum');
+                
+                const triggerHandler = (e) => {
+                    e.preventDefault();
+                    
+                    const rect = pad.getBoundingClientRect();
+                    const touch = e.touches ? e.touches[e.touches.length - 1] : e;
+                    const touchX = touch.clientX - rect.left;
+                    const touchY = touch.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const distFromCenter = Math.sqrt(Math.pow(touchX - centerX, 2) + Math.pow(touchY - centerY, 2));
+                    
+                    // Rim click threshold is 65% out from core radius for distinct field clicks
+                    const thresholdRadius = (rect.width / 2) * 0.65;
+                    const isRim = distFromCenter > thresholdRadius;
+                    
+                    userTapDrum(drumName, isRim);
+                };
+
+                pad.addEventListener('touchstart', triggerHandler, { passive: false });
+                pad.addEventListener('mousedown', (e) => {
+                    if ('ontouchstart' in window) return;
+                    triggerHandler(e);
+                });
+            });
+
+            window.addEventListener('keydown', (e) => {
+                const drumName = DRUM_KEYS[e.code];
+                if (drumName) {
+                    const isRim = e.shiftKey;
+                    userTapDrum(drumName, isRim);
+                }
+            });
+
+            const btnPlayDemo = document.getElementById('btn-play-demo');
+            btnPlayDemo.addEventListener('click', () => {
+                initAudio();
+                if (isDemoPlaying) {
+                    stopDemoPlayback();
+                } else {
+                    startDemoPlayback();
+                }
+            });
+
+            const songSelect = document.getElementById('song-select');
+            songSelect.addEventListener('change', (e) => {
+                selectedSongKey = e.target.value;
+                currentBpm = SONGS[selectedSongKey].tempo;
+                document.getElementById('tempo-slider').value = currentBpm;
+                document.getElementById('tempo-display').innerText = currentBpm;
+                if (isDemoPlaying) {
+                    stopDemoPlayback();
+                    startDemoPlayback();
+                }
+            });
+
+            const tempoSlider = document.getElementById('tempo-slider');
+            tempoSlider.addEventListener('input', (e) => {
+                currentBpm = parseInt(e.target.value);
+                document.getElementById('tempo-display').innerText = currentBpm;
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', resetAllSettings);
+
+            const tuningPanel = document.getElementById('tuning-panel');
+            document.getElementById('btn-tuning-toggle').addEventListener('click', () => {
+                tuningPanel.classList.toggle('translate-x-full');
+            });
+
+            document.getElementById('btn-tuning-close').addEventListener('click', () => {
+                tuningPanel.classList.add('translate-x-full');
+            });
+
+            const tuneSelectSpocks = document.getElementById('tune-select-spocks');
+            const tuneSelectDrums = document.getElementById('tune-select-drums');
+            const tuneBlockSpocks = document.getElementById('tune-block-spocks');
+            const tuneBlockDrums = document.getElementById('tune-block-drums');
+
+            tuneSelectSpocks.addEventListener('click', () => {
+                tuneSelectSpocks.classList.add('bg-amber-500', 'text-gray-950');
+                tuneSelectSpocks.classList.remove('text-gray-400');
+                tuneSelectDrums.classList.remove('bg-amber-500', 'text-gray-950');
+                tuneSelectDrums.classList.add('text-gray-400');
+                tuneBlockSpocks.classList.remove('hidden');
+                tuneBlockDrums.classList.add('hidden');
+            });
+
+            tuneSelectDrums.addEventListener('click', () => {
+                tuneSelectDrums.classList.add('bg-amber-500', 'text-gray-950');
+                tuneSelectDrums.classList.remove('text-gray-400');
+                tuneSelectSpocks.classList.remove('bg-amber-500', 'text-gray-950');
+                tuneSelectSpocks.classList.add('text-gray-400');
+                tuneBlockDrums.classList.remove('hidden');
+                tuneBlockSpocks.classList.add('hidden');
+            });
+
+            // Sync Sliders to Engine Controls
+            document.getElementById('tuning-reverb').addEventListener('input', (e) => {
+                config.reverb = parseInt(e.target.value);
+                document.getElementById('reverb-val').innerText = `${config.reverb}%`;
+                updateAcousticTuning();
+            });
+
+            document.getElementById('tuning-attack').addEventListener('input', (e) => {
+                config.attack = parseInt(e.target.value);
+                document.getElementById('attack-val').innerText = `${config.attack}%`;
+            });
+
+            document.getElementById('tuning-rimshot').addEventListener('input', (e) => {
+                config.rimshot = parseInt(e.target.value);
+                document.getElementById('rimshot-val').innerText = `${config.rimshot}%`;
+            });
+
+            document.getElementById('tune-spock-pitch').addEventListener('input', (e) => {
+                config.spockPitch = parseInt(e.target.value);
+                document.getElementById('spock-pitch-val').innerText = `${config.spockPitch}Hz`;
+            });
+
+            document.getElementById('tune-spock-decay').addEventListener('input', (e) => {
+                config.spockDecay = parseFloat(e.target.value) / 100;
+                document.getElementById('spock-decay-val').innerText = `${config.spockDecay}s`;
+            });
+
+            document.getElementById('tune-drum1-pitch').addEventListener('input', (e) => {
+                config.drum1Pitch = parseInt(e.target.value);
+                document.getElementById('drum1-pitch-val').innerText = `${config.drum1Pitch}Hz`;
+            });
+            document.getElementById('tune-drum1-decay').addEventListener('input', (e) => {
+                config.drum1Decay = parseFloat(e.target.value) / 100;
+                document.getElementById('drum1-decay-val').innerText = `${config.drum1Decay}s`;
+            });
+
+            document.getElementById('tune-drum2-pitch').addEventListener('input', (e) => {
+                config.drum2Pitch = parseInt(e.target.value);
+                document.getElementById('drum2-pitch-val').innerText = `${config.drum2Pitch}Hz`;
+            });
+            document.getElementById('tune-drum2-decay').addEventListener('input', (e) => {
+                config.drum2Decay = parseFloat(e.target.value) / 100;
+                document.getElementById('drum2-decay-val').innerText = `${config.drum2Decay}s`;
+            });
+
+            document.getElementById('tune-drum3-pitch').addEventListener('input', (e) => {
+                config.drum3Pitch = parseInt(e.target.value);
+                document.getElementById('drum3-pitch-val').innerText = `${config.drum3Pitch}Hz`;
+            });
+            document.getElementById('tune-drum3-decay').addEventListener('input', (e) => {
+                config.drum3Decay = parseFloat(e.target.value) / 100;
+                document.getElementById('drum3-decay-val').innerText = `${config.drum3Decay}s`;
+            });
+
+            document.getElementById('tune-drum4-pitch').addEventListener('input', (e) => {
+                config.drum4Pitch = parseInt(e.target.value);
+                document.getElementById('drum4-pitch-val').innerText = `${config.drum4Pitch}Hz`;
+            });
+            document.getElementById('tune-drum4-decay').addEventListener('input', (e) => {
+                config.drum4Decay = parseFloat(e.target.value) / 100;
+                document.getElementById('drum4-decay-val').innerText = `${config.drum4Decay}s`;
+            });
+
+            document.getElementById('btn-tuning-reset').addEventListener('click', resetAllSettings);
+        }
+
+        function startDemoPlayback() {
+            isDemoPlaying = true;
+            demoPlaybackStartTime = audioCtx.currentTime;
+            
+            const song = SONGS[selectedSongKey];
+            song.notes.forEach(n => n.playedInCycle = false);
+
+            document.getElementById('play-icon').className = 'fa-solid fa-pause';
+            document.getElementById('play-text').innerText = 'หยุดเล่นสาธิต';
+            
+            score = 0;
+            combo = 0;
+            updateScoreDisplay();
+        }
+
+        function stopDemoPlayback() {
+            isDemoPlaying = false;
+            document.getElementById('play-icon').className = 'fa-solid fa-play';
+            document.getElementById('play-text').innerText = 'เล่นอัตโนมัติ';
+        }
+
+        function resetAllSettings() {
+            config = { ...DEFAULTS };
+            
+            // Sync slider views UI elements
+            document.getElementById('tuning-reverb').value = DEFAULTS.reverb;
+            document.getElementById('reverb-val').innerText = `${DEFAULTS.reverb}%`;
+
+            document.getElementById('tuning-attack').value = DEFAULTS.attack;
+            document.getElementById('attack-val').innerText = `${DEFAULTS.attack}%`;
+
+            document.getElementById('tuning-rimshot').value = DEFAULTS.rimshot;
+            document.getElementById('rimshot-val').innerText = `${DEFAULTS.rimshot}%`;
+
+            document.getElementById('tune-spock-pitch').value = DEFAULTS.spockPitch;
+            document.getElementById('spock-pitch-val').innerText = `${DEFAULTS.spockPitch}Hz`;
+
+            document.getElementById('tune-spock-decay').value = DEFAULTS.spockDecay * 100;
+            document.getElementById('spock-decay-val').innerText = `${DEFAULTS.spockDecay}s`;
+
+            document.getElementById('tune-drum1-pitch').value = DEFAULTS.drum1Pitch;
+            document.getElementById('drum1-pitch-val').innerText = `${DEFAULTS.drum1Pitch}Hz`;
+            document.getElementById('tune-drum1-decay').value = DEFAULTS.drum1Decay * 100;
+            document.getElementById('drum1-decay-val').innerText = `${DEFAULTS.drum1Decay}s`;
+
+            document.getElementById('tune-drum2-pitch').value = DEFAULTS.drum2Pitch;
+            document.getElementById('drum2-pitch-val').innerText = `${DEFAULTS.drum2Pitch}Hz`;
+            document.getElementById('tune-drum2-decay').value = DEFAULTS.drum2Decay * 100;
+            document.getElementById('drum2-decay-val').innerText = `${DEFAULTS.drum2Decay}s`;
+
+            document.getElementById('tune-drum3-pitch').value = DEFAULTS.drum3Pitch;
+            document.getElementById('drum3-pitch-val').innerText = `${DEFAULTS.drum3Pitch}Hz`;
+            document.getElementById('tune-drum3-decay').value = DEFAULTS.drum3Decay * 100;
+            document.getElementById('drum3-decay-val').innerText = `${DEFAULTS.drum3Decay}s`;
+
+            document.getElementById('tune-drum4-pitch').value = DEFAULTS.drum4Pitch;
+            document.getElementById('drum4-pitch-val').innerText = `${DEFAULTS.drum4Pitch}Hz`;
+            document.getElementById('tune-drum4-decay').value = DEFAULTS.drum4Decay * 100;
+            document.getElementById('drum4-decay-val').innerText = `${DEFAULTS.drum4Decay}s`;
+
+            updateAcousticTuning();
+            stopDemoPlayback();
+
+            showHitText('RESET CONFIG!');
+        }
+
+        window.onload = function() {
+            setupEventListeners();
+            drawVisualizer();
+        };
     </script>
 </body>
 </html>
