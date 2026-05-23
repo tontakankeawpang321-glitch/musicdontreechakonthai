@@ -3,348 +3,424 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cornet Simulator Mobile</title>
+    <title>Cornet Simulator Pro Mobile - Real HD Sound</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for elegant brass & instrument icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
 
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none; /* ป้องกันการเลื่อนหน้าจอ */
+            touch-action: none; /* Prevents screen scrolling and double-tap zoom */
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle at center, #2b2b2b, #000000);
             font-family: 'Sarabun', sans-serif;
-            overflow: hidden; /* ห้ามล้นขอบ */
-            display: flex;
-            flex-direction: column;
-            color: #fff;
+            background: radial-gradient(circle at center, #18181c 0%, #08080a 100%);
+            overflow: hidden;
         }
 
-        /* ส่วนหัวและหน้าจอแสดงผล */
-        header {
-            height: 15vh;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border-bottom: 2px solid #daa520;
+        /* Gold metal effect styling */
+        .brass-gradient {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+        }
+        
+        .brass-border {
+            border-image: linear-gradient(to right, #bf953f, #fcf6ba, #b38728) 1;
         }
 
-        .display-panel {
-            text-align: center;
-            flex-grow: 1;
+        .gold-glow {
+            text-shadow: 0 0 10px rgba(218, 165, 32, 0.6);
         }
 
-        #note-display {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #daa520;
-            text-shadow: 0 0 10px rgba(218, 165, 32, 0.5);
-            min-height: 3rem;
-        }
-
-        #status-display {
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-
-        /* ส่วนตัวเครื่องดนตรี */
-        .instrument-body {
-            flex-grow: 1;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
-
-        /* ท่อลมตกแต่ง */
-        .pipe-deco {
-            position: absolute;
-            z-index: 0;
-            background: linear-gradient(90deg, #8B4513, #daa520, #ffd700, #daa520, #8B4513);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            border-radius: 20px;
-        }
-
-        .main-pipe {
-            width: 90%;
-            height: 40px;
-            top: 40%;
-        }
-
-        .bell {
-            position: absolute;
-            right: -20px;
-            top: 30%;
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, #333 10%, #daa520 40%, #ffd700 100%);
-            border-radius: 50%;
-            border: 5px solid #b8860b;
-            transform: scaleY(0.6) rotate(-10deg);
-            z-index: -1;
-            box-shadow: inset 0 0 20px #000;
-        }
-
-        /* แผงควบคุมวาล์ว */
-        .valve-container {
-            display: flex;
-            gap: 20px;
-            z-index: 10;
-            padding-bottom: 20px;
-        }
-
-        .valve-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .valve-piston {
-            width: 15px;
-            height: 80px;
-            background: linear-gradient(90deg, #ccc, #fff, #ccc);
-            margin-bottom: -10px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .valve-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fff, #e0e0e0, #a0a0a0);
-            border: 4px solid #daa520;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.8);
-            cursor: pointer;
-            transition: transform 0.1s, margin-top 0.1s;
-            position: relative;
-            z-index: 2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: #555;
-            font-size: 1.2rem;
-        }
-
-        .valve-btn.active {
-            transform: translateY(15px);
-            background: radial-gradient(circle at 30% 30%, #e0e0e0, #a0a0a0, #707070);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        }
-
-        /* ส่วนควบคุมล่าง (ปากเป่า + ช่วงเสียง) */
-        .controls-area {
-            height: 25vh;
-            background: #1a1a1a;
-            display: flex;
-            padding: 10px;
-            align-items: center;
-            justify-content: space-around;
-            border-top: 2px solid #daa520;
-        }
-
-        /* Slider ปรับช่วงเสียง (Lip Tension) */
-        .lip-control {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 20%;
-        }
-
-        .lip-label {
-            font-size: 0.8rem;
-            color: #daa520;
-            margin-bottom: 5px;
-        }
-
-        input[type=range][orient=vertical] {
+        /* Vertical range slider customizing */
+        input[type="range"].vertical-slider {
+            -webkit-appearance: none;
             writing-mode: bt-lr; /* IE */
-            -webkit-appearance: slider-vertical; /* WebKit */
-            width: 8px;
-            height: 100px;
-            padding: 0 5px;
+            appearance: none;
+            width: 12px;
+            height: 140px;
+            background: #23232a;
+            outline: none;
+            border-radius: 6px;
+            border: 1px solid #43434f;
         }
 
-        /* ปุ่มเป่าลม */
-        .blow-pad {
-            width: 100px;
-            height: 100px;
+        input[type="range"].vertical-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            background: radial-gradient(circle, #ff6b6b, #c0392b);
-            border: 4px solid #fff;
-            box-shadow: 0 0 15px #c0392b;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
+            background: linear-gradient(135deg, #ffd700, #b8860b);
+            border: 2px solid #fff;
             cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
-        .blow-pad:active, .blow-pad.blowing {
-            transform: scale(0.95);
-            background: radial-gradient(circle, #ff8787, #e74c3c);
-            box-shadow: 0 0 25px #e74c3c;
+        /* Valve animation when activated */
+        .valve-button {
+            transition: transform 0.08s ease-out, background 0.08s ease-out;
+        }
+        .valve-button.active {
+            transform: translateY(18px) scale(0.95);
         }
 
-        /* แผงอัดเสียง */
-        .recorder-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 25%;
-            align-items: center;
+        /* Blow Pad Pulse */
+        @keyframes blow-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+            50% { transform: scale(0.96); box-shadow: 0 0 25px rgba(239, 68, 68, 0.95); }
+        }
+        .blow-active {
+            animation: blow-pulse 0.8s infinite ease-in-out;
+            background: radial-gradient(circle, #f87171, #dc2626) !important;
         }
 
-        .rec-btn {
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            padding: 8px;
-            width: 100%;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            cursor: pointer;
+        /* Neon Active Indicator */
+        .active-ring {
+            box-shadow: 0 0 12px #eab308;
         }
 
-        .rec-btn.recording {
-            background: #e74c3c;
-            animation: pulse 1s infinite;
+        /* Custom scrollbar for settings */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
         }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
         }
-
-        /* Start Overlay */
-        #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #daa520;
-        }
-
-        .start-btn {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: #daa520;
-            color: #000;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(218, 165, 32, 0.5);
-        }
-
-        /* Responsive */
-        @media (orientation: landscape) {
-            .instrument-body { flex-direction: row; }
-            .valve-container { transform: scale(0.8); }
-            .main-pipe { height: 60px; }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(218, 165, 32, 0.3);
+            border-radius: 2px;
         }
     </style>
 </head>
-<body>
+<body class="w-screen h-screen flex flex-col justify-between text-gray-100 select-none overflow-hidden">
 
-    <div id="start-overlay">
-        <h1>Cornet Simulator</h1>
-        <p>จำลองเสียงคอร์เน็ทสมจริง</p>
-        <button class="start-btn" onclick="initAudio()">แตะเพื่อเริ่มใช้งาน</button>
+    <!-- Start Overlay Screen -->
+    <div id="start-overlay" class="fixed inset-0 bg-black/95 z-50 flex flex-col justify-center items-center text-center px-6">
+        <div class="mb-6 brass-gradient p-1 rounded-full shadow-2xl">
+            <div class="bg-zinc-900 rounded-full p-6 w-28 h-28 flex items-center justify-center">
+                <i class="fa-solid fa-music text-5xl text-amber-500 animate-bounce"></i>
+            </div>
+        </div>
+        <h1 class="text-4xl font-bold brass-gradient bg-clip-text text-transparent mb-2">Cornet Pro HD</h1>
+        <p class="text-gray-400 text-sm max-w-xs mb-8">ระบบจำลองเสียงคอร์เน็ทระดับคุณภาพไฮไฟพร้อมฟิลเตอร์ลมเป่าแบบสมจริง</p>
+        
+        <button class="px-8 py-4 bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-zinc-950 font-bold text-lg rounded-full shadow-lg shadow-yellow-500/20 active:scale-95 transition-all duration-150" onclick="initAudio()">
+            <i class="fa-solid fa-play mr-2"></i> แตะเพื่อเริ่มต้นบรรเลง HD
+        </button>
+        <span class="text-xs text-zinc-500 mt-4"><i class="fa-solid fa-volume-high"></i> แนะนำให้เปิดเสียงดัง หรือสวมหูฟังเพื่อมิติลมเป่าที่สมจริง</span>
     </div>
 
-    <header>
-        <div class="display-panel">
-            <div id="status-display">พร้อมใช้งาน</div>
-            <div id="note-display">--</div>
+    <!-- Header Section / Realtime Visualizer -->
+    <header class="h-[14vh] min-h-[90px] border-b border-amber-600/30 bg-zinc-950/80 px-4 py-2 flex items-center justify-between gap-4 relative z-10">
+        <!-- Display Pitch / Info -->
+        <div class="flex flex-col justify-center w-1/3">
+            <span id="status-display" class="text-[10px] uppercase tracking-wider text-amber-500/70 font-semibold truncate">พร้อมบรรเลง</span>
+            <div id="note-display" class="text-3xl font-black text-amber-400 gold-glow tracking-tight mt-0.5">--</div>
+            <span id="freq-display" class="text-[9px] text-zinc-500">0.00 Hz</span>
+        </div>
+
+        <!-- Analyzer Visualizer Canvas -->
+        <div class="flex-grow h-full max-w-[40%] relative flex items-center justify-center bg-zinc-900/40 rounded-lg overflow-hidden border border-zinc-800">
+            <canvas id="visualizerCanvas" class="w-full h-full opacity-80"></canvas>
+            <span class="absolute text-[8px] text-zinc-600 bottom-1 right-2 pointer-events-none">REALTIME ANALYZER</span>
+        </div>
+
+        <!-- Mode Indicator / Quick Controls -->
+        <div class="flex flex-col items-end w-1/4 gap-1">
+            <span class="text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-full" id="mode-badge">
+                <i class="fa-solid fa-hand-pointer text-amber-500 mr-1"></i> ควบคุมเอง
+            </span>
+            <button onclick="stopAllDemo()" id="btn-global-stop" class="hidden text-[10px] text-red-400 bg-red-950/40 border border-red-500/30 px-2.5 py-1 rounded-md font-medium active:scale-95">
+                <i class="fa-solid fa-circle-stop mr-1"></i> หยุดเพลง
+            </button>
         </div>
     </header>
 
-    <div class="instrument-body">
-        <div class="bell"></div>
-        <div class="pipe-deco main-pipe"></div>
-        
-        <div class="valve-container">
-            <div class="valve-wrapper">
-                <div class="valve-piston"></div>
-                <div class="valve-btn" id="valve3" data-val="3">3</div>
+    <!-- Instrument Visual representation & Interactive Valves -->
+    <div class="flex-grow flex flex-col justify-center items-center relative px-4 overflow-hidden py-1">
+        <!-- Background pipes graphic -->
+        <div class="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none opacity-20">
+            <div class="w-4/5 h-20 border-4 border-amber-600 rounded-full relative">
+                <div class="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full border-4 border-amber-500"></div>
             </div>
-            <div class="valve-wrapper">
-                <div class="valve-piston"></div>
-                <div class="valve-btn" id="valve2" data-val="1">2</div>
+        </div>
+
+        <!-- Realtime Cornet Interactive Area -->
+        <div class="relative w-full max-w-md flex flex-col items-center py-2">
+            <!-- Cornet Bell representation -->
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 w-20 h-24 bg-gradient-to-r from-amber-700 via-amber-500 to-yellow-300 rounded-l-full filter blur-[1px] opacity-40 transform scale-y-150 z-0"></div>
+            
+            <!-- Golden Main Pipe Tube -->
+            <div class="w-full h-6 rounded-full brass-gradient shadow-md border-b border-yellow-900/50 relative z-0 mb-8 flex items-center">
+                <!-- Water key visual -->
+                <div class="absolute right-8 bottom-[-8px] w-2 h-4 bg-zinc-400 rounded-sm transform rotate-12"></div>
+                <!-- Mouthpiece visual connection -->
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-4 bg-zinc-400 rounded-r-md"></div>
             </div>
-            <div class="valve-wrapper">
-                <div class="valve-piston"></div>
-                <div class="valve-btn" id="valve1" data-val="2">1</div>
+
+            <!-- Valves Assembly (Valves 1, 2, 3) -->
+            <div class="flex justify-center items-end gap-5 relative z-10">
+                <!-- Valve 1 -->
+                <div class="flex flex-col items-center">
+                    <span class="text-xs text-amber-500/70 font-semibold mb-1">วาล์ว 1</span>
+                    <div class="w-8 h-16 bg-gradient-to-b from-zinc-700 via-zinc-500 to-zinc-800 rounded-t-sm relative border-x border-zinc-600 shadow-md">
+                        <!-- Piston shaft -->
+                        <div id="shaft-1" class="absolute left-1/2 -translate-x-1/2 bottom-full w-2 h-10 bg-zinc-300 transition-all duration-75"></div>
+                    </div>
+                    <!-- Piston button -->
+                    <button id="valveBtn1" class="valve-button w-14 h-14 rounded-full brass-gradient border-4 border-yellow-700 shadow-xl flex items-center justify-center font-bold text-zinc-900 text-lg relative z-20 mt-[-20px] active:ring-4 active:ring-yellow-400">
+                        1
+                    </button>
+                    <span class="text-[9px] text-zinc-400 mt-1">-2 Semitones</span>
+                </div>
+
+                <!-- Valve 2 -->
+                <div class="flex flex-col items-center">
+                    <span class="text-xs text-amber-500/70 font-semibold mb-1">วาล์ว 2</span>
+                    <div class="w-8 h-12 bg-gradient-to-b from-zinc-700 via-zinc-500 to-zinc-800 rounded-t-sm relative border-x border-zinc-600 shadow-md">
+                        <!-- Piston shaft -->
+                        <div id="shaft-2" class="absolute left-1/2 -translate-x-1/2 bottom-full w-2 h-10 bg-zinc-300 transition-all duration-75"></div>
+                    </div>
+                    <!-- Piston button -->
+                    <button id="valveBtn2" class="valve-button w-14 h-14 rounded-full brass-gradient border-4 border-yellow-700 shadow-xl flex items-center justify-center font-bold text-zinc-900 text-lg relative z-20 mt-[-20px] active:ring-4 active:ring-yellow-400">
+                        2
+                    </button>
+                    <span class="text-[9px] text-zinc-400 mt-1">-1 Semitone</span>
+                </div>
+
+                <!-- Valve 3 -->
+                <div class="flex flex-col items-center">
+                    <span class="text-xs text-amber-500/70 font-semibold mb-1">วาล์ว 3</span>
+                    <div class="w-8 h-16 bg-gradient-to-b from-zinc-700 via-zinc-500 to-zinc-800 rounded-t-sm relative border-x border-zinc-600 shadow-md">
+                        <!-- Piston shaft -->
+                        <div id="shaft-3" class="absolute left-1/2 -translate-x-1/2 bottom-full w-2 h-10 bg-zinc-300 transition-all duration-75"></div>
+                    </div>
+                    <!-- Piston button -->
+                    <button id="valveBtn3" class="valve-button w-14 h-14 rounded-full brass-gradient border-4 border-yellow-700 shadow-xl flex items-center justify-center font-bold text-zinc-900 text-lg relative z-20 mt-[-20px] active:ring-4 active:ring-yellow-400">
+                        3
+                    </button>
+                    <span class="text-[9px] text-zinc-400 mt-1">-3 Semitones</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="controls-area">
-        <div class="lip-control">
-            <span class="lip-label">ระดับเสียง (Lips)</span>
-            <input type="range" id="harmonicSlider" min="2" max="6" value="4" orient="vertical">
+    <!-- Control Panels (Lip Tension, Play, Record, Demo, Advanced FX) -->
+    <div class="bg-zinc-900/90 border-t border-amber-600/30 px-3 pt-3 pb-6 flex flex-col gap-3 relative z-20 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+        
+        <!-- Tab Switches: Sound & Demo / Advanced Controls -->
+        <div class="flex border-b border-zinc-800 text-xs font-semibold gap-2 pb-1">
+            <button onclick="switchTab('basic')" id="tab-basic" class="flex-1 py-1.5 text-center rounded-t-md bg-zinc-800 text-amber-400 border-b-2 border-amber-500">
+                <i class="fa-solid fa-sliders mr-1"></i> ควบคุม & บันทึกเสียง
+            </button>
+            <button onclick="switchTab('advanced')" id="tab-advanced" class="flex-1 py-1.5 text-center rounded-t-md text-zinc-400 hover:text-gray-200">
+                <i class="fa-solid fa-sliders-h mr-1"></i> ปรับแต่งเสียงสมจริงขั้นสูง
+            </button>
+            <button onclick="switchTab('demos')" id="tab-demos" class="flex-1 py-1.5 text-center rounded-t-md text-zinc-400 hover:text-gray-200">
+                <i class="fa-solid fa-graduation-cap mr-1"></i> เพลงสาธิต
+            </button>
         </div>
 
-        <div class="blow-pad" id="blowPad">
-            เป่า
+        <!-- TAB CONTENT 1: BASIC PLAY & RECORD -->
+        <div id="panel-basic" class="flex items-center justify-between gap-2.5 h-[160px]">
+            <!-- Lip Tension Slider -->
+            <div class="flex flex-col items-center justify-center w-1/4 h-full bg-zinc-950/40 border border-zinc-800/60 p-2 rounded-lg">
+                <span class="text-[9px] text-amber-500 font-bold mb-1 truncate w-full text-center">LIP TENSION</span>
+                <input type="range" id="harmonicSlider" min="2" max="6" value="4" step="1" class="vertical-slider">
+                <span id="harmonic-label" class="text-[10px] text-zinc-400 font-semibold mt-1">Mid (Bb4)</span>
+            </div>
+
+            <!-- Big Air Blow Button -->
+            <div class="flex-1 h-full flex flex-col items-center justify-center">
+                <span class="text-[10px] text-zinc-500 mb-2 uppercase tracking-widest font-bold">แท่นเป่าลม</span>
+                <button id="blowPad" class="w-28 h-28 rounded-full bg-gradient-to-br from-red-600 to-red-800 text-white font-black text-lg tracking-wider shadow-lg border-4 border-zinc-800 active:scale-95 transition-all duration-75 flex flex-col items-center justify-center select-none cursor-pointer">
+                    <i class="fa-solid fa-wind text-xl mb-1"></i>
+                    <span>เป่าลม</span>
+                </button>
+                <span class="text-[9px] text-zinc-400 mt-2 text-center">แตะค้างไว้เพื่อเริ่มเป่าเสียง</span>
+            </div>
+
+            <!-- Recorder Dashboard -->
+            <div class="w-1/3 h-full flex flex-col justify-between bg-zinc-950/40 border border-zinc-800/60 p-2.5 rounded-lg text-xs">
+                <span class="text-[9px] text-zinc-500 font-bold uppercase tracking-wider block text-center border-b border-zinc-800/50 pb-1">RECORDER</span>
+                
+                <button id="btnRecord" class="w-full py-1.5 px-2 bg-red-950/40 text-red-400 hover:bg-red-900/30 border border-red-800/30 rounded flex items-center justify-center gap-1.5 font-medium transition-all duration-150">
+                    <div class="w-2.5 h-2.5 bg-red-500 rounded-full" id="rec-dot"></div>
+                    <span id="rec-text">อัดเสียง</span>
+                </button>
+                
+                <button id="btnPlay" disabled class="w-full py-1.5 px-2 bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 rounded flex items-center justify-center gap-1.5 font-medium transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none">
+                    <i class="fa-solid fa-play text-emerald-400"></i>
+                    <span>เล่นกลับ</span>
+                </button>
+
+                <button id="btnDownload" disabled class="w-full py-1.5 px-2 bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 rounded flex items-center justify-center gap-1.5 font-medium transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none">
+                    <i class="fa-solid fa-download text-amber-500"></i>
+                    <span>บันทึกไฟล์</span>
+                </button>
+            </div>
         </div>
 
-        <div class="recorder-panel">
-            <button class="rec-btn" id="btnRecord">🔴 อัดเสียง</button>
-            <button class="rec-btn" id="btnPlay" disabled>▶️ เล่น</button>
-            <button class="rec-btn" id="btnDownload" disabled>⬇️ โหลด</button>
+        <!-- TAB CONTENT 2: ADVANCED SOUND ADJUSTMENTS (ULTRA-REALISTIC) -->
+        <div id="panel-advanced" class="hidden flex flex-col gap-2 h-[160px] overflow-y-auto custom-scroll px-1">
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <!-- Vibrato Setting -->
+                <div class="flex flex-col bg-zinc-950/40 p-1.5 rounded border border-zinc-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-zinc-400 font-semibold text-[10px]">Vibrato (ลูกคอริมฝีปาก)</span>
+                        <span id="vibrato-val" class="text-amber-500 text-[10px]">ปานกลาง</span>
+                    </div>
+                    <input type="range" id="vibratoSlider" min="0" max="10" value="4" class="w-full accent-amber-500">
+                </div>
+
+                <!-- Reverb / Concert Echo -->
+                <div class="flex flex-col bg-zinc-950/40 p-1.5 rounded border border-zinc-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-zinc-400 font-semibold text-[10px]">Reverb Space (เสียงก้องห้องซ้อม)</span>
+                        <span id="reverb-val" class="text-amber-500 text-[10px]">ฮอลล์คอนเสิร์ต</span>
+                    </div>
+                    <input type="range" id="reverbSlider" min="0" max="100" value="40" class="w-full accent-amber-500">
+                </div>
+
+                <!-- Tone Brightness -->
+                <div class="flex flex-col bg-zinc-950/40 p-1.5 rounded border border-zinc-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-zinc-400 font-semibold text-[10px]">Cutoff Brightness (ความสว่างเสียง)</span>
+                        <span id="cutoff-val" class="text-amber-500 text-[10px]">1600 Hz</span>
+                    </div>
+                    <input type="range" id="cutoffSlider" min="200" max="4000" value="1600" step="50" class="w-full accent-amber-500">
+                </div>
+
+                <!-- Envelope Attack -->
+                <div class="flex flex-col bg-zinc-950/40 p-1.5 rounded border border-zinc-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-zinc-400 font-semibold text-[10px]">Envelope Attack (ความนุ่มเริ่มแรก)</span>
+                        <span id="attack-val" class="text-amber-500 text-[10px]">0.08s</span>
+                    </div>
+                    <input type="range" id="attackSlider" min="1" max="50" value="8" class="w-full accent-amber-500">
+                </div>
+            </div>
+            
+            <!-- System Preset Selector -->
+            <div class="flex items-center gap-2 mt-1 border-t border-zinc-800 pt-2">
+                <span class="text-[10px] text-zinc-500">PRESETS:</span>
+                <button onclick="applyPreset('classic')" class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-[9px] text-amber-400">Classic Brass</button>
+                <button onclick="applyPreset('soft')" class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-[9px] text-amber-400">Warm Flugelhorn</button>
+                <button onclick="applyPreset('echo')" class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-[9px] text-amber-400">Cathedral Solo</button>
+            </div>
         </div>
+
+        <!-- TAB CONTENT 3: DEMO MUSIC WITH AUTO-VALVE SIMULATION -->
+        <div id="panel-demos" class="hidden flex flex-col justify-between h-[160px] text-xs">
+            <span class="text-[9px] text-zinc-400 block mb-1">เลือกเพลงสาธิต (ระบบจะแสดงตำแหน่งเป่าและวาล์วอัตโนมัติ):</span>
+            
+            <div class="flex flex-col gap-1.5 overflow-y-auto custom-scroll flex-grow pr-1">
+                <!-- Song 1 -->
+                <div class="flex items-center justify-between p-2 bg-zinc-950/40 border border-zinc-800 rounded hover:border-amber-500/50 transition-all duration-150">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded flex items-center justify-center font-semibold text-xs">1</div>
+                        <div>
+                            <p class="font-semibold text-zinc-200 text-xs">Ode to Joy</p>
+                            <p class="text-[9px] text-zinc-500">Ludwig van Beethoven • Fanfare</p>
+                        </div>
+                    </div>
+                    <button onclick="playDemo(1)" id="btn-play-demo-1" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-[11px] rounded transition-all duration-150 active:scale-95">
+                        <i class="fa-solid fa-play"></i> บรรเลง
+                    </button>
+                </div>
+
+                <!-- Song 2 -->
+                <div class="flex items-center justify-between p-2 bg-zinc-950/40 border border-zinc-800 rounded hover:border-amber-500/50 transition-all duration-150">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded flex items-center justify-center font-semibold text-xs">2</div>
+                        <div>
+                            <p class="font-semibold text-zinc-200 text-xs">Amazing Grace</p>
+                            <p class="text-[9px] text-zinc-500">Traditional Hymn • Solo Brass</p>
+                        </div>
+                    </div>
+                    <button onclick="playDemo(2)" id="btn-play-demo-2" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-[11px] rounded transition-all duration-150 active:scale-95">
+                        <i class="fa-solid fa-play"></i> บรรเลง
+                    </button>
+                </div>
+
+                <!-- Song 3 -->
+                <div class="flex items-center justify-between p-2 bg-zinc-950/40 border border-zinc-800 rounded hover:border-amber-500/50 transition-all duration-150">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded flex items-center justify-center font-semibold text-xs">3</div>
+                        <div>
+                            <p class="font-semibold text-zinc-200 text-xs">Trumpet Voluntary Theme</p>
+                            <p class="text-[9px] text-zinc-500">Jeremiah Clarke • Royal Majesty</p>
+                        </div>
+                    </div>
+                    <button onclick="playDemo(3)" id="btn-play-demo-3" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-[11px] rounded transition-all duration-150 active:scale-95">
+                        <i class="fa-solid fa-play"></i> บรรเลง
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Alert / Message overlay (No standard JS alert is allowed) -->
+    <div id="message-toast" class="fixed bottom-32 left-1/2 -translate-x-1/2 bg-zinc-900 border border-amber-500/60 px-4 py-2 rounded-full text-xs text-amber-400 shadow-2xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2">
+        <i class="fa-solid fa-circle-info"></i> <span id="toast-text">ข้อความแจ้งเตือน</span>
     </div>
 
     <script>
-        // --- Audio Context & Variables ---
+        // --- Web Audio Context & Node Variables ---
         let audioCtx;
         let masterGain;
-        let oscillator;
+        let osc1, osc2; // Dual-sawtooth oscillators for rich brass texture
+        let oscGain1, oscGain2;
         let filter;
-        let isBlowing = false;
-        let valves = { 1: false, 2: false, 3: false }; // Note: Valve 1 lowers 2 semitones, V2 lowers 1, V3 lowers 3
-        let currentHarmonic = 4; // Default harmonic series (Middle Bb range)
+        let bellFilter; // Peaking filter mimicking brass body resonance
+        let noiseBuffer; // Mouthpiece chiff/breath simulator
+        let noiseSource;
+        let noiseFilter;
+        let noiseGain;
+        let delayNode;
+        let delayFeedback;
+        let vibratoLFO;
+        let vibratoGain;
+        let analyser;
         
-        // Recording variables
+        let isBlowing = false;
+        let valves = { 1: false, 2: false, 3: false }; // Current manual state
+        let currentHarmonic = 4; // Default level 4 (Middle Pitch series)
+        
+        // --- Sound customization values ---
+        let configVibratoDepth = 4; // 0 to 10
+        let configReverbMix = 0.4;  // 0 to 1
+        let configCutoff = 1600;    // 200 to 4000
+        let configAttack = 0.08;    // 0.01 to 0.5 seconds
+        
+        // --- Recording System State ---
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob;
         let audioUrl;
         let recordedAudio = new Audio();
-        let destNode; // Destination for recording
+        let destNode; // MediaStream node for capturing pure simulator output
 
-        // Frequency Map (Cornet in Bb)
-        // Base Harmonics of Open Pipe (Approximate):
-        // H2: Bb3 (233.08), H3: F4 (349.23), H4: Bb4 (466.16), H5: D5 (587.33), H6: F5 (698.46)
+        // --- Demo Song Sequences & Playing Variables ---
+        let isDemoPlaying = false;
+        let demoSequenceTimeouts = [];
+        let currentActiveDemoNum = null;
+
+        // Base series Bb Transposed Cornet values
         const harmonicBaseFreqs = {
-            2: 233.08, // Low
-            3: 349.23,
-            4: 466.16, // Mid (Tuning Bb)
-            5: 587.33,
+            2: 233.08, // Low range
+            3: 349.23, // Mid low
+            4: 466.16, // Mid
+            5: 587.33, // High-mid
             6: 698.46  // High
         };
 
@@ -352,228 +428,776 @@
             "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"
         ];
 
-        function getNoteName(freq) {
-            // Formula: NoteNum = 12 * log2(freq / 440) + 69
-            // 69 is A4. 
-            if(freq === 0) return "--";
-            let noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
-            noteNum = Math.round(noteNum);
-            let noteIndex = noteNum % 12;
-            let octave = Math.floor(noteNum / 12) - 1;
-            return noteNames[noteIndex] + octave;
+        // --- Realtime Canvas Rendering Variables ---
+        let animationFrameId;
+
+        // --- Demo Songs Metadata Definition ---
+        // Format of Note Object: [harmonicIndex, [valve1_Active, valve2_Active, valve3_Active], durationMs, restGapMs]
+        const demoSongs = {
+            1: {
+                title: "Beethoven's Ode to Joy",
+                notes: [
+                    [3, [true, true, false], 400, 50],  // D4
+                    [3, [true, true, false], 400, 50],  // D4
+                    [3, [true, false, false], 400, 50], // Eb4
+                    [3, [false, false, false], 400, 50], // F4
+                    [3, [false, false, false], 400, 50], // F4
+                    [3, [true, false, false], 400, 50], // Eb4
+                    [3, [true, true, false], 400, 50],  // D4
+                    [3, [true, true, true], 400, 50],   // C4
+                    [2, [false, false, false], 400, 50], // Bb3
+                    [2, [false, false, false], 400, 50], // Bb3
+                    [2, [false, true, false], 400, 50],  // A3
+                    [2, [false, false, false], 400, 50], // Bb3
+                    [2, [false, false, false], 600, 50], // Bb3
+                    [2, [false, true, false], 200, 50],  // A3
+                    [2, [false, true, false], 800, 100], // A3
+                    // Second verse phrase
+                    [3, [true, true, false], 400, 50],  // D4
+                    [3, [true, true, false], 400, 50],  // D4
+                    [3, [true, false, false], 400, 50], // Eb4
+                    [3, [false, false, false], 400, 50], // F4
+                    [3, [false, false, false], 400, 50], // F4
+                    [3, [true, false, false], 400, 50], // Eb4
+                    [3, [true, true, false], 400, 50],  // D4
+                    [3, [true, true, true], 400, 50],   // C4
+                    [2, [false, false, false], 400, 50], // Bb3
+                    [2, [false, false, false], 400, 50], // Bb3
+                    [2, [false, true, false], 400, 50],  // A3
+                    [2, [false, false, false], 400, 50], // Bb3
+                    [2, [false, true, false], 600, 50],  // A3
+                    [2, [false, false, false], 200, 50], // Bb3
+                    [2, [false, false, false], 800, 100]  // Bb3
+                ]
+            },
+            2: {
+                title: "Amazing Grace",
+                notes: [
+                    [2, [true, true, true], 400, 100],   // F3
+                    [2, [false, false, false], 800, 100], // Bb3
+                    [3, [true, true, false], 300, 50],   // D4 (glide up)
+                    [2, [false, false, false], 300, 50], // Bb3
+                    [3, [true, true, false], 800, 100],  // D4
+                    [3, [true, true, true], 400, 100],   // C4
+                    [2, [false, false, false], 800, 100], // Bb3
+                    [2, [true, true, false], 400, 100],   // G3
+                    [2, [true, true, true], 800, 100],   // F3
+                    // Next segment
+                    [2, [true, true, true], 400, 100],   // F3
+                    [2, [false, false, false], 800, 100], // Bb3
+                    [3, [true, true, false], 300, 50],   // D4
+                    [2, [false, false, false], 300, 50], // Bb3
+                    [3, [true, true, false], 800, 100],  // D4
+                    [3, [true, true, true], 400, 100],   // C4
+                    [3, [false, false, false], 1200, 200] // F4
+                ]
+            },
+            3: {
+                title: "Trumpet Voluntary Theme",
+                notes: [
+                    [2, [false, false, false], 500, 50],  // Bb3
+                    [2, [false, false, false], 200, 50],  // Bb3
+                    [2, [false, false, false], 200, 50],  // Bb3
+                    [2, [false, false, false], 600, 100], // Bb3
+                    [3, [true, true, false], 400, 50],   // D4
+                    [2, [false, false, false], 400, 50],  // Bb3
+                    [3, [false, false, false], 600, 100], // F4
+                    [3, [true, true, false], 300, 50],   // D4
+                    [3, [false, false, false], 300, 50],  // F4
+                    [3, [true, true, false], 800, 150],  // D4
+                    [3, [true, true, true], 300, 50],   // C4
+                    [3, [true, true, false], 300, 50],   // D4
+                    [3, [true, false, false], 300, 50],  // Eb4
+                    [3, [true, true, false], 300, 50],   // D4
+                    [3, [true, true, true], 300, 50],   // C4
+                    [2, [false, false, false], 800, 200]  // Bb3
+                ]
+            }
+        };
+
+        // --- Custom Toast Warning & Notification system ---
+        function showNotification(msg) {
+            const toast = document.getElementById('message-toast');
+            document.getElementById('toast-text').innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
+            }, 3000);
         }
 
-        // --- Initialization ---
+        // --- Tab Selection Routing ---
+        function switchTab(tabId) {
+            document.getElementById('panel-basic').classList.add('hidden');
+            document.getElementById('panel-advanced').classList.add('hidden');
+            document.getElementById('panel-demos').classList.add('hidden');
+
+            document.getElementById('tab-basic').className = "flex-1 py-1.5 text-center rounded-t-md text-zinc-400 hover:text-gray-200";
+            document.getElementById('tab-advanced').className = "flex-1 py-1.5 text-center rounded-t-md text-zinc-400 hover:text-gray-200";
+            document.getElementById('tab-demos').className = "flex-1 py-1.5 text-center rounded-t-md text-zinc-400 hover:text-gray-200";
+
+            if (tabId === 'basic') {
+                document.getElementById('panel-basic').classList.remove('hidden');
+                document.getElementById('tab-basic').className = "flex-1 py-1.5 text-center rounded-t-md bg-zinc-800 text-amber-400 border-b-2 border-amber-500";
+            } else if (tabId === 'advanced') {
+                document.getElementById('panel-advanced').classList.remove('hidden');
+                document.getElementById('tab-advanced').className = "flex-1 py-1.5 text-center rounded-t-md bg-zinc-800 text-amber-400 border-b-2 border-amber-500";
+            } else if (tabId === 'demos') {
+                document.getElementById('panel-demos').classList.remove('hidden');
+                document.getElementById('tab-demos').className = "flex-1 py-1.5 text-center rounded-t-md bg-zinc-800 text-amber-400 border-b-2 border-amber-500";
+            }
+        }
+
+        // --- STREAMING_CHUNK: Setting up audio path and generators ---
+        // Generates procedural white noise for breath sound
+        function createNoiseBuffer() {
+            if (!audioCtx) return null;
+            const bufferSize = audioCtx.sampleRate * 2.0; // 2 seconds loop
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            return buffer;
+        }
+
+        // --- Audio System Initiation ---
         function initAudio() {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
             
-            // Master Gain (Volume)
+            // Unlock Context on iOS/Mobile Safari
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // Master Output Setup
             masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0;
+            masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
 
-            // Destination for Recorder
+            // Analyser for Live Wave Visuals
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+
+            // Generate noise buffer for the chiff
+            noiseBuffer = createNoiseBuffer();
+
+            // MediaStream for flawless high-quality recording output
             destNode = audioCtx.createMediaStreamDestination();
-            masterGain.connect(audioCtx.destination);
-            masterGain.connect(destNode);
+            
+            // Concert Hall Reverb/Delay Loop simulation
+            delayNode = audioCtx.createDelay(1.0);
+            delayFeedback = audioCtx.createGain();
+            
+            // Connect Reverb Space Loops
+            delayNode.delayTime.value = 0.35; // 350ms echo reflections
+            delayFeedback.gain.value = configReverbMix; // Feedback level
 
+            // Main outputs routing
+            masterGain.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            analyser.connect(destNode);
+
+            // Reverb parallel routing
+            masterGain.connect(delayNode);
+            delayNode.connect(delayFeedback);
+            delayFeedback.connect(delayNode);
+            delayFeedback.connect(analyser); // Join spatial reflection to master output
+
+            // Finalize UI layout visibility & triggers
             document.getElementById('start-overlay').style.display = 'none';
-            setupInteraction();
-            updateNoteDisplay("--");
+            setupUserControls();
+            drawWaveform();
+            showNotification("ระบบเครื่องเป่า HD พร้อมบรรเลงสมจริงแล้ว!");
         }
 
+        // --- STREAMING_CHUNK: Setup advanced brass synthesis engines ---
+        // Main synthesizer configurations (Dual detuned sawtooths + Formant + Spit Chiff Noise)
         function setupOscillator() {
-            if (oscillator) oscillator.stop();
+            stopOscillatorNodes();
+
+            const now = audioCtx.currentTime;
+
+            // Dual detuned sawtooth oscillators for warm acoustic resonance
+            osc1 = audioCtx.createOscillator();
+            osc1.type = 'sawtooth';
             
-            oscillator = audioCtx.createOscillator();
-            oscillator.type = 'sawtooth'; // Sawtooth is best base for brass
-            
-            // Filter to simulate brass bell (Lowpass)
+            osc2 = audioCtx.createOscillator();
+            osc2.type = 'sawtooth';
+            osc2.detune.setValueAtTime(6.5, now); // Detuned slightly for premium chorused brass depth
+
+            // Individual node gains to prevent clipping and structure blend
+            oscGain1 = audioCtx.createGain();
+            oscGain1.gain.setValueAtTime(0.55, now);
+            oscGain2 = audioCtx.createGain();
+            oscGain2.gain.setValueAtTime(0.40, now);
+
+            // Setup main lowpass filter (simulates warm tone barrier)
             filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.value = 1500; // Brightness
-            filter.Q.value = 1; // Resonance
+            filter.Q.setValueAtTime(1.8, now); // Sweet spot resonance
 
-            oscillator.connect(filter);
-            filter.connect(masterGain);
-            oscillator.start();
+            // Bell Column peaking filter (Simulates physical hollow metal tube resonances)
+            bellFilter = audioCtx.createBiquadFilter();
+            bellFilter.type = 'peaking';
+            bellFilter.frequency.setValueAtTime(450, now); // Acoustic hollow formant range
+            bellFilter.Q.setValueAtTime(1.3, now);
+            bellFilter.gain.setValueAtTime(5.5, now); // Boost frequency body resonance
+
+            // Breath simulator (Chiff Spit Sound at onset)
+            if (noiseBuffer) {
+                noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = noiseBuffer;
+                noiseSource.loop = true;
+
+                noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(1150, now); // Dynamic breath center band
+                noiseFilter.Q.setValueAtTime(3.8, now);
+
+                noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.14, now); // Initial burst volume of spit
+                // Realistic breath chiff: drops to near silence rapidly
+                noiseGain.gain.exponentialRampToValueAtTime(0.015, now + 0.16);
+
+                noiseSource.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(masterGain);
+                noiseSource.start(now);
+            }
+
+            // Lip-vibrato low frequency oscillator
+            vibratoLFO = audioCtx.createOscillator();
+            vibratoLFO.frequency.setValueAtTime(5.8, now); // 5.8Hz natural lip wiggle
+            
+            vibratoGain = audioCtx.createGain();
+            vibratoGain.gain.setValueAtTime(configVibratoDepth, now);
+
+            vibratoLFO.connect(vibratoGain);
+            vibratoGain.connect(osc1.frequency);
+            vibratoGain.connect(osc2.frequency);
+
+            // Route acoustic nodes path
+            osc1.connect(oscGain1);
+            osc2.connect(oscGain2);
+            
+            oscGain1.connect(filter);
+            oscGain2.connect(filter);
+            
+            filter.connect(bellFilter);
+            bellFilter.connect(masterGain);
+
+            osc1.start(now);
+            osc2.start(now);
+            vibratoLFO.start(now);
         }
 
-        function calculateFrequency() {
+        // --- Safe cleanup helper ---
+        function stopOscillatorNodes() {
+            if (osc1) { try { osc1.stop(); } catch(e){} osc1.disconnect(); osc1 = null; }
+            if (osc2) { try { osc2.stop(); } catch(e){} osc2.disconnect(); osc2 = null; }
+            if (vibratoLFO) { try { vibratoLFO.stop(); } catch(e){} vibratoLFO.disconnect(); vibratoLFO = null; }
+            if (noiseSource) { try { noiseSource.stop(); } catch(e){} noiseSource.disconnect(); noiseSource = null; }
+            if (vibratoGain) { vibratoGain.disconnect(); vibratoGain = null; }
+            if (oscGain1) oscGain1.disconnect();
+            if (oscGain2) oscGain2.disconnect();
+            if (noiseGain) noiseGain.disconnect();
+        }
+
+        // --- Calculations of Transposed Bb Pitch values ---
+        function calculateCurrentFrequency() {
             let baseFreq = harmonicBaseFreqs[currentHarmonic];
             
-            // Valve math:
-            // Valve 2: -1 semitone
-            // Valve 1: -2 semitones
-            // Valve 3: -3 semitones
-            let semitoneDrop = 0;
-            if (valves[2]) semitoneDrop += 1;
-            if (valves[1]) semitoneDrop += 2;
-            if (valves[3]) semitoneDrop += 3;
+            // Valve finger lowering rules:
+            // Valve 2 active drops pitch 1 semitone
+            // Valve 1 active drops pitch 2 semitones
+            // Valve 3 active drops pitch 3 semitones
+            let droppedSemitones = 0;
+            if (valves[2]) droppedSemitones += 1;
+            if (valves[1]) droppedSemitones += 2;
+            if (valves[3]) droppedSemitones += 3;
 
-            // Calculate new frequency: f = f0 * (2 ^ (-n/12))
-            let finalFreq = baseFreq * Math.pow(2, -semitoneDrop / 12);
-            return finalFreq;
+            // Formula: Final Freq = F0 * (2 ^ (-d/12))
+            return baseFreq * Math.pow(2, -droppedSemitones / 12);
         }
 
-        function updateSound() {
-            if (!audioCtx) return;
+        function getCalculatedNoteName(freq) {
+            if (freq <= 0) return "--";
+            let midiIndex = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
+            midiIndex = Math.round(midiIndex);
             
-            let freq = calculateFrequency();
-            let noteName = getNoteName(freq);
+            let noteIdx = midiIndex % 12;
+            let octave = Math.floor(midiIndex / 12) - 1;
+            return noteNames[noteIdx] + octave;
+        }
+
+        // --- STREAMING_CHUNK: Updating active audio values dynamically ---
+        // Main Audio Update Engine
+        function updateAudioPlayback() {
+            if (!audioCtx) return;
+
+            let freqVal = calculateCurrentFrequency();
+            let noteStr = getCalculatedNoteName(freqVal);
 
             if (isBlowing) {
-                if (!oscillator) setupOscillator();
+                if (!osc1 || !osc2) {
+                    setupOscillator();
+                }
+
+                let timeNow = audioCtx.currentTime;
                 
-                // Portamento (Glide) for realistic transitions
-                let now = audioCtx.currentTime;
-                oscillator.frequency.setTargetAtTime(freq, now, 0.05);
+                // Portamento (Glide transition) for brass pitch-sliding simulation
+                osc1.frequency.setTargetAtTime(freqVal, timeNow, 0.035);
+                osc2.frequency.setTargetAtTime(freqVal, timeNow, 0.035);
                 
-                // Envelope for Attack
-                masterGain.gain.cancelScheduledValues(now);
-                masterGain.gain.setTargetAtTime(0.8, now, 0.1); // Attack to 0.8
-                
-                // Open filter slightly on louder notes (Brass simulation)
-                filter.frequency.setTargetAtTime(1000 + (freq), now, 0.1);
-                
-                updateNoteDisplay(noteName);
+                // Lowpass filter envelope opening dynamically for realistic bite
+                // Higher frequencies have automatically brighter resonant limits
+                let targetCutoff = configCutoff + (freqVal * 1.15);
+                filter.frequency.setValueAtTime(targetCutoff * 0.5, timeNow);
+                // Dynamically sweep up the filter to mimic the release of metal pipe tension
+                filter.frequency.exponentialRampToValueAtTime(targetCutoff, timeNow + 0.08);
+
+                // Smooth attack sound envelope to prevent loud initial click
+                masterGain.gain.cancelScheduledValues(timeNow);
+                masterGain.gain.setTargetAtTime(0.75, timeNow, configAttack);
+
+                // Live display rendering
+                document.getElementById('note-display').innerText = noteStr;
+                document.getElementById('freq-display').innerText = freqVal.toFixed(2) + " Hz";
             } else {
-                // Release
-                let now = audioCtx.currentTime;
-                masterGain.gain.cancelScheduledValues(now);
-                masterGain.gain.setTargetAtTime(0, now, 0.1);
-                updateNoteDisplay("--");
-                
-                // Stop oscillator after release to save CPU (optional, but good for battery)
+                // Complete soft envelope release to natural silence
+                let timeNow = audioCtx.currentTime;
+                masterGain.gain.cancelScheduledValues(timeNow);
+                masterGain.gain.setTargetAtTime(0.0, timeNow, 0.06); // Quick decay release
+
+                document.getElementById('note-display').innerText = "--";
+                document.getElementById('freq-display').innerText = "0.00 Hz";
+
+                // Cleanup oscillators to reduce background resources safely after 120ms
                 setTimeout(() => {
-                    if(!isBlowing && oscillator) {
-                        oscillator.stop();
-                        oscillator = null;
+                    if (!isBlowing) {
+                        stopOscillatorNodes();
                     }
-                }, 200);
+                }, 120);
             }
         }
 
-        function updateNoteDisplay(note) {
-            document.getElementById('note-display').innerText = note;
+        // --- STREAMING_CHUNK: Designing Real-time Canvas Waveform ---
+        function drawWaveform() {
+            const canvas = document.getElementById('visualizerCanvas');
+            const canvasCtx = canvas.getContext('2d');
+            
+            // Adjust canvas resolution dynamically
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function renderLoop() {
+                animationFrameId = requestAnimationFrame(renderLoop);
+                analyser.getByteTimeDomainData(dataArray);
+
+                canvasCtx.fillStyle = 'rgba(13, 13, 16, 0.5)'; // clean background
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                canvasCtx.lineWidth = 2.5;
+                // Rich golden visual color
+                canvasCtx.strokeStyle = 'rgba(218, 165, 32, 0.85)';
+                canvasCtx.beginPath();
+
+                let sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    let v = dataArray[i] / 128.0;
+                    let y = v * canvas.height / 2;
+
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
+                }
+
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
+            }
+
+            renderLoop();
         }
 
-        // --- Interaction Handlers ---
-        function setupInteraction() {
-            const valveBtns = document.querySelectorAll('.valve-btn');
+        // --- User Controls Setup ---
+        function setupUserControls() {
+            const vBtn1 = document.getElementById('valveBtn1');
+            const vBtn2 = document.getElementById('valveBtn2');
+            const vBtn3 = document.getElementById('valveBtn3');
             const blowPad = document.getElementById('blowPad');
-            const slider = document.getElementById('harmonicSlider');
+            const hSlider = document.getElementById('harmonicSlider');
 
-            // Valve Logic
-            valveBtns.forEach(btn => {
-                const handleValveStart = (e) => {
-                    e.preventDefault();
-                    let id = btn.id.replace('valve', '');
-                    valves[id] = true;
-                    btn.classList.add('active');
-                    if (isBlowing) updateSound();
-                };
+            // Help state handlers to prevent multiple registrations on mobile
+            const onValveStart = (valveId, btnElement, shaftId) => {
+                if (isDemoPlaying) return; // Prevent interference during song demo playback
+                valves[valveId] = true;
+                btnElement.classList.add('active');
+                document.getElementById(shaftId).style.transform = 'translateY(16px)';
+                updateAudioPlayback();
+            };
 
-                const handleValveEnd = (e) => {
-                    e.preventDefault();
-                    let id = btn.id.replace('valve', '');
-                    valves[id] = false;
-                    btn.classList.remove('active');
-                    if (isBlowing) updateSound();
-                };
+            const onValveEnd = (valveId, btnElement, shaftId) => {
+                if (isDemoPlaying) return;
+                valves[valveId] = false;
+                btnElement.classList.remove('active');
+                document.getElementById(shaftId).style.transform = 'translateY(0px)';
+                updateAudioPlayback();
+            };
 
-                btn.addEventListener('mousedown', handleValveStart);
-                btn.addEventListener('touchstart', handleValveStart);
-                btn.addEventListener('mouseup', handleValveEnd);
-                btn.addEventListener('touchend', handleValveEnd);
-                btn.addEventListener('mouseleave', handleValveEnd);
-            });
+            // Valve 1 bindings
+            vBtn1.addEventListener('touchstart', (e) => { e.preventDefault(); onValveStart(1, vBtn1, 'shaft-1'); });
+            vBtn1.addEventListener('mousedown', (e) => { e.preventDefault(); onValveStart(1, vBtn1, 'shaft-1'); });
+            vBtn1.addEventListener('touchend', (e) => { e.preventDefault(); onValveEnd(1, vBtn1, 'shaft-1'); });
+            vBtn1.addEventListener('mouseup', (e) => { e.preventDefault(); onValveEnd(1, vBtn1, 'shaft-1'); });
+            vBtn1.addEventListener('mouseleave', (e) => { e.preventDefault(); onValveEnd(1, vBtn1, 'shaft-1'); });
 
-            // Blow Pad Logic
-            const startBlowing = (e) => {
+            // Valve 2 bindings
+            vBtn2.addEventListener('touchstart', (e) => { e.preventDefault(); onValveStart(2, vBtn2, 'shaft-2'); });
+            vBtn2.addEventListener('mousedown', (e) => { e.preventDefault(); onValveStart(2, vBtn2, 'shaft-2'); });
+            vBtn2.addEventListener('touchend', (e) => { e.preventDefault(); onValveEnd(2, vBtn2, 'shaft-2'); });
+            vBtn2.addEventListener('mouseup', (e) => { e.preventDefault(); onValveEnd(2, vBtn2, 'shaft-2'); });
+            vBtn2.addEventListener('mouseleave', (e) => { e.preventDefault(); onValveEnd(2, vBtn2, 'shaft-2'); });
+
+            // Valve 3 bindings
+            vBtn3.addEventListener('touchstart', (e) => { e.preventDefault(); onValveStart(3, vBtn3, 'shaft-3'); });
+            vBtn3.addEventListener('mousedown', (e) => { e.preventDefault(); onValveStart(3, vBtn3, 'shaft-3'); });
+            vBtn3.addEventListener('touchend', (e) => { e.preventDefault(); onValveEnd(3, vBtn3, 'shaft-3'); });
+            vBtn3.addEventListener('mouseup', (e) => { e.preventDefault(); onValveEnd(3, vBtn3, 'shaft-3'); });
+            vBtn3.addEventListener('mouseleave', (e) => { e.preventDefault(); onValveEnd(3, vBtn3, 'shaft-3'); });
+
+            // Blow pad activation
+            const onBlowStart = (e) => {
                 e.preventDefault();
+                if (isDemoPlaying) {
+                    showNotification("กรุณากดหยุดบรรเลงเพลงก่อนจะเล่นเอง");
+                    return;
+                }
                 isBlowing = true;
-                blowPad.classList.add('blowing');
-                updateSound();
+                blowPad.classList.add('blow-active');
+                updateAudioPlayback();
             };
 
-            const stopBlowing = (e) => {
+            const onBlowEnd = (e) => {
                 e.preventDefault();
+                if (isDemoPlaying) return;
                 isBlowing = false;
-                blowPad.classList.remove('blowing');
-                updateSound();
+                blowPad.classList.remove('blow-active');
+                updateAudioPlayback();
             };
 
-            blowPad.addEventListener('mousedown', startBlowing);
-            blowPad.addEventListener('touchstart', startBlowing);
-            blowPad.addEventListener('mouseup', stopBlowing);
-            blowPad.addEventListener('touchend', stopBlowing);
-            blowPad.addEventListener('mouseleave', stopBlowing);
+            blowPad.addEventListener('touchstart', onBlowStart);
+            blowPad.addEventListener('mousedown', onBlowStart);
+            blowPad.addEventListener('touchend', onBlowEnd);
+            blowPad.addEventListener('mouseup', onBlowEnd);
+            blowPad.addEventListener('mouseleave', onBlowEnd);
 
-            // Slider Logic
-            slider.addEventListener('input', (e) => {
+            // Harmonic Lip tension controller
+            hSlider.addEventListener('input', (e) => {
+                if (isDemoPlaying) return;
                 currentHarmonic = parseInt(e.target.value);
-                if (isBlowing) updateSound();
                 
-                let rangeText = "";
-                if(currentHarmonic == 2) rangeText = "ต่ำ (Low)";
-                else if(currentHarmonic == 4) rangeText = "กลาง (Mid)";
-                else if(currentHarmonic == 6) rangeText = "สูง (High)";
-                document.getElementById('status-display').innerText = "ช่วงเสียง: " + rangeText;
+                const labelElement = document.getElementById('harmonic-label');
+                if (currentHarmonic === 2) labelElement.innerText = "Low (Bb3)";
+                else if (currentHarmonic === 3) labelElement.innerText = "Low-Mid (F4)";
+                else if (currentHarmonic === 4) labelElement.innerText = "Mid (Bb4)";
+                else if (currentHarmonic === 5) labelElement.innerText = "High-Mid (D5)";
+                else if (currentHarmonic === 6) labelElement.innerText = "High (F5)";
+                
+                if (isBlowing) updateAudioPlayback();
             });
 
-            // Recording Logic
+            // Advanced Audio adjustment parameters listeners
+            document.getElementById('vibratoSlider').addEventListener('input', (e) => {
+                configVibratoDepth = parseFloat(e.target.value);
+                const txt = configVibratoDepth === 0 ? "ปิด" : (configVibratoDepth < 4 ? "เบา" : (configVibratoDepth < 8 ? "ปานกลาง" : "ลึก"));
+                document.getElementById('vibrato-val').innerText = txt;
+                if (vibratoGain) {
+                    vibratoGain.gain.setValueAtTime(configVibratoDepth, audioCtx.currentTime);
+                }
+            });
+
+            document.getElementById('reverbSlider').addEventListener('input', (e) => {
+                let val = parseInt(e.target.value);
+                configReverbMix = val / 100.0;
+                document.getElementById('reverb-val').innerText = val === 0 ? "ปิดห้อง" : (val < 35 ? "ห้องซ้อม" : (val < 70 ? "ฮอลล์คอนเสิร์ต" : "มหาวิหารก้องกังวาน"));
+                if (delayFeedback) {
+                    delayFeedback.gain.setValueAtTime(configReverbMix, audioCtx.currentTime);
+                }
+            });
+
+            document.getElementById('cutoffSlider').addEventListener('input', (e) => {
+                configCutoff = parseInt(e.target.value);
+                document.getElementById('cutoff-val').innerText = configCutoff + " Hz";
+                if (filter) {
+                    filter.frequency.setValueAtTime(configCutoff, audioCtx.currentTime);
+                }
+            });
+
+            document.getElementById('attackSlider').addEventListener('input', (e) => {
+                let stepVal = parseInt(e.target.value);
+                configAttack = stepVal / 100.0;
+                document.getElementById('attack-val').innerText = configAttack.toFixed(2) + "s";
+            });
+
+            // Recording System interactions
             const btnRecord = document.getElementById('btnRecord');
             const btnPlay = document.getElementById('btnPlay');
             const btnDownload = document.getElementById('btnDownload');
+            const recDot = document.getElementById('rec-dot');
+            const recText = document.getElementById('rec-text');
 
             btnRecord.addEventListener('click', () => {
-                if (btnRecord.classList.contains('recording')) {
-                    // Stop Recording
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    // STOP REC
                     mediaRecorder.stop();
-                    btnRecord.classList.remove('recording');
-                    btnRecord.innerText = "🔴 อัดเสียง";
-                    document.getElementById('status-display').innerText = "บันทึกเสร็จสิ้น";
+                    recDot.classList.remove('animate-ping');
+                    btnRecord.className = "w-full py-1.5 px-2 bg-red-950/40 text-red-400 hover:bg-red-900/30 border border-red-800/30 rounded flex items-center justify-center gap-1.5 font-medium transition-all duration-150";
+                    recText.innerText = "อัดเสียง";
+                    showNotification("หยุดบันทึกและรวบรวมไฟล์เสียงเรียบร้อย!");
                 } else {
-                    // Start Recording
+                    // START REC
                     audioChunks = [];
+                    // Capture output directly from destination stream
                     mediaRecorder = new MediaRecorder(destNode.stream);
-                    
+
                     mediaRecorder.ondataavailable = (event) => {
-                        audioChunks.push(event.data);
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
                     };
 
                     mediaRecorder.onstop = () => {
                         audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         audioUrl = URL.createObjectURL(audioBlob);
                         recordedAudio.src = audioUrl;
+                        
                         btnPlay.disabled = false;
                         btnDownload.disabled = false;
+                        btnPlay.className = "w-full py-1.5 px-2 bg-emerald-950/40 text-emerald-400 border border-emerald-800/30 rounded flex items-center justify-center gap-1.5 font-medium transition-all duration-150 hover:bg-emerald-900/30";
+                        btnDownload.className = "w-full py-1.5 px-2 bg-amber-950/40 text-amber-400 border border-amber-800/30 rounded flex items-center justify-center gap-1.5 font-medium transition-all duration-150 hover:bg-amber-900/30";
                     };
 
                     mediaRecorder.start();
-                    btnRecord.classList.add('recording');
-                    btnRecord.innerText = "⏹ หยุดอัด";
-                    document.getElementById('status-display').innerText = "กำลังอัดเสียง...";
+                    recDot.classList.add('animate-ping');
+                    btnRecord.className = "w-full py-1.5 px-2 bg-red-600 text-white border border-red-700 rounded flex items-center justify-center gap-1.5 font-bold transition-all duration-150 animate-pulse";
+                    recText.innerText = "กำลังอัด...";
+                    showNotification("เริ่มอัดไฟล์เสียงแล้ว บรรเลงได้เลย!");
+
                     btnPlay.disabled = true;
                     btnDownload.disabled = true;
                 }
             });
 
             btnPlay.addEventListener('click', () => {
-                recordedAudio.play();
-                document.getElementById('status-display').innerText = "กำลังเล่นเสียงที่อัด...";
-                recordedAudio.onended = () => {
-                    document.getElementById('status-display').innerText = "พร้อมใช้งาน";
-                };
+                if (recordedAudio) {
+                    recordedAudio.play();
+                    showNotification("กำลังเล่นเสียงจำลองที่บันทึกไว้...");
+                }
             });
 
             btnDownload.addEventListener('click', () => {
-                const link = document.createElement('a');
-                link.href = audioUrl;
-                link.download = 'cornet_solo_' + new Date().getTime() + '.webm';
-                link.click();
+                if (audioUrl) {
+                    const link = document.createElement('a');
+                    link.href = audioUrl;
+                    link.download = 'cornet_rec_' + new Date().getTime() + '.webm';
+                    link.click();
+                    showNotification("กำลังดาวน์โหลดไฟล์เสียงจำลอง...");
+                }
             });
+        }
+
+        // --- Custom Settings Presets ---
+        function applyPreset(presetName) {
+            const vibSld = document.getElementById('vibratoSlider');
+            const revSld = document.getElementById('reverbSlider');
+            const cutSld = document.getElementById('cutoffSlider');
+            const attSld = document.getElementById('attackSlider');
+
+            if (presetName === 'classic') {
+                vibSld.value = 4;
+                revSld.value = 40;
+                cutSld.value = 1600;
+                attSld.value = 8;
+                showNotification("เปิดพรีเซ็ต: Classic Cornet");
+            } else if (presetName === 'soft') {
+                vibSld.value = 2;
+                revSld.value = 55;
+                cutSld.value = 900;
+                attSld.value = 18;
+                showNotification("เปิดพรีเซ็ต: Warm Flugelhorn");
+            } else if (presetName === 'echo') {
+                vibSld.value = 7;
+                revSld.value = 85;
+                cutSld.value = 2200;
+                attSld.value = 5;
+                showNotification("เปิดพรีเซ็ต: Cathedral Solo Space");
+            }
+
+            // Trigger updates manually
+            vibSld.dispatchEvent(new Event('input'));
+            revSld.dispatchEvent(new Event('input'));
+            cutSld.dispatchEvent(new Event('input'));
+            attSld.dispatchEvent(new Event('input'));
+        }
+
+        // --- STREAMING_CHUNK: Engineering Interactive Demo Player ---
+        // Play selected demo song beautifully with auto-visual representation
+        function playDemo(songNum) {
+            // If already playing this song, then STOP it
+            if (isDemoPlaying && currentActiveDemoNum === songNum) {
+                stopAllDemo();
+                return;
+            }
+
+            // Stop any currently playing song first
+            stopAllDemo();
+
+            // Set State
+            isDemoPlaying = true;
+            currentActiveDemoNum = songNum;
+            
+            // Switch UI headers
+            document.getElementById('mode-badge').innerHTML = '<i class="fa-solid fa-graduation-cap text-yellow-500 animate-spin mr-1"></i> สาธิตการเล่น';
+            document.getElementById('mode-badge').className = "text-[10px] text-yellow-400 bg-yellow-950 border border-yellow-500/50 px-2 py-0.5 rounded-full active-ring";
+            document.getElementById('btn-global-stop').classList.remove('hidden');
+
+            // Change play button of this active song to stop style
+            const targetPlayBtn = document.getElementById(`btn-play-demo-${songNum}`);
+            if (targetPlayBtn) {
+                targetPlayBtn.innerHTML = '<i class="fa-solid fa-circle-stop mr-1"></i> หยุด';
+                targetPlayBtn.className = "px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-semibold text-[11px] rounded transition-all duration-150 active:scale-95";
+            }
+
+            const songData = demoSongs[songNum];
+            document.getElementById('status-display').innerText = "เพลงสาธิต: " + songData.title;
+
+            let playbackPointer = 0;
+
+            function playNextNote() {
+                if (!isDemoPlaying || currentActiveDemoNum !== songNum) return;
+
+                if (playbackPointer >= songData.notes.length) {
+                    // Song completed gracefully!
+                    showNotification("การบรรเลงตัวอย่างจบสมบูรณ์เรียบร้อย!");
+                    stopAllDemo();
+                    return;
+                }
+
+                const currentNote = songData.notes[playbackPointer];
+                const harmonicVal = currentNote[0];
+                const activeValvesArray = currentNote[1];
+                const noteDuration = currentNote[2];
+                const gapDuration = currentNote[3];
+
+                // 1. Move UI Lip tension slider automatically to correct level
+                const harmonicSlider = document.getElementById('harmonicSlider');
+                harmonicSlider.value = harmonicVal;
+                currentHarmonic = harmonicVal;
+
+                // Sync Lip tension label info
+                const labelElement = document.getElementById('harmonic-label');
+                if (harmonicVal === 2) labelElement.innerText = "Low (Bb3)";
+                else if (harmonicVal === 3) labelElement.innerText = "Low-Mid (F4)";
+                else if (harmonicVal === 4) labelElement.innerText = "Mid (Bb4)";
+                else if (harmonicVal === 5) labelElement.innerText = "High-Mid (D5)";
+                else if (harmonicVal === 6) labelElement.innerText = "High (F5)";
+
+                // 2. Depress the virtual brass valves in realtime
+                valves[1] = activeValvesArray[0];
+                valves[2] = activeValvesArray[1];
+                valves[3] = activeValvesArray[2];
+
+                // Update physical valve buttons style
+                updateValveUIStyles(1, valves[1]);
+                updateValveUIStyles(2, valves[2]);
+                updateValveUIStyles(3, valves[3]);
+
+                // 3. Blow air trigger
+                isBlowing = true;
+                document.getElementById('blowPad').classList.add('blow-active');
+                updateAudioPlayback();
+
+                // Wait note length, then momentarily release blowing pad (gap time)
+                let noteTimer = setTimeout(() => {
+                    isBlowing = false;
+                    document.getElementById('blowPad').classList.remove('blow-active');
+                    updateAudioPlayback();
+
+                    // Wait gap duration, then play next note
+                    let gapTimer = setTimeout(() => {
+                        playbackPointer++;
+                        playNextNote();
+                    }, gapDuration);
+
+                    demoSequenceTimeouts.push(gapTimer);
+                }, noteDuration);
+
+                demoSequenceTimeouts.push(noteTimer);
+            }
+
+            // Initiate sequencer loop
+            playNextNote();
+        }
+
+        // --- Quick Valve UI Visual Update helper ---
+        function updateValveUIStyles(valveNum, isActive) {
+            const vBtn = document.getElementById(`valveBtn${valveNum}`);
+            const vShaft = document.getElementById(`shaft-${valveNum}`);
+            
+            if (isActive) {
+                vBtn.classList.add('active');
+                vShaft.style.transform = 'translateY(16px)';
+            } else {
+                vBtn.classList.remove('active');
+                vShaft.style.transform = 'translateY(0px)';
+            }
+        }
+
+        // --- Graceful Demo Stopper & State Clean up ---
+        function stopAllDemo() {
+            // Cancel any future note triggers
+            demoSequenceTimeouts.forEach(t => clearTimeout(t));
+            demoSequenceTimeouts = [];
+
+            isDemoPlaying = false;
+            currentActiveDemoNum = null;
+
+            // Reset manual valves status & clean elements styles
+            valves = { 1: false, 2: false, 3: false };
+            updateValveUIStyles(1, false);
+            updateValveUIStyles(2, false);
+            updateValveUIStyles(3, false);
+
+            // Turn off automatic blowing
+            isBlowing = false;
+            document.getElementById('blowPad').classList.remove('blow-active');
+
+            // Set audio back to silent
+            updateAudioPlayback();
+
+            // Restore global buttons UI
+            document.getElementById('mode-badge').innerHTML = '<i class="fa-solid fa-hand-pointer text-amber-500 mr-1"></i> ควบคุมเอง';
+            document.getElementById('mode-badge').className = "text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-full";
+            document.getElementById('btn-global-stop').classList.add('hidden');
+            document.getElementById('status-display').innerText = "พร้อมบรรเลง";
+
+            // Restore play buttons styling of all demo items
+            for (let i = 1; i <= 3; i++) {
+                const b = document.getElementById(`btn-play-demo-${i}`);
+                if (b) {
+                    b.innerHTML = '<i class="fa-solid fa-play"></i> บรรเลง';
+                    b.className = "px-3 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-[11px] rounded transition-all duration-150 active:scale-95";
+                }
+            }
         }
     </script>
 </body>
