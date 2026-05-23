@@ -3,442 +3,756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>คาวเบลจำลอง (Ultimate Cowbell)</title>
+    <title>คาวเบลจำลองระดับโปร (Ultimate Cowbell Pro)</title>
+    <!-- Tailwind CSS for modern rapid responsive UI development -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for beautiful modern action icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* รีเซ็ตค่าพื้นฐาน */
         * {
             box-sizing: border-box;
-            touch-action: none; /* ป้องกันการเลื่อน/ซูมบนมือถือ */
-            user-select: none; /* ป้องกันการเลือกข้อความ */
+            touch-action: none; /* Prevents double-tap zooming & native scrolling */
+            user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: #1a1a1a;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            height: 100vh;
+            background-color: #0b0c10;
+            color: #f5f5f7;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            height: 100dvh;
             width: 100vw;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
         }
 
-        /* พื้นหลังที่มีการไล่เฉดสี */
-        .bg-gradient {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, #333 0%, #000 100%);
-            z-index: -1;
-        }
-
-        /* คอนเทนเนอร์หลัก */
-        #app-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ปุ่มควบคุมการบันทึก */
-        .controls-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-        }
-
-        .record-btn {
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #555;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
-        }
-
-        .record-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #888;
-        }
-
-        .record-btn.recording {
-            background: rgba(231, 76, 60, 0.2);
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
-
-        .indicator {
-            width: 12px;
-            height: 12px;
-            background-color: #e74c3c;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .recording .indicator {
-            animation: blink 1s infinite;
-            background-color: #e74c3c;
-            box-shadow: 0 0 10px #e74c3c;
-            border-radius: 2px; /* เปลี่ยนเป็นสี่เหลี่ยมเมื่ออัด (Stop icon style) */
-        }
-
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-
-        /* ตัวคาวเบล (วาดด้วย CSS ล้วนๆ เพื่อความคมชัด) */
+        /* 3D golden metallic styling for the Ultimate Cowbell */
         .cowbell-wrapper {
             position: relative;
-            width: 300px;
-            height: 380px;
             cursor: pointer;
             transition: transform 0.05s ease-out;
             transform-origin: center top;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.65));
         }
 
         .cowbell-top {
-            width: 160px;
-            height: 60px;
-            background: linear-gradient(90deg, #555, #888, #555);
-            margin: 0 auto;
-            border-radius: 10px 10px 0 0;
-            position: relative;
-            z-index: 2;
-            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.3);
+            background: linear-gradient(90deg, #8a6f27 0%, #d4af37 50%, #f3e5ab 75%, #8a6f27 100%);
+            box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.4);
         }
 
-        /* หูหิ้ว */
         .cowbell-handle {
-            width: 80px;
-            height: 40px;
-            border: 8px solid #aaa;
+            border: 8px solid #c5a02c;
             border-bottom: none;
-            position: absolute;
-            top: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 20px 20px 0 0;
-            z-index: 1;
             background: transparent;
         }
 
         .cowbell-body {
-            width: 260px;
-            height: 280px;
-            background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 50%, #222 100%);
-            margin: 0 auto;
-            clip-path: polygon(15% 0, 85% 0, 100% 100%, 0% 100%);
-            position: relative;
-            top: -1px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            padding-bottom: 20px;
+            background: linear-gradient(135deg, #42320b 0%, #d4af37 40%, #aa7c11 70%, #1f1602 100%);
+            clip-path: polygon(18% 0, 82% 0, 100% 100%, 0% 100%);
         }
 
-        /* เงาและไฮไลท์เพื่อให้ดูเป็นโลหะ 3 มิติ */
+        /* Ambient light reflection on metallic surface */
         .cowbell-body::before {
             content: '';
             position: absolute;
             top: 0;
-            left: 20%;
-            width: 60%;
+            left: 15%;
+            width: 70%;
             height: 100%;
-            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%);
             pointer-events: none;
         }
 
-        .cowbell-body::after {
-            content: '';
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 2px;
-            background: rgba(0,0,0,0.5);
-        }
-
-        /* ปากระฆัง (ส่วนเปิด) */
         .cowbell-opening {
-            width: 260px;
-            height: 40px;
-            background: #111;
-            margin: 0 auto;
-            border-radius: 0 0 10px 10px; /* ลดความโค้งลง */
-            position: relative;
-            top: -2px;
-            box-shadow: inset 0 10px 15px rgba(0,0,0,0.8);
-            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%); /* ทำให้ปากสอบเข้าเล็กน้อย */
-        }
-        
-        /* สัญลักษณ์หรือโลโก้ */
-        .logo {
-            position: absolute;
-            top: 40%;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.15);
-            font-size: 2rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            pointer-events: none;
+            background: #110d02;
+            box-shadow: inset 0 12px 18px rgba(0, 0, 0, 0.95);
+            clip-path: polygon(0 0, 100% 0, 93% 100%, 7% 100%);
         }
 
-        /* ข้อความแนะนำ */
-        .hint {
-            margin-top: 30px;
-            color: #888;
-            font-size: 1.2rem;
-            animation: pulse 2s infinite;
-            text-align: center;
-        }
-
-        /* ปุ่มเริ่ม (Overlay) */
-        #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: opacity 0.5s;
-        }
-
-        .start-btn {
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
-            animation: bounce 1s infinite alternate;
-        }
-
-        /* เอฟเฟกต์ตอนตี */
+        /* Keyframe animations for rhythmic shake */
         .hit-anim {
-            animation: shake 0.1s cubic-bezier(.36,.07,.19,.97) both;
+            animation: cowbell-shake 0.12s cubic-bezier(.36,.07,.19,.97) both;
         }
 
-        /* Visual Ripple Effect */
-        .ripple {
+        @keyframes cowbell-shake {
+            10%, 90% { transform: scale(0.96) rotate(-4deg); }
+            20%, 80% { transform: scale(0.96) rotate(4deg); }
+            30%, 50%, 70% { transform: scale(0.94) rotate(-6deg); }
+            40%, 60% { transform: scale(0.94) rotate(6deg); }
+        }
+
+        /* Floating music notes styling */
+        .floating-note {
             position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(0);
-            animation: ripple-anim 0.6s linear;
             pointer-events: none;
+            color: #d4af37;
+            font-weight: bold;
+            font-size: 1.5rem;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+            z-index: 50;
         }
 
-        @keyframes ripple-anim {
-            to {
-                transform: scale(4);
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.5) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-120px) scale(1.3) rotate(var(--rot));
                 opacity: 0;
             }
         }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0) rotate(-2deg); }
-            20%, 80% { transform: translate3d(4px, 0, 0) rotate(2deg); }
-            30%, 50%, 70% { transform: translate3d(-8px, 0, 0) rotate(-4deg); }
-            40%, 60% { transform: translate3d(8px, 0, 0) rotate(4deg); }
+        /* Pulsing indicator animation */
+        @keyframes custom-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+        .pulse-accent {
+            animation: custom-pulse 1.5s infinite;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
+        /* Hidden scrollbars but active scrolling for Advanced Panel */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-        
-        @keyframes bounce {
-            from { transform: translateY(0); }
-            to { transform: translateY(-10px); }
-        }
-
-        /* Responsive สำหรับมือถือ */
-        @media (max-width: 600px) {
-            .cowbell-wrapper {
-                transform: scale(0.8);
-            }
-            .hint {
-                font-size: 1rem;
-            }
-            .controls-container {
-                top: 10px;
-                right: 10px;
-            }
-            .record-btn {
-                padding: 8px 15px;
-                font-size: 0.9rem;
-            }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body>
+<body class="bg-slate-950 font-sans select-none overflow-hidden h-full flex flex-col justify-between">
 
-    <div class="bg-gradient"></div>
+    <div class="absolute inset-0 bg-radial-gradient from-amber-500/10 via-transparent to-transparent pointer-events-none z-0"></div>
 
-    <!-- ปุ่มควบคุมการบันทึก -->
-    <div class="controls-container">
-        <button id="record-btn" class="record-btn">
-            <span class="indicator"></span>
-            <span id="record-text">บันทึกเสียง</span>
+    <!-- START AUDIO PERMISSION OVERLAY -->
+    <div id="start-overlay" class="fixed inset-0 bg-black/95 z-[1000] flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-24 h-24 bg-amber-500/20 rounded-full flex items-center justify-center mb-6 border border-amber-500/30 pulse-accent">
+            <i class="fa-solid fa-cowbell text-amber-400 text-5xl">🔔</i>
+        </div>
+        <h1 class="text-3xl font-bold tracking-wider text-amber-400 mb-2">Ultimate Cowbell Pro</h1>
+        <p class="text-slate-400 max-w-sm mb-8 text-sm">ยินดีต้อนรับสู่โปรแกรมคาวเบลสังเคราะห์จำลองที่ดีที่สุด สัมผัสความบันเทิง ปรับแต่งคีย์เสียง และบันทึกแทร็คของคุณเอง!</p>
+        <button id="start-btn" class="px-8 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-black font-bold text-lg rounded-full shadow-lg shadow-amber-500/30 transition-transform active:scale-95">
+            แตะเพื่อเข้าสู่ระบบเสียง 🐮
         </button>
     </div>
 
-    <!-- หน้าจอเริ่ม (จำเป็นสำหรับ Web Audio API) -->
-    <div id="start-overlay">
-        <h1>Cowbell Simulator</h1>
-        <p style="margin-bottom: 20px; color: #ccc;">More Cowbell?</p>
-        <button class="start-btn" id="start-btn">แตะเพื่อเริ่มตี!</button>
-    </div>
-
-    <div id="app-container">
-        <div class="cowbell-wrapper" id="cowbell">
-            <div class="cowbell-handle"></div>
-            <div class="cowbell-top"></div>
-            <div class="cowbell-body">
-                <span class="logo">MORE BELL</span>
+    <!-- MAIN APP WRAPPER -->
+    <div class="relative w-full max-w-md mx-auto h-full flex flex-col justify-between px-4 py-3 z-10">
+        
+        <!-- HEADER & RECORDING SYSTEM -->
+        <header class="flex items-center justify-between w-full mt-2">
+            <div>
+                <h1 class="text-lg font-black tracking-wide text-amber-400 uppercase">COWBELL <span class="text-xs px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/30 ml-1">PRO v2</span></h1>
+                <p id="demo-status" class="text-[10px] text-slate-400">โหมดอิสระ: แตะเพื่อบรรเลง</p>
             </div>
-            <div class="cowbell-opening"></div>
+            
+            <!-- Record Button -->
+            <button id="record-btn" class="flex items-center gap-2 px-3.5 py-1.5 bg-slate-900 border border-slate-700 hover:border-red-500/50 rounded-full text-xs font-semibold transition-all duration-300 shadow-md">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-600" id="record-indicator"></span>
+                <span id="record-text" class="text-slate-300">บันทึกเสียง</span>
+            </button>
+        </header>
+
+        <!-- VISUALIZER CANVAS (REALTIME AUDIO SPECTROGRAM) -->
+        <div class="w-full h-12 relative overflow-hidden rounded-lg bg-slate-900/60 border border-slate-800/40 my-1">
+            <canvas id="visualizer" class="w-full h-full opacity-60"></canvas>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span id="visualizer-hint" class="text-[10px] text-slate-500 tracking-widest uppercase">AUDIO ANALYZER</span>
+            </div>
         </div>
-        <div class="hint">แตะที่ระฆังเพื่อตี! (รองรับมัลติทัช)</div>
+
+        <!-- DEMO SONGS SELECTOR PANEL -->
+        <div class="w-full bg-slate-900/90 border border-slate-800/60 rounded-xl p-3 shadow-lg">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-compact-disc text-amber-400"></i> เพลงสาธิตอัตโนมัติ (Demo Tracks)
+                </span>
+                <button id="stop-all-demos" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30 hidden hover:bg-red-500/40 transition-colors">
+                    <i class="fa-solid fa-stop mr-1"></i> หยุดเล่น
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <!-- Track 1 -->
+                <button id="demo-tr1" class="demo-btn relative overflow-hidden group flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-all text-center">
+                    <i class="fa-solid fa-play text-xs text-amber-400 mb-1 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[11px] font-bold text-slate-200 block truncate w-full">Disco Fever</span>
+                    <span class="text-[8px] text-slate-400">Funk / 120BPM</span>
+                </button>
+                <!-- Track 2 -->
+                <button id="demo-tr2" class="demo-btn relative overflow-hidden group flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-all text-center">
+                    <i class="fa-solid fa-play text-xs text-amber-400 mb-1 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[11px] font-bold text-slate-200 block truncate w-full">Salsa Caliente</span>
+                    <span class="text-[8px] text-slate-400">Latin / 110BPM</span>
+                </button>
+                <!-- Track 3 -->
+                <button id="demo-tr3" class="demo-btn relative overflow-hidden group flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-all text-center">
+                    <i class="fa-solid fa-play text-xs text-amber-400 mb-1 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[11px] font-bold text-slate-200 block truncate w-full">Reaper Rock</span>
+                    <span class="text-[8px] text-slate-400">Classic / 138BPM</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- THE GOLDEN COWBELL PLAY AREA (PORTRAIT SIZED) -->
+        <div class="flex-1 flex flex-col justify-center items-center py-4 relative">
+            <div class="cowbell-wrapper w-[230px] h-[300px]" id="cowbell">
+                <!-- Top loop connector handle -->
+                <div class="cowbell-handle w-20 h-10 absolute -top-8 left-1/2 -translate-x-1/2 rounded-t-2xl z-0"></div>
+                <!-- Heavy bell top crown -->
+                <div class="cowbell-top w-[120px] h-12 mx-auto rounded-t-xl relative z-10"></div>
+                <!-- Dynamic body with modern metallic shader gradient -->
+                <div class="cowbell-body w-[200px] h-[220px] mx-auto relative -top-1 flex justify-center items-end pb-8">
+                    <span class="text-[11px] font-extrabold tracking-[0.2em] text-amber-100/15 pointer-events-none select-none uppercase">ULTIMATE BELL</span>
+                </div>
+                <!-- Resonating open mouth rim -->
+                <div class="cowbell-opening w-[200px] h-11 mx-auto relative -top-1.5 rounded-b-lg"></div>
+            </div>
+            
+            <div id="tap-instruction" class="text-xs text-slate-500 tracking-wider text-center mt-3 animate-pulse">
+                <i class="fa-solid fa-hand-pointer mr-1 text-[10px]"></i> แตะตัวระฆังเพื่อตีคาวเบล (รองรับสัมผัสพร้อมกันหลายนิ้ว)
+            </div>
+        </div>
+
+        <!-- BOTTOM SLIDE-UP DRAWER FOR ADVANCED CONTROLS -->
+        <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300">
+            <button id="toggle-drawer" class="w-full py-2.5 bg-slate-850 hover:bg-slate-800 text-xs font-bold text-amber-300 border-b border-slate-800/80 flex items-center justify-center gap-2 transition-colors">
+                <i class="fa-solid fa-sliders text-[11px]"></i>
+                <span>แผงควบคุมเสียงสังเคราะห์ขั้นสูง (Advanced Tuning)</span>
+                <i id="drawer-arrow" class="fa-solid fa-chevron-up text-[10px] ml-1 transition-transform"></i>
+            </button>
+            
+            <div id="drawer-content" class="h-0 opacity-0 overflow-y-auto no-scrollbar transition-all duration-300 px-4">
+                <div class="grid grid-cols-2 gap-x-4 gap-y-3 py-3 text-xs">
+                    
+                    <!-- Slider 1: Master Pitch -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between font-medium text-slate-300">
+                            <span>ความถี่หลัก (High Pitch)</span>
+                            <span id="lbl-pitch-high" class="text-amber-400 font-mono">800 Hz</span>
+                        </div>
+                        <input type="range" id="param-pitch-high" min="400" max="1500" value="800" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Slider 2: Sub Harmonics Pitch -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between font-medium text-slate-300">
+                            <span>ความถี่ซับ (Low Pitch)</span>
+                            <span id="lbl-pitch-low" class="text-amber-400 font-mono">540 Hz</span>
+                        </div>
+                        <input type="range" id="param-pitch-low" min="200" max="1000" value="540" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Slider 3: Sound Decay Time -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between font-medium text-slate-300">
+                            <span>หางเสียงสะท้อน (Decay)</span>
+                            <span id="lbl-decay" class="text-amber-400 font-mono">0.30s</span>
+                        </div>
+                        <input type="range" id="param-decay" min="5" max="120" value="30" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Slider 4: Filter Frequency -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between font-medium text-slate-300">
+                            <span>โทนฟิลเตอร์ (Cutoff)</span>
+                            <span id="lbl-cutoff" class="text-amber-400 font-mono">1200 Hz</span>
+                        </div>
+                        <input type="range" id="param-cutoff" min="400" max="3000" value="1200" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Slider 5: Filter Q Resonance -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between font-medium text-slate-300">
+                            <span>ความก้องของโลหะ (Q)</span>
+                            <span id="lbl-resonance" class="text-amber-400 font-mono">1.50</span>
+                        </div>
+                        <input type="range" id="param-resonance" min="5" max="80" value="15" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Slider 6: Auto accompaniment volume -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between font-medium text-slate-300">
+                            <span>เสียงดนตรีประกอบ (Backing)</span>
+                            <span id="lbl-backing" class="text-amber-400 font-mono">60%</span>
+                        </div>
+                        <input type="range" id="param-backing" min="0" max="100" value="60" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+                
+                <div class="w-full flex items-center justify-between pb-3 text-[10px] text-slate-500 border-t border-slate-800/80 pt-2">
+                    <span>*การปรับแต่งจะส่งผลทันทีเมื่อเล่นเสียงในครั้งต่อไป</span>
+                    <button id="reset-presets" class="hover:text-amber-300 font-bold transition-colors">
+                        <i class="fa-solid fa-arrow-rotate-left mr-0.5"></i> คืนค่าเสียงเริ่มต้น
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // --- ส่วนจัดการเสียง (Audio Engine) ---
-        
-        // ใช้ Web Audio API เพื่อสังเคราะห์เสียง
+        // Global State & UI References
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
-        let masterGain; // Master node เพื่อรวมเสียงทั้งหมด (ใช้สำหรับการบันทึก)
-        
+        let audioCtx = null;
+        let masterGain = null;
+        let analyser = null;
+        let isAudioReady = false;
+
+        // Custom Sound Engine parameters config
+        const synthParams = {
+            pitchHigh: 800,
+            pitchLow: 540,
+            decay: 0.3,
+            cutoff: 1200,
+            resonance: 1.5,
+            backingVol: 0.6
+        };
+
+        // UI references for real-time visual dynamic changes
+        const cowbell = document.getElementById('cowbell');
+        const startOverlay = document.getElementById('start-overlay');
+        const startBtn = document.getElementById('start-btn');
+        const demoStatus = document.getElementById('demo-status');
+        const visualizer = document.getElementById('visualizer');
+        const visualizerHint = document.getElementById('visualizer-hint');
+        const toggleDrawerBtn = document.getElementById('toggle-drawer');
+        const drawerContent = document.getElementById('drawer-content');
+        const drawerArrow = document.getElementById('drawer-arrow');
+
+        // AUDIO ENGINE INITIALIZATION
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new AudioContext();
                 
-                // สร้าง Master Gain เพื่อเป็นจุดรวมเสียงก่อนส่งออกลำโพง
+                // masterGain connects everything to speakers
                 masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0.9, audioCtx.currentTime);
                 masterGain.connect(audioCtx.destination);
+
+                // Setup FFT Analyzer node for visual response
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 64;
+                masterGain.connect(analyser);
+
+                startVisualizer();
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        /**
-         * สร้างเสียง Cowbell สังเคราะห์
-         */
-        function playCowbellSound(velocity = 1.0) {
+        // SYNTHESIZER: Generating custom professional synthetic cowbell strikes
+        function playCowbellSound(velocity = 1.0, isAccent = true) {
             if (!audioCtx) return;
 
             const t = audioCtx.currentTime;
             
-            // สร้าง Oscillator 1 (เสียงหลัก High)
+            // Core Oscillator 1 (Square wave for high harmonic punch)
             const osc1 = audioCtx.createOscillator();
-            const gain1 = audioCtx.createGain();
+            const oscGain1 = audioCtx.createGain();
             osc1.type = 'square';
-            osc1.frequency.setValueAtTime(800, t);
-            osc1.connect(gain1);
-            // เชื่อมต่อไปยัง Master Gain แทน destination โดยตรง
-            gain1.connect(masterGain);
+            osc1.frequency.setValueAtTime(synthParams.pitchHigh * (isAccent ? 1.0 : 0.85), t);
+            osc1.connect(oscGain1);
 
-            // สร้าง Oscillator 2 (เสียงรอง Low)
+            // Core Oscillator 2 (Sawtooth for low metal vibration)
             const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
+            const oscGain2 = audioCtx.createGain();
             osc2.type = 'sawtooth';
-            osc2.frequency.setValueAtTime(540, t);
-            osc2.connect(gain2);
-            gain2.connect(masterGain); // เชื่อมต่อ Master Gain
+            osc2.frequency.setValueAtTime(synthParams.pitchLow * (isAccent ? 1.0 : 0.85), t);
+            osc2.connect(oscGain2);
 
-            // Filter
+            // Bandpass filter to restrict frequencies into metallic bell tone
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'bandpass';
-            filter.frequency.value = 1200;
-            filter.Q.value = 1;
+            filter.frequency.value = synthParams.cutoff;
+            filter.Q.value = synthParams.resonance;
 
-            osc1.disconnect();
-            osc2.disconnect();
-            osc1.connect(filter);
-            osc2.connect(filter);
-            // เชื่อม filter กลับเข้า gain1 (ซึ่งต่อกับ masterGain แล้ว)
-            filter.connect(gain1); 
+            // Connect everything together
+            oscGain1.connect(filter);
+            oscGain2.connect(filter);
 
-            // Envelope (ADSR)
-            gain1.gain.setValueAtTime(0, t);
-            gain1.gain.linearRampToValueAtTime(velocity * 0.8, t + 0.005);
-            gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            const outputGain = audioCtx.createGain();
+            filter.connect(outputGain);
+            outputGain.connect(masterGain);
 
-            // เริ่มและหยุด
+            // Accent volume calculation
+            const volumeCoeff = isAccent ? 0.9 : 0.55;
+            const targetGain = velocity * volumeCoeff;
+
+            // Volume Envelope (ADSR - emphasis on decay)
+            outputGain.gain.setValueAtTime(0, t);
+            outputGain.gain.linearRampToValueAtTime(targetGain, t + 0.003); // Instant attack
+            outputGain.gain.exponentialRampToValueAtTime(0.005, t + synthParams.decay); // Metallic decay
+
+            // Trigger and stop oscillators
             osc1.start(t);
             osc2.start(t);
-            osc1.stop(t + 0.4);
-            osc2.stop(t + 0.4);
+            osc1.stop(t + synthParams.decay + 0.1);
+            osc2.stop(t + synthParams.decay + 0.1);
         }
 
-        // --- ส่วนการบันทึกเสียง (Recording) ---
-        let mediaRecorder;
+        // SYNTHESIZER: Synthesizing a simple bass drum for rhythms
+        function playKickDrum(t) {
+            if (!audioCtx || synthParams.backingVol <= 0.01) return;
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(masterGain);
+
+            osc.frequency.setValueAtTime(150, t);
+            osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.15);
+
+            gainNode.gain.setValueAtTime(synthParams.backingVol * 0.8, t);
+            gainNode.gain.exponentialRampToValueAtTime(0.005, t + 0.16);
+
+            osc.start(t);
+            osc.stop(t + 0.18);
+        }
+
+        // SEQUENCER STATE
+        let isPlayingDemo = false;
+        let nextNoteTime = 0.0;
+        let current16thNote = 0;
+        const lookahead = 25.0; // Check interval in milliseconds
+        const scheduleAheadTime = 0.1; // Amount of time ahead to schedule
+        let seqTimerId = null;
+        let activeSongId = null;
+
+        // Sequence database definitions
+        const demoSongs = {
+            tr1: {
+                name: "Disco Fever (Funkytown)",
+                bpm: 120,
+                length: 64, // Stops automatically after 4 bars (64 16th notes)
+                // Cowbell track: 1=Normal strike, 2=Accent strike, 0=Rest
+                cowbellPattern: [
+                    2, 0, 1, 2, 0, 1, 0, 2,  0, 1, 2, 0, 1, 0, 2, 0,
+                    2, 0, 1, 2, 0, 1, 0, 2,  0, 1, 2, 0, 1, 0, 2, 0,
+                    2, 0, 1, 2, 0, 1, 0, 2,  0, 1, 2, 0, 1, 0, 2, 0,
+                    2, 0, 1, 2, 0, 1, 0, 2,  0, 1, 2, 0, 1, 0, 2, 0
+                ],
+                // Backing track (Synthesized bass drum on quarters)
+                kickPattern: [
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0,
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0,
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0,
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0
+                ]
+            },
+            tr2: {
+                name: "Salsa Caliente (Mambo)",
+                bpm: 110,
+                length: 64,
+                cowbellPattern: [
+                    2, 0, 1, 2, 1, 0, 2, 1,  0, 2, 1, 2, 0, 1, 2, 0,
+                    2, 0, 1, 2, 1, 0, 2, 1,  0, 2, 1, 2, 0, 1, 2, 0,
+                    2, 0, 1, 2, 1, 0, 2, 1,  0, 2, 1, 2, 0, 1, 2, 0,
+                    2, 0, 1, 2, 1, 0, 2, 1,  0, 2, 1, 2, 0, 1, 2, 0
+                ],
+                kickPattern: [
+                    1, 0, 0, 0, 0, 0, 1, 0,  0, 0, 1, 0, 0, 0, 1, 0,
+                    1, 0, 0, 0, 0, 0, 1, 0,  0, 0, 1, 0, 0, 0, 1, 0,
+                    1, 0, 0, 0, 0, 0, 1, 0,  0, 0, 1, 0, 0, 0, 1, 0,
+                    1, 0, 0, 0, 0, 0, 1, 0,  0, 0, 1, 0, 0, 0, 1, 0
+                ]
+            },
+            tr3: {
+                name: "Reaper Rock (Don't Fear the Reaper)",
+                bpm: 138,
+                length: 64,
+                cowbellPattern: [
+                    2, 1, 1, 2, 1, 1, 2, 1,  2, 1, 1, 2, 1, 1, 2, 1,
+                    2, 1, 1, 2, 1, 1, 2, 1,  2, 1, 1, 2, 1, 1, 2, 1,
+                    2, 1, 1, 2, 1, 1, 2, 1,  2, 1, 1, 2, 1, 1, 2, 1,
+                    2, 1, 1, 2, 1, 1, 2, 1,  2, 1, 1, 2, 1, 1, 2, 1
+                ],
+                kickPattern: [
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0,
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0,
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0,
+                    1, 0, 0, 0, 1, 0, 0, 0,  1, 0, 0, 0, 1, 0, 0, 0
+                ]
+            }
+        };
+
+        // Advance to next subdivision note clock
+        function advanceNote(bpm) {
+            const secondsPerBeat = 60.0 / bpm;
+            nextNoteTime += 0.25 * secondsPerBeat; // Add 16th note length in seconds
+
+            current16thNote++; // Advance sequence position
+        }
+
+        // Schedule synthesis events
+        function scheduleNextNote(song, noteIndex, time) {
+            if (noteIndex >= song.length) {
+                // Auto close and stop sequence when it completes!
+                stopDemoSong();
+                return;
+            }
+
+            const cowbellStrike = song.cowbellPattern[noteIndex];
+            const kickStrike = song.kickPattern[noteIndex];
+
+            // Schedule background instruments
+            if (kickStrike > 0) {
+                playKickDrum(time);
+            }
+
+            // Schedule the cowbell hit
+            if (cowbellStrike > 0) {
+                // Synthesize sound scheduled on exact clock
+                const osc1 = audioCtx.createOscillator();
+                const oscGain1 = audioCtx.createGain();
+                osc1.type = 'square';
+                osc1.frequency.setValueAtTime(synthParams.pitchHigh * (cowbellStrike === 2 ? 1.0 : 0.85), time);
+                osc1.connect(oscGain1);
+
+                const osc2 = audioCtx.createOscillator();
+                const oscGain2 = audioCtx.createGain();
+                osc2.type = 'sawtooth';
+                osc2.frequency.setValueAtTime(synthParams.pitchLow * (cowbellStrike === 2 ? 1.0 : 0.85), time);
+                osc2.connect(oscGain2);
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = synthParams.cutoff;
+                filter.Q.value = synthParams.resonance;
+
+                oscGain1.connect(filter);
+                oscGain2.connect(filter);
+
+                const outputGain = audioCtx.createGain();
+                filter.connect(outputGain);
+                outputGain.connect(masterGain);
+
+                const volumeCoeff = cowbellStrike === 2 ? 0.9 : 0.55;
+                outputGain.gain.setValueAtTime(0, time);
+                outputGain.gain.linearRampToValueAtTime(volumeCoeff, time + 0.003);
+                outputGain.gain.exponentialRampToValueAtTime(0.005, time + synthParams.decay);
+
+                osc1.start(time);
+                osc2.start(time);
+                osc1.stop(time + synthParams.decay + 0.1);
+                osc2.stop(time + synthParams.decay + 0.1);
+
+                // Fire visuals synced to sound rendering moment
+                const delayMs = Math.max(0, (time - audioCtx.currentTime) * 1000);
+                setTimeout(() => {
+                    if (isPlayingDemo) {
+                        triggerVisualsOnly(cowbellStrike === 2 ? 1.0 : 0.7);
+                    }
+                }, delayMs);
+            }
+        }
+
+        // Core sequencer loop function
+        function scheduler() {
+            const song = demoSongs[activeSongId];
+            if (!song) return;
+
+            while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+                scheduleNextNote(song, current16thNote, nextNoteTime);
+                advanceNote(song.bpm);
+            }
+            seqTimerId = setTimeout(scheduler, lookahead);
+        }
+
+        // Play/Pause toggler for demos
+        function startDemoSong(songId) {
+            if (!isAudioReady) return;
+            
+            // Stop any active song playing
+            if (isPlayingDemo) {
+                stopDemoSong();
+            }
+
+            activeSongId = songId;
+            isPlayingDemo = true;
+            current16thNote = 0;
+            nextNoteTime = audioCtx.currentTime + 0.05;
+
+            scheduler();
+
+            // UI updates
+            document.getElementById('stop-all-demos').classList.remove('hidden');
+            const songName = demoSongs[songId].name;
+            demoStatus.innerHTML = `<span class="text-amber-400 font-bold animate-pulse"><i class="fa-solid fa-compact-disc spin-icon mr-1"></i> กำลังเล่น: ${songName}</span>`;
+            
+            // Update the specific button design
+            document.getElementById(`demo-${songId}`).classList.add('bg-amber-500/20', 'border-amber-500/50');
+            document.getElementById(`demo-${songId}`).querySelector('i').className = 'fa-solid fa-square text-xs text-red-500 mb-1';
+        }
+
+        function stopDemoSong() {
+            if (!isPlayingDemo) return;
+
+            isPlayingDemo = false;
+            clearTimeout(seqTimerId);
+
+            // Revert active button designs
+            if (activeSongId) {
+                document.getElementById(`demo-${activeSongId}`).classList.remove('bg-amber-500/20', 'border-amber-500/50');
+                document.getElementById(`demo-${activeSongId}`).querySelector('i').className = 'fa-solid fa-play text-xs text-amber-400 mb-1';
+            }
+
+            activeSongId = null;
+            document.getElementById('stop-all-demos').classList.add('hidden');
+            demoStatus.innerText = "โหมดอิสระ: แตะเพื่อบรรเลง";
+        }
+
+
+        // TRIGGERS ONLY VISUALS (For automated sequencer playback)
+        function triggerVisualsOnly(intensity = 1.0) {
+            // Shake element
+            cowbell.classList.remove('hit-anim');
+            void cowbell.offsetWidth; // Force CSS reflow
+            cowbell.classList.add('hit-anim');
+
+            // Dynamic scale variation
+            cowbell.style.transform = `scale(${1 - (intensity * 0.06)}) rotate(${(Math.random() * 4 - 2)}deg)`;
+            setTimeout(() => {
+                cowbell.style.transform = 'scale(1) rotate(0deg)';
+            }, 80);
+
+            // Generate floating notes effects
+            spawnFloatingNote();
+        }
+
+        // TRIGGER BELL BOTH AUDIO & VISUALS (For user real taps)
+        function triggerBellManual(e) {
+            if (!isAudioReady) return;
+
+            // Compute dynamic pressure velocity relative to screen click position
+            const rect = cowbell.getBoundingClientRect();
+            let clickY = 0;
+            if (e && e.touches && e.touches.length > 0) {
+                clickY = e.changedTouches[0].clientY;
+            } else if (e) {
+                clickY = e.clientY;
+            } else {
+                clickY = rect.top + (rect.height / 2);
+            }
+            
+            const distance = Math.min(rect.height, Math.max(0, clickY - rect.top));
+            const pressure = 0.6 + (distance / rect.height) * 0.4; // Strike harder at the mouth bottom
+            
+            // 1. Play Synth Sound
+            playCowbellSound(pressure, true);
+
+            // 2. Play Visual Animation
+            triggerVisualsOnly(pressure);
+        }
+
+        // Spawn interactive musical notes at visual location
+        function spawnFloatingNote() {
+            const symbols = ['♫', '♬', '🎵', '🎶', '🐮'];
+            const chosen = symbols[Math.floor(Math.random() * symbols.length)];
+            
+            const note = document.createElement('div');
+            note.className = 'floating-note';
+            note.innerText = chosen;
+            
+            // Random horizontal dispersal offset inside cowbell area
+            const randomX = Math.random() * 160 - 80;
+            note.style.left = `calc(50% + ${randomX}px)`;
+            note.style.bottom = `120px`;
+            
+            // Custom rotation random factor
+            const rot = (Math.random() * 180 - 90) + 'deg';
+            note.style.setProperty('--rot', rot);
+            
+            cowbell.appendChild(note);
+            
+            // Automatic DOM destruction on completion
+            setTimeout(() => {
+                note.remove();
+            }, 1000);
+        }
+
+        // REALTIME SPECTRUM WAVE CANVAS RENDERING
+        function startVisualizer() {
+            const canvasCtx = visualizer.getContext('2d');
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                requestAnimationFrame(draw);
+
+                analyser.getByteFrequencyData(dataArray);
+
+                const width = visualizer.width = visualizer.clientWidth;
+                const height = visualizer.height = visualizer.clientHeight;
+
+                canvasCtx.clearRect(0, 0, width, height);
+
+                const barWidth = (width / bufferLength) * 1.5;
+                let barHeight;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 2;
+
+                    // Neon Gold / Amber gradient visualizer colors
+                    const r = 212;
+                    const g = Math.floor(120 + (barHeight * 0.5));
+                    const b = 37;
+
+                    canvasCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${barHeight / 128})`;
+                    canvasCtx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
+
+                    x += barWidth;
+                }
+            }
+            draw();
+        }
+
+        // STEREO RECORDING ENGINE (Saves Master Channel Sound stream)
+        let mediaRecorder = null;
         let recordedChunks = [];
         let isRecording = false;
-        let recordingDest;
+        let recordingDest = null;
 
         const recordBtn = document.getElementById('record-btn');
+        const recordIndicator = document.getElementById('record-indicator');
         const recordText = document.getElementById('record-text');
 
         function toggleRecording() {
-            if (!isAudioReady) return;
+            if (!isAudioReady) {
+                alert("กรุณาเปิดระบบเสียงก่อนบันทึก!");
+                return;
+            }
 
             if (!isRecording) {
-                // เริ่มบันทึก
                 startRecording();
             } else {
-                // หยุดบันทึก
                 stopRecording();
             }
         }
 
         function startRecording() {
-            // สร้าง Destination สำหรับบันทึกเสียงจาก Web Audio API
+            // Pipe entire master stream straight into MediaRecorder
             recordingDest = audioCtx.createMediaStreamDestination();
-            masterGain.connect(recordingDest); // ต่อเสียงจาก Master เข้าเครื่องบันทึก
+            masterGain.connect(recordingDest);
 
-            // ตรวจสอบประเภทไฟล์ที่รองรับ
-            let mimeType = 'audio/webm'; // Default for Chrome/Firefox
+            let mimeType = 'audio/webm';
             if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                mimeType = 'audio/mp4'; // Safari
+                mimeType = 'audio/mp4'; // Safari friendly format
             }
 
             try {
                 mediaRecorder = new MediaRecorder(recordingDest.stream, { mimeType });
             } catch (e) {
-                // Fallback ถ้า option ไม่ผ่าน
                 mediaRecorder = new MediaRecorder(recordingDest.stream);
             }
 
@@ -452,62 +766,153 @@
                 const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
                 const url = URL.createObjectURL(blob);
                 
-                // สร้างลิงก์ดาวน์โหลด
+                // Prompt safe system download
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
                 const ext = mimeType.includes('mp4') ? 'm4a' : 'webm';
-                a.download = `cowbell-session-${Date.now()}.${ext}`;
+                a.download = `ultimate-cowbell-pro-${Date.now()}.${ext}`;
                 document.body.appendChild(a);
                 a.click();
                 
-                // คืนค่าหน่วยความจำ
                 setTimeout(() => {
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
-                }, 100);
+                }, 150);
                 
-                // ล้างข้อมูล
                 recordedChunks = [];
-                // ตัดการเชื่อมต่อเครื่องบันทึกเพื่อประหยัดทรัพยากร
+                // Unpipe destination stream safe and clean
                 masterGain.disconnect(recordingDest);
             };
 
             mediaRecorder.start();
             isRecording = true;
             
-            // อัปเดต UI
-            recordBtn.classList.add('recording');
+            // Visual feedback transitions
+            recordBtn.classList.add('border-red-500', 'bg-red-950/40');
+            recordIndicator.classList.add('animate-ping');
             recordText.innerText = "หยุดบันทึก";
+            recordText.classList.add('text-red-400');
         }
 
         function stopRecording() {
+            if (!isRecording) return;
             mediaRecorder.stop();
             isRecording = false;
-            
-            // อัปเดต UI
-            recordBtn.classList.remove('recording');
+
+            recordBtn.classList.remove('border-red-500', 'bg-red-950/40');
+            recordIndicator.classList.remove('animate-ping');
             recordText.innerText = "บันทึกเสียง";
+            recordText.classList.remove('text-red-400');
         }
 
-        recordBtn.addEventListener('click', toggleRecording);
-        // ป้องกัน event ชนกันบนมือถือ
-        recordBtn.addEventListener('touchstart', (e) => {
-            e.stopPropagation(); // หยุดไม่ให้ตีกลองตอนกดปุ่ม
-        });
-        recordBtn.addEventListener('mousedown', (e) => {
+        recordBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            toggleRecording();
         });
 
 
-        // --- ส่วนจัดการหน้าจอและการโต้ตอบ (UI & Interaction) ---
+        // DRAWER PANEL BEHAVIOR CONTROL
+        let isDrawerOpen = false;
+        function toggleDrawer() {
+            isDrawerOpen = !isDrawerOpen;
+            if (isDrawerOpen) {
+                drawerContent.classList.remove('h-0', 'opacity-0');
+                drawerContent.classList.add('h-48', 'opacity-100');
+                drawerArrow.style.transform = 'rotate(180deg)';
+            } else {
+                drawerContent.classList.add('h-0', 'opacity-0');
+                drawerContent.classList.remove('h-48', 'opacity-100');
+                drawerArrow.style.transform = 'rotate(0deg)';
+            }
+        }
+        toggleDrawerBtn.addEventListener('click', toggleDrawer);
 
-        const cowbell = document.getElementById('cowbell');
-        const startOverlay = document.getElementById('start-overlay');
-        const startBtn = document.getElementById('start-btn');
-        let isAudioReady = false;
+        // SLIDER CONTROL SYNCRONIZATION
+        const sliders = {
+            pitchHigh: { el: document.getElementById('param-pitch-high'), lbl: document.getElementById('lbl-pitch-high'), suffix: ' Hz' },
+            pitchLow: { el: document.getElementById('param-pitch-low'), lbl: document.getElementById('lbl-pitch-low'), suffix: ' Hz' },
+            decay: { el: document.getElementById('param-decay'), lbl: document.getElementById('lbl-decay'), div: 100, suffix: 's' },
+            cutoff: { el: document.getElementById('param-cutoff'), lbl: document.getElementById('lbl-cutoff'), suffix: ' Hz' },
+            resonance: { el: document.getElementById('param-resonance'), lbl: document.getElementById('lbl-resonance'), div: 10, suffix: '' },
+            backing: { el: document.getElementById('param-backing'), lbl: document.getElementById('lbl-backing'), div: 100, suffix: '%', isPercent: true }
+        };
 
-        // ฟังก์ชันเริ่มแอป (ปลดล็อก AudioContext)
+        function updateParamsFromSliders() {
+            synthParams.pitchHigh = parseFloat(sliders.pitchHigh.el.value);
+            sliders.pitchHigh.lbl.innerText = synthParams.pitchHigh + sliders.pitchHigh.suffix;
+
+            synthParams.pitchLow = parseFloat(sliders.pitchLow.el.value);
+            sliders.pitchLow.lbl.innerText = synthParams.pitchLow + sliders.pitchLow.suffix;
+
+            synthParams.decay = parseFloat(sliders.decay.el.value) / sliders.decay.div;
+            sliders.decay.lbl.innerText = synthParams.decay.toFixed(2) + sliders.decay.suffix;
+
+            synthParams.cutoff = parseFloat(sliders.cutoff.el.value);
+            sliders.cutoff.lbl.innerText = synthParams.cutoff + sliders.cutoff.suffix;
+
+            synthParams.resonance = parseFloat(sliders.resonance.el.value) / sliders.resonance.div;
+            sliders.resonance.lbl.innerText = synthParams.resonance.toFixed(2) + sliders.resonance.suffix;
+
+            synthParams.backingVol = parseFloat(sliders.backing.el.value) / sliders.backing.div;
+            if (sliders.backing.isPercent) {
+                sliders.backing.lbl.innerText = Math.round(synthParams.backingVol * 100) + sliders.backing.suffix;
+            }
+        }
+
+        // Attach listeners to all adjustment inputs
+        Object.values(sliders).forEach(slider => {
+            slider.el.addEventListener('input', updateParamsFromSliders);
+        });
+
+        // Presets Reset Button
+        document.getElementById('reset-presets').addEventListener('click', () => {
+            sliders.pitchHigh.el.value = 800;
+            sliders.pitchLow.el.value = 540;
+            sliders.decay.el.value = 30;
+            sliders.cutoff.el.value = 1200;
+            sliders.resonance.el.value = 15;
+            sliders.backing.el.value = 60;
+            updateParamsFromSliders();
+        });
+
+        // DEMO SONGS PLAY BUTTON TRIGGERS
+        document.getElementById('demo-tr1').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeSongId === 'tr1') {
+                stopDemoSong();
+            } else {
+                startDemoSong('tr1');
+            }
+        });
+
+        document.getElementById('demo-tr2').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeSongId === 'tr2') {
+                stopDemoSong();
+            } else {
+                startDemoSong('tr2');
+            }
+        });
+
+        document.getElementById('demo-tr3').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeSongId === 'tr3') {
+                stopDemoSong();
+            } else {
+                startDemoSong('tr3');
+            }
+        });
+
+        // Global Demo Stop Button
+        const stopAllDemosBtn = document.getElementById('stop-all-demos');
+        stopAllDemosBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            stopDemoSong();
+        });
+
+
+        // START EXPERIENCE OVERLAYS
         function startApp() {
             initAudio();
             isAudioReady = true;
@@ -519,86 +924,31 @@
 
         startBtn.addEventListener('click', startApp);
         startBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
             startApp();
         });
 
-        // ฟังก์ชันตีระฆัง
-        function triggerBell(e) {
-            if (!isAudioReady) return;
-
-            // 1. เล่นเสียง
-            const velocity = 0.8 + Math.random() * 0.2; 
-            playCowbellSound(velocity);
-
-            // 2. เอฟเฟกต์ภาพ (สั่น)
-            cowbell.classList.remove('hit-anim');
-            void cowbell.offsetWidth; 
-            cowbell.classList.add('hit-anim');
-
-            // 3. สร้าง Ripple effect
-            createRipple(e);
-        }
-
-        function createRipple(e) {
-            const rect = cowbell.getBoundingClientRect();
-            let clientX, clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.changedTouches[0].clientX;
-                clientY = e.changedTouches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
-
-            const circle = document.createElement('span');
-            circle.classList.add('ripple');
-            const diameter = Math.max(rect.width, rect.height) / 2;
-            const radius = diameter / 2;
-
-            circle.style.width = circle.style.height = `${diameter}px`;
-            circle.style.left = `${x - radius}px`;
-            circle.style.top = `${y - radius}px`;
-
-            cowbell.appendChild(circle);
-
-            setTimeout(() => {
-                circle.remove();
-            }, 600);
-        }
-
+        // STRIKE INTERACTIVE ACTIONS (Multi-touch friendly & clicks)
         cowbell.addEventListener('pointerdown', (e) => {
-            e.preventDefault(); 
-            triggerBell(e);
-            cowbell.style.transform = 'scale(0.95) rotate(' + (Math.random() * 2 - 1) + 'deg)';
+            e.preventDefault();
+            triggerBellManual(e);
         });
 
-        cowbell.addEventListener('pointerup', () => {
-             cowbell.style.transform = 'scale(1) rotate(0deg)';
-        });
-        
-        cowbell.addEventListener('pointerleave', () => {
-             cowbell.style.transform = 'scale(1) rotate(0deg)';
+        // Prevent accidental drawer closures when adjusting sliders
+        drawerContent.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
         });
 
+        // Keyboard accessibility falling trigger (Space & Enter & C keys)
         document.addEventListener('keydown', (e) => {
-            if ((e.code === 'Space' || e.code === 'Enter') && isAudioReady) {
-                const mockEvent = {
-                    clientX: cowbell.getBoundingClientRect().left + 150,
-                    clientY: cowbell.getBoundingClientRect().top + 150
-                };
-                triggerBell(mockEvent);
-                cowbell.style.transform = 'scale(0.95)';
+            if ((e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyC') && isAudioReady) {
+                e.preventDefault();
+                triggerBellManual(null);
             }
         });
 
-        document.addEventListener('keyup', () => {
-            cowbell.style.transform = 'scale(1)';
-        });
-
+        // Start default sync values rendering on startup
+        updateParamsFromSliders();
     </script>
 </body>
 </html>
