@@ -5,55 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Euphonium Pro Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: #1a1a1a;
+            background-color: #0b0805;
             touch-action: none; /* ป้องกันการซูมและเลื่อน */
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* Metallic Gold Gradient for Buttons */
+        /* Metallic Gold Gradient for Valves */
         .valve-btn {
-            background: radial-gradient(circle at 30% 30%, #fffacd, #ffd700, #b8860b, #8b4500);
+            background: radial-gradient(circle at 35% 35%, #fff9e6, #ffd700 40%, #b8860b 80%, #5c3a00 100%);
             box-shadow: 
-                0 4px 6px rgba(0,0,0,0.5),
-                inset 0 -2px 5px rgba(0,0,0,0.4),
-                inset 0 2px 5px rgba(255,255,255,0.7);
+                0 6px 12px rgba(0,0,0,0.6),
+                inset 0 -3px 6px rgba(0,0,0,0.5),
+                inset 0 3px 6px rgba(255,255,255,0.8);
             transition: transform 0.05s, box-shadow 0.05s;
-            border: 2px solid #5c3a00;
+            border: 2px solid #4a2f00;
         }
 
         .valve-btn:active, .valve-btn.active {
-            transform: translateY(4px) scale(0.98);
-            background: radial-gradient(circle at 40% 40%, #b8860b, #ffd700);
+            transform: translateY(6px) scale(0.96);
+            background: radial-gradient(circle at 45% 45%, #b8860b, #ffd700 60%, #8b5a00 100%);
             box-shadow: 
-                0 1px 2px rgba(0,0,0,0.5),
-                inset 0 4px 8px rgba(0,0,0,0.6);
+                0 2px 4px rgba(0,0,0,0.6),
+                inset 0 4px 10px rgba(0,0,0,0.8);
         }
 
         /* Realistic Instrument Body Background */
         .instrument-bg {
-            background: linear-gradient(135deg, #2c1a00 0%, #000000 100%);
+            background: radial-gradient(circle at center, #1f1303 0%, #080502 100%);
             position: relative;
         }
         
         .brass-pipe {
             position: absolute;
-            background: linear-gradient(90deg, #8b4500, #ffd700, #ffec8b, #b8860b);
+            background: linear-gradient(90deg, #5c3a00, #b8860b, #ffd700, #ffec8b, #b8860b, #5c3a00);
             border-radius: 999px;
-            opacity: 0.3;
+            opacity: 0.15;
             z-index: 0;
             pointer-events: none;
         }
 
         .control-btn {
-            backdrop-filter: blur(5px);
-            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .control-btn:active {
@@ -61,121 +62,357 @@
         }
 
         .led-indicator {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background-color: #333;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
-            transition: background-color 0.2s;
+            background-color: #2b2b2b;
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.1);
+            transition: background-color 0.2s, box-shadow 0.2s;
         }
         .led-indicator.recording {
             background-color: #ff3b30;
-            box-shadow: 0 0 8px #ff3b30;
+            box-shadow: 0 0 12px #ff3b30, inset 0 1px 2px rgba(255,255,255,0.5);
             animation: pulse 1s infinite;
         }
         .led-indicator.playing {
             background-color: #34c759;
-            box-shadow: 0 0 8px #34c759;
+            box-shadow: 0 0 12px #34c759, inset 0 1px 2px rgba(255,255,255,0.5);
+        }
+        .led-indicator.demo {
+            background-color: #007aff;
+            box-shadow: 0 0 12px #007aff, inset 0 1px 2px rgba(255,255,255,0.5);
+            animation: pulse 0.8s infinite;
         }
 
         @keyframes pulse {
             0% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.4; }
             100% { opacity: 1; }
+        }
+
+        /* Glassmorphic Drawer Up */
+        .drawer {
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer.open {
+            transform: translateY(0);
         }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col instrument-bg text-white">
 
-    <!-- Decoration Pipes (Visual Only) -->
-    <div class="brass-pipe w-64 h-64 border-[30px] border-yellow-600 rounded-full top-[-50px] right-[-50px]"></div>
-    <div class="brass-pipe w-full h-12 bottom-0 left-0 opacity-20"></div>
+    <div class="brass-pipe w-72 h-72 border-[35px] border-yellow-700/30 rounded-full top-[-60px] right-[-60px]"></div>
+    <div class="brass-pipe w-4/5 h-8 top-[40%] left-[-10%] rotate-12 opacity-10"></div>
+    <div class="brass-pipe w-full h-16 bottom-0 left-0 opacity-15"></div>
 
-    <!-- Header & Controls -->
-    <div class="relative z-10 flex flex-col p-4 bg-black/40 border-b border-yellow-900/50 backdrop-blur-md">
-        <div class="flex justify-between items-center mb-3">
-            <h1 class="text-xl font-bold text-yellow-500 tracking-wider drop-shadow-md">EUPHONIUM</h1>
-            <div id="statusLed" class="led-indicator"></div>
+    <header class="relative z-10 flex flex-col px-4 py-3 bg-black/60 border-b border-yellow-800/30 backdrop-blur-md">
+        <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-music text-yellow-500 text-lg"></i>
+                <h1 class="text-lg font-bold text-yellow-500 tracking-widest drop-shadow-md">EUPHONIUM PRO</h1>
+            </div>
+            <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-yellow-900/30">
+                <span id="statusText" class="text-[10px] text-gray-400 font-semibold tracking-wider uppercase">STANDBY</span>
+                <div id="statusLed" class="led-indicator"></div>
+            </div>
         </div>
         
-        <div class="flex gap-2 justify-between">
-            <button id="btnRecord" onclick="toggleRecording()" class="control-btn flex-1 bg-red-900/80 hover:bg-red-700 text-white py-2 rounded-lg border border-red-500 text-sm font-bold flex items-center justify-center gap-2">
+        <!-- Quick Control Buttons -->
+        <div class="flex gap-2">
+            <button id="btnRecord" onclick="toggleRecording()" class="control-btn flex-1 bg-red-950/80 hover:bg-red-900 text-white py-2 rounded-xl border border-red-800 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-black/30">
+                <i class="fa-solid fa-circle text-red-500 text-[10px] animate-pulse"></i>
                 <span id="recordText">อัดเสียง</span>
             </button>
-            <button id="btnPlay" onclick="playRecording()" disabled class="control-btn flex-1 bg-gray-700 text-gray-400 py-2 rounded-lg border border-gray-600 text-sm font-bold">
-                เล่น
+            <button id="btnPlay" onclick="playRecording()" disabled class="control-btn flex-1 bg-neutral-800 text-neutral-500 py-2 rounded-xl border border-neutral-700 text-xs font-bold flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-play"></i>
+                เล่นอัด
             </button>
-            <button id="btnDownload" onclick="downloadRecording()" disabled class="control-btn flex-1 bg-gray-700 text-gray-400 py-2 rounded-lg border border-gray-600 text-sm font-bold">
+            <button id="btnDownload" onclick="downloadRecording()" disabled class="control-btn flex-1 bg-neutral-800 text-neutral-500 py-2 rounded-xl border border-neutral-700 text-xs font-bold flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-download"></i>
                 โหลด
             </button>
         </div>
+    </header>
+
+    <div class="relative z-10 flex gap-2 p-3 bg-black/20 border-b border-yellow-950/30">
+        <button onclick="toggleDrawer('drawerSettings')" class="control-btn flex-1 bg-gradient-to-r from-amber-900/40 to-yellow-900/40 border border-yellow-700/40 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 text-yellow-400 hover:from-amber-900/60 shadow-lg">
+            <i class="fa-solid fa-sliders-h text-yellow-400"></i>
+            <span>ปรับแต่งเสียงขั้นสูง</span>
+        </button>
+        <button onclick="toggleDrawer('drawerDemo')" class="control-btn flex-1 bg-gradient-to-r from-amber-950/40 to-yellow-950/40 border border-yellow-800/30 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 text-yellow-300/90 hover:from-amber-900/40 shadow-lg">
+            <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i>
+            <span>ฟังเพลงสาธิต (Demo)</span>
+        </button>
     </div>
 
-    <!-- Main Playing Area (Valves/Keys) -->
-    <div class="relative z-10 flex-1 p-2 flex flex-col justify-center items-center overflow-hidden">
+    <main class="relative z-10 flex-1 p-3 flex flex-col justify-center items-center overflow-hidden">
         
-        <!-- Note Grid (Low to High) -->
-        <div class="grid grid-cols-4 gap-3 w-full max-w-md h-full content-center p-2" id="keypad">
-            <!-- Low Register -->
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="Bb2">
-                <span class="text-xs opacity-60">Low</span>
-                <span class="text-xl">Bb</span>
+        <!-- Note Grid (Low to High Registers adapted for standard portrait smartphone screen) -->
+        <div class="grid grid-cols-4 gap-2.5 w-full max-w-sm h-full max-h-[420px] content-center py-2" id="keypad">
+            
+            <!-- Row 1: Low Register -->
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="Bb2">
+                <span class="text-[9px] uppercase tracking-wider opacity-60 absolute top-2">Low</span>
+                <span class="text-xl font-extrabold">B♭</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">Bb2</span>
             </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="C3">
-                <span class="text-xl">C</span>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="C3">
+                <span class="text-xl font-extrabold">C</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">C3</span>
             </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="D3">
-                <span class="text-xl">D</span>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="D3">
+                <span class="text-xl font-extrabold">D</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">D3</span>
             </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="Eb3">
-                <span class="text-xl">Eb</span>
-            </button>
-
-            <!-- Mid Register -->
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="F3">
-                <span class="text-xl">F</span>
-            </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="G3">
-                <span class="text-xl">G</span>
-            </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="A3">
-                <span class="text-xl">A</span>
-            </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="Bb3">
-                <span class="text-xs opacity-60">Mid</span>
-                <span class="text-xl">Bb</span>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="Eb3">
+                <span class="text-xl font-extrabold">E♭</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">Eb3</span>
             </button>
 
-            <!-- High Register -->
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="C4">
-                <span class="text-xl">C</span>
+            <!-- Row 2: Mid Register -->
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="F3">
+                <span class="text-xl font-extrabold">F</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">F3</span>
             </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="D4">
-                <span class="text-xl">D</span>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="G3">
+                <span class="text-xl font-extrabold">G</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">G3</span>
             </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="Eb4">
-                <span class="text-xl">Eb</span>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="A3">
+                <span class="text-xl font-extrabold">A</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">A3</span>
             </button>
-            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-black font-bold" data-note="F4">
-                <span class="text-xl">F</span>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="Bb3">
+                <span class="text-[9px] uppercase tracking-wider opacity-60 absolute top-2">Mid</span>
+                <span class="text-xl font-extrabold">B♭</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">Bb3</span>
+            </button>
+
+            <!-- Row 3: High Register -->
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="C4">
+                <span class="text-[9px] uppercase tracking-wider opacity-60 absolute top-2">High</span>
+                <span class="text-xl font-extrabold">C</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">C4</span>
+            </button>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="D4">
+                <span class="text-xl font-extrabold">D</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">D4</span>
+            </button>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="Eb4">
+                <span class="text-xl font-extrabold">E♭</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">Eb4</span>
+            </button>
+            <button class="valve-btn rounded-full w-full aspect-square flex flex-col items-center justify-center text-yellow-950 font-bold relative" data-note="F4">
+                <span class="text-xl font-extrabold">F</span>
+                <span class="text-[9px] opacity-40 absolute bottom-2">F4</span>
             </button>
         </div>
         
-        <div class="mt-4 text-center text-yellow-600/50 text-xs">
-            แตะเพื่อเล่น • แตะหลายปุ่มได้ (Multitouch)
+        <div class="mt-2 text-center text-yellow-600/40 text-[10px] tracking-wider uppercase">
+            Multitouch Supported • แตะหลายปุ่มพร้อมกันได้
         </div>
+    </main>
+
+    <div id="drawerSettings" class="drawer fixed inset-x-0 bottom-0 z-20 bg-neutral-950/95 border-t border-yellow-900/50 rounded-t-3xl backdrop-blur-xl p-5 max-h-[85vh] overflow-y-auto shadow-2xl">
+        <div class="flex justify-between items-center mb-4 pb-2 border-b border-neutral-800">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-yellow-500"></i>
+                <h3 class="text-base font-bold text-yellow-500">ปรับแต่งความอิ่มเสียงขั้นสูง</h3>
+            </div>
+            <button onclick="toggleDrawer('drawerSettings')" class="text-gray-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4 text-sm">
+            <!-- Sound Waveform Selector -->
+            <div>
+                <label class="block text-xs font-bold text-yellow-600 uppercase mb-2">รูปคลื่นเสียง (Timbre)</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setWaveform('sawtooth')" id="wave-sawtooth" class="wave-select-btn py-1.5 rounded-lg bg-yellow-900/60 border border-yellow-500 text-yellow-300 font-semibold text-xs transition">
+                        Sawtooth
+                    </button>
+                    <button onclick="setWaveform('triangle')" id="wave-triangle" class="wave-select-btn py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-gray-400 text-xs transition">
+                        Triangle
+                    </button>
+                    <button onclick="setWaveform('square')" id="wave-square" class="wave-select-btn py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-gray-400 text-xs transition">
+                        Square
+                    </button>
+                    <button onclick="setWaveform('sine')" id="wave-sine" class="wave-select-btn py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-gray-400 text-xs transition">
+                        Sine
+                    </button>
+                </div>
+            </div>
+
+            <!-- ADSR Envelopes -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-400">ความเร็วก่อนเสียงดัง (Attack)</span>
+                        <span id="lblAttack" class="text-yellow-500 font-bold">0.05s</span>
+                    </div>
+                    <input type="range" min="0.01" max="0.5" step="0.01" value="0.05" oninput="updateSynthSetting('attack', this.value)" class="w-full accent-yellow-500 bg-neutral-800 h-1 rounded-lg appearance-none">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-400">หางเสียงสะบัดปลาย (Release)</span>
+                        <span id="lblRelease" class="text-yellow-500 font-bold">0.30s</span>
+                    </div>
+                    <input type="range" min="0.05" max="1.5" step="0.05" value="0.30" oninput="updateSynthSetting('release', this.value)" class="w-full accent-yellow-500 bg-neutral-800 h-1 rounded-lg appearance-none">
+                </div>
+            </div>
+
+            <!-- Vibrato Setting -->
+            <div class="p-3 bg-yellow-950/10 border border-yellow-900/30 rounded-xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-yellow-600 uppercase">ระบบลูกคอทองคำ (Vibrato)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="vibratoToggle" onchange="updateSynthSetting('vibratoActive', this.checked)" checked class="sr-only peer">
+                        <div class="w-9 h-5 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-600"></div>
+                    </label>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-neutral-400">ความสั่นไหว (Depth)</span>
+                            <span id="lblVibDepth" class="text-yellow-500">4.0 Hz</span>
+                        </div>
+                        <input type="range" min="0" max="15" step="0.5" value="4.0" oninput="updateSynthSetting('vibratoDepth', this.value)" class="w-full accent-yellow-500 bg-neutral-800 h-1 rounded-lg appearance-none">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-neutral-400">ความถี่ลูกคอ (Speed)</span>
+                            <span id="lblVibSpeed" class="text-yellow-500">5.5 Hz</span>
+                        </div>
+                        <input type="range" min="1" max="12" step="0.5" value="5.5" oninput="updateSynthSetting('vibratoSpeed', this.value)" class="w-full accent-yellow-500 bg-neutral-800 h-1 rounded-lg appearance-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reverb Hall Delay Settings -->
+            <div class="p-3 bg-amber-950/10 border border-yellow-950/30 rounded-xl">
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-xs font-bold text-yellow-600 uppercase flex items-center gap-1">
+                        <i class="fa-solid fa-warehouse text-[10px]"></i> จำลองขนาดห้องเสียงประสาน (Reverb Delay)
+                    </span>
+                    <span id="lblDelayWet" class="text-yellow-500 font-bold">25%</span>
+                </div>
+                <input type="range" min="0" max="0.7" step="0.05" value="0.25" oninput="updateSynthSetting('delayWet', this.value)" class="w-full accent-yellow-500 bg-neutral-800 h-1 rounded-lg appearance-none">
+            </div>
+
+            <!-- Audio Master Gain -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-400">ความดังหลัก (Volume Limit)</span>
+                    <span id="lblVolume" class="text-yellow-500 font-bold">60%</span>
+                </div>
+                <input type="range" min="10" max="100" step="5" value="60" oninput="updateSynthSetting('volume', this.value)" class="w-full accent-yellow-500 bg-neutral-800 h-1.5 rounded-lg appearance-none">
+            </div>
+        </div>
+    </div>
+
+    <div id="drawerDemo" class="drawer fixed inset-x-0 bottom-0 z-20 bg-neutral-950/95 border-t border-yellow-900/50 rounded-t-3xl backdrop-blur-xl p-5 max-h-[85vh] overflow-y-auto shadow-2xl">
+        <div class="flex justify-between items-center mb-4 pb-2 border-b border-neutral-800">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-yellow-500"></i>
+                <h3 class="text-base font-bold text-yellow-500">บรรเลงเพลงสาธิต (Demo Tracks)</h3>
+            </div>
+            <button onclick="toggleDrawer('drawerDemo')" class="text-gray-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            <!-- Stop Current Demo Playing button -->
+            <button id="btnStopDemo" onclick="stopDemoPlaying()" class="w-full py-3 rounded-xl bg-red-950/80 border border-red-800 hover:bg-red-900 text-red-200 text-xs font-bold flex items-center justify-center gap-2 shadow-inner transition-all hidden">
+                <i class="fa-solid fa-stop-circle text-red-500 text-base"></i>
+                <span>หยุดเล่นเพลงบรรเลงทั้งหมด</span>
+            </button>
+
+            <!-- Song List -->
+            <div class="space-y-2">
+                <!-- Song 1 -->
+                <div class="flex items-center justify-between p-3.5 bg-neutral-900/60 hover:bg-neutral-900 border border-neutral-800 hover:border-yellow-900/50 rounded-xl transition cursor-pointer" onclick="selectAndPlayDemo(0)">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">1</div>
+                        <div>
+                            <p class="font-bold text-sm text-yellow-400">Ode to Joy (โอเดทูจอย)</p>
+                            <p class="text-[10px] text-gray-400">เพลงคลาสสิกระดับสากล • บรรเลงนุ่มนวล</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-yellow-500 text-xl"></i>
+                </div>
+
+                <!-- Song 2 -->
+                <div class="flex items-center justify-between p-3.5 bg-neutral-900/60 hover:bg-neutral-900 border border-neutral-800 hover:border-yellow-900/50 rounded-xl transition cursor-pointer" onclick="selectAndPlayDemo(1)">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">2</div>
+                        <div>
+                            <p class="font-bold text-sm text-yellow-400">Amazing Grace (อะเมซิ่งเกรซ)</p>
+                            <p class="text-[10px] text-gray-400">เมโลดี้เพนทาโทนิกส์หวานซึ้ง • คลื่นเสียงกว้าง</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-yellow-500 text-xl"></i>
+                </div>
+
+                <!-- Song 3 -->
+                <div class="flex items-center justify-between p-3.5 bg-neutral-900/60 hover:bg-neutral-900 border border-neutral-800 hover:border-yellow-900/50 rounded-xl transition cursor-pointer" onclick="selectAndPlayDemo(2)">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">3</div>
+                        <div>
+                            <p class="font-bold text-sm text-yellow-400">Loi Krathong (เพลงลอยกระทง)</p>
+                            <p class="text-[10px] text-gray-400">เพลงพื้นบ้านไทยจังหวะคุ้นหู • เล่นสลับคีย์แพดสดใส</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-yellow-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-black/90 border border-yellow-500 text-yellow-300 font-semibold px-5 py-2.5 rounded-full text-xs shadow-2xl tracking-wider transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+        <i class="fa-solid fa-info-circle text-yellow-500"></i>
+        <span id="toastMessage">แจ้งเตือนข้อมูล</span>
     </div>
 
     <script>
+        // --- Custom Toast Warning (No alert/confirm policy) ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.remove('opacity-100');
+            }, 3000);
+        }
+
         // --- Audio Context Setup ---
         let audioCtx;
         let masterGain;
+        let reverbDelayNode;
+        let reverbFeedback;
         let dest; // For recording
         let mediaRecorder;
         let recordedChunks = [];
         let audioBlob;
         let audioUrl;
         let isRecording = false;
+
+        // --- Synth Options (Configurable Parameters) ---
+        const config = {
+            waveform: 'sawtooth',
+            attack: 0.05,
+            release: 0.30,
+            vibratoActive: true,
+            vibratoDepth: 4.0,
+            vibratoSpeed: 5.5,
+            delayWet: 0.25,
+            volume: 0.60
+        };
         
         const noteFrequencies = {
             'Bb2': 116.54, 'C3': 130.81, 'D3': 146.83, 'Eb3': 155.56,
@@ -190,85 +427,169 @@
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
                 
-                // Master Gain for volume control
+                // Master Gain for volume limit
                 masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.6;
+                masterGain.gain.setValueAtTime(config.volume, audioCtx.currentTime);
                 
                 // Destination for recording
                 dest = audioCtx.createMediaStreamDestination();
                 
-                // Connect Master to Speakers AND Recorder
+                // --- Build Reverb (Echo/Feedback Loop) ---
+                reverbDelayNode = audioCtx.createDelay(1.0);
+                reverbFeedback = audioCtx.createGain();
+                
+                // Set initial delay settings
+                reverbDelayNode.delayTime.setValueAtTime(0.35, audioCtx.currentTime);
+                reverbFeedback.gain.setValueAtTime(config.delayWet, audioCtx.currentTime);
+
+                // Setup feedback path: masterGain -> delayNode -> feedback -> delayNode
+                masterGain.connect(reverbDelayNode);
+                reverbDelayNode.connect(reverbFeedback);
+                reverbFeedback.connect(reverbDelayNode);
+                
+                // Connect Master directly and through delay route
                 masterGain.connect(audioCtx.destination);
                 masterGain.connect(dest);
+                reverbDelayNode.connect(audioCtx.destination);
+                reverbDelayNode.connect(dest);
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // --- Sound Synthesis (Brass Model) ---
+        // --- Drawer Control Functions ---
+        function toggleDrawer(id) {
+            // Close other drawers if they are open
+            ['drawerSettings', 'drawerDemo'].forEach(dId => {
+                if(dId !== id) {
+                    document.getElementById(dId).classList.remove('open');
+                }
+            });
+            const drawer = document.getElementById(id);
+            drawer.classList.toggle('open');
+        }
+
+        // --- Custom Setting Handlers ---
+        function setWaveform(type) {
+            config.waveform = type;
+            document.querySelectorAll('.wave-select-btn').forEach(btn => {
+                btn.className = "wave-select-btn py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-gray-400 text-xs transition";
+            });
+            const activeBtn = document.getElementById(`wave-${type}`);
+            if (activeBtn) {
+                activeBtn.className = "wave-select-btn py-1.5 rounded-lg bg-yellow-900/60 border border-yellow-500 text-yellow-300 font-semibold text-xs transition";
+            }
+        }
+
+        function updateSynthSetting(key, val) {
+            initAudio();
+            if (key === 'vibratoActive') {
+                config.vibratoActive = val;
+            } else {
+                config[key] = parseFloat(val);
+            }
+
+            // UI updates
+            if (key === 'attack') document.getElementById('lblAttack').innerText = `${config.attack.toFixed(2)}s`;
+            if (key === 'release') document.getElementById('lblRelease').innerText = `${config.release.toFixed(2)}s`;
+            if (key === 'vibratoDepth') document.getElementById('lblVibDepth').innerText = `${config.vibratoDepth.toFixed(1)} Hz`;
+            if (key === 'vibratoSpeed') document.getElementById('lblVibSpeed').innerText = `${config.vibratoSpeed.toFixed(1)} Hz`;
+            if (key === 'delayWet') {
+                document.getElementById('lblDelayWet').innerText = `${Math.round(config.delayWet * 100)}%`;
+                if (reverbFeedback) reverbFeedback.gain.setValueAtTime(config.delayWet, audioCtx.currentTime);
+            }
+            if (key === 'volume') {
+                document.getElementById('lblVolume').innerText = `${Math.round(config.volume * 100)}%`;
+                if (masterGain) masterGain.gain.setValueAtTime(config.volume, audioCtx.currentTime);
+            }
+        }
+
+        // --- STREAMING_CHUNK: Sound Synthesis (Brass Modeling with Vibrato & Filter) ---
         function playNote(note) {
             initAudio();
             const freq = noteFrequencies[note];
             if (!freq) return;
 
-            // Prevent stacking same note
+            // Prevent overlapping on same notes
             if(activeOscillators[note]) return;
 
             const t = audioCtx.currentTime;
 
-            // 1. Oscillator (Sawtooth for Brass buzz)
+            // 1. Principal Oscillator
             const osc = audioCtx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.value = freq;
+            osc.type = config.waveform;
+            osc.frequency.setValueAtTime(freq, t);
 
-            // 2. Filter (Lowpass for mellow brass tone)
+            // 2. Brass Buzz Lowpass Filter
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(freq * 2, t); // Start brighter
-            filter.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.2); // Mellow out
-            filter.Q.value = 1;
+            // Start brighter for the Initial buzz attack, then fade to brassy body
+            filter.frequency.setValueAtTime(freq * 3, t);
+            filter.frequency.exponentialRampToValueAtTime(freq * 1.6, t + 0.15);
+            filter.Q.setValueAtTime(1.2, t);
 
-            // 3. Envelope (ADSR)
+            // 3. Vibrato (LFO)
+            let lfo = null;
+            let lfoGain = null;
+            if (config.vibratoActive && config.vibratoDepth > 0) {
+                lfo = audioCtx.createOscillator();
+                lfoGain = audioCtx.createGain();
+                
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(config.vibratoSpeed, t);
+                lfoGain.gain.setValueAtTime(config.vibratoDepth, t);
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(t);
+            }
+
+            // 4. Amplitude Envelope (ADSR)
             const env = audioCtx.createGain();
             env.gain.setValueAtTime(0, t);
-            env.gain.linearRampToValueAtTime(1, t + 0.05); // Attack
-            env.gain.exponentialRampToValueAtTime(0.7, t + 0.2); // Decay
+            env.gain.linearRampToValueAtTime(1.0, t + config.attack); // Attack
+            env.gain.exponentialRampToValueAtTime(0.75, t + config.attack + 0.15); // Decay & Sustain
 
-            // Connections
+            // Connecting nodes
             osc.connect(filter);
             filter.connect(env);
             env.connect(masterGain);
 
             osc.start(t);
             
-            // Store reference to stop later
-            activeOscillators[note] = { osc, env, filter };
+            // Store reference for termination
+            activeOscillators[note] = { osc, env, filter, lfo, lfoGain };
         }
 
         function stopNote(note) {
             if (!activeOscillators[note]) return;
             
-            const { osc, env } = activeOscillators[note];
+            const { osc, env, lfo } = activeOscillators[note];
             const t = audioCtx.currentTime;
 
-            // Release phase
-            env.gain.cancelScheduledValues(t);
-            env.gain.setValueAtTime(env.gain.value, t);
-            env.gain.exponentialRampToValueAtTime(0.001, t + 0.3); // Release time
+            // Release Phase
+            try {
+                env.gain.cancelScheduledValues(t);
+                env.gain.setValueAtTime(env.gain.value, t);
+                env.gain.exponentialRampToValueAtTime(0.001, t + config.release);
+            } catch(e) {}
 
-            osc.stop(t + 0.3);
+            osc.stop(t + config.release + 0.05);
+            if (lfo) {
+                try { lfo.stop(t + config.release + 0.05); } catch(e) {}
+            }
             
             delete activeOscillators[note];
         }
 
-        // --- Interaction Handlers (Touch & Mouse) ---
+        // --- Interaction Handlers (Multi-Touch Support) ---
         const buttons = document.querySelectorAll('.valve-btn');
 
         buttons.forEach(btn => {
             const note = btn.getAttribute('data-note');
 
-            // Touch events for mobile
+            // Touch support for mobiles
             btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 btn.classList.add('active');
@@ -279,9 +600,15 @@
                 e.preventDefault();
                 btn.classList.remove('active');
                 stopNote(note);
-            });
+            }, { passive: false });
 
-            // Mouse events for desktop testing
+            btn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                btn.classList.remove('active');
+                stopNote(note);
+            }, { passive: false });
+
+            // Desktop fallback
             btn.addEventListener('mousedown', () => {
                 btn.classList.add('active');
                 playNote(note);
@@ -296,20 +623,162 @@
             });
         });
 
-        // --- Recording Logic ---
+        // --- STREAMING_CHUNK: Demo Songs Orchestration ---
+        const demoSongs = [
+            {
+                name: "Ode to Joy (โอเดทูจอย)",
+                notes: [
+                    { note: 'D3', dur: 0.35 }, { note: 'D3', dur: 0.35 }, { note: 'Eb3', dur: 0.35 }, { note: 'F3', dur: 0.35 },
+                    { note: 'F3', dur: 0.35 }, { note: 'Eb3', dur: 0.35 }, { note: 'D3', dur: 0.35 }, { note: 'C3', dur: 0.35 },
+                    { note: 'Bb2', dur: 0.35 }, { note: 'Bb2', dur: 0.35 }, { note: 'C3', dur: 0.35 }, { note: 'D3', dur: 0.35 },
+                    { note: 'D3', dur: 0.45 }, { note: 'C3', dur: 0.15 }, { note: 'C3', dur: 0.5 },
+                    
+                    { note: 'D3', dur: 0.35 }, { note: 'D3', dur: 0.35 }, { note: 'Eb3', dur: 0.35 }, { note: 'F3', dur: 0.35 },
+                    { note: 'F3', dur: 0.35 }, { note: 'Eb3', dur: 0.35 }, { note: 'D3', dur: 0.35 }, { note: 'C3', dur: 0.35 },
+                    { note: 'Bb2', dur: 0.35 }, { note: 'Bb2', dur: 0.35 }, { note: 'C3', dur: 0.35 }, { note: 'D3', dur: 0.35 },
+                    { note: 'C3', dur: 0.45 }, { note: 'Bb2', dur: 0.15 }, { note: 'Bb2', dur: 0.6 }
+                ]
+            },
+            {
+                name: "Amazing Grace (อะเมซิ่งเกรซ)",
+                notes: [
+                    { note: 'Bb2', dur: 0.45 },
+                    { note: 'Eb3', dur: 0.8 }, { note: 'G3', dur: 0.2 }, { note: 'Eb3', dur: 0.3 },
+                    { note: 'G3', dur: 0.8 }, { note: 'F3', dur: 0.4 },
+                    { note: 'Eb3', dur: 0.8 }, { note: 'C3', dur: 0.4 },
+                    { note: 'Bb2', dur: 0.8 }, { note: 'Bb2', dur: 0.4 },
+                    { note: 'Eb3', dur: 0.8 }, { note: 'G3', dur: 0.2 }, { note: 'Eb3', dur: 0.3 },
+                    { note: 'G3', dur: 0.8 }, { note: 'F3', dur: 0.4 },
+                    { note: 'Bb3', dur: 1.2 },
+                    { note: 'G3', dur: 0.8 }, { note: 'Bb3', dur: 0.3 }, { note: 'G3', dur: 0.2 },
+                    { note: 'Eb3', dur: 0.8 }, { note: 'Bb2', dur: 0.4 },
+                    { note: 'C3', dur: 0.8 }, { note: 'Eb3', dur: 0.2 }, { note: 'C3', dur: 0.3 },
+                    { note: 'Bb2', dur: 0.8 }, { note: 'Bb2', dur: 0.4 },
+                    { note: 'Eb3', dur: 0.8 }, { note: 'G3', dur: 0.2 }, { note: 'Eb3', dur: 0.3 },
+                    { note: 'G3', dur: 0.8 }, { note: 'F3', dur: 0.4 },
+                    { note: 'Eb3', dur: 1.2 }
+                ]
+            },
+            {
+                name: "Loi Krathong (เพลงลอยกระทง)",
+                notes: [
+                    { note: 'F3', dur: 0.25 }, { note: 'F3', dur: 0.25 }, { note: 'F3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'Bb3', dur: 0.5 },
+                    { note: 'Bb3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'Bb3', dur: 0.25 }, { note: 'C4', dur: 0.5 },
+                    { note: 'Bb3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'F3', dur: 0.5 },
+                    { note: 'F3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'Bb3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'F3', dur: 0.5 },
+                    { note: 'D3', dur: 0.25 }, { note: 'C3', dur: 0.25 }, { note: 'D3', dur: 0.25 }, { note: 'F3', dur: 0.7 },
+                    
+                    { note: 'C4', dur: 0.25 }, { note: 'C4', dur: 0.25 }, { note: 'Bb3', dur: 0.25 }, { note: 'C4', dur: 0.25 }, { note: 'D4', dur: 0.5 },
+                    { note: 'D4', dur: 0.25 }, { note: 'C4', dur: 0.25 }, { note: 'Bb3', dur: 0.25 }, { note: 'G3', dur: 0.5 },
+                    { note: 'Bb3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'F3', dur: 0.5 },
+                    { note: 'F3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'Bb3', dur: 0.25 }, { note: 'G3', dur: 0.25 }, { note: 'F3', dur: 0.5 },
+                    { note: 'D3', dur: 0.25 }, { note: 'C3', dur: 0.25 }, { note: 'D3', dur: 0.25 }, { note: 'Eb3', dur: 0.7 }
+                ]
+            }
+        ];
+
+        let demoTimeoutIds = [];
+        let isDemoPlaying = false;
+
+        function selectAndPlayDemo(songIdx) {
+            initAudio();
+            stopDemoPlaying(); // Clear any playing demo
+            
+            // If recording is active, refuse or stop it
+            if(isRecording) {
+                showToast("ไม่สามารถเล่นเพลงตัวอย่างระหว่างอัดเสียงได้!");
+                return;
+            }
+
+            const song = demoSongs[songIdx];
+            isDemoPlaying = true;
+            toggleDrawer('drawerDemo'); // Slide down
+            
+            // Set App UI to Demo Play mode
+            document.getElementById('statusLed').className = "led-indicator demo";
+            document.getElementById('statusText').innerText = "DEMO PLAYING";
+            document.getElementById('btnStopDemo').classList.remove('hidden');
+
+            showToast(`กำลังเริ่มบรรเลงเพลง: ${song.name}`);
+
+            let currentDelay = 0;
+
+            song.notes.forEach((noteEvent, step) => {
+                const triggerId = setTimeout(() => {
+                    // Visually press the button
+                    const targetBtn = document.querySelector(`[data-note="${noteEvent.note}"]`);
+                    if (targetBtn) targetBtn.classList.add('active');
+                    
+                    playNote(noteEvent.note);
+
+                    // Cut Note off slightly before the next one starts to prevent sound piling
+                    const cutId = setTimeout(() => {
+                        if (targetBtn) targetBtn.classList.remove('active');
+                        stopNote(noteEvent.note);
+                    }, (noteEvent.dur * 1000) - 40);
+                    
+                    demoTimeoutIds.push(cutId);
+
+                }, currentDelay * 1000);
+
+                demoTimeoutIds.push(triggerId);
+                currentDelay += noteEvent.dur;
+            });
+
+            // "เพลงจบเพลงด้วย ปิดด้วยเมื่อจบ" Auto-Shutdown Sequencer when Demo reaches conclusion
+            const finishId = setTimeout(() => {
+                stopDemoPlaying();
+                showToast("จบการบรรเลงสาธิตเรียบร้อยแล้ว");
+            }, currentDelay * 1000 + 300);
+
+            demoTimeoutIds.push(finishId);
+        }
+
+        function stopDemoPlaying() {
+            // Cancel all timeouts
+            demoTimeoutIds.forEach(id => clearTimeout(id));
+            demoTimeoutIds = [];
+
+            // Release all active audio nodes immediately
+            Object.keys(activeOscillators).forEach(note => {
+                stopNote(note);
+            });
+
+            // Reset visual states
+            document.querySelectorAll('.valve-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Restore App UI
+            document.getElementById('statusLed').className = "led-indicator";
+            document.getElementById('statusText').innerText = "STANDBY";
+            document.getElementById('btnStopDemo').classList.add('hidden');
+            
+            isDemoPlaying = false;
+        }
+
+        // --- STREAMING_CHUNK: Sound Recording Engine ---
         function toggleRecording() {
             initAudio();
+            
+            // Refuse if demo is active
+            if(isDemoPlaying) {
+                showToast("กรุณาหยุดบรรเลงเพลงสาธิตก่อนทำการบันทึกเสียง");
+                return;
+            }
+
             const btn = document.getElementById('btnRecord');
             const led = document.getElementById('statusLed');
             const txt = document.getElementById('recordText');
+            const statusTxt = document.getElementById('statusText');
 
             if (!isRecording) {
-                // Start Recording
+                // Start Recording sequence
                 recordedChunks = [];
                 try {
                     mediaRecorder = new MediaRecorder(dest.stream);
                 } catch (e) {
-                    alert('Browser not compatible with MediaRecorder');
+                    showToast('เบราว์เซอร์ไม่รองรับเทคโนโลยีอัดเสียง MediaRecorder');
                     return;
                 }
 
@@ -321,50 +790,57 @@
                     audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
                     audioUrl = URL.createObjectURL(audioBlob);
                     
-                    // Enable Play/Download
+                    // Unlock Play and Download buttons
                     document.getElementById('btnPlay').disabled = false;
-                    document.getElementById('btnPlay').classList.replace('bg-gray-700', 'bg-green-600');
-                    document.getElementById('btnPlay').classList.replace('text-gray-400', 'text-white');
+                    document.getElementById('btnPlay').className = "control-btn flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-xl border border-green-500 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-green-900/30";
                     
                     document.getElementById('btnDownload').disabled = false;
-                    document.getElementById('btnDownload').classList.replace('bg-gray-700', 'bg-blue-600');
-                    document.getElementById('btnDownload').classList.replace('text-gray-400', 'text-white');
+                    document.getElementById('btnDownload').className = "control-btn flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-xl border border-blue-500 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-blue-900/30";
+                    
+                    showToast("เสร็จสิ้นการจัดเตรียมไฟล์อัดเสียง! พร้อมให้ดาวน์โหลดหรือฟังแล้ว");
                 };
 
                 mediaRecorder.start();
                 isRecording = true;
                 
-                // UI Updates
-                btn.classList.replace('bg-red-900/80', 'bg-red-600');
-                txt.innerText = "หยุดอัด";
+                // UI recording modifications
+                btn.className = "control-btn flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded-xl border border-red-400 text-xs font-bold flex items-center justify-center gap-1.5 animate-pulse shadow-lg";
+                txt.innerText = "หยุดบันทึก";
                 led.className = "led-indicator recording";
+                statusTxt.innerText = "RECORDING";
                 
-                // Reset previous recording
+                // Reset outdated records
                 document.getElementById('btnPlay').disabled = true;
+                document.getElementById('btnPlay').className = "control-btn flex-1 bg-neutral-800 text-neutral-500 py-2 rounded-xl border border-neutral-700 text-xs font-bold flex items-center justify-center gap-1.5";
                 document.getElementById('btnDownload').disabled = true;
+                document.getElementById('btnDownload').className = "control-btn flex-1 bg-neutral-800 text-neutral-500 py-2 rounded-xl border border-neutral-700 text-xs font-bold flex items-center justify-center gap-1.5";
 
             } else {
                 // Stop Recording
                 mediaRecorder.stop();
                 isRecording = false;
                 
-                // UI Updates
-                btn.classList.replace('bg-red-600', 'bg-red-900/80');
+                // Restore standard recording states
+                btn.className = "control-btn flex-1 bg-red-950/80 hover:bg-red-900 text-white py-2 rounded-xl border border-red-800 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-black/30";
                 txt.innerText = "อัดเสียง";
                 led.className = "led-indicator";
+                statusTxt.innerText = "STANDBY";
             }
         }
 
         function playRecording() {
             if (!audioUrl) return;
             const led = document.getElementById('statusLed');
+            const statusTxt = document.getElementById('statusText');
             const audio = new Audio(audioUrl);
             
             led.className = "led-indicator playing";
+            statusTxt.innerText = "PLAYING RECORD";
             audio.play();
             
             audio.onended = () => {
                 led.className = "led-indicator";
+                statusTxt.innerText = "STANDBY";
             };
         }
 
@@ -372,7 +848,7 @@
             if (!audioUrl) return;
             const a = document.createElement('a');
             a.href = audioUrl;
-            a.download = `euphonium_solo_${new Date().getTime()}.webm`;
+            a.download = `euphonium_pro_${new Date().getTime()}.webm`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
