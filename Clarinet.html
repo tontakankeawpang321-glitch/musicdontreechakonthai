@@ -3,504 +3,1124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtual Clarinet</title>
+    <title>Virtual Clarinet - เสียงสมจริงเสมือนจริง</title>
+    <!-- Tailwind CSS for sleek utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for elegant iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Krub -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Krub:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --wood-color: #1a1a1a;
-            --key-silver: #d1d1d1;
-            --key-shadow: #5a5a5a;
-            --bg-gradient: linear-gradient(135deg, #2b32b2 10%, #1488cc 100%);
-        }
-
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none; /* Prevent scrolling on mobile */
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh; /* Use dynamic viewport height for mobile browsers */
-            background: var(--bg-gradient);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Krub', sans-serif;
+            background: radial-gradient(circle at center, #11101e 0%, #030308 100%);
+            touch-action: none;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        /* Control Panel */
-        #controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 100;
-            pointer-events: none; /* Let touches pass through to instrument if needed, but buttons handle their own */
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .control-btn {
-            pointer-events: auto;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .glass-panel-heavy {
+            background: rgba(10, 12, 22, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
-        .control-btn:active {
-            transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.4);
+        /* Elegant Clarinet wood finish */
+        .clarinet-body {
+            background: linear-gradient(90deg, #050507 0%, #1c1c1f 30%, #2a2a2e 50%, #151518 70%, #050507 100%);
+            box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.9);
         }
 
-        .control-btn.recording {
-            background: rgba(255, 59, 48, 0.8);
-            animation: pulse 1.5s infinite;
+        /* Custom thumb and track styling for input sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.08);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
-        }
-
-        /* Instrument Body */
-        #clarinet-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #instrument-body {
-            width: 120px; /* Wider for better touch targets on mobile */
-            /* Use dvh to account for browser UI bars on mobile */
-            height: 90vh; 
-            height: 90dvh; 
-            max-height: 95%;
-            background: linear-gradient(90deg, #000 0%, #333 40%, #111 100%);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-evenly;
-            align-items: center;
-            padding: 10px 0; /* Reduced padding */
-            position: relative;
-            border-left: 2px solid #444;
-            border-right: 2px solid #222;
-        }
-
-        /* Decorative Rings */
-        .ring {
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #888, #fff, #888);
-            position: absolute;
-            z-index: 1;
-        }
-        .ring:nth-child(1) { top: 5%; }
-        .ring:nth-child(2) { bottom: 15%; }
-
-        /* Keys/Holes */
-        .key-row {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            /* Allow keys to shrink if needed */
-            flex-shrink: 1; 
-        }
-
-        .note-key {
-            /* Responsive sizing: min of px or vh to fit small screens */
-            width: 9vh; 
-            height: 9vh;
-            max-width: 70px;
-            max-height: 70px;
-            min-width: 50px;
-            min-height: 50px;
-            
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fff, var(--key-silver), var(--key-shadow));
-            box-shadow: 0 5px 10px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.2);
-            border: 2px solid #999;
+            background: #60a5fa;
             cursor: pointer;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.1s;
-            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 0 12px rgba(96, 165, 250, 0.6);
+            transition: transform 0.1s, background-color 0.2s;
         }
 
-        /* Active State (Pressed) */
-        .note-key.active {
-            transform: scale(0.92);
-            background: radial-gradient(circle at 30% 30%, #aaa, #666, #333);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.8);
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.3);
+            background: #93c5fd;
         }
 
-        /* Note Label */
-        .key-label {
-            font-size: 16px; /* Slightly smaller for mobile fit */
-            font-weight: bold;
-            color: #333;
-            pointer-events: none;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
-            opacity: 1;
-            transition: opacity 0.3s;
-        }
-        
-        .note-key.active .key-label {
-            color: #fff;
-            text-shadow: 0 1px 2px black;
+        /* Active glow states for keys */
+        .key-glow-active {
+            background: radial-gradient(circle at 35% 35%, #ffffff, #60a5fa, #2563eb, #1e3a8a, #0f172a) !important;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.9), inset 0 0 15px rgba(255, 255, 255, 0.9) !important;
+            transform: scale(0.91) translateY(1.5px);
         }
 
-        /* Bell at the bottom */
-        #bell {
+        /* Ambient background dynamic pulse when keys are pressed */
+        .ambient-glow {
             position: absolute;
-            bottom: -25px; /* Moved up slightly */
-            width: 140px; /* Slightly smaller */
-            height: 50px;
-            background: linear-gradient(90deg, #000, #222, #000);
-            border-radius: 0 0 50% 50%;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
-            z-index: 0;
-            border-bottom: 4px solid #555;
-        }
-
-        /* Overlay for "Click to Start" (AudioContext policy) */
-        #overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            color: white;
-            text-align: center;
-        }
-
-        #start-btn {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 24px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-10px);}
-            60% {transform: translateY(-5px);}
-        }
-
-        #audio-player-container {
-            display: none;
-            position: absolute;
-            bottom: 20px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-            z-index: 200;
+            transform: translate(-50%, -50%);
+            width: 140%;
+            height: 140%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        .hidden {
-            display: none !important;
+        .ambient-glow.active {
+            opacity: 1;
         }
-
     </style>
 </head>
-<body>
+<body class="w-screen h-[100dvh] flex flex-col justify-between items-center py-4 relative">
 
-    <!-- Start Overlay -->
-    <div id="overlay">
-        <h1>🎵 Clarinet Sim</h1>
-        <p>แตะปุ่มเพื่อเริ่มเล่น</p>
-        <button id="start-btn">เริ่มใช้งาน</button>
-    </div>
+    <!-- Ambient glowing light in the background -->
+    <div id="app-glow" class="ambient-glow"></div>
 
-    <!-- Controls -->
-    <div id="controls">
-        <button class="control-btn" id="toggle-labels">👁️ โน้ต</button>
-        <button class="control-btn" id="record-btn">🔴 อัดเสียง</button>
-    </div>
-
-    <!-- Playback Control -->
-    <div id="audio-player-container">
-        <audio id="playback" controls></audio>
-        <button class="control-btn" onclick="document.getElementById('audio-player-container').style.display='none'" style="margin-top:5px; background:#ccc; color:black; width:100%; justify-content:center;">ปิด</button>
-    </div>
-
-    <!-- Instrument -->
-    <div id="clarinet-container">
-        <div id="instrument-body">
-            <!-- Decorative Rings -->
-            <div class="ring"></div>
-            <div class="ring"></div>
+    <!-- Welcome Screen / Enable Audio (Strict Browser Policy Requirement) -->
+    <div id="overlay" class="fixed inset-0 z-[1000] flex flex-col justify-center items-center bg-slate-950/98 text-white p-6 text-center">
+        <div class="max-w-md p-8 rounded-3xl glass-panel border border-slate-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-600/20 rounded-full blur-2xl"></div>
             
-            <!-- Keys generated by JS -->
-            <div id="keys-container" style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-evenly; align-items: center;">
-                <!-- Keys will be injected here -->
-            </div>
-
-            <div id="bell"></div>
+            <span class="inline-flex items-center justify-center w-20 h-20 bg-blue-500/10 text-blue-400 rounded-full text-4xl mb-6 border border-blue-500/30 animate-pulse">
+                <i class="fa-solid fa-wind"></i>
+            </span>
+            <h1 class="text-3xl font-bold tracking-tight mb-2 bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300 bg-clip-text text-transparent">Virtual Clarinet</h1>
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed">สัมผัสประสบการณ์จำลองคลาริเน็ตเสมือนจริง อัปเกรดโมเดลเสียงกายภาพ (Physical Modelling Synth) ร่วมกับเสียงลมเป่าที่ให้ความสมจริงเป็นธรรมชาติสูงสุด</p>
+            
+            <button id="start-btn" class="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 active:scale-95 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/30 transition duration-150 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> เริ่มเล่นดนตรีเสียงจริง
+            </button>
         </div>
     </div>
 
+    <!-- Safe Custom Notification System -->
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[999] px-4 py-3 rounded-xl glass-panel-heavy text-white text-sm font-medium flex items-center gap-2 shadow-2xl transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-blue-400"></i>
+        <span id="toast-text">ข้อความแจ้งเตือน</span>
+    </div>
+
+    <!-- Top Header & Navigation Utilities -->
+    <header class="w-full max-w-md px-4 flex justify-between items-center z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-blue-500 animate-ping"></div>
+            <h2 class="text-white text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Acoustic Model v3.0</h2>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="btn-tuner-toggle" class="w-10 h-10 rounded-full glass-panel hover:bg-white/10 active:scale-90 text-white flex items-center justify-center transition" title="ปรับแต่งเสียง">
+                <i class="fa-solid fa-sliders text-sm"></i>
+            </button>
+            <button id="btn-demo-toggle" class="w-10 h-10 rounded-full glass-panel hover:bg-white/10 active:scale-90 text-amber-400 flex items-center justify-center transition" title="เพลงสาธิต">
+                <i class="fa-solid fa-music text-sm"></i>
+            </button>
+            <button id="toggle-labels" class="w-10 h-10 rounded-full glass-panel hover:bg-white/10 active:scale-90 text-emerald-400 flex items-center justify-center transition" title="สลับแสดงโน้ต">
+                <i class="fa-solid fa-eye text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Active Record & Recording Playback Controls -->
+    <div class="w-full max-w-sm px-4 flex flex-col gap-2 items-center z-40">
+        <div class="flex items-center justify-between w-full glass-panel px-4 py-2.5 rounded-2xl">
+            <div class="flex items-center gap-2">
+                <button id="record-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg transition active:scale-95">
+                    <span class="w-2.5 h-2.5 bg-white rounded-full animate-pulse" id="record-indicator"></span>
+                    <span id="record-txt">อัดเสียง</span>
+                </button>
+            </div>
+            
+            <div id="record-playback-container" class="hidden flex items-center gap-3">
+                <span class="text-[10px] text-slate-400 font-bold uppercase bg-slate-800 px-2 py-1 rounded">อัดเสร็จแล้ว</span>
+                <button id="playback-play-btn" class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition active:scale-90">
+                    <i class="fa-solid fa-play text-xs"></i>
+                </button>
+                <button id="playback-close-btn" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center hover:bg-slate-700 transition active:scale-90">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Player Control Overlay Bar -->
+    <div id="demo-player-bar" class="hidden w-full max-w-xs glass-panel-heavy border-blue-500/30 px-4 py-3 rounded-2xl flex items-center justify-between z-50 animate-bounce">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-compact-disc text-blue-400 animate-spin"></i>
+            <div>
+                <p class="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">เพลงสาธิตกำลังทำงาน</p>
+                <h4 id="demo-song-title" class="text-xs text-white font-bold">ชื่อเพลงสาธิต</h4>
+            </div>
+        </div>
+        <button id="demo-stop-btn" class="px-3 py-1 bg-red-500/20 hover:bg-red-500 text-red-200 hover:text-white rounded-lg text-xs font-bold transition">
+            <i class="fa-solid fa-square-stop mr-1"></i> ปิด
+        </button>
+    </div>
+
+    <!-- Clarinet Instrument Body Area -->
+    <main id="clarinet-container" class="w-full flex-1 flex justify-center items-center relative overflow-hidden py-2">
+        <div id="instrument-body" class="clarinet-body w-[90px] h-[72dvh] max-h-[580px] rounded-full relative flex flex-col justify-between items-center py-10 border-l-[1px] border-zinc-700 border-r-[1px] border-black">
+            
+            <!-- Metallic Decorative Rings representing clarinet links -->
+            <div class="absolute top-[8%] left-0 right-0 h-1.5 bg-gradient-to-r from-zinc-500 via-zinc-100 to-zinc-500 border-y border-zinc-600"></div>
+            <div class="absolute bottom-[16%] left-0 right-0 h-1.5 bg-gradient-to-r from-zinc-500 via-zinc-100 to-zinc-500 border-y border-zinc-600"></div>
+
+            <!-- Virtual Keys Column (C4 to C5 notes mapped inside clarinet-body) -->
+            <div id="keys-container" class="w-full h-full flex flex-col justify-between items-center px-1 z-30">
+                <!-- Keys are dynamically injected here via JS with exact sizes and placements -->
+            </div>
+
+            <!-- Flared Wooden Bell at the bottom -->
+            <div id="bell" class="absolute -bottom-11 w-[124px] h-[52px] bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 rounded-b-[40%] border-b-8 border-zinc-800 shadow-2xl flex items-center justify-center">
+                <div class="w-[82%] h-[14px] bg-zinc-950/90 rounded-b-full"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Slide Up Modal for Selecting Demo Songs -->
+    <div id="demo-modal" class="fixed inset-x-0 bottom-0 z-[100] max-w-md mx-auto translate-y-full transition-transform duration-300 ease-out">
+        <div class="glass-panel-heavy rounded-t-[32px] p-6 text-white shadow-2xl border-t border-slate-800">
+            <div class="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-5"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-music text-amber-400 mr-2"></i> เพลงสาธิต (3 เพลงฮิต)</h3>
+                <button id="close-demo-modal" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button class="demo-select-btn w-full p-4 glass-panel hover:bg-white/10 rounded-2xl flex items-center justify-between text-left transition" data-song="0">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center font-bold">1</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-amber-200">เพลงช้าง (Elephant Song)</h4>
+                            <p class="text-xs text-slate-400">เพลงไทยคลาสสิกสำหรับเด็ก</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-amber-400 text-lg"></i>
+                </button>
+
+                <button class="demo-select-btn w-full p-4 glass-panel hover:bg-white/10 rounded-2xl flex items-center justify-between text-left transition" data-song="1">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center font-bold">2</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-amber-200">หนูมาลี (Mary Had a Little Lamb)</h4>
+                            <p class="text-xs text-slate-400">เพลงเริ่มต้นดนตรีสากลยอดนิยม</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-amber-400 text-lg"></i>
+                </button>
+
+                <button class="demo-select-btn w-full p-4 glass-panel hover:bg-white/10 rounded-2xl flex items-center justify-between text-left transition" data-song="2">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center font-bold">3</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-amber-200">สุขสันต์วันเกิด (Happy Birthday)</h4>
+                            <p class="text-xs text-slate-400">เฉลองผ่านมิติเสียงสะท้อนไม้ลมเป่า</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-amber-400 text-lg"></i>
+                </button>
+            </div>
+            <p class="text-slate-500 text-[10px] text-center mt-6">ไฟคีย์จะกะพริบเรืองแสงสอดคล้องกับจังหวะตัวโน้ต และระบจะปิดเครื่องอัตโนมัติเมื่อเล่นจบเพลง</p>
+        </div>
+    </div>
+
+    <!-- Advanced Synth Customization Drawer -->
+    <div id="tuner-drawer" class="fixed inset-x-0 bottom-0 z-[100] max-w-md mx-auto translate-y-full transition-transform duration-300 ease-out">
+        <div class="glass-panel-heavy rounded-t-[32px] p-6 text-white shadow-2xl border-t border-slate-800 max-h-[85vh] overflow-y-auto">
+            <div class="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-5"></div>
+            
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-bold"><i class="fa-solid fa-sliders text-blue-400 mr-2"></i> ปรับแต่งเสียงสมจริง</h3>
+                    <p class="text-xs text-slate-400">ออกแบบและตกแต่งโทนเสียงและมิติของตัวเครื่องเป่า</p>
+                </div>
+                <button id="close-tuner-drawer" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Synth Customization Controls -->
+            <div class="space-y-5">
+                <!-- Sound Engine Type Select -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-300 font-semibold tracking-wide uppercase flex items-center gap-1">
+                        <i class="fa-solid fa-circle-nodes text-blue-400"></i> โมเดลสังเคราะห์เสียง (Audio Model)
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="model-btn py-2.5 text-xs rounded-xl border font-bold transition flex items-center justify-center gap-1.5" data-model="realistic">
+                            <i class="fa-solid fa-feather-pointed"></i> จำลองเสียงเครื่องเป่าจริง
+                        </button>
+                        <button class="model-btn py-2.5 text-xs rounded-xl border font-bold transition flex items-center justify-center gap-1.5" data-model="synth">
+                            <i class="fa-solid fa-wave-square"></i> คลื่นซินธ์ดนตรีไฟฟ้า
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Waveform Select (Visible only for Synth Mode) -->
+                <div id="waveform-selection-group" class="space-y-2">
+                    <label class="text-xs text-slate-300 font-semibold tracking-wide uppercase flex items-center gap-1">
+                        <i class="fa-solid fa-wave-square text-sky-400"></i> ประเภทคลื่นเสียงซินธ์
+                    </label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button class="wave-btn py-2 text-xs rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 font-semibold text-slate-300 transition" data-wave="square">Square</button>
+                        <button class="wave-btn py-2 text-xs rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 font-semibold text-slate-300 transition" data-wave="triangle">Triangle</button>
+                        <button class="wave-btn py-2 text-xs rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 font-semibold text-slate-300 transition" data-wave="sawtooth">Sawtooth</button>
+                        <button class="wave-btn py-2 text-xs rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 font-semibold text-slate-300 transition" data-wave="sine">Sine</button>
+                    </div>
+                </div>
+
+                <!-- Envelope Attack -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span class="flex items-center gap-1 font-semibold"><i class="fa-solid fa-gauge-simple-high text-sky-400"></i> เวลาเริ่มโจมตีโน้ต (Attack)</span>
+                        <span id="val-attack" class="text-sky-400 font-bold">0.05s</span>
+                    </div>
+                    <input type="range" id="input-attack" min="0.01" max="0.5" step="0.01" value="0.05" class="w-full">
+                </div>
+
+                <!-- Envelope Release -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span class="flex items-center gap-1 font-semibold"><i class="fa-solid fa-hourglass-end text-indigo-400"></i> หางเสียงสั่นปล่อยค้าง (Release)</span>
+                        <span id="val-release" class="text-indigo-400 font-bold">0.15s</span>
+                    </div>
+                    <input type="range" id="input-release" min="0.05" max="1.5" step="0.05" value="0.15" class="w-full">
+                </div>
+
+                <!-- Vibrato Control -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px] text-slate-300">
+                            <span class="font-semibold text-emerald-400">Vibrato Speed</span>
+                            <span id="val-vibrato-rate">5Hz</span>
+                        </div>
+                        <input type="range" id="input-vibrato-rate" min="2" max="12" step="0.5" value="5" class="w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px] text-slate-300">
+                            <span class="font-semibold text-emerald-400">Vibrato Depth</span>
+                            <span id="val-vibrato-depth">5</span>
+                        </div>
+                        <input type="range" id="input-vibrato-depth" min="0" max="25" step="1" value="5" class="w-full">
+                    </div>
+                </div>
+
+                <!-- Lowpass Filter Cutoff -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span class="flex items-center gap-1 font-semibold"><i class="fa-solid fa-filter text-amber-400"></i> ตัวกรองความถี่ปุ่มเป่า (Body Cutoff)</span>
+                        <span id="val-cutoff" class="text-amber-400 font-bold">1200Hz</span>
+                    </div>
+                    <input type="range" id="input-cutoff" min="500" max="3500" step="100" value="1200" class="w-full">
+                </div>
+
+                <!-- Stereo Spatial Reverb Simulator -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span class="flex items-center gap-1 font-semibold"><i class="fa-solid fa-guitar text-rose-400"></i> มิติห้องสะท้อนเวที (Concert Reverb)</span>
+                        <span id="val-reverb" class="text-rose-400 font-bold">25%</span>
+                    </div>
+                    <input type="range" id="input-reverb" min="0" max="80" step="5" value="25" class="w-full">
+                </div>
+            </div>
+            
+            <button id="reset-tuner-btn" class="w-full mt-6 py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs text-slate-300 rounded-xl transition font-semibold border border-slate-700 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-rotate-left"></i> คืนค่าเสียงเริ่มต้น
+            </button>
+        </div>
+    </div>
+
+    <!-- Playback container with native HTML5 controller for safe rendering -->
+    <div class="hidden">
+        <audio id="playback-audio" controls></audio>
+    </div>
+
     <script>
-        // --- Configuration ---
+        // --- 1. Sound Settings configuration ---
         const NOTES = [
-            { note: 'C4', label: 'โด (ต่ำ)', freq: 261.63 },
-            { note: 'D4', label: 'เร', freq: 293.66 },
-            { note: 'E4', label: 'มี', freq: 329.63 },
-            { note: 'F4', label: 'ฟา', freq: 349.23 },
-            { note: 'G4', label: 'ซอล', freq: 392.00 },
-            { note: 'A4', label: 'ลา', freq: 440.00 },
+            { note: 'C5', label: 'โด (สูง)', freq: 523.25 },
             { note: 'B4', label: 'ที', freq: 493.88 },
-            { note: 'C5', label: 'โด (สูง)', freq: 523.25 }
+            { note: 'A4', label: 'ลา', freq: 440.00 },
+            { note: 'G4', label: 'ซอล', freq: 392.00 },
+            { note: 'F4', label: 'ฟา', freq: 349.23 },
+            { note: 'E4', label: 'มี', freq: 329.63 },
+            { note: 'D4', label: 'เร', freq: 293.66 },
+            { note: 'C4', label: 'โด (ต่ำ)', freq: 261.63 }
         ];
 
-        // --- Audio Context & Synth Engine ---
+        // Advanced Synth Synth Custom Settings Variable
+        let config = {
+            soundModel: 'realistic', // 'realistic' (Custom Woodwind Engine) or 'synth'
+            waveType: 'square',
+            attack: 0.05,
+            release: 0.22,
+            cutoff: 1400,
+            vibratoRate: 5.5,
+            vibratoDepth: 4,
+            delayWet: 0.35
+        };
+
+        // Audio node states
         let audioCtx;
         let masterGain;
-        let compressor;
-        let dest; // For recording
-        let activeOscillators = {}; // Map to track playing notes
+        let mainFilter;
+        let delayNodeL;
+        let delayNodeR;
+        let delayFeedbackL;
+        let delayFeedbackR;
+        let delayFilterL;
+        let delayFilterR;
+        let wetGain;
+        let recordingDest;
+        let activeOscillators = {}; // Maps to track live synth play triggers
         let isLabelsVisible = true;
+        let noiseBuffer = null; // White noise cache for realistic air sound
 
-        // Recording vars
+        // Recording Logic Variables
         let mediaRecorder;
-        let audioChunks = [];
+        let recordedChunks = [];
         let isRecording = false;
 
+        // Demo Engine States
+        let isPlayingDemo = false;
+        let demoSequenceTimers = [];
+
+        // --- 2. Advanced Audio Context Initialization ---
         function initAudio() {
             if (audioCtx) return;
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
-            
-            // Master Chain
+
+            // Create air noise buffer to avoid real-time calculation drops
+            const bufferSize = audioCtx.sampleRate * 2;
+            noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                noiseData[i] = Math.random() * 2 - 1;
+            }
+
+            // Dynamic master gain to avoid digital clipping
             masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.5; // Prevent clipping
+            masterGain.gain.setValueAtTime(0.40, audioCtx.currentTime);
 
-            compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -10;
-            compressor.knee.value = 40;
-            compressor.ratio.value = 12;
-            compressor.attack.value = 0;
-            compressor.release.value = 0.25;
+            // Biquad lowpass filter mimicking the heavy wooden body resonant response
+            mainFilter = audioCtx.createBiquadFilter();
+            mainFilter.type = 'lowpass';
+            mainFilter.frequency.setValueAtTime(config.cutoff, audioCtx.currentTime);
 
-            // Destination for recording
-            dest = audioCtx.createMediaStreamDestination();
+            // STAGE REVERB CHAMBER: Deluxe Pseudo-Stereo Comb Delay Loops
+            delayNodeL = audioCtx.createDelay(1.0);
+            delayNodeR = audioCtx.createDelay(1.0);
+            delayNodeL.delayTime.setValueAtTime(0.12, audioCtx.currentTime); // L reflection time
+            delayNodeR.delayTime.setValueAtTime(0.18, audioCtx.currentTime); // R reflection time
 
-            // Connect chain: Master -> Compressor -> [Speakers & Recorder]
-            masterGain.connect(compressor);
-            compressor.connect(audioCtx.destination);
-            compressor.connect(dest);
+            delayFeedbackL = audioCtx.createGain();
+            delayFeedbackR = audioCtx.createGain();
+            delayFeedbackL.gain.setValueAtTime(0.40, audioCtx.currentTime);
+            delayFeedbackR.gain.setValueAtTime(0.40, audioCtx.currentTime);
+
+            // High frequency dampening inside the wood tube reflection
+            delayFilterL = audioCtx.createBiquadFilter();
+            delayFilterR = audioCtx.createBiquadFilter();
+            delayFilterL.type = 'lowpass';
+            delayFilterR.type = 'lowpass';
+            delayFilterL.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            delayFilterR.frequency.setValueAtTime(1200, audioCtx.currentTime);
+
+            const stereoMerger = audioCtx.createChannelMerger(2);
+            wetGain = audioCtx.createGain();
+            wetGain.gain.setValueAtTime(config.delayWet, audioCtx.currentTime);
+
+            // Connect Master Chain
+            masterGain.connect(mainFilter);
+            mainFilter.connect(audioCtx.destination); // Direct Clean Mono output
+
+            // Route filter into Stereo Space Simulator
+            mainFilter.connect(delayNodeL);
+            mainFilter.connect(delayNodeR);
+
+            // Feedbacks
+            delayNodeL.connect(delayFilterL);
+            delayFilterL.connect(delayFeedbackL);
+            delayFeedbackL.connect(delayNodeL); // Feedback loop L
+
+            delayNodeR.connect(delayFilterR);
+            delayFilterR.connect(delayFeedbackR);
+            delayFeedbackR.connect(delayNodeR); // Feedback loop R
+
+            // Cross feedback to combine L and R for dynamic depth
+            delayFeedbackL.connect(delayNodeR);
+
+            // Merge Mono streams to Stereo output
+            delayFeedbackL.connect(stereoMerger, 0, 0);
+            delayFeedbackR.connect(stereoMerger, 0, 1);
+            stereoMerger.connect(wetGain);
+            wetGain.connect(audioCtx.destination);
+
+            // Create safe media recording targets
+            recordingDest = audioCtx.createMediaStreamDestination();
+            mainFilter.connect(recordingDest);
+            wetGain.connect(recordingDest);
         }
 
-        // --- Clarinet Sound Synthesis ---
-        function playTone(freq, noteId) {
-            if (activeOscillators[noteId]) return; // Already playing
+        // --- 3. Custom notification (Toast replacing standard alert) ---
+        function showToast(text, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            const toastIcon = document.getElementById('toast-icon');
 
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            toastText.textContent = text;
+            if (isError) {
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-rose-500";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+            }
 
-            const t = audioCtx.currentTime;
+            toast.style.opacity = "1";
+            toast.style.transform = "translate(-50%, 0)";
+            toast.style.pointerEvents = "auto";
 
-            // 1. Oscillator: Square wave sounds closest to woodwinds (odd harmonics)
-            const osc = audioCtx.createOscillator();
-            osc.type = 'square'; 
-            osc.frequency.setValueAtTime(freq, t);
-
-            // 2. Filter: Lowpass to simulate the wooden body (removes harshness)
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(800, t); // Base cutoff
-            filter.Q.value = 1; // Resonance
-            // Dynamic filtering (breath simulation)
-            filter.frequency.linearRampToValueAtTime(1500, t + 0.1); 
-
-            // 3. Envelope (Gain): ADSR
-            const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(0.8, t + 0.05); // Attack
-            gainNode.gain.linearRampToValueAtTime(0.6, t + 0.2);  // Decay
-
-            // Connect: Osc -> Filter -> Gain -> Master
-            osc.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(masterGain);
-
-            osc.start(t);
-
-            // Store ref to stop later
-            activeOscillators[noteId] = { osc, gainNode, filter };
-        }
-
-        function stopTone(noteId) {
-            const sound = activeOscillators[noteId];
-            if (!sound) return;
-
-            const t = audioCtx.currentTime;
-            
-            // Release envelope
-            sound.gainNode.gain.cancelScheduledValues(t);
-            sound.gainNode.gain.setValueAtTime(sound.gainNode.gain.value, t);
-            sound.gainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.1); // Quick release
-
-            sound.osc.stop(t + 0.1);
-            
-            // Cleanup memory after sound finishes
             setTimeout(() => {
-                sound.osc.disconnect();
-                sound.filter.disconnect();
-                sound.gainNode.disconnect();
-            }, 150);
+                toast.style.opacity = "0";
+                toast.style.transform = "translate(-50%, -20px)";
+                toast.style.pointerEvents = "none";
+            }, 2500);
+        }
+
+        // --- 4. Custom Physical Modeling Clarinet Synthesis Engine ---
+        function triggerNoteStart(freq, noteId) {
+            if (activeOscillators[noteId]) return; // Avoid overlapping audio triggers
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+            const t = audioCtx.currentTime;
+            let osc;
+            let noiseSource = null;
+            let noiseGain = null;
+            let bodyFilter;
+            let noteGain;
+
+            if (config.soundModel === 'realistic') {
+                // MODEL A: REALISTIC ACOUSTIC CLARINET
+                osc = audioCtx.createOscillator();
+                
+                // Additive Synthesis Fourier Table representation for real Clarinet
+                // Cylindrical pipes closed at one end emphasize strong ODD harmonics.
+                const real = new Float32Array(13);
+                const imag = new Float32Array(13);
+                // real[0] and imag[0] must be 0
+                imag[1] = 1.0;   // Fundamental
+                imag[2] = 0.05;  // 2nd (Very weak)
+                imag[3] = 0.75;  // 3rd (Very strong odd)
+                imag[4] = 0.03;  // 4th
+                imag[5] = 0.45;  // 5th (Strong odd)
+                imag[6] = 0.02;  // 6th
+                imag[7] = 0.28;  // 7th (Odd)
+                imag[8] = 0.01;  // 8th
+                imag[9] = 0.14;  // 9th (Odd)
+                imag[10] = 0.01; // 10th
+                imag[11] = 0.08; // 11th (Odd)
+                imag[12] = 0.01; // 12th
+
+                const clarinetWave = audioCtx.createPeriodicWave(real, imag);
+                osc.setPeriodicWave(clarinetWave);
+
+                // REED PHYSICS SIMULATION: Initial microscopic scoop (reed bending)
+                osc.frequency.setValueAtTime(freq * 0.985, t);
+                osc.frequency.exponentialRampToValueAtTime(freq, t + 0.06);
+
+                // BREATH SIMULATION: Blow noise chiff source
+                noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = noiseBuffer;
+                noiseSource.loop = true;
+
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                // Focus wind noise around fundamental and odd harmonics
+                noiseFilter.frequency.setValueAtTime(freq * 1.5, t);
+                noiseFilter.Q.setValueAtTime(1.8, t);
+
+                noiseGain = audioCtx.createGain();
+                // Puff attack chiff then stabilize to warm breathing whisper
+                noiseGain.gain.setValueAtTime(0, t);
+                noiseGain.gain.linearRampToValueAtTime(0.12, t + 0.03); 
+                noiseGain.gain.exponentialRampToValueAtTime(0.015, t + 0.18);
+
+                noiseSource.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+
+                // Dynamic lowpass representing wood dampening under air pressure
+                bodyFilter = audioCtx.createBiquadFilter();
+                bodyFilter.type = 'lowpass';
+                bodyFilter.frequency.setValueAtTime(280, t);
+                bodyFilter.frequency.exponentialRampToValueAtTime(config.cutoff, t + config.attack);
+                bodyFilter.Q.setValueAtTime(1.1, t);
+
+                // Attack smoothing ADSR
+                noteGain = audioCtx.createGain();
+                noteGain.gain.setValueAtTime(0, t);
+                noteGain.gain.linearRampToValueAtTime(0.9, t + config.attack);
+
+                // Routings
+                osc.connect(bodyFilter);
+                noiseGain.connect(bodyFilter); // Mix reed sound and air sound inside body filter
+                bodyFilter.connect(noteGain);
+                noteGain.connect(masterGain);
+
+            } else {
+                // MODEL B: ELECTRIC SYNTH WAVE ENGINE
+                osc = audioCtx.createOscillator();
+                osc.type = config.waveType;
+                osc.frequency.setValueAtTime(freq, t);
+
+                bodyFilter = audioCtx.createBiquadFilter();
+                bodyFilter.type = 'lowpass';
+                bodyFilter.frequency.setValueAtTime(config.cutoff, t);
+
+                noteGain = audioCtx.createGain();
+                noteGain.gain.setValueAtTime(0, t);
+                noteGain.gain.linearRampToValueAtTime(1.0, t + config.attack);
+
+                osc.connect(bodyFilter);
+                bodyFilter.connect(noteGain);
+                noteGain.connect(masterGain);
+            }
+
+            // VIBRATO INSTANCE (LFO)
+            const vibratoLFO = audioCtx.createOscillator();
+            const vibratoGain = audioCtx.createGain();
+            vibratoLFO.frequency.setValueAtTime(config.vibratoRate, t);
+            
+            // Musicians apply vibrato slightly after attack phase - very realistic
+            vibratoGain.gain.setValueAtTime(0, t);
+            vibratoGain.gain.linearRampToValueAtTime(config.vibratoDepth, t + 0.25);
+
+            vibratoLFO.connect(vibratoGain);
+            vibratoGain.connect(osc.frequency);
+
+            // Execute elements
+            vibratoLFO.start(t);
+            osc.start(t);
+            if (noiseSource) noiseSource.start(t);
+
+            // Keep reference of running nodes
+            activeOscillators[noteId] = {
+                osc,
+                vibratoLFO,
+                vibratoGain,
+                noiseSource,
+                noiseGain,
+                bodyFilter,
+                noteGain
+            };
+
+            // Trigger dynamic container pulse glow effect
+            document.getElementById('app-glow').classList.add('active');
+        }
+
+        function triggerNoteStop(noteId) {
+            const activeInst = activeOscillators[noteId];
+            if (!activeInst) return;
+
+            const t = audioCtx.currentTime;
+
+            // Decay the wooden body filter frequency downwards on release
+            if (activeInst.bodyFilter) {
+                activeInst.bodyFilter.frequency.cancelScheduledValues(t);
+                activeInst.bodyFilter.frequency.setValueAtTime(activeInst.bodyFilter.frequency.value, t);
+                activeInst.bodyFilter.frequency.exponentialRampToValueAtTime(80, t + config.release);
+            }
+
+            // Trigger release envelope for main tone and wind noise
+            activeInst.noteGain.gain.cancelScheduledValues(t);
+            activeInst.noteGain.gain.setValueAtTime(activeInst.noteGain.gain.value, t);
+            activeInst.noteGain.gain.exponentialRampToValueAtTime(0.001, t + config.release);
+
+            if (activeInst.noiseGain) {
+                activeInst.noiseGain.gain.cancelScheduledValues(t);
+                activeInst.noiseGain.gain.setValueAtTime(activeInst.noiseGain.gain.value, t);
+                activeInst.noiseGain.gain.exponentialRampToValueAtTime(0.001, t + config.release * 0.7); // Wind dies slightly faster
+            }
+
+            const oscToClean = activeInst.osc;
+            const lfoToClean = activeInst.vibratoLFO;
+            const noiseToClean = activeInst.noiseSource;
+            const releaseTimeCalculated = config.release * 1000 + 100;
+
+            // Safe garbage collection of Web Audio nodes
+            setTimeout(() => {
+                try {
+                    oscToClean.stop();
+                    lfoToClean.stop();
+                    if (noiseToClean) noiseToClean.stop();
+
+                    oscToClean.disconnect();
+                    lfoToClean.disconnect();
+                    if (noiseToClean) noiseToClean.disconnect();
+                    if (activeInst.noiseGain) activeInst.noiseGain.disconnect();
+                    activeInst.bodyFilter.disconnect();
+                    activeInst.noteGain.disconnect();
+                } catch(e){}
+            }, releaseTimeCalculated);
 
             delete activeOscillators[noteId];
+
+            // Turn off ambient background glow if no other keys are playing
+            if (Object.keys(activeOscillators).length === 0) {
+                document.getElementById('app-glow').classList.remove('active');
+            }
         }
 
-        // --- UI Construction ---
-        function createKeys() {
-            const container = document.getElementById('keys-container');
-            
-            // Reverse loop to put Low notes at bottom (like holding a clarinet vertically)
-            // Or usually on mobile apps, low notes are at bottom.
-            // Let's iterate normally: C4 (Low) at Bottom? 
-            // Clarinet standard: Right hand (lower notes) at bottom.
-            // Let's render from Top (High) to Bottom (Low) or vice versa.
-            // To match visual: Top of screen = Mouthpiece (High notes usually closer to top? No, on clarinet, fingers closer to mouth play higher notes usually on left hand, but let's stick to a piano-roll vertical concept: Up = High Pitch, Down = Low Pitch).
-            
-            // Let's do: Top = High Pitch (C5), Bottom = Low Pitch (C4).
-            const sortedNotes = [...NOTES].reverse(); 
+        // --- 5. Interactive Clarinet Keys Creation ---
+        function renderClarinetKeys() {
+            const keysContainer = document.getElementById('keys-container');
+            keysContainer.innerHTML = ''; // Clear previous
 
-            sortedNotes.forEach((noteData, index) => {
+            NOTES.forEach((noteData) => {
                 const keyRow = document.createElement('div');
-                keyRow.className = 'key-row';
+                keyRow.className = "flex justify-center w-full relative";
 
-                const btn = document.createElement('div');
-                btn.className = 'note-key';
-                btn.dataset.note = noteData.note;
-                btn.dataset.freq = noteData.freq;
+                const keyBtn = document.createElement('button');
+                keyBtn.id = `key-${noteData.note}`;
+                keyBtn.className = "w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-600 border-[3px] border-zinc-500 active:scale-95 shadow-xl shadow-black/80 relative flex items-center justify-center transition-all duration-100 cursor-pointer pointer-events-auto touch-none";
+                keyBtn.setAttribute('data-note', noteData.note);
+                keyBtn.setAttribute('data-freq', noteData.freq);
+
+                // Internal key structure mimicking high quality chrome mechanical flaps
+                const keyCap = document.createElement('div');
+                keyCap.className = "w-[75%] h-[75%] rounded-full bg-gradient-to-tr from-zinc-300 via-white to-zinc-200 border border-zinc-400/40 flex flex-col items-center justify-center shadow-inner relative";
                 
+                // Silver hinge visual bar extending off-center to make it look like a clarinet key mechanism
+                const mechanicalHinge = document.createElement('div');
+                mechanicalHinge.className = "absolute left-full top-1/2 -translate-y-1/2 w-4 h-2 bg-gradient-to-b from-zinc-400 to-zinc-600 rounded-r border-y border-zinc-400";
+                keyBtn.appendChild(mechanicalHinge);
+
+                // Note Label Text
                 const label = document.createElement('span');
-                label.className = 'key-label';
-                label.innerText = noteData.label;
-                btn.appendChild(label);
+                label.className = "note-label text-[11px] font-bold text-zinc-800 tracking-tight transition duration-200 pointer-events-none";
+                label.textContent = noteData.label;
 
-                keyRow.appendChild(btn);
-                container.appendChild(keyRow);
+                const alphabetLabel = document.createElement('span');
+                alphabetLabel.className = "note-label text-[9px] font-semibold text-zinc-500 uppercase pointer-events-none";
+                alphabetLabel.textContent = noteData.note;
 
-                // Interaction Logic
-                const startHandler = (e) => {
-                    e.preventDefault(); // Prevent scroll/zoom
-                    btn.classList.add('active');
-                    playTone(noteData.freq, noteData.note);
-                };
+                keyCap.appendChild(label);
+                keyCap.appendChild(alphabetLabel);
+                keyBtn.appendChild(keyCap);
+                keyRow.appendChild(keyBtn);
+                keysContainer.appendChild(keyRow);
 
-                const endHandler = (e) => {
+                // Interaction structures for instant touch response
+                const onStart = (e) => {
                     e.preventDefault();
-                    btn.classList.remove('active');
-                    stopTone(noteData.note);
+                    if (isPlayingDemo) return; // Prevent play overlap during demo
+                    keyBtn.classList.add('key-glow-active');
+                    initAudio();
+                    triggerNoteStart(noteData.freq, noteData.note);
                 };
 
-                // Touch Events (Mobile)
-                btn.addEventListener('touchstart', startHandler, {passive: false});
-                btn.addEventListener('touchend', endHandler);
-                btn.addEventListener('touchcancel', endHandler);
+                const onEnd = (e) => {
+                    e.preventDefault();
+                    if (isPlayingDemo) return;
+                    keyBtn.classList.remove('key-glow-active');
+                    triggerNoteStop(noteData.note);
+                };
 
-                // Mouse Events (Desktop)
-                btn.addEventListener('mousedown', startHandler);
-                btn.addEventListener('mouseup', endHandler);
-                btn.addEventListener('mouseleave', endHandler);
+                // Pointer events (handles touch & mouse beautifully in modern browsers)
+                keyBtn.addEventListener('pointerdown', onStart);
+                keyBtn.addEventListener('pointerup', onEnd);
+                keyBtn.addEventListener('pointerleave', onEnd);
+                keyBtn.addEventListener('pointercancel', onEnd);
             });
         }
 
-        // --- Recording Logic ---
-        function toggleRecording() {
-            const btn = document.getElementById('record-btn');
-            
-            if (!isRecording) {
-                // Start Recording
-                audioChunks = [];
-                // Check if supported
-                try {
-                    mediaRecorder = new MediaRecorder(dest.stream);
-                } catch (err) {
-                    alert("Browser does not support recording.");
-                    return;
+        // --- 6. Demo Player Engine (3 Hit Songs with automatic turn off) ---
+        const DEMO_SONGS = [
+            {
+                title: "เพลงช้าง (Elephant Song)",
+                tempo: 420,
+                sequence: [
+                    { note: 'G4', dur: 1.5 }, { note: 'G4', dur: 0.5 }, { note: 'G4', dur: 0.5 }, { note: 'G4', dur: 1.5 }, { note: 'E4', dur: 0.5 }, { note: 'D4', dur: 0.5 }, { note: 'C4', dur: 2 },
+                    { note: 'E4', dur: 1 }, { note: 'G4', dur: 1 }, { note: 'A4', dur: 1 }, { note: 'G4', dur: 2 },
+                    { note: 'G4', dur: 1 }, { note: 'G4', dur: 0.5 }, { note: 'G4', dur: 0.5 }, { note: 'G4', dur: 1.5 }, { note: 'E4', dur: 0.5 }, { note: 'D4', dur: 0.5 }, { note: 'C4', dur: 3 }
+                ]
+            },
+            {
+                title: "หนูมาลี (Mary Had a Little Lamb)",
+                tempo: 360,
+                sequence: [
+                    { note: 'E4', dur: 1 }, { note: 'D4', dur: 1 }, { note: 'C4', dur: 1 }, { note: 'D4', dur: 1 },
+                    { note: 'E4', dur: 1 }, { note: 'E4', dur: 1 }, { note: 'E4', dur: 2 },
+                    { note: 'D4', dur: 1 }, { note: 'D4', dur: 1 }, { note: 'D4', dur: 2 },
+                    { note: 'E4', dur: 1 }, { note: 'G4', dur: 1 }, { note: 'G4', dur: 2 },
+                    { note: 'E4', dur: 1 }, { note: 'D4', dur: 1 }, { note: 'C4', dur: 1 }, { note: 'D4', dur: 1 },
+                    { note: 'E4', dur: 1 }, { note: 'E4', dur: 1 }, { note: 'E4', dur: 1 }, { note: 'E4', dur: 1 },
+                    { note: 'D4', dur: 1 }, { note: 'D4', dur: 1 }, { note: 'E4', dur: 1 }, { note: 'D4', dur: 1 }, { note: 'C4', dur: 3 }
+                ]
+            },
+            {
+                title: "สุขสันต์วันเกิด (Happy Birthday)",
+                tempo: 400,
+                sequence: [
+                    { note: 'C4', dur: 0.8 }, { note: 'C4', dur: 0.4 }, { note: 'D4', dur: 1.2 }, { note: 'C4', dur: 1.2 }, { note: 'F4', dur: 1.2 }, { note: 'E4', dur: 2.4 },
+                    { note: 'C4', dur: 0.8 }, { note: 'C4', dur: 0.4 }, { note: 'D4', dur: 1.2 }, { note: 'C4', dur: 1.2 }, { note: 'G4', dur: 1.2 }, { note: 'F4', dur: 2.4 },
+                    { note: 'C4', dur: 0.8 }, { note: 'C4', dur: 0.4 }, { note: 'C5', dur: 1.2 }, { note: 'A4', dur: 1.2 }, { note: 'F4', dur: 1.2 }, { note: 'E4', dur: 1.2 }, { note: 'D4', dur: 2.4 },
+                    { note: 'B4', dur: 0.8 }, { note: 'B4', dur: 0.4 }, { note: 'A4', dur: 1.2 }, { note: 'F4', dur: 1.2 }, { note: 'G4', dur: 1.2 }, { note: 'F4', dur: 3 }
+                ]
+            }
+        ];
+
+        function playDemoSong(songIndex) {
+            if (isPlayingDemo) stopDemoPlayback();
+            isPlayingDemo = true;
+            initAudio();
+
+            const song = DEMO_SONGS[songIndex];
+            document.getElementById('demo-song-title').textContent = song.title;
+            document.getElementById('demo-player-bar').classList.remove('hidden');
+            closeDemoModal();
+
+            showToast(`เริ่มแสดงเพลงสาธิต: ${song.title}`);
+
+            let accumulatedTime = 0;
+
+            song.sequence.forEach((step, index) => {
+                const triggerTimeMs = accumulatedTime * song.tempo;
+                const noteObj = NOTES.find(n => n.note === step.note);
+
+                if (noteObj) {
+                    // Schedule Note On
+                    const tStart = setTimeout(() => {
+                        const keyEl = document.getElementById(`key-${step.note}`);
+                        if (keyEl) keyEl.classList.add('key-glow-active');
+                        triggerNoteStart(noteObj.freq, noteObj.note);
+                    }, triggerTimeMs);
+
+                    // Schedule Note Off
+                    const tStop = setTimeout(() => {
+                        const keyEl = document.getElementById(`key-${step.note}`);
+                        if (keyEl) keyEl.classList.remove('key-glow-active');
+                        triggerNoteStop(noteObj.note);
+                    }, triggerTimeMs + (step.dur * song.tempo - 40));
+
+                    demoSequenceTimers.push(tStart, tStop);
                 }
 
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                accumulatedTime += step.dur;
+            });
+
+            // Auto turn off when completion is achieved
+            const totalLengthMs = accumulatedTime * song.tempo + 300;
+            const completionTimer = setTimeout(() => {
+                stopDemoPlayback();
+                showToast("จบเพลงสาธิต เรียบร้อยแล้ว");
+            }, totalLengthMs);
+
+            demoSequenceTimers.push(completionTimer);
+        }
+
+        function stopDemoPlayback() {
+            // Cancel all timers
+            demoSequenceTimers.forEach(timer => clearTimeout(timer));
+            demoSequenceTimers = [];
+
+            // Reset UI lights and active tones
+            NOTES.forEach(noteData => {
+                const keyEl = document.getElementById(`key-${noteData.note}`);
+                if (keyEl) keyEl.classList.remove('key-glow-active');
+                triggerNoteStop(noteData.note);
+            });
+
+            document.getElementById('demo-player-bar').classList.add('hidden');
+            isPlayingDemo = false;
+        }
+
+        // --- 7. Native Web Recorder Operations ---
+        function toggleRecording() {
+            initAudio();
+            const recordBtn = document.getElementById('record-btn');
+            const recordTxt = document.getElementById('record-txt');
+            const recordIndicator = document.getElementById('record-indicator');
+
+            if (!isRecording) {
+                recordedChunks = [];
+                try {
+                    mediaRecorder = new MediaRecorder(recordingDest.stream, {
+                        mimeType: 'audio/webm'
+                    });
+                } catch(e) {
+                    try {
+                        mediaRecorder = new MediaRecorder(recordingDest.stream);
+                    } catch(err) {
+                        showToast("ไม่รองรับการบันทึกบนเบราว์เซอร์นี้", true);
+                        return;
+                    }
+                }
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+                };
+
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioUrl = URL.createObjectURL(blob);
-                    const player = document.getElementById('playback');
-                    player.src = audioUrl;
-                    document.getElementById('audio-player-container').style.display = 'block';
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    const audioURL = URL.createObjectURL(blob);
+                    
+                    const playbackAudio = document.getElementById('playback-audio');
+                    playbackAudio.src = audioURL;
+
+                    document.getElementById('record-playback-container').classList.remove('hidden');
+                    showToast("บันทึกเพลงของคุณเรียบร้อยแล้ว");
                 };
 
                 mediaRecorder.start();
                 isRecording = true;
-                btn.classList.add('recording');
-                btn.innerText = "⏹ หยุดอัด";
+                recordBtn.classList.remove('bg-rose-600');
+                recordBtn.classList.add('bg-zinc-800', 'border', 'border-rose-500');
+                recordTxt.textContent = "หยุดบันทึก";
+                recordIndicator.classList.add('bg-rose-500');
+                showToast("เริ่มบันทึกเสียงเป่าของคุณแล้ว...");
             } else {
-                // Stop Recording
                 mediaRecorder.stop();
                 isRecording = false;
-                btn.classList.remove('recording');
-                btn.innerText = "🔴 อัดเสียง";
+                recordBtn.classList.remove('bg-zinc-800', 'border', 'border-rose-500');
+                recordBtn.classList.add('bg-rose-600');
+                recordTxt.textContent = "อัดเสียง";
+                recordIndicator.classList.remove('bg-rose-500');
+                recordIndicator.classList.add('bg-white');
             }
         }
 
-        // --- Initialization ---
-        document.getElementById('start-btn').addEventListener('click', () => {
-            initAudio();
-            document.getElementById('overlay').classList.add('hidden');
-        });
+        // --- 8. UI Modals/Drawers Controls ---
+        function openDemoModal() {
+            document.getElementById('demo-modal').style.transform = 'translateY(0)';
+            closeTunerDrawer();
+        }
 
-        document.getElementById('toggle-labels').addEventListener('click', () => {
-            isLabelsVisible = !isLabelsVisible;
-            const labels = document.querySelectorAll('.key-label');
-            labels.forEach(l => l.style.opacity = isLabelsVisible ? '1' : '0');
-        });
+        function closeDemoModal() {
+            document.getElementById('demo-modal').style.transform = 'translateY(100%)';
+        }
 
-        document.getElementById('record-btn').addEventListener('click', toggleRecording);
+        function openTunerDrawer() {
+            document.getElementById('tuner-drawer').style.transform = 'translateY(0)';
+            closeDemoModal();
+        }
 
-        // Build UI
-        createKeys();
+        function closeTunerDrawer() {
+            document.getElementById('tuner-drawer').style.transform = 'translateY(100%)';
+        }
 
+        function updateTunerUI() {
+            document.getElementById('val-attack').textContent = `${config.attack.toFixed(2)}s`;
+            document.getElementById('val-release').textContent = `${config.release.toFixed(2)}s`;
+            document.getElementById('val-vibrato-rate').textContent = `${config.vibratoRate}Hz`;
+            document.getElementById('val-vibrato-depth').textContent = config.vibratoDepth;
+            document.getElementById('val-cutoff').textContent = `${config.cutoff}Hz`;
+            document.getElementById('val-reverb').textContent = `${Math.round(config.delayWet * 100)}%`;
+
+            // Active Voice Model state buttons
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                if (btn.dataset.model === config.soundModel) {
+                    btn.className = "model-btn py-2.5 text-xs rounded-xl border border-blue-500 bg-gradient-to-r from-blue-600 to-indigo-600 font-bold text-white transition shadow-lg shadow-blue-500/20";
+                } else {
+                    btn.className = "model-btn py-2.5 text-xs rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 font-bold text-slate-300 transition";
+                }
+            });
+
+            // Toggle Synth waveform options group
+            const waveGroup = document.getElementById('waveform-selection-group');
+            if (config.soundModel === 'synth') {
+                waveGroup.classList.remove('hidden');
+            } else {
+                waveGroup.classList.add('hidden');
+            }
+
+            // Synth Active wave button state
+            document.querySelectorAll('.wave-btn').forEach(btn => {
+                if (btn.dataset.wave === config.waveType) {
+                    btn.className = "wave-btn py-2 text-xs rounded-xl border border-sky-500 bg-sky-600 font-semibold text-white transition shadow-md shadow-sky-500/20";
+                } else {
+                    btn.className = "wave-btn py-2 text-xs rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 font-semibold text-slate-300 transition";
+                }
+            });
+
+            // Feed updated values into real-time Web Audio nodes
+            if (audioCtx) {
+                mainFilter.frequency.setValueAtTime(config.cutoff, audioCtx.currentTime);
+                wetGain.gain.setValueAtTime(config.delayWet, audioCtx.currentTime);
+            }
+        }
+
+        // --- 9. Interface Bindings and Event Listeners ---
+        function setupEventListeners() {
+            // Overlay and initialization
+            document.getElementById('start-btn').addEventListener('click', () => {
+                initAudio();
+                document.getElementById('overlay').classList.add('hidden');
+                showToast("แอปพลิเคชัน คลาริเน็ตเสมือนจริง พร้อมทำงาน!");
+            });
+
+            // Toggle Labels Option
+            document.getElementById('toggle-labels').addEventListener('click', () => {
+                isLabelsVisible = !isLabelsVisible;
+                const labels = document.querySelectorAll('.note-label');
+                labels.forEach(lbl => {
+                    lbl.style.opacity = isLabelsVisible ? '1' : '0.15';
+                });
+                const toggleBtn = document.getElementById('toggle-labels');
+                if (isLabelsVisible) {
+                    toggleBtn.classList.remove('text-zinc-500');
+                    toggleBtn.classList.add('text-emerald-400');
+                } else {
+                    toggleBtn.classList.remove('text-emerald-400');
+                    toggleBtn.classList.add('text-zinc-500');
+                }
+            });
+
+            // Recording bindings
+            document.getElementById('record-btn').addEventListener('click', toggleRecording);
+            
+            document.getElementById('playback-play-btn').addEventListener('click', () => {
+                const playbackAudio = document.getElementById('playback-audio');
+                if (playbackAudio.paused) {
+                    playbackAudio.play();
+                    document.getElementById('playback-play-btn').innerHTML = '<i class="fa-solid fa-pause text-xs"></i>';
+                } else {
+                    playbackAudio.pause();
+                    document.getElementById('playback-play-btn').innerHTML = '<i class="fa-solid fa-play text-xs"></i>';
+                }
+            });
+
+            document.getElementById('playback-audio').onended = () => {
+                document.getElementById('playback-play-btn').innerHTML = '<i class="fa-solid fa-play text-xs"></i>';
+            };
+
+            document.getElementById('playback-close-btn').addEventListener('click', () => {
+                document.getElementById('record-playback-container').classList.add('hidden');
+                document.getElementById('playback-audio').src = '';
+            });
+
+            // Modal/Drawer controllers
+            document.getElementById('btn-demo-toggle').addEventListener('click', openDemoModal);
+            document.getElementById('close-demo-modal').addEventListener('click', closeDemoModal);
+            document.getElementById('btn-tuner-toggle').addEventListener('click', openTunerDrawer);
+            document.getElementById('close-tuner-drawer').addEventListener('click', closeTunerDrawer);
+
+            // Audio model toggle selector
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    config.soundModel = e.currentTarget.dataset.model;
+                    updateTunerUI();
+                    showToast(`เปลี่ยนเป็นโมเดลเสียง: ${config.soundModel === 'realistic' ? 'จำลองเสียงจริง' : 'เสียงสังเคราะห์ซินธ์'}`);
+                });
+            });
+
+            // Waveform selector for Synth Mode
+            document.querySelectorAll('.wave-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    config.waveType = e.target.dataset.wave;
+                    updateTunerUI();
+                });
+            });
+
+            // Tuner controls inputs bindings
+            document.getElementById('input-attack').addEventListener('input', (e) => {
+                config.attack = parseFloat(e.target.value);
+                updateTunerUI();
+            });
+
+            document.getElementById('input-release').addEventListener('input', (e) => {
+                config.release = parseFloat(e.target.value);
+                updateTunerUI();
+            });
+
+            document.getElementById('input-vibrato-rate').addEventListener('input', (e) => {
+                config.vibratoRate = parseFloat(e.target.value);
+                updateTunerUI();
+            });
+
+            document.getElementById('input-vibrato-depth').addEventListener('input', (e) => {
+                config.vibratoDepth = parseFloat(e.target.value);
+                updateTunerUI();
+            });
+
+            document.getElementById('input-cutoff').addEventListener('input', (e) => {
+                config.cutoff = parseInt(e.target.value);
+                updateTunerUI();
+            });
+
+            document.getElementById('input-reverb').addEventListener('input', (e) => {
+                config.delayWet = parseInt(e.target.value) / 100;
+                updateTunerUI();
+            });
+
+            // Reset tuner configurations
+            document.getElementById('reset-tuner-btn').addEventListener('click', () => {
+                config = {
+                    soundModel: 'realistic',
+                    waveType: 'square',
+                    attack: 0.05,
+                    release: 0.22,
+                    cutoff: 1400,
+                    vibratoRate: 5.5,
+                    vibratoDepth: 4,
+                    delayWet: 0.35
+                };
+                
+                // Reset native slider elements positions
+                document.getElementById('input-attack').value = 0.05;
+                document.getElementById('input-release').value = 0.22;
+                document.getElementById('input-vibrato-rate').value = 5.5;
+                document.getElementById('input-vibrato-depth').value = 4;
+                document.getElementById('input-cutoff').value = 1400;
+                document.getElementById('input-reverb').value = 35;
+
+                updateTunerUI();
+                showToast("คืนค่าเริ่มต้นของระบบเสียงจริง เรียบร้อยแล้ว");
+            });
+
+            // Demo Songs selections triggers
+            document.querySelectorAll('.demo-select-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const songIdx = parseInt(e.currentTarget.dataset.song);
+                    playDemoSong(songIdx);
+                });
+            });
+
+            // Stop demo action trigger
+            document.getElementById('demo-stop-btn').addEventListener('click', stopDemoPlayback);
+        }
+
+        // --- 10. Start Application ---
+        window.onload = function() {
+            renderClarinetKeys();
+            setupEventListeners();
+            updateTunerUI();
+        }
     </script>
 </body>
 </html>
