@@ -3,350 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>French Horn Simulator</title>
+    <title>French Horn Simulator Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --brass-gold: #d4af37;
             --brass-dark: #8a6e18;
             --brass-light: #f9e38e;
-            --bg-color: #1a1a1a;
         }
-
-        * {
-            box-sizing: border-box;
-            touch-action: none; /* ป้องกันการเลื่อนหน้าจอ */
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at center, #2a2a2a 0%, #000000 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            overflow: hidden;
-            font-family: 'Sarabun', sans-serif;
-            color: white;
+            font-family: 'Inter', 'Sarabun', sans-serif;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
-
-        /* ส่วนหัวและแผงควบคุม */
-        header {
-            width: 100%;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(5px);
-            z-index: 10;
-            height: 60px;
+        /* Custom scrollbar to keep layout premium */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
         }
-
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: var(--brass-gold);
-            text-shadow: 0 0 5px var(--brass-dark);
+        ::-webkit-scrollbar-thumb {
+            background: var(--brass-dark);
+            border-radius: 10px;
         }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-control {
-            background: #333;
-            border: 1px solid #555;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .btn-control:active {
-            transform: scale(0.95);
-        }
-
-        .btn-record.recording {
-            background: #ff4444;
-            border-color: #ff0000;
-            animation: pulse 1.5s infinite;
-        }
-
-        .btn-play:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
-        }
-
-        /* พื้นที่แสดงผลเฟรนช์ฮอร์น (SVG) */
-        .instrument-container {
-            flex-grow: 1;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        #horn-svg {
-            max-width: 90%;
-            max-height: 50vh;
-            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
-        }
-
-        /* ส่วนของ Valve Animation */
+        /* Piston valve dynamic compression transition */
         .valve-piston {
-            transition: transform 0.1s ease-out;
-            fill: #c0c0c0;
+            transition: transform 0.08s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .valve-pressed {
-            transform: translateY(15px);
+            transform: translateY(12px);
         }
-
-        /* แป้นคีย์บอร์ดโน้ต */
-        .keyboard-container {
-            width: 100%;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-top: 2px solid var(--brass-dark);
-            height: 35vh; /* พื้นที่กด */
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+        /* Premium custom key transition */
+        .key-btn-active {
+            transform: translateY(4px) scale(0.98);
+            background: linear-gradient(180deg, var(--brass-dark) 0%, var(--brass-gold) 100%) !important;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.8), 0 0 10px rgba(212, 175, 55, 0.4) !important;
         }
-
-        .octave-label {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 5px;
-        }
-
-        .keys-row {
-            display: flex;
-            justify-content: space-around;
-            height: 100%;
-            gap: 5px;
-        }
-
-        .key-btn {
-            flex: 1;
-            background: linear-gradient(180deg, var(--brass-light) 0%, var(--brass-gold) 50%, var(--brass-dark) 100%);
-            border: none;
-            border-radius: 0 0 10px 10px;
-            position: relative;
-            cursor: pointer;
-            box-shadow: inset 0 2px 5px rgba(255,255,255,0.5), 0 5px 10px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            padding-bottom: 15px;
-            transition: transform 0.1s, background 0.1s;
-        }
-
-        .key-btn::before {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 70%;
-            height: 10px;
-            background: rgba(255,255,255,0.4);
-            border-radius: 5px;
-        }
-
-        .key-btn:active, .key-btn.active {
-            transform: translateY(5px);
-            background: linear-gradient(180deg, var(--brass-dark) 0%, var(--brass-gold) 100%);
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
-        }
-
-        .key-label {
-            font-weight: bold;
-            font-size: 1rem;
-            color: #2c2100;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
-        }
-        
-        .key-sub {
-            font-size: 0.7rem;
-            color: #4a3b00;
-        }
-
-        /* Overlay เริ่มต้น */
-        #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-            text-align: center;
-        }
-
-        #start-btn {
-            background: var(--brass-gold);
-            color: black;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            border-radius: 50px;
-            margin-top: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 20px var(--brass-gold);
-            animation: glow 2s infinite;
-        }
-
-        @keyframes glow {
-            0% { box-shadow: 0 0 20px var(--brass-gold); }
-            50% { box-shadow: 0 0 40px var(--brass-light); }
-            100% { box-shadow: 0 0 20px var(--brass-gold); }
-        }
-
     </style>
 </head>
-<body>
+<body class="bg-neutral-950 text-white w-screen h-screen overflow-hidden flex flex-col justify-between">
 
-    <div id="start-overlay">
-        <h1>French Horn Simulator</h1>
-        <p>แตะเพื่อเริ่มเล่น (Tap to Start)</p>
-        <button id="start-btn">เริ่มเลย</button>
+    <!-- หน้าจอ Welcome Screen เพื่อปลดล็อกข้อจำกัด Audio Context ของเบราว์เซอร์ -->
+    <div id="start-overlay" class="fixed inset-0 bg-neutral-950/95 backdrop-blur-md z-50 flex flex-col justify-center items-center text-center p-6 transition-all duration-500">
+        <div class="relative mb-6">
+            <div class="absolute inset-0 bg-yellow-500/10 blur-3xl rounded-full"></div>
+            <svg class="w-32 h-32 text-amber-400 drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+            </svg>
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-600 bg-clip-text text-transparent mb-2">
+            FRENCH HORN SIMULATOR
+        </h1>
+        <p class="text-neutral-400 max-w-xs text-sm mb-8 leading-relaxed">
+            สัมผัสเสียงดนตรีคลาสสิกจำลองระดับสตูดิโอผ่านเบราว์เซอร์ของคุณ ออกแบบเพื่อการแสดงผลบนสมาร์ตโฟนแนวตั้งโดยเฉพาะ
+        </p>
+        <button id="start-btn" class="px-10 py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-neutral-950 font-bold text-lg rounded-full shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all transform hover:scale-105 active:scale-95 duration-200">
+            เริ่มใช้งานเครื่องดนตรี
+        </button>
     </div>
 
-    <header>
-        <h1>French Horn</h1>
-        <div class="controls">
-            <button class="btn-control btn-record" id="record-btn">
-                <span>●</span> อัดเสียง
-            </button>
-            <button class="btn-control btn-play" id="play-btn" disabled>
-                <span>▶</span> เล่น
-            </button>
-            <a id="download-link" style="display:none"></a>
-            <button class="btn-control" id="download-btn" disabled>
-                <span>⬇</span> โหลด
-            </button>
+    <!-- ส่วนหัวแอปพลิเคชันและแถบควบคุมหลัก -->
+    <header class="w-full bg-neutral-900/80 backdrop-blur-md border-b border-neutral-800 p-3 z-30">
+        <div class="max-w-md mx-auto flex justify-between items-center gap-2">
+            <div>
+                <h1 class="text-sm font-extrabold text-amber-400 tracking-wider">FRENCH HORN</h1>
+                <p class="text-[10px] text-neutral-500 font-mono" id="status-text">Ready to play</p>
+            </div>
+            
+            <div class="flex items-center gap-1.5">
+                <button id="toggle-audio-btn" class="p-2 bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-600 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors border border-neutral-700/50">
+                    <span>⚙️</span> <span class="hidden xs:inline">ปรับแต่ง</span>
+                </button>
+                <button id="toggle-demo-btn" class="p-2 bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-600 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors border border-neutral-700/50">
+                    <span>🎵</span> <span class="hidden xs:inline">เพลงสาธิต</span>
+                </button>
+                <div class="w-[1px] h-6 bg-neutral-800 mx-1"></div>
+                <button id="record-btn" class="p-2 bg-neutral-800 text-red-500 hover:bg-neutral-700 rounded-lg text-xs font-bold flex items-center gap-1 transition-all border border-neutral-700/50">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-600 inline-block animate-pulse" id="rec-dot"></span>
+                    <span id="rec-text">อัด</span>
+                </button>
+                <button id="play-btn" disabled class="p-2 bg-neutral-800 text-emerald-400 disabled:opacity-40 rounded-lg text-xs font-bold transition-all border border-neutral-700/50">
+                    ▶ เล่น
+                </button>
+                <button id="download-btn" disabled class="p-2 bg-neutral-800 text-sky-400 disabled:opacity-40 rounded-lg text-xs font-bold transition-all border border-neutral-700/50">
+                    ⬇ โหลด
+                </button>
+                <a id="download-link" class="hidden"></a>
+            </div>
         </div>
     </header>
 
-    <div class="instrument-container">
-        <!-- SVG French Horn Graphic -->
-        <svg id="horn-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#f9e38e;stop-opacity:1" />
-                    <stop offset="50%" style="stop-color:#d4af37;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#8a6e18;stop-opacity:1" />
-                </linearGradient>
-                <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#eeeeee;stop-opacity:1" />
-                    <stop offset="50%" style="stop-color:#999999;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#eeeeee;stop-opacity:1" />
-                </linearGradient>
-            </defs>
+    <!-- ส่วนแผงปรับปรุงสัญญาณเสียงดนตรีขั้นสูง (Advanced Audio Configuration Drawer) -->
+    <div id="audio-panel" class="hidden w-full bg-neutral-900/95 border-b border-neutral-800 shadow-2xl p-4 transition-all duration-300 z-20">
+        <div class="max-w-md mx-auto grid grid-cols-2 gap-4">
+            <div class="col-span-2 border-b border-neutral-800 pb-2">
+                <h3 class="text-xs font-bold text-amber-400 flex items-center gap-1">
+                    <span>🎛️</span> สตูดิโอมิกเซอร์จำลอง
+                </h3>
+            </div>
             
-            <!-- Main Body (Coils) -->
-            <path d="M150,150 Q100,50 200,50 T250,150 T150,250 T50,150" fill="none" stroke="url(#gold-grad)" stroke-width="20" stroke-linecap="round"/>
-            <path d="M160,150 Q120,80 190,80 T230,150 T160,220 T80,150" fill="none" stroke="url(#gold-grad)" stroke-width="15" stroke-linecap="round" opacity="0.8"/>
+            <div class="flex flex-col gap-1.5">
+                <div class="flex justify-between text-[11px] text-neutral-400 font-mono">
+                    <span>ระดับความดัง</span>
+                    <span id="label-vol" class="text-amber-400">75%</span>
+                </div>
+                <input type="range" id="slider-vol" min="0" max="1" step="0.05" value="0.75" class="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-400">
+            </div>
 
-            <!-- Bell -->
-            <path d="M50,150 Q20,150 10,250 Q60,280 100,220" fill="url(#gold-grad)" stroke="var(--brass-dark)" stroke-width="2"/>
-            <ellipse cx="55" cy="220" rx="45" ry="30" fill="#220000" transform="rotate(-30 55 220)"/>
+            <div class="flex flex-col gap-1.5">
+                <div class="flex justify-between text-[11px] text-neutral-400 font-mono">
+                    <span>โทนฟิลเตอร์</span>
+                    <span id="label-cutoff" class="text-amber-400">450Hz</span>
+                </div>
+                <input type="range" id="slider-cutoff" min="150" max="1500" step="25" value="450" class="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-400">
+            </div>
 
-            <!-- Leadpipe to Valves -->
-            <path d="M250,150 L280,150 L280,100" fill="none" stroke="url(#gold-grad)" stroke-width="12"/>
+            <div class="flex flex-col gap-1.5">
+                <div class="flex justify-between text-[11px] text-neutral-400 font-mono">
+                    <span>ลมเริ่มเป่า (Attack)</span>
+                    <span id="label-attack" class="text-amber-400">0.08s</span>
+                </div>
+                <input type="range" id="slider-attack" min="0.01" max="0.30" step="0.01" value="0.08" class="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-400">
+            </div>
 
-            <!-- Valve Casings -->
-            <rect x="270" y="80" width="20" height="60" rx="2" fill="url(#gold-grad)" />
-            <rect x="300" y="80" width="20" height="60" rx="2" fill="url(#gold-grad)" />
-            <rect x="330" y="80" width="20" height="60" rx="2" fill="url(#gold-grad)" />
-
-            <!-- Pistons (Moving Parts) -->
-            <rect id="valve-1" class="valve-piston" x="275" y="60" width="10" height="30" rx="2" fill="url(#silver-grad)" />
-            <rect id="valve-2" class="valve-piston" x="305" y="60" width="10" height="30" rx="2" fill="url(#silver-grad)" />
-            <rect id="valve-3" class="valve-piston" x="335" y="60" width="10" height="30" rx="2" fill="url(#silver-grad)" />
-
-            <!-- Finger Buttons -->
-            <circle cx="280" cy="60" r="8" fill="white" stroke="#999"/>
-            <circle cx="310" cy="60" r="8" fill="white" stroke="#999"/>
-            <circle cx="340" cy="60" r="8" fill="white" stroke="#999"/>
-        </svg>
+            <div class="flex flex-col gap-1.5">
+                <div class="flex justify-between text-[11px] text-neutral-400 font-mono">
+                    <span>มิติสะท้อน (Echo Space)</span>
+                    <span id="label-reverb" class="text-amber-400">30%</span>
+                </div>
+                <input type="range" id="slider-reverb" min="0" max="0.8" step="0.05" value="0.30" class="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-400">
+            </div>
+        </div>
     </div>
 
-    <div class="keyboard-container">
-        <div class="octave-label">Low Register</div>
-        <div class="keys-row">
-            <button class="key-btn" data-note="F2" data-valves="1">
-                <span class="key-label">F</span>
-                <span class="key-sub">ฟา</span>
-            </button>
-            <button class="key-btn" data-note="G2" data-valves="1,3">
-                <span class="key-label">G</span>
-                <span class="key-sub">ซอล</span>
-            </button>
-            <button class="key-btn" data-note="A2" data-valves="1,2">
-                <span class="key-label">A</span>
-                <span class="key-sub">ลา</span>
-            </button>
-            <button class="key-btn" data-note="Bb2" data-valves="1">
-                <span class="key-label">Bb</span>
-                <span class="key-sub">ทีb</span>
-            </button>
-            <button class="key-btn" data-note="C3" data-valves="0">
-                <span class="key-label">C</span>
-                <span class="key-sub">โด</span>
-            </button>
-            <button class="key-btn" data-note="D3" data-valves="1">
-                <span class="key-label">D</span>
-                <span class="key-sub">เร</span>
-            </button>
-            <button class="key-btn" data-note="E3" data-valves="0">
-                <span class="key-label">E</span>
-                <span class="key-sub">มี</span>
-            </button>
-             <button class="key-btn" data-note="F3" data-valves="1">
-                <span class="key-label">F</span>
-                <span class="key-sub">ฟา</span>
-            </button>
+    <!-- ส่วนแผงเลือกเล่นเพลงสาธิตอัตโนมัติ -->
+    <div id="demo-panel" class="hidden w-full bg-neutral-900/95 border-b border-neutral-800 shadow-2xl p-4 transition-all duration-300 z-20">
+        <div class="max-w-md mx-auto">
+            <h3 class="text-xs font-bold text-amber-400 flex items-center gap-1 mb-3">
+                <span>🎼</span> รายการบทเพลงสาธิตที่จำลองการขยับตามจริง
+            </h3>
+            <div class="grid grid-cols-3 gap-2">
+                <button id="demo-1-btn" class="py-2.5 px-2 bg-neutral-800/80 hover:bg-neutral-700/80 active:scale-95 text-[11px] font-semibold rounded-lg text-amber-200 border border-amber-500/20 transition-all truncate">
+                    Ode to Joy
+                </button>
+                <button id="demo-2-btn" class="py-2.5 px-2 bg-neutral-800/80 hover:bg-neutral-700/80 active:scale-95 text-[11px] font-semibold rounded-lg text-amber-200 border border-amber-500/20 transition-all truncate">
+                    Twinkle Star
+                </button>
+                <button id="demo-3-btn" class="py-2.5 px-2 bg-neutral-800/80 hover:bg-neutral-700/80 active:scale-95 text-[11px] font-semibold rounded-lg text-amber-200 border border-amber-500/20 transition-all truncate">
+                    Majestic Fanfare
+                </button>
+            </div>
+            <div class="mt-3 flex justify-end">
+                <button id="stop-demo-btn" disabled class="py-1.5 px-4 bg-red-950/80 border border-red-500/30 text-red-400 hover:bg-red-900 text-xs font-bold rounded-md disabled:opacity-40 transition-colors">
+                    ■ หยุดเพลงสาธิต
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- พื้นที่หลักสำหรับแสดงแอนิเมชันของเครื่องดนตรีเฟรนช์ฮอร์น -->
+    <main class="flex-grow flex items-center justify-center relative w-full px-4 overflow-hidden">
+        <div class="w-full max-w-sm aspect-square flex items-center justify-center">
+            <!-- French Horn SVG Vector Graphic with Interactive Parts -->
+            <svg id="horn-svg" class="w-full h-full max-h-[38vh]" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#fff3cc;stop-opacity:1" />
+                        <stop offset="35%" style="stop-color:#f3ce5a;stop-opacity:1" />
+                        <stop offset="70%" style="stop-color:#d4af37;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#705307;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#b5b5b5;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#efefef;stop-opacity:1" />
+                    </linearGradient>
+                    <filter id="metallic-shadow" x="-10%" y="-10%" width="120%" height="120%">
+                        <feDropShadow dx="2" dy="5" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+                    </filter>
+                </defs>
+                
+                <!-- Main Coiled Tubes -->
+                <path d="M150,150 Q100,50 200,50 T250,150 T150,250 T50,150" fill="none" stroke="url(#gold-grad)" stroke-width="22" stroke-linecap="round" filter="url(#metallic-shadow)"/>
+                <path d="M160,150 Q120,80 190,80 T230,150 T160,220 T80,150" fill="none" stroke="url(#gold-grad)" stroke-width="16" stroke-linecap="round" opacity="0.95"/>
+
+                <!-- Bell Section -->
+                <path d="M50,150 Q20,150 10,250 Q60,280 100,220" fill="url(#gold-grad)" stroke="#5e4503" stroke-width="1.5" filter="url(#metallic-shadow)"/>
+                <!-- Dark Inside Horn Mouth -->
+                <ellipse cx="55" cy="220" rx="42" ry="26" fill="#140600" transform="rotate(-30 55 220)"/>
+                <ellipse cx="55" cy="220" rx="36" ry="20" fill="#2d1a00" opacity="0.8" transform="rotate(-30 55 220)"/>
+
+                <!-- Leadpipe Connection to Valve Area -->
+                <path d="M250,150 L280,150 L280,105" fill="none" stroke="url(#gold-grad)" stroke-width="13"/>
+
+                <!-- Valve Base Casings -->
+                <rect x="268" y="80" width="22" height="65" rx="3" fill="url(#gold-grad)" filter="url(#metallic-shadow)"/>
+                <rect x="298" y="80" width="22" height="65" rx="3" fill="url(#gold-grad)" filter="url(#metallic-shadow)"/>
+                <rect x="328" y="80" width="22" height="65" rx="3" fill="url(#gold-grad)" filter="url(#metallic-shadow)"/>
+
+                <!-- Moving Mechanical Pistons -->
+                <rect id="valve-1" class="valve-piston" x="273" y="58" width="12" height="35" rx="2" fill="url(#silver-grad)" />
+                <rect id="valve-2" class="valve-piston" x="303" y="58" width="12" height="35" rx="2" fill="url(#silver-grad)" />
+                <rect id="valve-3" class="valve-piston" x="333" y="58" width="12" height="35" rx="2" fill="url(#silver-grad)" />
+
+                <!-- Solid Brass Keycaps -->
+                <circle cx="279" cy="58" r="9" fill="url(#gold-grad)" stroke="#8a6e18" stroke-width="1"/>
+                <circle cx="279" cy="58" r="5" fill="#f7f7f7" opacity="0.9"/>
+                
+                <circle cx="309" cy="58" r="9" fill="url(#gold-grad)" stroke="#8a6e18" stroke-width="1"/>
+                <circle cx="309" cy="58" r="5" fill="#f7f7f7" opacity="0.9"/>
+                
+                <circle cx="339" cy="58" r="9" fill="url(#gold-grad)" stroke="#8a6e18" stroke-width="1"/>
+                <circle cx="339" cy="58" r="5" fill="#f7f7f7" opacity="0.9"/>
+            </svg>
+        </div>
+    </main>
+
+    <!-- โซนคีย์บอร์ดลิ่มนิ้วที่ออกแบบมาแบบพรีเมียม (Bottom Music Keyboard Controls) -->
+    <div class="w-full bg-neutral-900/60 backdrop-blur-md border-t border-neutral-800 p-3 z-30 pb-5">
+        <div class="max-w-md mx-auto flex flex-col gap-2">
+            <div class="flex justify-between items-center px-1">
+                <span class="text-[10px] tracking-widest text-neutral-500 font-extrabold">FRENCH HORN NATURAL HARMONICS</span>
+                <span class="text-[10px] text-amber-500/70 font-mono">F / Bb RANGE</span>
+            </div>
+            
+            <div class="flex justify-between gap-1.5 h-[24vh] min-h-[140px] max-h-[180px]">
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="F2" data-valves="1">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">F2</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">ฟา</span>
+                </button>
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="G2" data-valves="1,3">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">G2</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">ซอล</span>
+                </button>
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="A2" data-valves="1,2">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">A2</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">ลา</span>
+                </button>
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="Bb2" data-valves="1">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">Bb2</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">ทีb</span>
+                </button>
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="C3" data-valves="0">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">C3</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">โด</span>
+                </button>
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="D3" data-valves="1">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">D3</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">เร</span>
+                </button>
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="E3" data-valves="0">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">E3</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">มี</span>
+                </button>
+                <button class="key-btn flex-1 bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 hover:to-amber-800 border-t border-amber-200 shadow-xl rounded-b-lg flex flex-col justify-end items-center pb-4 transition-all duration-75 relative outline-none" data-note="F3" data-valves="1">
+                    <div class="absolute top-2 w-[70%] h-1.5 bg-white/40 rounded-full"></div>
+                    <span class="key-label text-neutral-950 font-extrabold text-sm tracking-tighter">F3</span>
+                    <span class="key-sub text-neutral-800 text-[10px] font-bold">ฟา</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- Audio Engine (Brass Synthesizer) ---
+        // --- ระบบวิศวกรรมทางเสียง (Advanced Web Audio Synthesis) ---
         let audioCtx;
-        let masterGain;
+        let mainVolume;
+        let echoNode, echoGainNode; // สำหรับสร้างเอฟเฟกต์สะท้อนของโถงคอนเสิร์ตฮอลล์
         let mediaRecorder;
         let audioChunks = [];
         let recordedAudioBlob;
-        let dest; // For recording
+        let recordDestination; 
 
-        // Frequencies for French Horn Range (F2 to F3 simplified)
+        // ตารางย่านความถี่เสียง French Horn
         const noteFreqs = {
             'F2': 87.31,
             'G2': 98.00,
@@ -355,24 +292,53 @@
             'C3': 130.81,
             'D3': 146.83,
             'E3': 164.81,
-            'F3': 174.61
+            'F3': 174.61,
+            // ขยายช่วงโน้ตสำหรับการทำเพลงสาธิตให้มีความไพเราะมากยิ่งขึ้น
+            'G3': 196.00,
+            'A3': 220.00,
+            'Bb3': 233.08,
+            'C4': 261.63,
+            'D4': 293.66,
+            'E4': 329.63,
+            'F4': 349.23
         };
 
         let activeOscillators = {};
+
+        // พารามิเตอร์จำลองเสียงเครื่องทองเหลือง
+        let controlVolValue = 0.75;
+        let controlCutoffValue = 450;
+        let controlAttackValue = 0.08;
+        let controlEchoValue = 0.30;
 
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
                 
-                // Master Gain (Volume Control)
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.8;
+                // กำหนดโหนดเสียงหลัก
+                mainVolume = audioCtx.createGain();
+                mainVolume.gain.setValueAtTime(controlVolValue, audioCtx.currentTime);
                 
-                // Destination for recording
-                dest = audioCtx.createMediaStreamDestination();
-                masterGain.connect(audioCtx.destination);
-                masterGain.connect(dest); // Connect to recorder
+                // สรรค์สร้างมิติความสมจริงด้วย Feedback Loop Delay (จำลอง Concert Hall Resonance)
+                echoNode = audioCtx.createDelay(1.5);
+                echoGainNode = audioCtx.createGain();
+                
+                echoNode.delayTime.setValueAtTime(0.38, audioCtx.currentTime); // หน่วงเวลาสะท้อน
+                echoGainNode.gain.setValueAtTime(controlEchoValue, audioCtx.currentTime); // ระดับความสะท้อนเสียง
+                
+                // เชื่อมสายสปริง Feedback Loop
+                echoNode.connect(echoGainNode);
+                echoGainNode.connect(echoNode);
+                
+                // เชื่อมโยงสายเสียงเข้าสายควบคุมหลัก
+                mainVolume.connect(audioCtx.destination);
+                mainVolume.connect(echoNode);
+                echoGainNode.connect(mainVolume); // มิกซ์เอฟเฟกต์สะท้อนกลับมาเสียงหลัก
+                
+                // โหนดปลายทางสำหรับกระบวนการอัดเสียง
+                recordDestination = audioCtx.createMediaStreamDestination();
+                mainVolume.connect(recordDestination);
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
@@ -381,72 +347,77 @@
 
         function playNote(note) {
             if (!audioCtx) initAudio();
-            if (activeOscillators[note]) return; // Don't re-trigger if holding
+            if (activeOscillators[note]) return; 
 
             const freq = noteFreqs[note];
+            if (!freq) return;
             const now = audioCtx.currentTime;
 
-            // 1. Main Oscillator (Sawtooth for brass buzz)
-            const osc1 = audioCtx.createOscillator();
-            osc1.type = 'sawtooth';
-            osc1.frequency.setValueAtTime(freq, now);
+            // คลื่นลูกผสมฟันเลื่อยเพื่อจำลองเสียงสั่นสะเทือนของริมฝีปาก (Sawtooth)
+            const oscMain = audioCtx.createOscillator();
+            oscMain.type = 'sawtooth';
+            oscMain.frequency.setValueAtTime(freq, now);
 
-            // 2. Sub Oscillator (Triangle for body/mellow)
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(freq, now);
+            // คลื่นลูกผสมสามเหลี่ยมเพื่อเพิ่มความอุ่นแน่นของท่อลมทองเหลือง (Triangle Sub)
+            const oscSub = audioCtx.createOscillator();
+            oscSub.type = 'triangle';
+            oscSub.frequency.setValueAtTime(freq, now);
 
-            // Filter (Lowpass to dampen the harsh sawtooth)
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(400, now);
-            filter.frequency.exponentialRampToValueAtTime(freq * 4, now + 0.1); // Attack "Blart" sound
-            filter.frequency.exponentialRampToValueAtTime(freq * 2, now + 0.4); // Sustain brightness
+            // การควบคุมฟิลเตอร์แบบไดนามิก (Brass Filter Sweep)
+            const biquadFilter = audioCtx.createBiquadFilter();
+            biquadFilter.type = 'lowpass';
+            biquadFilter.frequency.setValueAtTime(controlCutoffValue, now);
+            // สร้างเสียง 'Blart' ที่เป็นเอกลักษณ์ยามลมปะทะขอบแตร
+            biquadFilter.frequency.exponentialRampToValueAtTime(freq * 3.8, now + controlAttackValue);
+            biquadFilter.frequency.exponentialRampToValueAtTime(controlCutoffValue * 1.4, now + controlAttackValue + 0.25);
 
-            // Envelope (Gain)
+            // ซองเสียงควบคุมความดัง (ADSR Envelope)
             const gainNode = audioCtx.createGain();
             gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.5, now + 0.1); // Attack
-            gainNode.gain.linearRampToValueAtTime(0.4, now + 0.3); // Decay
+            gainNode.gain.linearRampToValueAtTime(0.65, now + controlAttackValue); // โจมตีของความดังลมเป่า
+            gainNode.gain.linearRampToValueAtTime(0.48, now + controlAttackValue + 0.15); // ช่วงคงที่ของแรงเป่า
 
-            // Connections
-            osc1.connect(filter);
-            osc2.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(masterGain);
+            // เชื่อมต่อโหนดเข้าด้วยกัน
+            oscMain.connect(biquadFilter);
+            oscSub.connect(biquadFilter);
+            biquadFilter.connect(gainNode);
+            gainNode.connect(mainVolume);
 
-            osc1.start(now);
-            osc2.start(now);
+            oscMain.start(now);
+            oscSub.start(now);
 
-            activeOscillators[note] = { osc1, osc2, gainNode, filter };
+            // บันทึกสถานะเพื่อการปิดเสียงแบบนุ่มนวล
+            activeOscillators[note] = { oscMain, oscSub, gainNode, biquadFilter };
         }
 
         function stopNote(note) {
             if (!activeOscillators[note]) return;
 
-            const { osc1, osc2, gainNode, filter } = activeOscillators[note];
+            const { oscMain, oscSub, gainNode, biquadFilter } = activeOscillators[note];
             const now = audioCtx.currentTime;
+            const releaseTime = 0.25; // ค่าเวลาหยุดพัดเพื่อจำลองหางเสียงที่ละมุน
 
-            // Release envelope
-            const releaseTime = 0.2;
-            gainNode.gain.cancelScheduledValues(now);
-            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-            gainNode.gain.linearRampToValueAtTime(0, now + releaseTime);
-            
-            // Close filter slightly
-            filter.frequency.cancelScheduledValues(now);
-            filter.frequency.exponentialRampToValueAtTime(100, now + releaseTime);
+            try {
+                gainNode.gain.cancelScheduledValues(now);
+                gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + releaseTime);
+                
+                biquadFilter.frequency.cancelScheduledValues(now);
+                biquadFilter.frequency.exponentialRampToValueAtTime(70, now + releaseTime);
 
-            osc1.stop(now + releaseTime);
-            osc2.stop(now + releaseTime);
+                oscMain.stop(now + releaseTime);
+                oscSub.stop(now + releaseTime);
+            } catch(e) {
+                // ป้องกันเหตุขัดข้องจากการพยายามหยุดเครื่องกำเนิดความถี่
+            }
 
+            // ลบชื่อโน้ตออกกลุ่มที่ทำงานอยู่หลังจากปล่อยเสียงเรียบร้อย
             setTimeout(() => {
                 delete activeOscillators[note];
             }, releaseTime * 1000 + 50);
         }
 
-        // --- UI & Animation Logic ---
-        
+        // --- ระบบกลไกแอนิเมชันวาล์ว (Mechanical Valve Animation) ---
         const valves = {
             1: document.getElementById('valve-1'),
             2: document.getElementById('valve-2'),
@@ -454,141 +425,330 @@
         };
 
         function animateValves(valveString) {
-            // Reset all
-            valves[1].classList.remove('valve-pressed');
-            valves[2].classList.remove('valve-pressed');
-            valves[3].classList.remove('valve-pressed');
+            resetValves();
+            if (!valveString || valveString === "0") return;
 
-            if (valveString === "0") return;
-
-            const v = valveString.split(',');
-            v.forEach(num => {
-                if (valves[num.trim()]) {
-                    valves[num.trim()].classList.add('valve-pressed');
+            const activeList = valveString.split(',');
+            activeList.forEach(num => {
+                const target = valves[num.trim()];
+                if (target) {
+                    target.classList.add('valve-pressed');
                 }
             });
         }
 
-        function releaseValves() {
-             valves[1].classList.remove('valve-pressed');
-             valves[2].classList.remove('valve-pressed');
-             valves[3].classList.remove('valve-pressed');
+        function resetValves() {
+            Object.values(valves).forEach(v => v.classList.remove('valve-pressed'));
         }
 
-        // --- Event Listeners ---
-
+        // --- ระบบประมวลผลแป้นสัมผัสลิ่มนิ้วแบบโต้ตอบ ---
         const keys = document.querySelectorAll('.key-btn');
-        
+        let currentlyPressedNote = null;
+
         keys.forEach(key => {
             const note = key.dataset.note;
-            const valveData = key.dataset.valves;
+            const valvesMap = key.dataset.valves;
 
-            const startHandler = (e) => {
-                e.preventDefault(); // Prevent ghost clicks
-                key.classList.add('active');
+            const startTrigger = (e) => {
+                e.preventDefault();
+                if (isDemoPlaying) return; // ล็อกปุ่มหากอยู่ระหว่างเล่นเดโมเพื่อป้องกันคีย์ซ้อน
+                
+                key.classList.add('key-btn-active');
                 playNote(note);
-                animateValves(valveData);
+                animateValves(valvesMap);
+                currentlyPressedNote = note;
+                document.getElementById('status-text').textContent = `Playing note: ${note}`;
             };
 
-            const endHandler = (e) => {
+            const endTrigger = (e) => {
                 e.preventDefault();
-                key.classList.remove('active');
+                if (isDemoPlaying) return;
+                
+                key.classList.remove('key-btn-active');
                 stopNote(note);
-                // Check if other keys are still pressed, if not release valves
-                const activeKeys = document.querySelectorAll('.key-btn.active');
+                
+                const activeKeys = document.querySelectorAll('.key-btn-active');
                 if (activeKeys.length === 0) {
-                    releaseValves();
+                    resetValves();
+                    document.getElementById('status-text').textContent = 'Ready to play';
                 } else {
-                    // Update valves to the last held note (simplified)
-                    const lastKey = activeKeys[activeKeys.length-1];
+                    // หากมีการกดแช่หลายตัว ให้ดึงวาล์วตัวล่าสุดที่ยังถูกสัมผัสอยู่
+                    const lastKey = activeKeys[activeKeys.length - 1];
                     animateValves(lastKey.dataset.valves);
                 }
             };
 
-            // Mouse
-            key.addEventListener('mousedown', startHandler);
-            key.addEventListener('mouseup', endHandler);
-            key.addEventListener('mouseleave', endHandler);
-
-            // Touch
-            key.addEventListener('touchstart', startHandler, {passive: false});
-            key.addEventListener('touchend', endHandler, {passive: false});
-            key.addEventListener('touchcancel', endHandler, {passive: false});
+            // รองรับทั้งระบบทัชสกรีน และการจำลองจากเมาส์
+            key.addEventListener('mousedown', startTrigger);
+            key.addEventListener('mouseup', endTrigger);
+            key.addEventListener('mouseleave', endTrigger);
+            key.addEventListener('touchstart', startTrigger, {passive: false});
+            key.addEventListener('touchend', endTrigger, {passive: false});
+            key.addEventListener('touchcancel', endTrigger, {passive: false});
         });
 
-        // --- Start Overlay ---
+        // เปิดรับสิทธิ์ในการสร้าง Web Audio Context
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio();
-            document.getElementById('start-overlay').style.display = 'none';
+            document.getElementById('start-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('start-overlay').style.display = 'none';
+            }, 500);
         });
 
-        // --- Recording Logic ---
+        // --- ระบบเปิดปิดแผงการควบคุมย่อย (Panel Drawer System) ---
+        const audioPanel = document.getElementById('audio-panel');
+        const demoPanel = document.getElementById('demo-panel');
+        const toggleAudioBtn = document.getElementById('toggle-audio-btn');
+        const toggleDemoBtn = document.getElementById('toggle-demo-btn');
+
+        toggleAudioBtn.addEventListener('click', () => {
+            if (audioPanel.classList.contains('hidden')) {
+                audioPanel.classList.remove('hidden');
+                toggleAudioBtn.classList.add('bg-amber-500', 'text-neutral-950');
+                // ซ่อนอีกแผงเพื่อไม่ให้รกทับซ้อนกันบนมือถือแนวตั้ง
+                demoPanel.classList.add('hidden');
+                toggleDemoBtn.classList.remove('bg-amber-500', 'text-neutral-950');
+            } else {
+                audioPanel.classList.add('hidden');
+                toggleAudioBtn.classList.remove('bg-amber-500', 'text-neutral-950');
+            }
+        });
+
+        toggleDemoBtn.addEventListener('click', () => {
+            if (demoPanel.classList.contains('hidden')) {
+                demoPanel.classList.remove('hidden');
+                toggleDemoBtn.classList.add('bg-amber-500', 'text-neutral-950');
+                audioPanel.classList.add('hidden');
+                toggleAudioBtn.classList.remove('bg-amber-500', 'text-neutral-950');
+            } else {
+                demoPanel.classList.add('hidden');
+                toggleDemoBtn.classList.remove('bg-amber-500', 'text-neutral-950');
+            }
+        });
+
+        // --- ตัวเก็บและอัปเดตสถิติตัวสไลเดอร์เสียง ---
+        document.getElementById('slider-vol').addEventListener('input', (e) => {
+            controlVolValue = parseFloat(e.target.value);
+            document.getElementById('label-vol').textContent = `${Math.round(controlVolValue * 100)}%`;
+            if (mainVolume && audioCtx) {
+                mainVolume.gain.setValueAtTime(controlVolValue, audioCtx.currentTime);
+            }
+        });
+
+        document.getElementById('slider-cutoff').addEventListener('input', (e) => {
+            controlCutoffValue = parseInt(e.target.value);
+            document.getElementById('label-cutoff').textContent = `${controlCutoffValue}Hz`;
+        });
+
+        document.getElementById('slider-attack').addEventListener('input', (e) => {
+            controlAttackValue = parseFloat(e.target.value);
+            document.getElementById('label-attack').textContent = `${controlAttackValue}s`;
+        });
+
+        document.getElementById('slider-reverb').addEventListener('input', (e) => {
+            controlEchoValue = parseFloat(e.target.value);
+            document.getElementById('label-reverb').textContent = `${Math.round(controlEchoValue * 100)}%`;
+            if (echoGainNode && audioCtx) {
+                echoGainNode.gain.setValueAtTime(controlEchoValue, audioCtx.currentTime);
+            }
+        });
+
+        // --- แผนการและระบบจำลองการเล่นเพลงสาธิต (Demo Sequencer) ---
+        let isDemoPlaying = false;
+        let demoSequenceTimers = [];
+        let currentlyPlayingSongBtn = null;
+
+        const demoSongs = {
+            1: [ // Ode to Joy
+                { note: 'E3', duration: 400 }, { note: 'E3', duration: 400 }, 
+                { note: 'F3', duration: 400 }, { note: 'G3', duration: 400 }, 
+                { note: 'G3', duration: 400 }, { note: 'F3', duration: 400 }, 
+                { note: 'E3', duration: 400 }, { note: 'D3', duration: 400 },
+                { note: 'C3', duration: 400 }, { note: 'C3', duration: 400 }, 
+                { note: 'D3', duration: 400 }, { note: 'E3', duration: 400 },
+                { note: 'E3', duration: 600 }, { note: 'D3', duration: 200 }, 
+                { note: 'D3', duration: 800 }
+            ],
+            2: [ // Twinkle Twinkle Little Star
+                { note: 'C3', duration: 450 }, { note: 'C3', duration: 450 }, 
+                { note: 'G3', duration: 450 }, { note: 'G3', duration: 450 },
+                { note: 'A3', duration: 450 }, { note: 'A3', duration: 450 }, 
+                { note: 'G3', duration: 900 },
+                { note: 'F3', duration: 450 }, { note: 'F3', duration: 450 }, 
+                { note: 'E3', duration: 450 }, { note: 'E3', duration: 450 },
+                { note: 'D3', duration: 450 }, { note: 'D3', duration: 450 }, 
+                { note: 'C3', duration: 900 }
+            ],
+            3: [ // Majestic Fanfare Theme
+                { note: 'C3', duration: 300 }, { note: 'E3', duration: 300 }, 
+                { note: 'G3', duration: 300 }, { note: 'C4', duration: 600 },
+                { note: 'G3', duration: 300 }, { note: 'C4', duration: 900 },
+                { note: 'E4', duration: 400 }, { note: 'D4', duration: 400 }, 
+                { note: 'C4', duration: 1000 }
+            ]
+        };
+
+        function playDemoTrack(songId, buttonElement) {
+            if (isDemoPlaying) {
+                stopDemoTrack();
+            }
+            initAudio();
+
+            isDemoPlaying = true;
+            currentlyPlayingSongBtn = buttonElement;
+            buttonElement.classList.remove('bg-neutral-800/80', 'text-amber-200');
+            buttonElement.classList.add('bg-amber-400', 'text-neutral-950', 'animate-pulse');
+            document.getElementById('stop-demo-btn').disabled = false;
+            document.getElementById('status-text').textContent = 'Playing Demo Melody...';
+
+            const melody = demoSongs[songId];
+            let elapsedSum = 0;
+
+            melody.forEach((step, index) => {
+                // ตัวจับเวลาสำหรับเล่นเสียงพร้อมแอนิเมชันปุ่มและลูกสูบแตร
+                const playTimer = setTimeout(() => {
+                    playNote(step.note);
+                    triggerKeyVisualState(step.note, true);
+                }, elapsedSum);
+
+                elapsedSum += step.duration;
+
+                // ตัวจับเวลาเพื่อหยุดการเป่าลมก่อนเปลี่ยนระดับเสียงถัดไป
+                const stopTimer = setTimeout(() => {
+                    stopNote(step.note);
+                    triggerKeyVisualState(step.note, false);
+                    resetValves();
+
+                    // เช็กหากจบเสียงตัวสุดท้ายแล้ว ให้หยุดและเคลียร์สถานะอย่างสมบูรณ์ทันที
+                    if (index === melody.length - 1) {
+                        stopDemoTrack();
+                    }
+                }, elapsedSum);
+
+                demoSequenceTimers.push(playTimer, stopTimer);
+                elapsedSum += 70; // ช่วงเวลาพักของแรงปะทะลม (Staccato Rest)
+            });
+        }
+
+        function stopDemoTrack() {
+            // เคลียร์คิวเวลาจับเวลากระบวนการเล่นที่เหลือทั้งหมด
+            demoSequenceTimers.forEach(t => clearTimeout(t));
+            demoSequenceTimers = [];
+
+            // สั่งหยุดเสียงทุกความถี่โน้ตเพื่อหลีกเลี่ยงอาการเสียงค้าง
+            Object.keys(noteFreqs).forEach(n => stopNote(n));
+
+            // เคลียร์กราฟิกลิ่มนิ้วและวาล์วลูกสูบทั้งหมด
+            keys.forEach(k => k.classList.remove('key-btn-active'));
+            resetValves();
+
+            // รีเซ็ตสถานะปุ่ม
+            if (currentlyPlayingSongBtn) {
+                currentlyPlayingSongBtn.classList.remove('bg-amber-400', 'text-neutral-950', 'animate-pulse');
+                currentlyPlayingSongBtn.classList.add('bg-neutral-800/80', 'text-amber-200');
+                currentlyPlayingSongBtn = null;
+            }
+
+            document.getElementById('stop-demo-btn').disabled = true;
+            isDemoPlaying = false;
+            document.getElementById('status-text').textContent = 'Melody Finished. Ready.';
+        }
+
+        // ตัวช่วยสะท้อนแอนิเมชันปุ่มคีย์บอร์ดจำลองขณะเพลงสาธิตเล่น
+        function triggerKeyVisualState(note, isActive) {
+            const keyElement = document.querySelector(`.key-btn[data-note="${note}"]`);
+            if (keyElement) {
+                if (isActive) {
+                    keyElement.classList.add('key-btn-active');
+                    animateValves(keyElement.dataset.valves);
+                } else {
+                    keyElement.classList.remove('key-btn-active');
+                }
+            }
+        }
+
+        // ลงทะเบียนระบบรับฟังเหตุการณ์ปุ่มสาธิตดนตรี
+        document.getElementById('demo-1-btn').addEventListener('click', function() { playDemoTrack(1, this); });
+        document.getElementById('demo-2-btn').addEventListener('click', function() { playDemoTrack(2, this); });
+        document.getElementById('demo-3-btn').addEventListener('click', function() { playDemoTrack(3, this); });
+        document.getElementById('stop-demo-btn').addEventListener('click', stopDemoTrack);
+
+
+        // --- ระบบอัดไฟล์เสียงและการประมวลผลเซฟเก็บข้อมูล (Audio Recorder) ---
         const recordBtn = document.getElementById('record-btn');
         const playBtn = document.getElementById('play-btn');
         const downloadBtn = document.getElementById('download-btn');
         const downloadLink = document.getElementById('download-link');
-
         let isRecording = false;
 
         recordBtn.addEventListener('click', () => {
             if (!isRecording) {
-                // Start Recording
                 if (!audioCtx) initAudio();
                 
                 audioChunks = [];
-                // Create recorder with supported mime type
-                const mimeTypes = ['audio/webm', 'audio/ogg', 'audio/mp4'];
-                let selectedType = 'audio/webm';
-                for(let type of mimeTypes) {
+                // ตรวจหา Mime Type ที่สอดรับกับสถาปัตยกรรมระบบปฏิบัติการเป้าหมาย
+                const supportedTypes = ['audio/webm', 'audio/ogg', 'audio/mp4'];
+                let chosenType = 'audio/webm';
+                for (let type of supportedTypes) {
                     if (MediaRecorder.isTypeSupported(type)) {
-                        selectedType = type;
+                        chosenType = type;
                         break;
                     }
                 }
 
-                mediaRecorder = new MediaRecorder(dest.stream, { mimeType: selectedType });
+                mediaRecorder = new MediaRecorder(recordDestination.stream, { mimeType: chosenType });
                 
                 mediaRecorder.ondataavailable = (event) => {
                     audioChunks.push(event.data);
                 };
 
                 mediaRecorder.onstop = () => {
-                    recordedAudioBlob = new Blob(audioChunks, { type: selectedType });
+                    recordedAudioBlob = new Blob(audioChunks, { type: chosenType });
                     const audioUrl = URL.createObjectURL(recordedAudioBlob);
                     
-                    // Enable buttons
                     playBtn.disabled = false;
                     downloadBtn.disabled = false;
                     
-                    // Setup Download
                     downloadLink.href = audioUrl;
-                    downloadLink.download = `french-horn-recording-${Date.now()}.webm`;
+                    downloadLink.download = `french-horn-session-${Date.now()}.webm`;
+                    document.getElementById('status-text').textContent = 'Recording Saved.';
                 };
 
                 mediaRecorder.start();
                 isRecording = true;
-                recordBtn.innerHTML = "<span>■</span> หยุด";
-                recordBtn.classList.add('recording');
+                
+                recordBtn.classList.remove('text-red-500', 'bg-neutral-800');
+                recordBtn.classList.add('bg-red-600', 'text-white');
+                document.getElementById('rec-dot').classList.remove('bg-red-600');
+                document.getElementById('rec-dot').classList.add('bg-white');
+                document.getElementById('rec-text').textContent = "หยุด";
+                document.getElementById('status-text').textContent = 'Recording Performance...';
+                
                 playBtn.disabled = true;
                 downloadBtn.disabled = true;
-
             } else {
-                // Stop Recording
                 mediaRecorder.stop();
                 isRecording = false;
-                recordBtn.innerHTML = "<span>●</span> อัดเสียง";
-                recordBtn.classList.remove('recording');
+                
+                recordBtn.classList.remove('bg-red-600', 'text-white');
+                recordBtn.classList.add('text-red-500', 'bg-neutral-800');
+                document.getElementById('rec-dot').classList.remove('bg-white');
+                document.getElementById('rec-dot').classList.add('bg-red-600');
+                document.getElementById('rec-text').textContent = "อัด";
             }
         });
 
         playBtn.addEventListener('click', () => {
             if (recordedAudioBlob) {
-                const audioUrl = URL.createObjectURL(recordedAudioBlob);
-                const audio = new Audio(audioUrl);
-                audio.play();
+                const playUrl = URL.createObjectURL(recordedAudioBlob);
+                const playbackElement = new Audio(playUrl);
+                playbackElement.play();
+                document.getElementById('status-text').textContent = 'Playing Recording File...';
             }
         });
 
+        // ฟังก์ชันสั่งดาวน์โหลดผลงานโดยดึงผ่านการจำลองคำสั่ง Click ของลิงก์เบื้องหลัง
         downloadBtn.addEventListener('click', () => {
             downloadLink.click();
         });
