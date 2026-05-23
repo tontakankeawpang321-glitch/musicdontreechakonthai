@@ -3,333 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bell Lyra Simulator (เบลไลลา)</title>
+    <title>Bell Lyra Simulator Master - เบลไลลาจำลอง</title>
+    <!-- Tailwind CSS for high-fidelity responsive layouts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Sarabun & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #2c3e50;
-            --frame-color: #bdc3c7;
-            --bar-color: #ecf0f1;
-            --bar-shadow: #7f8c8d;
-            --accidental-color: #f1c40f; /* Gold for sharps/flats */
-            --accidental-shadow: #b7950b;
-            --holder-color: #34495e;
-            --record-red: #e74c3c;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Sarabun', sans-serif;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            overscroll-behavior: none;
         }
 
-        #header {
-            color: white;
-            text-align: center;
-            margin-bottom: 5px;
-            /* pointer-events: none; removed to allow button clicks if needed inside */
+        /* Premium scrollbars for presets list */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
         }
 
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        /* 3D realistic metal keys styling */
+        .metal-key {
+            transition: transform 0.05s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.05s ease, filter 0.1s ease;
+            border-radius: 8px; /* Smooth rounded metal bar corners */
+        }
+        
+        .metal-key.active {
+            transform: translateY(4px) !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(0,0,0,0.2) !important;
         }
 
-        p {
-            margin: 2px 0 5px;
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        /* --- Recording Controls --- */
-        .controls-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-            z-index: 10;
-            background: rgba(0,0,0,0.2);
-            padding: 5px 15px;
-            border-radius: 30px;
-        }
-
-        .btn-control {
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-family: 'Sarabun', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s;
-        }
-
-        .btn-record {
-            background-color: var(--record-red);
-            color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-
-        .btn-record:active {
-            transform: scale(0.95);
-        }
-
-        .btn-record.recording {
-            animation: pulse-red 1.5s infinite;
-            background-color: #c0392b;
-        }
-
-        .btn-stop {
-            background-color: #7f8c8d;
-            color: white;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
-
-        audio {
-            height: 30px;
-            width: 200px;
-            border-radius: 15px;
-        }
-
-        /* The Instrument Container */
-        .lyra-container {
-            position: relative;
-            width: 95vw;
-            max-width: 800px;
-            height: 60vh;
-            background: linear-gradient(180deg, #95a5a6 0%, #7f8c8d 100%);
-            border-radius: 20px 20px 40px 40px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.3);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            border: 4px solid #555;
-        }
-
-        /* The decorative lyre shape top */
-        .lyra-head {
+        /* Screw caps visually indicating acoustic node points */
+        .node-screw {
             position: absolute;
-            top: -30px;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #94a3b8 0%, #334155 100%);
+            border-radius: 50%;
+            box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.6);
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 40px;
-            background: #95a5a6;
-            border-radius: 10px 10px 0 0;
-            border: 4px solid #555;
-            border-bottom: none;
-            z-index: -1;
+            z-index: 20;
+        }
+        .node-screw.top { top: 15%; }
+        .node-screw.bottom { bottom: 15%; }
+
+        /* Guide highlight pulsing for Learn Mode */
+        @keyframes guide-pulse {
+            0%, 100% { box-shadow: 0 0 18px #f59e0b, inset 0 0 8px #fbbf24; filter: brightness(1.25); }
+            50% { box-shadow: 0 0 6px #d97706, inset 0 0 3px #d97706; filter: brightness(1.0); }
+        }
+        .guide-active {
+            animation: guide-pulse 0.8s infinite alternate !important;
+            border: 2px solid #fbbf24 !important;
         }
 
-        /* Rows of keys */
-        .keys-row {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            position: relative;
+        /* Glowing visual trails */
+        .key-glow-natural {
+            background: linear-gradient(to bottom, #ffffff 0%, #cbd5e1 40%, #94a3b8 100%) !important;
+        }
+        .key-glow-accidental {
+            background: linear-gradient(to bottom, #fef08a 0%, #fbbf24 40%, #ca8a04 100%) !important;
         }
 
-        .keys-row.upper {
-            margin-bottom: -15px; /* Overlap slightly for realistic look */
-            z-index: 2;
-            padding-left: 20px; /* Offset for chromatics */
+        /* Custom frame ornament for traditional Thai/Victorian Lyre shape styling */
+        .lyra-frame-side {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
 
-        .keys-row.lower {
-            z-index: 1;
-        }
-
-        /* Individual Keys */
-        .key {
-            position: relative;
-            background: linear-gradient(to bottom, #ffffff 0%, #e0e0e0 50%, #dcdcdc 100%);
-            border-radius: 4px;
-            margin: 0 2px;
-            cursor: pointer;
-            box-shadow: 0 4px 0 var(--bar-shadow), 0 5px 10px rgba(0,0,0,0.3);
-            transition: transform 0.05s, background 0.1s;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.8rem;
-            color: #555;
-            flex-grow: 1;
-            height: 18vh;
-            border: 1px solid #ccc;
-        }
-
-        /* Chromatic Keys (Sharps/Flats) - Gold/Brass look */
-        .key.accidental {
-            background: linear-gradient(to bottom, #f1c40f 0%, #f39c12 100%);
-            box-shadow: 0 4px 0 var(--accidental-shadow), 0 5px 10px rgba(0,0,0,0.3);
-            height: 14vh;
-            color: #4e342e;
-            width: 8%; /* Slightly narrower */
-            margin: 0 4px;
-        }
-
-        /* Spacer for accidental row to align with natural keys */
-        .spacer {
-            width: 4%;
-            visibility: hidden;
-        }
-
-        /* Active State (Hit) */
-        .key.active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 var(--bar-shadow), 0 2px 5px rgba(0,0,0,0.3);
-            background: #fff;
-        }
-        
-        .key.accidental.active {
-            background: #f1c40f;
-            box-shadow: 0 0 0 var(--accidental-shadow);
-        }
-
-        /* Mallet Hit Visual Effect */
-        .hit-effect {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.8);
+        /* Floating mallet elements */
+        .mallet {
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, #e2e8f0 30%, #475569 100%);
+            border: 2px solid #1e293b;
             border-radius: 50%;
+            position: absolute;
             pointer-events: none;
-            animation: hitSplash 0.3s ease-out forwards;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            z-index: 99;
+            transform: translate(-50%, -50%) scale(1);
+            transition: transform 0.08s ease-out;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            display: none;
         }
-
-        @keyframes hitSplash {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-        }
-
-        /* Note labels */
-        .note-name {
-            pointer-events: none;
-            font-family: monospace;
-        }
-
-        /* Start Button overlay */
-        #overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-        }
-
-        .btn-start {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .mallet-stick {
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(to bottom, #475569, #1e293b);
+            position: absolute;
+            top: 24px;
+            left: 10px;
+            border-radius: 2px;
         }
         
-        @media (max-width: 600px) {
-             .lyra-container {
-                 width: 98vw;
-                 padding: 5px;
-             }
-             .key {
-                 font-size: 0.6rem;
-             }
-             .controls-bar {
-                width: 90%;
-                justify-content: center;
-                flex-wrap: wrap;
-             }
-             audio {
-                 width: 150px;
-             }
+        /* Floating Note particles animation */
+        @keyframes particle-up {
+            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-120px) scale(0.5) rotate(360deg); opacity: 0; }
+        }
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particle-up 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            z-index: 50;
+        }
+
+        /* --- Zoom Mode Scrollable Engine --- */
+        .zoom-active .key {
+            min-width: 46px !important;
+            max-width: 60px !important;
+        }
+        .zoom-active .spacer {
+            min-width: 46px !important;
+            max-width: 60px !important;
+        }
+        .zoom-container-active {
+            overflow-x: auto !important;
+            justify-content: flex-start !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        .zoom-row-active {
+            width: max-content !important;
+            min-width: 100% !important;
+            padding-left: 15px !important;
+            padding-right: 15px !important;
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-start min-h-screen text-white select-none overflow-hidden pb-4">
 
-    <div id="header">
-        <h1>Bell Lyra (เบลไลลา)</h1>
-        <p>แตะเพื่อเล่น • รองรับหลายนิ้ว (Multitouch)</p>
-    </div>
+    <!-- Mallet Visualizers -->
+    <div id="leftMallet" class="mallet"><div class="mallet-stick"></div></div>
 
-    <!-- Recording Controls -->
-    <div class="controls-bar">
-        <button id="btnRecord" class="btn-control btn-record">
-            <span>🔴</span> <span id="recordText">อัดเสียง</span>
-        </button>
-        <button id="btnStop" class="btn-control btn-stop" style="display: none;">
-            <span>⏹</span> หยุด
-        </button>
-        <audio id="audioPlayback" controls style="display: none;"></audio>
-    </div>
+    <!-- Background Stars / Visualizer Canvas -->
+    <canvas id="visualizerCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
 
-    <div class="lyra-container">
-        <div class="lyra-head"></div>
+    <!-- Top Navigation Header -->
+    <header class="w-full max-w-5xl px-4 py-3 z-10 flex flex-col md:flex-row justify-between items-center gap-2">
+        <div class="text-center md:text-left">
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-amber-200 to-white flex items-center justify-center md:justify-start gap-2">
+                🎼 Bell Lyra Master <span class="text-xs bg-amber-500 text-slate-950 font-bold px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg">PRO v2.5</span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-1">เครื่องดนตรีจำลองเบลไลลา • ระบบเสียงระดับคอนเสิร์ตฮอลล์ • โหมดฝึกเล่นแสนสนุก</p>
+        </div>
         
-        <!-- Upper Row (Chromatics / Black Keys) -->
-        <div class="keys-row upper" id="upperRow">
-            <!-- Will be generated by JS -->
+        <!-- Toggle Language & Quick Stats -->
+        <div class="flex items-center gap-3">
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-full px-3 py-1 flex items-center gap-2 text-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>ระบบสังเคราะห์เสียงสมบูรณ์ (Low Latency)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Central Control Room Layout -->
+    <main class="w-full max-w-5xl px-3 z-10 flex flex-col gap-3 flex-1 justify-start">
+        
+        <!-- Premium Modular Deck Panel -->
+        <div class="bg-slate-900/70 border border-slate-700/50 backdrop-blur-md rounded-2xl p-3 md:p-4 shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-3">
+            
+            <!-- Column 1: Mode & Preset Song Selection -->
+            <div class="lg:col-span-5 flex flex-col gap-2 justify-between">
+                <div>
+                    <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block mb-1">🎶 เลือกบทเพลงและการเรียนรู้</span>
+                    <div class="flex gap-2">
+                        <select id="demoSelect" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-amber-400">
+                            <option value="">-- เลือกเพลงดนตรี --</option>
+                            <option value="mary">1. หนูมาลี (Mary Had a Little Lamb)</option>
+                            <option value="twinkle">2. ดาวดวงน้อย (Twinkle Twinkle Little Star)</option>
+                            <option value="loykrathong">3. ลอยกระทง (Loy Krathong Theme)</option>
+                            <option value="jingle">4. จิงเกิลเบลส์ (Jingle Bells)</option>
+                            <option value="kamman">5. ค้างคาวกินกล้วย (Thai Classical)</option>
+                        </select>
+                        
+                        <button id="btnLearn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-lg">
+                            <span id="learnIcon">🎓</span> <span id="learnText">ฝึกเล่น</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-2">
+                    <button id="btnDemo" class="flex-1 bg-purple-600 hover:bg-purple-500 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition shadow-md">
+                        <span>▶️</span> เล่นออโต้
+                    </button>
+                    <button id="btnStopDemo" class="bg-slate-800 hover:bg-slate-700 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1 transition border border-slate-700">
+                        <span>⏹</span> หยุด
+                    </button>
+                </div>
+
+                <!-- Learning Progress Bar -->
+                <div id="learnProgressContainer" class="hidden mt-2 bg-slate-800/50 p-2 rounded-lg border border-amber-500/20">
+                    <div class="flex justify-between text-[11px] mb-1">
+                        <span class="text-amber-400 font-semibold" id="learnStatusTitle">กำลังฝึกเล่น...</span>
+                        <span id="learnFraction" class="font-bold">0 / 0</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div id="learnProgressBar" class="bg-amber-400 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Recording Station -->
+            <div class="lg:col-span-3 bg-slate-800/40 p-2 rounded-xl border border-slate-700/30 flex flex-col justify-between">
+                <div>
+                    <span class="text-[10px] text-red-400 font-bold uppercase tracking-wider block mb-1">🎙 อัดเสียงและส่งออก</span>
+                    <div class="flex gap-2">
+                        <button id="btnRecord" class="flex-1 bg-red-600 hover:bg-red-500 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-lg">
+                            <span class="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></span>
+                            <span id="recordText">อัดเสียง</span>
+                        </button>
+                        <button id="btnStop" class="bg-slate-700 hover:bg-slate-600 py-1.5 px-3 rounded-lg text-xs font-bold transition hidden">
+                            ⏹ หยุดบันทึก
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Audio Players and Exporters -->
+                <div class="mt-2 flex flex-col gap-1">
+                    <audio id="audioPlayback" controls class="hidden w-full"></audio>
+                    <button id="btnDownload" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 py-1 px-2 rounded text-[11px] font-bold items-center justify-center gap-1 transition text-white">
+                        📥 ดาวน์โหลดไฟล์อัดเสียง (.webm)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Column 3: Customization & Labeling -->
+            <div class="lg:col-span-4 flex flex-col justify-between gap-2">
+                <div>
+                    <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block mb-1">🏷 ตั้งค่าป้ายชื่อตัวโน้ต</span>
+                    <div class="grid grid-cols-4 gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700">
+                        <button onclick="setLabelMode('eng')" id="lbl-eng" class="lbl-btn bg-blue-600 text-[11px] font-semibold py-1 rounded transition text-center">C D E</button>
+                        <button onclick="setLabelMode('thai_full')" id="lbl-thai_full" class="lbl-btn text-slate-400 text-[11px] py-1 rounded hover:bg-slate-700/50 transition text-center">โด เร มี</button>
+                        <button onclick="setLabelMode('thai_short')" id="lbl-thai_short" class="lbl-btn text-slate-400 text-[11px] py-1 rounded hover:bg-slate-700/50 transition text-center font-bold">ด ร ม</button>
+                        <button onclick="setLabelMode('solfege')" id="lbl-solfege" class="lbl-btn text-slate-400 text-[11px] py-1 rounded hover:bg-slate-700/50 transition text-center">Do Re</button>
+                    </div>
+                </div>
+
+                <!-- Live Sound Parameter Controller Buttons & Zoom Button -->
+                <div class="flex gap-2">
+                    <button id="btnZoom" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-1.5 rounded-lg font-bold border border-slate-700 transition flex items-center justify-center gap-1">
+                        <span id="zoomIcon">🔍</span> <span id="zoomText">ขยายคีย์ (Zoom)</span>
+                    </button>
+                    <button id="btnSettings" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-1.5 rounded-lg font-bold border border-slate-700 transition flex items-center justify-center gap-1">
+                        <span>⚙️</span> ตั้งค่าเสียง
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Lower Row (Naturals / White Keys) -->
-        <div class="keys-row lower" id="lowerRow">
-            <!-- Will be generated by JS -->
+        <!-- Hidden Modular Sound Synthesiser Control Panel -->
+        <div id="settingsPanel" class="hidden bg-slate-900/90 border border-slate-700/70 backdrop-blur p-4 rounded-xl shadow-2xl flex flex-col gap-3">
+            <h3 class="text-sm font-bold text-amber-400 border-b border-slate-800 pb-1 flex items-center justify-between">
+                <span>⚙️ การปรับตั้งเสียงสะท้อนและเครื่องดนตรี</span>
+                <span class="text-xs text-slate-500 font-normal">ปรับได้ตามใจชอบ</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Master Room Reverb -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <label for="sliderReverb">เสียงสะท้อน (Hall Reverb Mix):</label>
+                        <span id="valReverb" class="font-bold text-blue-400">0.35</span>
+                    </div>
+                    <input type="range" id="sliderReverb" min="0" max="0.8" step="0.05" value="0.35" class="accent-blue-500">
+                </div>
+                <!-- Decay -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <label for="sliderDecay">ความยาวหางเสียง (Decay Time):</label>
+                        <span id="valDecay" class="font-bold text-blue-400">2.8s</span>
+                    </div>
+                    <input type="range" id="sliderDecay" min="0.5" max="5.0" step="0.1" value="2.8" class="accent-blue-500">
+                </div>
+                <!-- Brightness/Overtones -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <label for="sliderBright">ความใสกังวาน (Overtone Volume):</label>
+                        <span id="valBright" class="font-bold text-blue-400">0.40</span>
+                    </div>
+                    <input type="range" id="sliderBright" min="0" max="1.0" step="0.05" value="0.40" class="accent-blue-500">
+                </div>
+                <!-- Keyboard Shortcuts Display -->
+                <div class="flex flex-col justify-center">
+                    <div class="flex items-center gap-2 bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                        <input type="checkbox" id="checkShowKeys" checked class="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded focus:ring-blue-500">
+                        <label for="checkShowKeys" class="text-xs text-slate-300 cursor-pointer">แสดงปุ่มคีย์บอร์ดบนแป้นจำลอง</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSTRUMENT BOX: Beautifully Designed Traditional Lyre Shaped Bell Lyra Frame -->
+        <div class="flex-1 flex items-center justify-center py-2 relative">
+            
+            <!-- Traditional scroll metal frame curves behind notes (for visual identity) -->
+            <div class="absolute inset-y-0 w-full max-w-[760px] flex justify-between pointer-events-none opacity-20">
+                <div class="w-16 h-full border-l-8 border-t-8 border-b-8 border-slate-500 rounded-l-full lyra-frame-side"></div>
+                <div class="w-16 h-full border-r-8 border-t-8 border-b-8 border-slate-500 rounded-r-full lyra-frame-side"></div>
+            </div>
+
+            <!-- The Instrument Body Container -->
+            <div class="lyra-container relative w-full max-w-[780px] bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 rounded-2xl md:rounded-[30px] p-2 md:p-4 shadow-3xl flex flex-col justify-between border-4 border-slate-600 overflow-hidden transition-all duration-300">
+                <div class="lyra-head"></div>
+                
+                <!-- Realistic red felt dampening strips underneath the keys (for true glockenspiel visuals) -->
+                <div class="absolute left-4 right-4 h-2.5 bg-rose-800 rounded opacity-75 pointer-events-none shadow-md" style="top: 21%; z-index: 5;"></div>
+                <div class="absolute left-4 right-4 h-2.5 bg-rose-800 rounded opacity-75 pointer-events-none shadow-md" style="bottom: 21%; z-index: 5;"></div>
+
+                <!-- Upper Row (Chromatics / Black Keys) -->
+                <div class="keys-row upper flex justify-center w-full relative mb-1.5 transition-all duration-300" id="upperRow" style="z-index: 10;">
+                    <!-- Javascript populates -->
+                </div>
+
+                <!-- Lower Row (Naturals / White Keys) -->
+                <div class="keys-row lower flex justify-center w-full relative transition-all duration-300" id="lowerRow" style="z-index: 10;">
+                    <!-- Javascript populates -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Start Audio Overlay (Mandatory for modern browser Audio Security Policies) -->
+    <div id="overlay" class="fixed inset-0 bg-slate-950/95 flex flex-col justify-center items-center z-50 text-center px-4">
+        <div class="max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col items-center">
+            <span class="text-5xl md:text-6xl mb-4 animate-bounce">🔔</span>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-amber-400 mb-2">ยินดีต้อนรับสู่ Bell Lyra Master!</h1>
+            <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+                จำลองสัมผัสเครื่องดนตรีเบลไลลาแสนหวาน ด้วยเอนจินคลื่นเสียงความหน่วงต่ำพิเศษ เพื่อประสิทธิภาพเสียงอันยอดเยี่ยม โปรดแตะเปิดเสียงด้านล่างนี้
+            </p>
+            <button class="btn-start bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-base md:text-lg font-extrabold py-3.5 px-10 rounded-full shadow-lg hover:brightness-110 active:scale-95 transition-all duration-200" id="startBtn">
+                เริ่มเข้าเล่นดนตรี (Start)
+            </button>
         </div>
     </div>
 
-    <div id="overlay">
-        <h1>พร้อมเล่นดนตรีหรือยัง?</h1>
-        <p style="margin-bottom: 20px;">แตะปุ่มด้านล่างเพื่อเปิดเสียง</p>
-        <button class="btn-start" id="startBtn">เริ่มเล่น (Start)</button>
+    <!-- Award Overlay (Learn Mode Completion) -->
+    <div id="awardOverlay" class="fixed inset-0 bg-slate-950/90 hidden flex-col justify-center items-center z-50 text-center px-4">
+        <div class="max-w-md bg-slate-900 border border-amber-500/30 rounded-3xl p-6 md:p-8 shadow-3xl flex flex-col items-center animate-scale-up">
+            <span class="text-6xl md:text-7xl mb-2">🏆</span>
+            <h2 class="text-2xl md:text-3xl font-black text-amber-400 mb-1">ยอดเยี่ยมมาก!</h2>
+            <p class="text-sm text-slate-400 mb-4" id="awardSongName">คุณจบเพลงสำเร็จแล้ว</p>
+            
+            <!-- Stars -->
+            <div class="flex gap-2 text-4xl mb-6">
+                <span id="star1" class="text-slate-600 transition duration-300">⭐</span>
+                <span id="star2" class="text-slate-600 transition duration-300">⭐</span>
+                <span id="star3" class="text-slate-600 transition duration-300">⭐</span>
+            </div>
+
+            <p class="text-xs text-slate-400 mb-6" id="awardSummary">เล่นผิดพลาดยากมาก มารับรางวัลแตรวงเบลไลลากันเลย!</p>
+            
+            <button onclick="closeAwardOverlay()" class="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-sm font-bold py-2.5 px-8 rounded-xl shadow-lg hover:brightness-110 transition">
+                ตกลง
+            </button>
+        </div>
     </div>
 
     <script>
-        // --- Audio Engine (Web Audio API) ---
-        let audioCtx;
-        let mainOutput; // Main Gain Node to route audio
-        let dest;       // MediaStreamDestination for recording
-        let mediaRecorder;
+        // --- Web Audio Synthesizer, Web Audio API and Recording ---
+        let audioCtx = null;
+        let mainOutput = null; 
+        let reverbNode = null; 
+        let dest = null;       
+        let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
 
-        // Define Notes (Frequencies for Bell Lyra range)
+        const soundSettings = {
+            volume: 0.8,
+            decay: 2.8,
+            brightness: 0.4,
+            reverbWet: 0.35,
+            malletForce: 0.85
+        };
+
+        const keyElementsMap = {};
+
+        // Translation Mapping Modes for the Bell Lyra bars
+        const labelModeMapping = {
+            eng: {
+                "C5": "C", "C#5": "C#", "D5": "D", "D#5": "D#", "E5": "E", "F5": "F", "F#5": "F#", "G5": "G", "G#5": "G#", "A5": "A", "A#5": "A#", "B5": "B",
+                "C6": "C", "C#6": "C#", "D6": "D", "D#6": "D#", "E6": "E", "F6": "F", "F#6": "F#", "G6": "G", "G#6": "G#", "A6": "A", "A#6": "A#", "B6": "B", "C7": "C"
+            },
+            thai_full: {
+                "C5": "โด", "C#5": "โด#", "D5": "เร", "D#5": "เร#", "E5": "มี", "F5": "ฟา", "F#5": "ฟา#", "G5": "ซอล", "G#5": "ซอล#", "A5": "ลา", "A#5": "ลา#", "B5": "ที",
+                "C6": "โด", "C#6": "โด#", "D6": "เร", "D#6": "เร#", "E6": "มี", "F6": "ฟา", "F#6": "ฟา#", "G6": "ซอล", "G#6": "ซอล#", "A6": "ลา", "A#6": "ลา#", "B6": "ที", "C7": "โด"
+            },
+            thai_short: {
+                "C5": "ด", "C#5": "ด#", "D5": "ร", "D#5": "ร#", "E5": "ม", "F5": "ฟ", "F#5": "ฟ#", "G5": "ซ", "G#5": "ซ#", "A5": "ล", "A#5": "ล#", "B5": "ท",
+                "C6": "ด", "C#6": "ด#", "D6": "ร", "D#6": "ร#", "E6": "ม", "F6": "ฟ", "F#6": "ฟ#", "G6": "ซ", "G#6": "ซ#", "A6": "ล", "A#6": "ล#", "B6": "ท", "C7": "ด"
+            },
+            solfege: {
+                "C5": "Do", "C#5": "Do#", "D5": "Re", "D#5": "Re#", "E5": "Mi", "F5": "Fa", "F#5": "Fa#", "G5": "Sol", "G#5": "Sol#", "A5": "La", "A#5": "La#", "B5": "Si",
+                "C6": "Do", "C#6": "Do#", "D6": "Re", "D#6": "Re#", "E6": "Mi", "F6": "Fa", "F#6": "Fa#", "G6": "Sol", "G#6": "Sol#", "A6": "La", "A#6": "La#", "B6": "Si", "C7": "Do"
+            }
+        };
+
+        let currentLabelMode = "eng";
+
+        // Desktop keyboard shortcut mapping
+        const keyboardShortcuts = {
+            "C5": "A", "C#5": "W", "D5": "S", "D#5": "E", "E5": "D", "F5": "F", "F#5": "T", "G5": "G", "G#5": "Y", "A5": "H", "A#5": "U", "B5": "J",
+            "C6": "K", "C#6": "O", "D6": "L", "D#6": "P", "E6": ";", "F6": "'", "F#6": "[", "G6": "Z", "G#6": "]", "A6": "X", "A#6": "\\", "B6": "C", "C7": "V"
+        };
+
+        // Note frequencies with corresponding keyboard keys and spatial indexes
         const notes = [
             { note: "C5", freq: 523.25, type: "natural" },
             { note: "C#5", freq: 554.37, type: "accidental" },
@@ -358,18 +445,41 @@
             { note: "C7", freq: 2093.00, type: "natural" }
         ];
 
+        // --- Synthetic Reverb Creator via ConvolverNode (Zero External Assets Needed!) ---
+        function createHallReverb() {
+            const sampleRate = audioCtx.sampleRate;
+            const duration = sampleRate * 3.5; // Large Hall Decay
+            const impulseBuffer = audioCtx.createBuffer(2, duration, sampleRate);
+            
+            const leftChannel = impulseBuffer.getChannelData(0);
+            const rightChannel = impulseBuffer.getChannelData(1);
+
+            for (let i = 0; i < duration; i++) {
+                // Exponential decay white noise representing room responses
+                const decay = Math.exp(-i / (sampleRate * 1.2));
+                leftChannel[i] = (Math.random() * 2 - 1) * decay;
+                rightChannel[i] = (Math.random() * 2 - 1) * decay;
+            }
+
+            const convolver = audioCtx.createConvolver();
+            convolver.buffer = impulseBuffer;
+            return convolver;
+        }
+
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // Create Master Output (Gain)
+                // Soundboard routing configurations
                 mainOutput = audioCtx.createGain();
-                mainOutput.gain.value = 1.0;
-                
-                // 1. Connect Master to Speakers (so user can hear)
+                mainOutput.gain.value = soundSettings.volume;
                 mainOutput.connect(audioCtx.destination);
 
-                // 2. Connect Master to Recorder Stream
+                // Create algorithmic reverb node
+                reverbNode = createHallReverb();
+                reverbNode.connect(mainOutput);
+
+                // Live recording output stream split
                 dest = audioCtx.createMediaStreamDestination();
                 mainOutput.connect(dest);
             }
@@ -378,147 +488,451 @@
             }
         }
 
-        function playNote(freq) {
+        // --- Realistic Physical Model Bell Lyra Synth ---
+        function playBellSound(freq) {
             if (!audioCtx) initAudio();
+            const now = audioCtx.currentTime;
 
-            const t = audioCtx.currentTime;
-            
-            // Note Gain (Volume for this specific note instance)
-            const noteGain = audioCtx.createGain();
-            
-            // Connect Note Gain -> Main Output (which goes to both Speaker & Recorder)
-            noteGain.connect(mainOutput);
-            
-            noteGain.gain.setValueAtTime(0, t);
-            noteGain.gain.linearRampToValueAtTime(0.8, t + 0.01); // Fast attack
-            noteGain.gain.exponentialRampToValueAtTime(0.01, t + 2.5); // Long ring decay
+            // Direct individual voice gain envelope
+            const voiceGain = audioCtx.createGain();
+            voiceGain.gain.setValueAtTime(0, now);
+            voiceGain.gain.linearRampToValueAtTime(1.0, now + 0.002); // Snappy instant crisp attack
+            voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + soundSettings.decay);
 
-            // Oscillator 1: Fundamental
+            // Reverb split node architecture
+            const dryGain = audioCtx.createGain();
+            dryGain.gain.setValueAtTime(1.0 - soundSettings.reverbWet, now);
+            
+            const wetGain = audioCtx.createGain();
+            wetGain.gain.setValueAtTime(soundSettings.reverbWet, now);
+
+            voiceGain.connect(dryGain);
+            voiceGain.connect(wetGain);
+
+            dryGain.connect(mainOutput);
+            wetGain.connect(reverbNode);
+
+            // 1. Fundamental Pitch
             const osc1 = audioCtx.createOscillator();
             osc1.type = 'sine';
-            osc1.frequency.value = freq;
-            osc1.connect(noteGain);
+            osc1.frequency.setValueAtTime(freq, now);
+            osc1.connect(voiceGain);
 
-            // Oscillator 2: Octave up (adds brightness)
+            // 2. High Metallic Clink Overtone (Typical of Bell Lyra bars: ~2.76x)
             const osc2 = audioCtx.createOscillator();
-            osc2.type = 'triangle';
-            osc2.frequency.value = freq * 2;
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(freq * 2.76, now);
             const osc2Gain = audioCtx.createGain();
-            osc2Gain.gain.value = 0.3; // Lower volume for harmonic
+            osc2Gain.gain.setValueAtTime(0.55 * soundSettings.brightness, now);
+            osc2Gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35); // Fast decay
             osc2.connect(osc2Gain);
-            osc2Gain.connect(noteGain);
+            osc2Gain.connect(voiceGain);
 
-            // Oscillator 3: Metallic Overtone
+            // 3. Perfect Octave Harmonic (4.0x) for body resonance
             const osc3 = audioCtx.createOscillator();
             osc3.type = 'sine';
-            osc3.frequency.value = freq * 3.5; 
+            osc3.frequency.setValueAtTime(freq * 4.0, now);
             const osc3Gain = audioCtx.createGain();
-            osc3Gain.gain.value = 0.1; // Very subtle
-            osc3Gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5); 
+            osc3Gain.gain.setValueAtTime(0.25 * soundSettings.brightness, now);
+            osc3Gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
             osc3.connect(osc3Gain);
-            osc3Gain.connect(noteGain);
+            osc3Gain.connect(voiceGain);
 
-            // Start all
-            osc1.start(t);
-            osc2.start(t);
-            osc3.start(t);
+            // 4. Sub-harmonic Warm Cabinet Overtone (0.5x)
+            const osc4 = audioCtx.createOscillator();
+            osc4.type = 'sine';
+            osc4.frequency.setValueAtTime(freq * 0.5, now);
+            const osc4Gain = audioCtx.createGain();
+            osc4Gain.gain.setValueAtTime(0.04, now);
+            osc4Gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+            osc4.connect(osc4Gain);
+            osc4Gain.connect(voiceGain);
 
-            // Stop all after decay
-            osc1.stop(t + 3);
-            osc2.stop(t + 3);
-            osc3.stop(t + 3);
-            
-            // Garbage collection helper
+            // 5. Short Noise Click Impulse mimicking a hard plastic/wood mallet hit
+            const bufferSize = audioCtx.sampleRate * 0.015; // 15ms impact burst
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const dataArray = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                dataArray[i] = (Math.random() * 2 - 1);
+            }
+            const noiseNode = audioCtx.createBufferSource();
+            noiseNode.buffer = noiseBuffer;
+
+            const clickFilter = audioCtx.createBiquadFilter();
+            clickFilter.type = 'highpass';
+            clickFilter.frequency.setValueAtTime(1500, now);
+
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.35 * soundSettings.malletForce, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+
+            noiseNode.connect(clickFilter);
+            clickFilter.connect(noiseGain);
+            noiseGain.connect(voiceGain);
+
+            // Start synthesis sequence
+            osc1.start(now);
+            osc2.start(now);
+            osc3.start(now);
+            osc4.start(now);
+            noiseNode.start(now);
+
+            // Audio node garbage collection scheduling
+            const terminationDuration = soundSettings.decay + 1;
+            osc1.stop(now + terminationDuration);
+            osc2.stop(now + terminationDuration);
+            osc3.stop(now + terminationDuration);
+            osc4.stop(now + terminationDuration);
+
             setTimeout(() => {
-                noteGain.disconnect();
-            }, 3000);
+                osc1.disconnect();
+                osc2.disconnect();
+                osc3.disconnect();
+                osc4.disconnect();
+                noiseNode.disconnect();
+                clickFilter.disconnect();
+                noiseGain.disconnect();
+                voiceGain.disconnect();
+                dryGain.disconnect();
+                wetGain.disconnect();
+            }, (terminationDuration + 1) * 1000);
+
+            // Launch particles from visualizers
+            launchNoteParticle(freq);
         }
 
-        // --- DOM Generation & Interaction ---
-        const upperRow = document.getElementById('upperRow');
-        const lowerRow = document.getElementById('lowerRow');
-        const startBtn = document.getElementById('startBtn');
-        const overlay = document.getElementById('overlay');
-        
-        // Recording UI Elements
-        const btnRecord = document.getElementById('btnRecord');
-        const btnStop = document.getElementById('btnStop');
-        const recordText = document.getElementById('recordText');
-        const audioPlayback = document.getElementById('audioPlayback');
+        // --- Demo & Learning Database ---
+        const demoSongs = {
+            mary: [
+                { n: "E5", d: 400 }, { n: "D5", d: 400 }, { n: "C5", d: 400 }, { n: "D5", d: 400 },
+                { n: "E5", d: 400 }, { n: "E5", d: 400 }, { n: "E5", d: 800 },
+                { n: "D5", d: 400 }, { n: "D5", d: 400 }, { n: "D5", d: 800 },
+                { n: "E5", d: 400 }, { n: "G5", d: 400 }, { n: "G5", d: 800 },
+                { n: "E5", d: 400 }, { n: "D5", d: 400 }, { n: "C5", d: 400 }, { n: "D5", d: 400 },
+                { n: "E5", d: 400 }, { n: "E5", d: 400 }, { n: "E5", d: 400 }, { n: "E5", d: 400 },
+                { n: "D5", d: 400 }, { n: "D5", d: 400 }, { n: "E5", d: 400 }, { n: "D5", d: 400 },
+                { n: "C5", d: 1000 }
+            ],
+            twinkle: [
+                { n: "C5", d: 450 }, { n: "C5", d: 450 }, { n: "G5", d: 450 }, { n: "G5", d: 450 },
+                { n: "A5", d: 450 }, { n: "A5", d: 450 }, { n: "G5", d: 900 },
+                { n: "F5", d: 450 }, { n: "F5", d: 450 }, { n: "E5", d: 450 }, { n: "E5", d: 450 },
+                { n: "D5", d: 450 }, { n: "D5", d: 450 }, { n: "C5", d: 900 },
+                { n: "G5", d: 450 }, { n: "G5", d: 450 }, { n: "F5", d: 450 }, { n: "F5", d: 450 },
+                { n: "E5", d: 450 }, { n: "E5", d: 450 }, { n: "D5", d: 900 },
+                { n: "G5", d: 450 }, { n: "G5", d: 450 }, { n: "F5", d: 450 }, { n: "F5", d: 450 },
+                { n: "E5", d: 450 }, { n: "E5", d: 450 }, { n: "D5", d: 900 },
+                { n: "C5", d: 450 }, { n: "C5", d: 450 }, { n: "G5", d: 450 }, { n: "G5", d: 450 },
+                { n: "A5", d: 450 }, { n: "A5", d: 450 }, { n: "G5", d: 900 }
+            ],
+            loykrathong: [
+                { n: "A5", d: 350 }, { n: "C6", d: 350 }, { n: "D6", d: 350 }, { n: "D6", d: 550 },
+                { n: "D6", d: 350 }, { n: "C6", d: 350 }, { n: "D6", d: 350 }, { n: "C6", d: 350 }, { n: "A5", d: 550 },
+                { n: "A5", d: 350 }, { n: "C6", d: 350 }, { n: "D6", d: 350 }, { n: "D6", d: 550 },
+                { n: "F6", d: 350 }, { n: "E6", d: 350 }, { n: "D6", d: 350 }, { n: "C6", d: 350 }, { n: "D6", d: 650 },
+                { n: "F6", d: 450 }, { n: "F6", d: 450 }, { n: "F6", d: 450 }, { n: "E6", d: 350 }, { n: "D6", d: 350 }, { n: "C6", d: 450 },
+                { n: "D6", d: 350 }, { n: "C6", d: 350 }, { n: "A5", d: 650 },
+                { n: "G5", d: 350 }, { n: "A5", d: 350 }, { n: "C6", d: 650 },
+                { n: "A5", d: 350 }, { n: "G5", d: 350 }, { n: "F5", d: 650 }
+            ],
+            jingle: [
+                { n: "E5", d: 300 }, { n: "E5", d: 300 }, { n: "E5", d: 600 },
+                { n: "E5", d: 300 }, { n: "E5", d: 300 }, { n: "E5", d: 600 },
+                { n: "E5", d: 300 }, { n: "G5", d: 300 }, { n: "C5", d: 450 }, { n: "D5", d: 150 }, { n: "E5", d: 900 },
+                { n: "F5", d: 300 }, { n: "F5", d: 300 }, { n: "F5", d: 450 }, { n: "F5", d: 150 },
+                { n: "F5", d: 300 }, { n: "E5", d: 300 }, { n: "E5", d: 300 }, { n: "E5", d: 150 }, { n: "E5", d: 150 },
+                { n: "E5", d: 300 }, { n: "D5", d: 300 }, { n: "D5", d: 300 }, { n: "E5", d: 300 }, { n: "D5", d: 600 }, { n: "G5", d: 600 }
+            ],
+            kamman: [
+                { n: "G5", d: 300 }, { n: "A5", d: 300 }, { n: "C6", d: 300 }, { n: "D6", d: 300 },
+                { n: "E6", d: 300 }, { n: "D6", d: 300 }, { n: "E6", d: 300 }, { n: "C6", d: 600 },
+                { n: "E6", d: 300 }, { n: "D6", d: 300 }, { n: "C6", d: 300 }, { n: "A5", d: 300 },
+                { n: "C6", d: 300 }, { n: "A5", d: 300 }, { n: "G5", d: 300 }, { n: "F5", d: 600 }
+            ]
+        };
 
-        // Recording Logic
-        btnRecord.addEventListener('click', () => {
-            initAudio(); // Ensure audio context exists
+        let demoTimeoutIds = [];
+        let isPlayingDemo = false;
+
+        // Interactive Learning State Variables
+        let isLearnMode = false;
+        let learnSongKey = "";
+        let learnSongIndex = 0;
+        let learnErrors = 0;
+
+        function stopAllDemos() {
+            demoTimeoutIds.forEach(id => clearTimeout(id));
+            demoTimeoutIds = [];
+            isPlayingDemo = false;
             
-            audioChunks = []; // Clear previous recording
-            
-            // Check browser support
-            if (!dest) {
-                alert("Browser not supported for recording.");
+            const btnDemo = document.getElementById('btnDemo');
+            btnDemo.innerHTML = "<span>▶️</span> เล่นออโต้";
+            btnDemo.classList.remove('bg-amber-600', 'animate-pulse');
+            btnDemo.classList.add('bg-purple-600');
+        }
+
+        function playDemoAuto() {
+            stopAllDemos();
+            exitLearnMode();
+
+            const select = document.getElementById('demoSelect');
+            const songKey = select.value;
+            if (!songKey || !demoSongs[songKey]) {
+                alert("กรุณาเลือกบทเพลงสาธิตที่ต้องการครับ");
                 return;
             }
 
-            mediaRecorder = new MediaRecorder(dest.stream);
+            initAudio();
+            isPlayingDemo = true;
             
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    audioChunks.push(e.data);
-                }
-            };
+            const btnDemo = document.getElementById('btnDemo');
+            btnDemo.innerHTML = "<span>⏹</span> หยุดเล่น";
+            btnDemo.classList.remove('bg-purple-600');
+            btnDemo.classList.add('bg-amber-600', 'animate-pulse');
 
-            mediaRecorder.onstop = () => {
-                // Create Blob
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                const audioURL = URL.createObjectURL(blob);
-                audioPlayback.src = audioURL;
-                audioPlayback.style.display = 'block';
-            };
+            const songNotes = demoSongs[songKey];
+            let accumulatedTime = 0;
 
-            mediaRecorder.start();
-            isRecording = true;
+            songNotes.forEach((step, index) => {
+                const id = setTimeout(() => {
+                    triggerTargetKey(step.n);
+                    
+                    if (index === songNotes.length - 1) {
+                        setTimeout(() => {
+                            stopAllDemos();
+                        }, step.d + 300);
+                    }
+                }, accumulatedTime);
+                
+                demoTimeoutIds.push(id);
+                accumulatedTime += step.d;
+            });
+        }
 
-            // UI Updates
-            btnRecord.classList.add('recording');
-            btnRecord.style.display = 'none';
-            btnStop.style.display = 'flex';
-            audioPlayback.style.display = 'none'; // Hide old player while recording new
-        });
-
-        btnStop.addEventListener('click', () => {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-
-                // UI Updates
-                btnRecord.classList.remove('recording');
-                btnRecord.style.display = 'flex';
-                btnStop.style.display = 'none';
-                recordText.innerText = "อัดใหม่";
+        // --- Interactive Learning (Learn Mode) Logic ---
+        function enterLearnMode() {
+            stopAllDemos();
+            
+            const select = document.getElementById('demoSelect');
+            const songKey = select.value;
+            if (!songKey || !demoSongs[songKey]) {
+                alert("กรุณาเลือกบทเพลงสำหรับเรียนรู้ก่อนครับ");
+                return;
             }
-        });
+
+            initAudio();
+            isLearnMode = true;
+            learnSongKey = songKey;
+            learnSongIndex = 0;
+            learnErrors = 0;
+
+            // UI configurations
+            document.getElementById('learnProgressContainer').classList.remove('hidden');
+            document.getElementById('btnLearn').innerHTML = "<span>⏹</span> หยุดเรียน";
+            document.getElementById('btnLearn').classList.add('bg-rose-600', 'hover:bg-rose-500', 'text-white');
+            document.getElementById('btnLearn').classList.remove('bg-amber-500', 'hover:bg-amber-400', 'text-slate-950');
+
+            updateLearnVisuals();
+        }
+
+        function exitLearnMode() {
+            isLearnMode = false;
+            learnSongKey = "";
+            learnSongIndex = 0;
+            
+            document.querySelectorAll('.key').forEach(el => el.classList.remove('guide-active'));
+            document.getElementById('learnProgressContainer').classList.add('hidden');
+            
+            const btnLearn = document.getElementById('btnLearn');
+            btnLearn.innerHTML = "<span>🎓</span> ฝึกเล่น";
+            btnLearn.classList.remove('bg-rose-600', 'hover:bg-rose-500', 'text-white');
+            btnLearn.classList.add('bg-amber-500', 'hover:bg-amber-400', 'text-slate-950');
+        }
+
+        function updateLearnVisuals() {
+            if (!isLearnMode) return;
+
+            const song = demoSongs[learnSongKey];
+            const currentStep = song[learnSongIndex];
+
+            // Setup highlight guiding glow
+            document.querySelectorAll('.key').forEach(el => el.classList.remove('guide-active'));
+            
+            const targetDom = keyElementsMap[currentStep.n];
+            if (targetDom) {
+                targetDom.classList.add('guide-active');
+            }
+
+            // Progress bar updates
+            const progressPct = (learnSongIndex / song.length) * 100;
+            document.getElementById('learnProgressBar').style.width = `${progressPct}%`;
+            document.getElementById('learnFraction').innerText = `${learnSongIndex} / ${song.length}`;
+            
+            const labelMap = labelModeMapping[currentLabelMode];
+            document.getElementById('learnStatusTitle').innerText = `เคาะตัวโน้ตถัดไป: "${labelMap[currentStep.n] || currentStep.n}"`;
+        }
+
+        function handleUserKeyPress(noteName) {
+            if (!isLearnMode) return;
+
+            const song = demoSongs[learnSongKey];
+            const targetStep = song[learnSongIndex];
+
+            if (noteName === targetStep.n) {
+                // Correct key played
+                learnSongIndex++;
+                if (learnSongIndex >= song.length) {
+                    // Song Completed successfully!
+                    showAwardOverlay();
+                    exitLearnMode();
+                } else {
+                    updateLearnVisuals();
+                }
+            } else {
+                // Mistake made
+                learnErrors++;
+            }
+        }
+
+        function showAwardOverlay() {
+            const overlay = document.getElementById('awardOverlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            const select = document.getElementById('demoSelect');
+            const songName = select.options[select.selectedIndex].text;
+            document.getElementById('awardSongName').innerText = `คุณจบเพลง "${songName}" สำเร็จแล้ว`;
+
+            const star1 = document.getElementById('star1');
+            const star2 = document.getElementById('star2');
+            const star3 = document.getElementById('star3');
+
+            // Reset stars classes
+            [star1, star2, star3].forEach(el => {
+                el.classList.remove('text-yellow-400', 'scale-125');
+                el.classList.add('text-slate-600');
+            });
+
+            // Calculate Performance Rating
+            setTimeout(() => {
+                star1.classList.add('text-yellow-400', 'scale-125');
+                star1.classList.remove('text-slate-600');
+                if (learnErrors <= 4) {
+                    setTimeout(() => {
+                        star2.classList.add('text-yellow-400', 'scale-125');
+                        star2.classList.remove('text-slate-600');
+                    }, 250);
+                }
+                if (learnErrors <= 1) {
+                    setTimeout(() => {
+                        star3.classList.add('text-yellow-400', 'scale-125');
+                        star3.classList.remove('text-slate-600');
+                    }, 500);
+                }
+            }, 300);
+
+            // Set text rating
+            const summary = document.getElementById('awardSummary');
+            if (learnErrors === 0) {
+                summary.innerText = "เล่นสมบูรณ์แบบยอดเยี่ยมไร้ที่ติ! สมควรได้รับเกียรตินิยมแตรวงเบลไลลาสูงสุด 🌟";
+            } else if (learnErrors <= 2) {
+                summary.innerText = `เคาะผิดพลาดเพียงแค่ ${learnErrors} ครั้งเท่านั้น ยอดเยี่ยมมากครับ!`;
+            } else {
+                summary.innerText = `เล่นจบเสร็จสิ้น มีข้อผิดพลาด ${learnErrors} ครั้ง ฝึกฝนเพิ่มเติมอีกนิดรับรองเก่งขึ้นแน่นอนครับ!`;
+            }
+        }
+
+        function closeAwardOverlay() {
+            const overlay = document.getElementById('awardOverlay');
+            overlay.classList.remove('flex');
+            overlay.classList.add('hidden');
+        }
+
+        // --- Simulated Target Hit trigger engine ---
+        function triggerTargetKey(noteName) {
+            const keyTarget = keyElementsMap[noteName];
+            if (!keyTarget) return;
+
+            const freq = parseFloat(keyTarget.dataset.freq);
+            playBellSound(freq);
+
+            // Animate mallet striking the key
+            animateMalletTo(keyTarget);
+
+            // Toggle Visual States
+            keyTarget.classList.add('active');
+            const isAccidental = keyTarget.classList.contains('accidental');
+            keyTarget.classList.add(isAccidental ? 'key-glow-accidental' : 'key-glow-natural');
+
+            setTimeout(() => {
+                keyTarget.classList.remove('active', 'key-glow-accidental', 'key-glow-natural');
+            }, 150);
+        }
+
+        // --- Mallet Animation Strike ---
+        function animateMalletTo(keyTarget) {
+            const leftMallet = document.getElementById('leftMallet');
+            const rect = keyTarget.getBoundingClientRect();
+            
+            // Render visible coordinates
+            leftMallet.style.display = 'block';
+            leftMallet.style.left = `${rect.left + (rect.width/2)}px`;
+            leftMallet.style.top = `${rect.top + (rect.height/4)}px`;
+
+            // Striking compression recoil visual effect
+            leftMallet.style.transform = "translate(-50%, -50%) scale(0.7)";
+            setTimeout(() => {
+                leftMallet.style.transform = "translate(-50%, -50%) scale(1.0)";
+            }, 100);
+        }
+
+        // --- Live Particle Emitter Engine ---
+        function launchNoteParticle(freq) {
+            const keyTarget = Object.values(keyElementsMap).find(el => parseFloat(el.dataset.freq) === freq);
+            if (!keyTarget) return;
+
+            const rect = keyTarget.getBoundingClientRect();
+            const particlesCount = 4;
+
+            for (let i = 0; i < particlesCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.innerHTML = "✦";
+                particle.style.color = keyTarget.classList.contains('accidental') ? '#facc15' : '#e2e8f0';
+                particle.style.fontSize = `${Math.random() * 14 + 10}px`;
+                particle.style.left = `${rect.left + (rect.width / 2) + (Math.random() * 20 - 10)}px`;
+                particle.style.top = `${rect.top + (Math.random() * 20 - 10)}px`;
+                
+                // Add horizontal variance
+                particle.style.setProperty('--x-move', `${Math.random() * 80 - 40}px`);
+                document.body.appendChild(particle);
+
+                // Self cleanup
+                setTimeout(() => particle.remove(), 800);
+            }
+        }
 
 
-        // Build grid logic
-        let naturals = [];
-        let accidentals = [];
+        // --- DOM Building, Layout Generation & Visuals Setup ---
+        const upperRow = document.getElementById('upperRow');
+        const lowerRow = document.getElementById('lowerRow');
 
-        let naturalIndex = 0;
-        
-        // Render Lower Row (Naturals)
+        // Populate Natural keys (lower)
         notes.forEach(n => {
             if (n.type === 'natural') {
-                const key = createKey(n);
+                const key = createKeyDOM(n);
                 lowerRow.appendChild(key);
+                keyElementsMap[n.note] = key;
             }
         });
 
-        // Render Upper Row (Accidentals + Spacers)
+        // Populate Accidental keys (upper)
         const naturalNotes = notes.filter(n => n.type === 'natural');
         
-        // Add initial spacer to offset slightly
+        // Initial offset spacer
         const startSpacer = document.createElement('div');
-        startSpacer.className = 'spacer';
-        startSpacer.style.width = '2%'; 
+        startSpacer.className = 'spacer flex-1 mx-[2.5px] md:mx-[4px]';
+        startSpacer.style.flexGrow = '0.4'; 
         upperRow.appendChild(startSpacer);
 
         for (let i = 0; i < naturalNotes.length - 1; i++) {
@@ -530,40 +944,79 @@
             
             if (idx2 - idx1 > 1) {
                 const accidentalNote = notes[idx1 + 1];
-                upperRow.appendChild(createKey(accidentalNote));
+                const key = createKeyDOM(accidentalNote);
+                upperRow.appendChild(key);
+                keyElementsMap[accidentalNote.note] = key;
             } else {
                 const spacer = document.createElement('div');
-                spacer.className = 'spacer';
+                spacer.className = 'spacer flex-1 mx-[2.5px] md:mx-[4px]';
                 upperRow.appendChild(spacer);
             }
         }
 
-        function createKey(noteData) {
+        function createKeyDOM(noteData) {
             const key = document.createElement('div');
-            key.className = `key ${noteData.type}`;
+            // Added flex-1 and mx-xx for beautiful separation of individual keys
+            key.className = `key metal-key ${noteData.type} flex-1 mx-[2.5px] md:mx-[4px] select-none relative flex flex-col justify-end items-center pb-3 shadow-[0_5px_8px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.7)] border-t border-white/20`;
             key.dataset.freq = noteData.freq;
             key.dataset.note = noteData.note;
-            
-            // Visual label
-            const label = document.createElement('span');
-            label.className = 'note-name';
-            label.innerText = noteData.note.replace(/\d/, ''); 
-            key.appendChild(label);
 
+            // Visual screws for realism
+            const topScrew = document.createElement('div');
+            topScrew.className = 'node-screw top';
+            const btmScrew = document.createElement('div');
+            btmScrew.className = 'node-screw bottom';
+            key.appendChild(topScrew);
+            key.appendChild(btmScrew);
+
+            // Note label
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'note-name font-bold tracking-tighter text-slate-700 select-none z-10 pointer-events-none text-xs md:text-sm';
+            labelSpan.id = `label-${noteData.note}`;
+            key.appendChild(labelSpan);
+
+            // Desktop hotkey indicator
+            const keyShortcut = keyboardShortcuts[noteData.note];
+            if (keyShortcut) {
+                const shortcutSpan = document.createElement('span');
+                shortcutSpan.className = 'shortcut-hint text-[8px] absolute top-1.5 font-mono tracking-tighter text-slate-400 select-none opacity-50';
+                shortcutSpan.id = `shortcut-${noteData.note}`;
+                shortcutSpan.innerText = keyShortcut;
+                key.appendChild(shortcutSpan);
+            }
+
+            // Tailored key height metrics & realistic gradients
+            if (noteData.type === 'natural') {
+                key.style.height = '24vh';
+                key.classList.add('bg-gradient-to-b', 'from-slate-50', 'via-slate-100', 'to-slate-300', 'border-x', 'border-slate-400/55');
+            } else {
+                key.style.height = '18.5vh';
+                key.classList.add('bg-gradient-to-b', 'from-amber-200', 'via-yellow-400', 'to-yellow-600', 'accidental', 'border-x', 'border-amber-600/60');
+            }
+
+            // Universal multi-touch handling
             const trigger = (e) => {
                 e.preventDefault(); 
-                if(e.type === 'mousedown' && e.buttons !== 1) return;
+                if (e.type === 'mousedown' && e.buttons !== 1) return;
 
-                playNote(noteData.freq);
-                
+                // Stop active automated playbacks
+                if (isPlayingDemo) stopAllDemos();
+
+                playBellSound(noteData.freq);
+
+                // Interaction visual triggers
                 key.classList.add('active');
-                
-                const splash = document.createElement('div');
-                splash.className = 'hit-effect';
-                key.appendChild(splash);
-                setTimeout(() => splash.remove(), 500);
+                const isAccidental = key.classList.contains('accidental');
+                key.classList.add(isAccidental ? 'key-glow-accidental' : 'key-glow-natural');
 
-                setTimeout(() => key.classList.remove('active'), 100);
+                // Evaluate game learning status
+                if (isLearnMode) {
+                    handleUserKeyPress(noteData.note);
+                }
+
+                setTimeout(() => {
+                    key.classList.remove('active', 'key-glow-accidental', 'key-glow-natural');
+                }, 100);
             };
 
             key.addEventListener('touchstart', trigger, { passive: false });
@@ -572,17 +1025,255 @@
             return key;
         }
 
-        // --- App State ---
+        // --- Translate Key Labels ---
+        function setLabelMode(mode) {
+            currentLabelMode = mode;
+            
+            document.querySelectorAll('.lbl-btn').forEach(btn => {
+                btn.className = 'lbl-btn text-slate-400 text-[11px] py-1 rounded hover:bg-slate-700/50 transition text-center';
+            });
+            const activeBtn = document.getElementById(`lbl-${mode}`);
+            if (activeBtn) {
+                activeBtn.className = 'lbl-btn bg-blue-600 text-white text-[11px] font-semibold py-1 rounded transition text-center';
+            }
+
+            const labelMap = labelModeMapping[mode];
+            notes.forEach(n => {
+                const labelDom = document.getElementById(`label-${n.note}`);
+                if (labelDom && labelMap[n.note]) {
+                    labelDom.innerText = labelMap[n.note];
+                }
+            });
+        }
+
+        // Initialize default letters
+        setLabelMode('eng');
+
+        // Toggle Keyboard shortcuts display
+        document.getElementById('checkShowKeys').addEventListener('change', (e) => {
+            const hints = document.querySelectorAll('.shortcut-hint');
+            hints.forEach(hint => {
+                hint.style.display = e.target.checked ? 'block' : 'none';
+            });
+        });
+
+        // --- Zoom Keyboard (Mobile Friendly Width) Logic ---
+        let isZoomed = false;
+        const btnZoom = document.getElementById('btnZoom');
+        const lyraContainer = document.querySelector('.lyra-container');
+
+        btnZoom.addEventListener('click', toggleZoom);
+
+        function toggleZoom() {
+            isZoomed = !isZoomed;
+            if (isZoomed) {
+                btnZoom.classList.add('bg-blue-600', 'border-blue-500');
+                btnZoom.classList.remove('bg-slate-800');
+                document.getElementById('zoomIcon').innerText = "🔎";
+                document.getElementById('zoomText').innerText = "ลดขนาดคีย์ (Fit)";
+                
+                // Add scrolling/zoom layout classes
+                upperRow.classList.add('zoom-active', 'zoom-row-active');
+                lowerRow.classList.add('zoom-active', 'zoom-row-active');
+                lyraContainer.classList.add('zoom-container-active');
+            } else {
+                btnZoom.classList.remove('bg-blue-600', 'border-blue-500');
+                btnZoom.classList.add('bg-slate-800');
+                document.getElementById('zoomIcon').innerText = "🔍";
+                document.getElementById('zoomText').innerText = "ขยายคีย์ (Zoom)";
+                
+                upperRow.classList.remove('zoom-active', 'zoom-row-active');
+                lowerRow.classList.remove('zoom-active', 'zoom-row-active');
+                lyraContainer.classList.remove('zoom-container-active');
+            }
+        }
+
+        // --- Sound Adjusters Event Listeners ---
+        document.getElementById('sliderReverb').addEventListener('input', (e) => {
+            soundSettings.reverbWet = parseFloat(e.target.value);
+            document.getElementById('valReverb').innerText = e.target.value;
+        });
+        document.getElementById('sliderDecay').addEventListener('input', (e) => {
+            soundSettings.decay = parseFloat(e.target.value);
+            document.getElementById('valDecay').innerText = e.target.value + "s";
+        });
+        document.getElementById('sliderBright').addEventListener('input', (e) => {
+            soundSettings.brightness = parseFloat(e.target.value);
+            document.getElementById('valBright').innerText = e.target.value;
+        });
+
+        // --- Desktop Keyboard Mapping Events ---
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            const pressedKey = e.key.toUpperCase();
+            
+            // Lookup key note matching physical binding
+            const matchedEntry = Object.entries(keyboardShortcuts).find(([note, binding]) => binding === pressedKey);
+            if (matchedEntry) {
+                const noteName = matchedEntry[0];
+                triggerTargetKey(noteName);
+
+                if (isLearnMode) {
+                    handleUserKeyPress(noteName);
+                }
+            }
+        });
+
+        // --- Application Main Panel Event Handlers ---
+        document.getElementById('btnDemo').addEventListener('click', () => {
+            if (isPlayingDemo) {
+                stopAllDemos();
+            } else {
+                playDemoAuto();
+            }
+        });
+
+        document.getElementById('btnStopDemo').addEventListener('click', stopAllDemos);
+
+        document.getElementById('btnLearn').addEventListener('click', () => {
+            if (isLearnMode) {
+                exitLearnMode();
+            } else {
+                enterLearnMode();
+            }
+        });
+
+        const btnSettings = document.getElementById('btnSettings');
+        const settingsPanel = document.getElementById('settingsPanel');
+        btnSettings.addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+        });
+
+        // --- Live Recording Operations ---
+        const btnRecord = document.getElementById('btnRecord');
+        const btnStop = document.getElementById('btnStop');
+        const recordText = document.getElementById('recordText');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const btnDownload = document.getElementById('btnDownload');
+
+        btnRecord.addEventListener('click', () => {
+            initAudio();
+            audioChunks = [];
+            if (!dest) {
+                alert("เอนจินของเบราว์เซอร์ไม่พร้อมสนับสนุนคุณสมบัติอัดเสียง");
+                return;
+            }
+
+            mediaRecorder = new MediaRecorder(dest.stream);
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioURL = URL.createObjectURL(blob);
+                audioPlayback.src = audioURL;
+                audioPlayback.style.display = 'block';
+                
+                // Toggle downloads available
+                btnDownload.style.display = 'flex';
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+
+            btnRecord.classList.add('bg-amber-600', 'animate-pulse');
+            btnRecord.innerHTML = "<span>⏹</span> หยุดอัดเสียง";
+            btnDownload.style.display = 'none';
+            audioPlayback.style.display = 'none';
+        });
+
+        btnDownload.addEventListener('click', () => {
+            if (audioChunks.length === 0) return;
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bell-lyra-recording-${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(url);
+        });
+
+        const startBtn = document.getElementById('startBtn');
+        const overlay = document.getElementById('overlay');
+
         startBtn.addEventListener('click', () => {
             initAudio();
             overlay.style.opacity = '0';
             setTimeout(() => {
                 overlay.style.display = 'none';
+                
+                // Splash sound indicating initialization is fully ready
+                playBellSound(523.25); // C5
+                setTimeout(() => playBellSound(659.25), 150); // E5
+                setTimeout(() => playBellSound(783.99), 300); // G5
             }, 500);
         });
 
         document.addEventListener('contextmenu', event => event.preventDefault());
 
+        // --- Visual Background Spectrum Audio Visualizer Canvas ---
+        const canvas = document.getElementById('visualizerCanvas');
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let waveStars = [];
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Render slowly flowing abstract glowing energy lines
+            const now = Date.now() * 0.001;
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)';
+            
+            ctx.beginPath();
+            for (let i = 0; i < canvas.width; i += 5) {
+                const y = canvas.height * 0.4 + Math.sin(i * 0.005 + now) * 40 + Math.cos(i * 0.01 + now) * 20;
+                if (i === 0) ctx.moveTo(i, y);
+                else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+
+            // Loop and draw floating star dust elements
+            if (Math.random() < 0.04) {
+                waveStars.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + 10,
+                    size: Math.random() * 3 + 1,
+                    speed: Math.random() * 1.5 + 0.5,
+                    opacity: Math.random() * 0.5 + 0.2
+                });
+            }
+
+            for (let i = waveStars.length - 1; i >= 0; i--) {
+                const s = waveStars[i];
+                s.y -= s.speed;
+                s.opacity -= 0.002;
+                if (s.y < -10 || s.opacity <= 0) {
+                    waveStars.splice(i, 1);
+                } else {
+                    ctx.fillStyle = `rgba(251, 191, 36, ${s.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        }
+        
+        window.onload = function() {
+            animate();
+        };
     </script>
 </body>
 </html>
