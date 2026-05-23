@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic Flugelhorn Simulator</title>
+    <title>Realistic Flugelhorn Simulator Pro</title>
     <!-- Tailwind CSS for layout utility -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Global Reset & No Scroll */
         body {
-            background: #1a1a1a;
-            color: white;
-            overflow: hidden; /* ห้ามเลื่อน */
-            touch-action: none; /* ห้าม Zoom/Pan */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0d0d0d;
+            color: #f3f4f6;
+            overflow: hidden; /* Prevent scrolling */
+            touch-action: none; /* Disable double-tap zoom and pan */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             height: 100vh;
             width: 100vw;
             display: flex;
@@ -24,218 +23,397 @@
             -webkit-user-select: none;
         }
 
-        /* Metallic Gradient for the Instrument */
-        .brass-gradient {
-            background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.4), 5px 5px 15px rgba(0,0,0,0.5);
+        /* Brushed Metallic Gold styling */
+        .text-gold {
+            color: #e5c158;
+            background: linear-gradient(to right, #fcf6ba, #bf953f, #fbf5b7, #aa771c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
+        .border-gold {
+            border-color: #b38728;
+        }
+
+        /* Valve animation and state colors */
         .valve-cap {
-            background: radial-gradient(circle at 30% 30%, #e8e8e8, #a0a0a0);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-            transition: transform 0.05s; /* Faster visual response */
+            background: radial-gradient(circle at 30% 30%, #fef08a, #b45309, #78350f);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+            transition: transform 0.04s cubic-bezier(0.1, 0.8, 0.3, 1);
         }
         
-        .valve-cap:active, .valve-cap.active {
-            transform: translateY(15px); /* Animation when pressed */
-            background: radial-gradient(circle at 30% 30%, #d0d0d0, #808080);
+        .valve-cap.active, .valve-cap:active {
+            transform: translateY(14px);
+            background: radial-gradient(circle at 30% 30%, #fef08a, #d97706, #451a03);
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
         }
 
-        /* Note Button Styling */
+        /* Note Button custom styling */
         .note-btn {
             appearance: none;
-            border: 2px solid #b38728;
-            background: rgba(30, 30, 30, 0.9);
-            color: #fcf6ba;
+            border: 2px solid #bf953f;
+            background: rgba(20, 20, 20, 0.85);
+            color: #fef08a;
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
+            width: 48px;
+            height: 48px;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(179, 135, 40, 0.2);
-            transition: all 0.05s; /* Faster touch response */
-            touch-action: none; /* Critical for mobile game feel */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255,255,255,0.1);
+            transition: all 0.05s ease;
+            touch-action: none;
             position: relative;
             z-index: 10;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .note-btn:active, .note-btn.active {
-            background: #b38728;
-            color: #1a1a1a;
-            transform: scale(0.95);
-            box-shadow: 0 0 20px rgba(179, 135, 40, 0.8);
+        @media (min-width: 380px) {
+            .note-btn { width: 56px; height: 56px; font-size: 1.15rem; }
         }
 
-        /* Control Panel Buttons */
+        .note-btn.active, .note-btn:active {
+            background: linear-gradient(135deg, #bf953f, #fcf6ba, #aa771c);
+            color: #111;
+            transform: scale(0.92);
+            box-shadow: 0 0 15px rgba(229, 193, 88, 0.8);
+            border-color: #fff;
+        }
+
+        /* Realistic Valve Trigger Button for Pro Mode */
+        .valve-trigger-btn {
+            background: radial-gradient(circle at 50% 30%, #3a3a3a, #1a1a1a);
+            border: 2px solid #555;
+            color: #bbb;
+            border-radius: 50% 50% 40% 40%;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.6), inset 0 2px 3px rgba(255,255,255,0.1);
+            transition: all 0.05s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .valve-trigger-btn.active, .valve-trigger-btn:active {
+            background: radial-gradient(circle at 50% 30%, #bf953f, #aa771c);
+            color: #fff;
+            border-color: #fcf6ba;
+            transform: translateY(4px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 12px rgba(229, 193, 88, 0.5);
+        }
+
+        /* Control deck utility and styling */
         .ctrl-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #333;
-            border-radius: 12px;
-            padding: 8px;
-            width: 64px;
-            height: 64px;
-            border: 1px solid #555;
-            transition: background 0.2s;
+            background: #1e1e1e;
+            border-radius: 14px;
+            padding: 4px;
+            width: 54px;
+            height: 54px;
+            border: 1px solid #333;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .ctrl-btn:active {
-            background: #444;
+            background: #2a2a2a;
+            transform: translateY(1px);
         }
         .ctrl-btn.recording {
-            background: #500;
-            border-color: #f00;
-            animation: pulse 1.5s infinite;
+            background: #7f1d1d;
+            border-color: #ef4444;
+            animation: pulse-red 1.5s infinite;
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        .tab-btn {
+            background: #161616;
+            border: 1px solid #262626;
+            color: #9ca3af;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #bf953f, #aa771c);
+            color: #0d0d0d;
+            border-color: #fcf6ba;
+            font-weight: bold;
         }
 
-        /* Canvas for Visualizer */
-        canvas {
-            width: 100%;
-            height: 100%;
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        /* SVG Instrument Layout */
-        .instrument-container {
-            position: relative;
-            width: 100%;
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+        /* Styled toast alert */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #1f2937;
+            color: #f9fafb;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 100px;
+            transform: translateX(-50%);
+            border: 1px solid #bf953f;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.4s, fadeout 0.4s 2.6s;
         }
 
-        /* Label Text */
-        .label-text {
-            font-size: 10px;
-            margin-top: 4px;
-            color: #aaa;
+        @keyframes fadein {
+            from { bottom: 80px; opacity: 0; }
+            to { bottom: 100px; opacity: 1; }
+        }
+        @keyframes fadeout {
+            from { bottom: 100px; opacity: 1; }
+            to { bottom: 80px; opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header / Status -->
-    <div class="h-14 bg-black/50 flex items-center justify-between px-4 border-b border-gray-700 z-20">
-        <h1 class="text-gold font-bold text-lg text-yellow-500 flex items-center gap-2">
-            <i data-lucide="music"></i> Flugelhorn Sim
+    <!-- Header / HUD Status Bar -->
+    <div class="h-12 bg-black/80 flex items-center justify-between px-4 border-b border-neutral-800 z-20">
+        <h1 class="font-bold text-sm sm:text-base flex items-center gap-2">
+            <i data-lucide="music" class="w-5 h-5 text-amber-500"></i>
+            <span class="text-gold">Flugelhorn Pro v2.0</span>
         </h1>
-        <div id="status" class="text-xs text-green-400 font-mono opacity-0 transition-opacity">Ready</div>
+        <div class="flex items-center gap-2">
+            <!-- Dynamic Note Played Indicator -->
+            <div id="noteDisplay" class="text-xs font-mono font-bold bg-amber-950/60 text-amber-400 border border-amber-800/60 px-2 py-0.5 rounded">
+                โน้ต: --
+            </div>
+            <div id="status" class="text-xs text-green-400 font-mono bg-green-950/40 px-2 py-0.5 rounded border border-green-800/50">Ready</div>
+        </div>
     </div>
 
-    <!-- Main Instrument Area -->
-    <div class="instrument-container relative">
-        <!-- Background Visualizer -->
-        <div class="absolute inset-0 z-0 opacity-30">
-            <canvas id="visualizer"></canvas>
+    <!-- Core App Mode Tabs -->
+    <div class="grid grid-cols-3 bg-black/60 border-b border-neutral-800 text-xs text-center z-20">
+        <button id="tabFxBtn" class="tab-btn py-2.5 flex items-center justify-center gap-1 active">
+            <i data-lucide="sliders" class="w-3.5 h-3.5"></i> ตกแต่งเสียง
+        </button>
+        <button id="tabProBtn" class="tab-btn py-2.5 flex items-center justify-center gap-1">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> โหมดเป่าจริง
+        </button>
+        <button id="tabDemoBtn" class="tab-btn py-2.5 flex items-center justify-center gap-1">
+            <i data-lucide="disc" class="w-3.5 h-3.5"></i> สมุดฝึกเป่า
+        </button>
+    </div>
+
+    <!-- Collapsible Context Panels -->
+    <div class="bg-neutral-900/90 border-b border-neutral-800 p-3 z-20 text-sm">
+        
+        <!-- Tab 1: Advanced Studio FX Controls -->
+        <div id="panelFx" class="space-y-2.5">
+            <div class="grid grid-cols-2 gap-3 text-xs mb-1">
+                <div class="flex items-center justify-between bg-black/40 p-1.5 rounded border border-neutral-800">
+                    <span class="text-neutral-400">ห้องเสียง:</span>
+                    <select id="selectAcoustic" class="bg-neutral-900 text-amber-400 border border-neutral-700 rounded px-1 py-0.5 outline-none font-sans">
+                        <option value="dry">ห้องแคบส่วนตัว</option>
+                        <option value="studio" selected>ห้องซ้อมดนตรี</option>
+                        <option value="hall">โถงคอนเสิร์ต</option>
+                        <option value="cathedral">โบสถ์โบราณ</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between bg-black/40 p-1.5 rounded border border-neutral-800">
+                    <span class="text-neutral-400">ความสั่น (Vibrato):</span>
+                    <span id="valVibrato" class="text-green-400 font-mono font-bold">30%</span>
+                </div>
+            </div>
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between gap-3">
+                    <span class="text-xs font-medium text-neutral-400 w-24 flex items-center gap-1">
+                        <i data-lucide="wind" class="w-3 h-3 text-yellow-600"></i> โทนเสียงแตร:
+                    </span>
+                    <input type="range" id="sliderTone" min="400" max="2500" value="1200" class="w-full accent-amber-500 h-1.5 bg-neutral-800 rounded-lg appearance-none">
+                    <span id="valTone" class="text-xs font-mono text-amber-400 w-16 text-right">อุ่นนุ่มนวล</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                    <span class="text-xs font-medium text-neutral-400 w-24 flex items-center gap-1">
+                        <i data-lucide="waves" class="w-3 h-3 text-blue-400"></i> สัดส่วนเสียงก้อง:
+                    </span>
+                    <input type="range" id="sliderEcho" min="0" max="80" value="25" class="w-full accent-blue-500 h-1.5 bg-neutral-800 rounded-lg appearance-none">
+                    <span id="valEcho" class="text-xs font-mono text-blue-400 w-16 text-right">25%</span>
+                </div>
+            </div>
         </div>
 
-        <!-- The Flugelhorn Graphic (SVG) -->
-        <div class="relative z-10 w-[90%] max-w-[500px] aspect-[4/3]">
-            <svg viewBox="0 0 400 300" class="w-full h-full drop-shadow-2xl">
-                <defs>
-                    <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#bf953f;stop-opacity:1" />
-                        <stop offset="25%" style="stop-color:#fcf6ba;stop-opacity:1" />
-                        <stop offset="50%" style="stop-color:#b38728;stop-opacity:1" />
-                        <stop offset="75%" style="stop-color:#fbf5b7;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#aa771c;stop-opacity:1" />
-                    </linearGradient>
-                    <filter id="glow">
-                        <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                        <feMerge>
-                            <feMergeNode in="coloredBlur"/>
-                            <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                    </filter>
-                </defs>
-
-                <!-- Tubing (Leadpipe to Bell) -->
-                <!-- The Flugelhorn has a wider conical bore than a trumpet -->
-                <path d="M 50 100 Q 150 100 200 150 T 350 150" 
-                      fill="none" stroke="url(#brass)" stroke-width="20" stroke-linecap="round" />
-                
-                <!-- The Bell -->
-                <path d="M 350 150 Q 380 150 390 110 L 400 110 Q 380 200 390 290 L 380 290 Q 370 250 350 250 L 350 150" 
-                      fill="url(#brass)" />
-                <ellipse cx="370" cy="200" rx="30" ry="50" fill="url(#brass)" fill-opacity="0.8" />
-                
-                <!-- Valve Casings -->
-                <rect x="130" y="120" width="20" height="120" fill="url(#brass)" stroke="#555" stroke-width="1"/>
-                <rect x="160" y="120" width="20" height="120" fill="url(#brass)" stroke="#555" stroke-width="1"/>
-                <rect x="190" y="120" width="20" height="120" fill="url(#brass)" stroke="#555" stroke-width="1"/>
-
-                <!-- Mouthpiece -->
-                <path d="M 10 95 L 40 98 L 40 102 L 10 105 Z" fill="#c0c0c0" />
-                <rect x="40" y="97" width="10" height="6" fill="#bf953f" />
-
-                <!-- Pistons (Visual only, animated by JS) -->
-                <rect id="piston1" x="132" y="110" width="16" height="30" class="valve-cap" rx="2" />
-                <rect id="piston2" x="162" y="110" width="16" height="30" class="valve-cap" rx="2" />
-                <rect id="piston3" x="192" y="110" width="16" height="30" class="valve-cap" rx="2" />
-            </svg>
+        <!-- Tab 2: Pro Valve Combination Guide -->
+        <div id="panelPro" class="hidden space-y-2">
+            <div class="p-2 bg-amber-950/20 border border-amber-900/40 rounded-lg text-xs leading-relaxed text-amber-200">
+                <p class="font-semibold text-amber-400 flex items-center gap-1 mb-1">
+                    <i data-lucide="info" class="w-3.5 h-3.5"></i> วิธีการเป่าในโหมด Pro สมจริง:
+                </p>
+                1. มือซ้ายกดค้างที่แถบ <strong>ระดับแรงลมปาก (Buzz)</strong> ด้านล่างเพื่อส่งลมเป่า<br>
+                2. มือขวากดผสม <strong>ปุ่มลูกสูบวาล์ว 1, 2, 3</strong> เพื่อจับคอร์ดเปลี่ยนระดับเสียงตามธรรมชาติ!
+            </div>
+            <!-- Dynamic Valve Finger Chart Guide -->
+            <div class="grid grid-cols-4 gap-1 text-[10px] text-neutral-400 bg-black/40 p-1.5 rounded border border-neutral-800">
+                <div class="flex flex-col items-center border-r border-neutral-800"><span class="text-amber-400 font-bold font-mono">C4 (Open)</span><span>ลูกสูบ: ปล่อย</span></div>
+                <div class="flex flex-col items-center border-r border-neutral-800"><span class="text-amber-400 font-bold font-mono">D4 (1 + 3)</span><span>ลูกสูบ: ซ้าย+ขวา</span></div>
+                <div class="flex flex-col items-center border-r border-neutral-800"><span class="text-amber-400 font-bold font-mono">E4 (1 + 2)</span><span>ลูกสูบ: ซ้าย+กลาง</span></div>
+                <div class="flex flex-col items-center"><span class="text-amber-400 font-bold font-mono">F4 (1)</span><span>ลูกสูบ: ซ้ายอย่างเดียว</span></div>
+            </div>
         </div>
 
-        <!-- Note Buttons Overlay (Ergonomic Arc) -->
-        <div class="absolute bottom-4 left-0 right-0 z-20 flex justify-center pb-2">
-            <div class="grid grid-cols-4 gap-3 sm:gap-6">
-                <!-- Lower Octave -->
-                <button class="note-btn" data-note="G3">G</button>
-                <button class="note-btn" data-note="A3">A</button>
-                <button class="note-btn" data-note="B3">B</button>
-                <button class="note-btn" data-note="C4" style="border-color: #fff;">C</button>
-                
-                <!-- Upper Octave -->
-                <button class="note-btn" data-note="D4">D</button>
-                <button class="note-btn" data-note="E4">E</button>
-                <button class="note-btn" data-note="F4">F</button>
-                <button class="note-btn" data-note="G4">G'</button>
+        <!-- Tab 3: Interactive Songbook Trainer -->
+        <div id="panelDemo" class="hidden space-y-2">
+            <div class="flex items-center justify-between text-xs text-neutral-400">
+                <span class="flex items-center gap-1"><i data-lucide="book-open" class="w-3.5 h-3.5 text-amber-500"></i> เลือกเพลงและบรรเลงคีย์ตามคอร์สฝึกสอน:</span>
+                <span id="songScore" class="font-bold text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded border border-amber-800/50">คะแนน: 0</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <button class="songbook-btn bg-neutral-800 hover:bg-neutral-750 text-neutral-100 text-xs py-2 rounded-lg transition-all truncate border border-neutral-700" data-song="0">🐑 เมรีมีลูกแกะ</button>
+                <button class="songbook-btn bg-neutral-800 hover:bg-neutral-750 text-neutral-100 text-xs py-2 rounded-lg transition-all truncate border border-neutral-700" data-song="1">✨ ระยิบระยับดาว</button>
+                <button class="songbook-btn bg-neutral-800 hover:bg-neutral-750 text-neutral-100 text-xs py-2 rounded-lg transition-all truncate border border-neutral-700" data-song="2">⛪ พระคุณพระเจ้า</button>
+            </div>
+            <!-- Interactive Play along prompt -->
+            <div id="trainerBar" class="hidden flex items-center justify-between bg-black/60 px-3 py-1.5 rounded-lg border border-amber-900/50 animate-pulse">
+                <span class="text-xs text-neutral-300">กดเป่าโน้ตถัดไปตามแถบทอง:</span>
+                <div class="flex items-center gap-2">
+                    <span id="targetNote" class="font-bold font-mono text-base bg-amber-500 text-black px-2.5 py-0.5 rounded-full animate-bounce">C4</span>
+                    <button id="quitTrainerBtn" class="text-red-400 text-xs border border-red-900/40 px-1.5 py-0.5 rounded hover:bg-red-950/20">ออก</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Control Deck (Bottom) -->
-    <div class="bg-gray-900 border-t border-gray-700 p-4 pb-8 z-30">
-        <div class="flex justify-around items-center max-w-md mx-auto">
+    <!-- Main Instrument Area -->
+    <div class="instrument-container">
+        <!-- Background Particle Visualizer Canvas -->
+        <div class="absolute inset-0 z-0 pointer-events-none">
+            <canvas id="visualizer"></canvas>
+        </div>
+
+        <!-- The Flugelhorn Graphic (SVG) -->
+        <div class="w-[85%] max-w-[420px] aspect-[4/3] mt-3 flex items-center justify-center relative z-10">
+            <svg viewBox="0 0 400 300" class="w-full h-full drop-shadow-3xl">
+                <defs>
+                    <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#bf953f;stop-opacity:1" />
+                        <stop offset="20%" style="stop-color:#fef08a;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#b38728;stop-opacity:1" />
+                        <stop offset="80%" style="stop-color:#fbf5b7;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#9a3412;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+
+                <!-- Tubing Loops (Wide conical brass layout of Flugelhorn) -->
+                <path d="M 50 100 Q 150 100 200 140 T 340 160" fill="none" stroke="url(#brass)" stroke-width="24" stroke-linecap="round" />
+                <path d="M 340 160 Q 240 230 140 210 T 50 130" fill="none" stroke="url(#brass)" stroke-width="20" stroke-linecap="round" />
+                
+                <!-- The Bell Output Area (Right facing) -->
+                <path id="hornBell" d="M 330 160 Q 360 160 370 110 L 400 90 Q 375 200 400 310 L 370 290 Q 360 240 330 240 Z" fill="url(#brass)" />
+                <ellipse cx="385" cy="200" rx="15" ry="105" fill="#7c2d12" fill-opacity="0.85" />
+                
+                <!-- Valve Casings -->
+                <rect x="140" y="90" width="18" height="110" fill="url(#brass)" stroke="#262626" stroke-width="1.5"/>
+                <rect x="165" y="90" width="18" height="110" fill="url(#brass)" stroke="#262626" stroke-width="1.5"/>
+                <rect x="190" y="90" width="18" height="110" fill="url(#brass)" stroke="#262626" stroke-width="1.5"/>
+
+                <!-- Silver Mouthpiece -->
+                <path d="M 15 95 L 45 98 L 45 102 L 15 105 Z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="0.5" />
+                <rect x="45" y="97" width="10" height="6" fill="#bf953f" />
+
+                <!-- 3 Dynamic Piston Caps -->
+                <rect id="piston1" x="141" y="76" width="16" height="25" class="valve-cap" rx="2" />
+                <rect id="piston2" x="166" y="76" width="16" height="25" class="valve-cap" rx="2" />
+                <rect id="piston3" x="191" y="76" width="16" height="25" class="valve-cap" rx="2" />
+            </svg>
+        </div>
+
+        <!-- Interactive Interface Container (Switched between keyboard/valves by JavaScript) -->
+        <div class="w-full px-4 max-w-md z-20">
             
-            <!-- Record Button -->
-            <button id="recordBtn" class="ctrl-btn text-red-500">
-                <i data-lucide="mic"></i>
-                <span class="label-text">อัดเสียง</span>
-            </button>
+            <!-- Interface Mode 1: Easy Keyboard Buttons (Shown by default) -->
+            <div id="keyboardInterface" class="flex flex-col gap-2.5">
+                <!-- High Range -->
+                <div class="flex justify-between px-3">
+                    <button class="note-btn" data-note="D4">D4</button>
+                    <button class="note-btn" data-note="E4">E4</button>
+                    <button class="note-btn" data-note="F4">F4</button>
+                    <button class="note-btn" data-note="G4" style="border-width: 3px;">G4</button>
+                </div>
+                <!-- Low Range -->
+                <div class="flex justify-between px-3">
+                    <button class="note-btn" data-note="G3">G3</button>
+                    <button class="note-btn" data-note="A3">A3</button>
+                    <button class="note-btn" data-note="B3">B3</button>
+                    <button class="note-btn" data-note="C4" style="border-width: 3px; border-color: #fef08a;">C4</button>
+                </div>
+            </div>
 
-            <!-- Play Button -->
-            <button id="playBtn" class="ctrl-btn text-blue-400" disabled style="opacity: 0.5;">
-                <i data-lucide="play"></i>
-                <span class="label-text">ฟังเสียง</span>
-            </button>
+            <!-- Interface Mode 2: Pro Valves with Wind Blowing Pads (Hidden by default) -->
+            <div id="proInterface" class="hidden flex-col gap-4">
+                
+                <!-- Left Hand Blow Wind Octaves (Hold any to blow + choose pitch tier) -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="blowLow" class="bg-neutral-800 text-neutral-300 border border-neutral-700 text-xs py-3 rounded-xl transition-all font-semibold active:bg-amber-600 active:text-black">
+                        💨 ลมต่ำ (Low)
+                    </button>
+                    <button id="blowMid" class="bg-neutral-800 text-neutral-300 border border-neutral-700 text-xs py-3 rounded-xl transition-all font-semibold active:bg-amber-500 active:text-black">
+                        💨 ลมกลาง (Mid)
+                    </button>
+                    <button id="blowHigh" class="bg-neutral-800 text-neutral-300 border border-neutral-700 text-xs py-3 rounded-xl transition-all font-semibold active:bg-amber-400 active:text-black">
+                        💨 ลมสูง (High)
+                    </button>
+                </div>
 
-            <!-- Download Button -->
-            <button id="downloadBtn" class="ctrl-btn text-yellow-500" disabled style="opacity: 0.5;">
-                <i data-lucide="download"></i>
-                <span class="label-text">โหลด</span>
-            </button>
+                <!-- Right Hand Valve Pistons Trigger Area -->
+                <div class="flex justify-around items-center bg-black/50 p-3 rounded-2xl border border-neutral-800">
+                    <div class="flex flex-col items-center">
+                        <span class="text-[10px] text-neutral-500 font-bold mb-1">ลูกสูบ 1</span>
+                        <button id="vbtn1" class="valve-trigger-btn w-12 h-16 font-mono font-bold text-lg">1</button>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-[10px] text-neutral-500 font-bold mb-1">ลูกสูบ 2</span>
+                        <button id="vbtn2" class="valve-trigger-btn w-12 h-16 font-mono font-bold text-lg">2</button>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-[10px] text-neutral-500 font-bold mb-1">ลูกสูบ 3</span>
+                        <button id="vbtn3" class="valve-trigger-btn w-12 h-16 font-mono font-bold text-lg">3</button>
+                    </div>
+                </div>
 
+            </div>
         </div>
     </div>
 
-    <!-- Hidden Audio Element for Playback -->
+    <!-- Control Deck Studio (Bottom) -->
+    <div class="bg-neutral-950 border-t border-neutral-800 p-2.5 pb-6 z-30">
+        <div class="flex justify-around items-center max-w-sm mx-auto">
+            <!-- Record Control -->
+            <button id="recordBtn" class="ctrl-btn text-red-500">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+                <span class="label-text">อัดเสียง</span>
+            </button>
+            <!-- Playback Control -->
+            <button id="playBtn" class="ctrl-btn text-blue-400" disabled style="opacity: 0.3;">
+                <i data-lucide="play" class="w-5 h-5"></i>
+                <span class="label-text">ฟังเสียง</span>
+            </button>
+            <!-- Download Control -->
+            <button id="downloadBtn" class="ctrl-btn text-yellow-500" disabled style="opacity: 0.3;">
+                <i data-lucide="download" class="w-5 h-5"></i>
+                <span class="label-text">ดาวน์โหลด</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden audio playback node for custom playback routines -->
     <audio id="audioPlayback" class="hidden"></audio>
 
+    <!-- UI Toast Element -->
+    <div id="toast">ข้อความแจ้งเตือน</div>
+
     <script>
-        // --- 1. Audio Engine (Web Audio API) ---
         let audioCtx;
         let masterGain;
         let analyser;
@@ -245,33 +423,72 @@
         let audioBlob = null;
         let isRecording = false;
 
-        // Frequencies for Notes (Concert Pitch)
-        // Flugelhorn is Bb instrument, but for simplicity we label C as C (Concert Pitch) for general users
+        // Custom FX Signal Flow Nodes
+        let delayNode;
+        let delayFeedback;
+        let delayMix;
+        let noiseBuffer = null;
+
+        // Sound System Configurations
+        let currentToneCutoff = 1200;
+        let currentEchoMix = 0.25;
+        let currentVibratoDepth = 30; // 0 to 100%
+        let activeAppMode = 'easy'; // 'easy' or 'pro'
+
+        // Real-Time Note Frequency Mapping
         const noteFreqs = {
-            'G3': 196.00,
-            'A3': 220.00,
-            'B3': 246.94,
-            'C4': 261.63,
-            'D4': 293.66,
-            'E4': 329.63,
-            'F4': 349.23,
-            'G4': 392.00
+            'G3': 196.00, 'A3': 220.00, 'B3': 246.94, 'C4': 261.63,
+            'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00,
+            
+            // Pro Extended Notes
+            'F#3': 185.00, 'G#3': 207.65, 'A#3': 233.08, 'C#4': 277.18,
+            'D#4': 311.13, 'F#4': 369.99, 'G#4': 415.30, 'A4': 440.00,
+            'A#4': 466.16, 'B4': 493.88, 'C5': 523.25, 'C#5': 554.37,
+            'D5': 587.33
         };
 
-        // Valve Mapping for Visuals (Which valve goes down for which note)
-        // 1 = Pressed, 0 = Open
-        const valveMap = {
-            'G3': [1, 0, 1], // 1+3 (Low G)
-            'A3': [1, 1, 0], // 1+2
-            'B3': [0, 1, 0], // 2
-            'C4': [0, 0, 0], // Open
-            'D4': [1, 0, 0], // 1
-            'E4': [0, 0, 0], // Open (harmonic) or 1+2. Let's use Open for simpler visual
-            'F4': [1, 0, 0], // 1
-            'G4': [0, 0, 0]  // Open
+        // Valve mappings for visuals/pro-mode (valves indices representing binary state of valve [1, 2, 3])
+        const valveVisualMap = {
+            'G3': [1, 0, 1], 'G#3': [0, 1, 1], 'A3': [1, 1, 0], 'A#3': [1, 0, 0], 'B3': [0, 1, 0], 'C4': [0, 0, 0],
+            'C#4': [1, 1, 1], 'D4': [1, 0, 1], 'D#4': [0, 1, 1], 'E4': [1, 1, 0], 'F4': [1, 0, 0], 'F#4': [0, 1, 0], 'G4': [0, 0, 0],
+            'G#4': [0, 1, 1], 'A4': [1, 1, 0], 'A#4': [1, 0, 0], 'B4': [0, 1, 0], 'C5': [0, 0, 0], 'C#5': [1, 1, 1], 'D5': [1, 0, 1],
+            'F#3': [1, 1, 1]
         };
+
+        // Interactive Training Songs Data Structure
+        const trainerSongs = [
+            {
+                name: "Mary Had a Little Lamb",
+                sequence: ['E4', 'D4', 'C4', 'D4', 'E4', 'E4', 'E4', 'D4', 'D4', 'D4', 'E4', 'G4', 'G4']
+            },
+            {
+                name: "Twinkle Twinkle Little Star",
+                sequence: ['C4', 'C4', 'G4', 'G4', 'A4', 'A4', 'G4', 'F4', 'F4', 'E4', 'E4', 'D4', 'D4', 'C4']
+            },
+            {
+                name: "Amazing Grace",
+                sequence: ['G3', 'C4', 'E4', 'C4', 'E4', 'D4', 'C4', 'A3', 'G3']
+            }
+        ];
+
+        let activeTrainingIdx = null;
+        let targetSongStep = 0;
+        let trainingScore = 0;
 
         let activeOscillators = {};
+        let activeProNote = null;
+        let currentProBlowOctave = null; // 'low', 'mid', 'high'
+
+        function createNoiseBuffer() {
+            if (!audioCtx) return;
+            const bufferSize = audioCtx.sampleRate * 2; // 2 seconds
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            return buffer;
+        }
 
         function initAudio() {
             if (!audioCtx) {
@@ -279,129 +496,264 @@
                 audioCtx = new AudioContext();
                 
                 masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.6; // Initial volume
+                masterGain.gain.value = 0.55;
 
-                // Analyser for Visuals
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 256;
 
-                // Compressor (to prevent clipping/distortion when multiple notes overlap)
+                // Create Noise buffer for simulation of breath
+                noiseBuffer = createNoiseBuffer();
+
+                // Advanced Multi-Tap Feedback Echo System
+                delayNode = audioCtx.createDelay(1.2);
+                delayFeedback = audioCtx.createGain();
+                delayMix = audioCtx.createGain();
+
+                delayNode.delayTime.value = 0.38; // Echo delay length
+                delayFeedback.gain.value = 0.32; // Decay rate feedback
+                delayMix.gain.value = currentEchoMix;
+
+                // Bind the delay feed feedback loop
+                delayNode.connect(delayFeedback);
+                delayFeedback.connect(delayNode);
+
+                // Compression to avoid digital distortion spikes
                 const compressor = audioCtx.createDynamicsCompressor();
-                compressor.threshold.value = -10;
-                compressor.knee.value = 40;
-                compressor.ratio.value = 12;
-                compressor.attack.value = 0;
+                compressor.threshold.value = -8;
+                compressor.knee.value = 30;
+                compressor.attack.value = 0.01;
                 compressor.release.value = 0.25;
 
-                // Recording Destination
                 recordingDest = audioCtx.createMediaStreamDestination();
 
-                // Chain: Master -> Analyser -> Compressor -> Destination (Speakers + Recorder)
+                // Core Wiring Route
                 masterGain.connect(analyser);
+                masterGain.connect(delayNode);
+                delayMix.connect(analyser);
+                delayNode.connect(delayMix);
+
                 analyser.connect(compressor);
                 compressor.connect(audioCtx.destination);
                 compressor.connect(recordingDest);
 
-                document.getElementById('status').style.opacity = '1';
-                drawVisualizer();
+                document.getElementById('status').innerText = 'Online';
+                showToast("เครื่องเป่าสังเคราะห์เสียงเริ่มต้นทำงาน!");
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        function playNote(note) {
+        function playNote(note, isAutoFeedback = false) {
             initAudio();
             
-            // STABILITY FIX: If note is already playing/fading, force stop it first to allow rapid re-triggering
             if (activeOscillators[note]) {
                 forceStop(note);
             }
 
             const freq = noteFreqs[note];
+            if (!freq) return;
+
             const t = audioCtx.currentTime;
 
-            // 1. Oscillator (The Source)
-            const osc = audioCtx.createOscillator();
-            osc.type = 'sawtooth'; 
-            osc.frequency.setValueAtTime(freq, t);
+            // Synthesis Element A: Main Detuned Sawtooth (Bright Brass Core)
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(freq, t);
 
-            // 2. Filter (The Timbre/Tone) - Low Pass
+            // Synthesis Element B: Detuned Triangle (Acoustic resonance under-body)
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(freq * 1.003, t); // Micro-detune
+
+            // Pitch Vibrato Setup
+            let lfo, lfoGain;
+            if (currentVibratoDepth > 0) {
+                lfo = audioCtx.createOscillator();
+                lfoGain = audioCtx.createGain();
+                lfo.frequency.value = 5.6; // Speed rate of shake
+                lfoGain.gain.value = (currentVibratoDepth / 100) * 8.5; // Pitch swing width
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc1.frequency);
+                lfoGain.connect(osc2.frequency);
+                lfo.start(t);
+            }
+
+            // Synthesis Element C: Wind Blowing Breath Noise (To create high realism)
+            let noiseNode, noiseFilter, noiseGain;
+            if (noiseBuffer) {
+                noiseNode = audioCtx.createBufferSource();
+                noiseNode.buffer = noiseBuffer;
+                noiseNode.loop = true;
+
+                noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(freq * 2.5, t); // Centered relative to current pitch
+                noiseFilter.Q.value = 1.2;
+
+                noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0, t);
+                noiseGain.gain.linearRampToValueAtTime(0.04, t + 0.05); // Air blow volume ratio
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+
+                noiseNode.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(masterGain);
+                noiseNode.start(t);
+            }
+
+            // Master Envelope Filter for authentic physical flugelhorn resonance
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            // Brass attack: Filter opens up slightly then settles
-            filter.frequency.setValueAtTime(400, t); 
-            filter.frequency.linearRampToValueAtTime(1800, t + 0.1); // Attack "Wah"
-            filter.frequency.exponentialRampToValueAtTime(1000, t + 0.5); // Sustain brightness
+            filter.frequency.setValueAtTime(150, t);
+            // Simulate sudden explosion of air down the conical bore
+            filter.frequency.linearRampToValueAtTime(currentToneCutoff + 600, t + 0.06);
+            filter.frequency.exponentialRampToValueAtTime(currentToneCutoff, t + 0.28);
 
-            // 3. Envelope (The Volume Shape)
+            // Envelope Volume Shaper
             const env = audioCtx.createGain();
             env.gain.setValueAtTime(0, t);
-            env.gain.linearRampToValueAtTime(0.8, t + 0.05); // Attack (Soft brass attack)
-            env.gain.linearRampToValueAtTime(0.6, t + 0.2);  // Decay to Sustain level
+            env.gain.linearRampToValueAtTime(0.75, t + 0.05); // Smooth air expansion
+            env.gain.linearRampToValueAtTime(0.55, t + 0.22); // Sustain level
 
-            // Connections
-            osc.connect(filter);
+            // Attach sources
+            osc1.connect(filter);
+            osc2.connect(filter);
             filter.connect(env);
             env.connect(masterGain);
 
-            osc.start(t);
+            osc1.start(t);
+            osc2.start(t);
 
-            activeOscillators[note] = { osc, env, filter };
+            // Store references
+            activeOscillators[note] = { 
+                osc1, osc2, env, filter, lfo, 
+                noiseNode, noiseGain 
+            };
 
-            // Visuals: Valve Animation
-            animateValves(note);
+            // Dynamic HUD elements update
+            document.getElementById('noteDisplay').innerText = `โน้ต: ${note}`;
+            animateValvesVisual(note);
+            triggerSparks();
+
+            // Check if playing correct trainer song note
+            if (!isAutoFeedback && activeTrainingIdx !== null) {
+                checkTrainerStep(note);
+            }
         }
 
         function stopNote(note) {
             if (!activeOscillators[note]) return;
 
-            const { osc, env } = activeOscillators[note];
+            const { osc1, osc2, env, lfo, noiseNode, noiseGain } = activeOscillators[note];
             const t = audioCtx.currentTime;
 
-            // Release Envelope
-            // Important: cancelScheduledValues allows us to take over immediately
             env.gain.cancelScheduledValues(t);
             env.gain.setValueAtTime(env.gain.value, t);
-            env.gain.exponentialRampToValueAtTime(0.001, t + 0.2); // Release tail
+            env.gain.exponentialRampToValueAtTime(0.001, t + 0.15); // Ring tail echo
 
-            osc.stop(t + 0.2);
-            
-            // STABILITY FIX: Remove from active list immediately so we can re-play instantly
-            // The audio node will finish its release in the background
+            if (noiseGain) {
+                noiseGain.gain.cancelScheduledValues(t);
+                noiseGain.gain.setValueAtTime(noiseGain.gain.value, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+            }
+
+            osc1.stop(t + 0.16);
+            osc2.stop(t + 0.16);
+            if (lfo) { lfo.stop(t + 0.16); }
+            if (noiseNode) { noiseNode.stop(t + 0.16); }
+
             delete activeOscillators[note];
-
-            // Reset Valves
-            resetValves();
+            
+            // Re-evaluate current active display
+            const activeKeys = Object.keys(activeOscillators);
+            if (activeKeys.length > 0) {
+                document.getElementById('noteDisplay').innerText = `โน้ต: ${activeKeys[activeKeys.length - 1]}`;
+            } else {
+                document.getElementById('noteDisplay').innerText = `โน้ต: --`;
+                resetValvesVisual();
+            }
         }
 
-        // Helper to instantly kill a note (used for re-triggering or panic button)
         function forceStop(note) {
             if (activeOscillators[note]) {
-                const { osc, env } = activeOscillators[note];
+                const { osc1, osc2, env, lfo, noiseNode } = activeOscillators[note];
                 try {
-                    const t = audioCtx.currentTime;
-                    env.gain.cancelScheduledValues(t);
-                    env.gain.setValueAtTime(0, t);
-                    osc.stop(t);
-                } catch(e) {
-                    // Ignore errors if already stopped
-                }
+                    env.gain.cancelScheduledValues(audioCtx.currentTime);
+                    osc1.stop();
+                    osc2.stop();
+                    if (lfo) lfo.stop();
+                    if (noiseNode) noiseNode.stop();
+                } catch(e) {}
                 delete activeOscillators[note];
             }
         }
-        
-        // Panic Button / Global Stop
+
         function stopAllNotes() {
             Object.keys(activeOscillators).forEach(note => forceStop(note));
-            resetValves();
+            document.getElementById('noteDisplay').innerText = `โน้ต: --`;
+            resetValvesVisual();
         }
 
-        // --- 2. Visuals & Animation ---
-        
-        function animateValves(note) {
-            const pattern = valveMap[note];
-            if(!pattern) return;
+        // Calculate the corresponding note based on held blow range and pressed pistons
+        function calculateProNote() {
+            if (!currentProBlowOctave) return null;
+
+            // Get binary state of pistons [V1, V2, V3] (1 = down, 0 = up)
+            const v1 = document.getElementById('vbtn1').classList.contains('active') ? 1 : 0;
+            const v2 = document.getElementById('vbtn2').classList.contains('active') ? 1 : 0;
+            const v3 = document.getElementById('vbtn3').classList.contains('active') ? 1 : 0;
+
+            const comboStr = `${v1}${v2}${v3}`;
+
+            // Map standard brass fingerings depending on octave buzzing
+            if (currentProBlowOctave === 'low') {
+                if (comboStr === '111') return 'F#3';
+                if (comboStr === '101') return 'G3';
+                if (comboStr === '011') return 'G#3';
+                if (comboStr === '110') return 'A3';
+                if (comboStr === '100') return 'A#3';
+                if (comboStr === '010') return 'B3';
+                if (comboStr === '000') return 'C4';
+            } else if (currentProBlowOctave === 'mid') {
+                if (comboStr === '111') return 'C#4';
+                if (comboStr === '101') return 'D4';
+                if (comboStr === '011') return 'D#4';
+                if (comboStr === '110') return 'E4';
+                if (comboStr === '100') return 'F4';
+                if (comboStr === '010') return 'F#4';
+                if (comboStr === '000') return 'G4';
+            } else if (currentProBlowOctave === 'high') {
+                if (comboStr === '111') return 'G#4';
+                if (comboStr === '101') return 'A4';
+                if (comboStr === '011') return 'A#4';
+                if (comboStr === '110') return 'B4';
+                if (comboStr === '100') return 'C5';
+                if (comboStr === '010') return 'C#5';
+                if (comboStr === '000') return 'D5';
+            }
+            return null;
+        }
+
+        // Trigger or update pitch on change of valves/blow
+        function updateProPerformance() {
+            const targetNote = calculateProNote();
+            
+            if (targetNote !== activeProNote) {
+                if (activeProNote) {
+                    stopNote(activeProNote);
+                }
+                activeProNote = targetNote;
+                if (activeProNote) {
+                    playNote(activeProNote);
+                }
+            }
+        }
+
+        function animateValvesVisual(note) {
+            const pattern = valveVisualMap[note];
+            if (!pattern) return;
 
             const pistons = [
                 document.getElementById('piston1'),
@@ -418,54 +770,269 @@
             });
         }
 
-        function resetValves() {
-            // Only reset if no other notes are playing (monophonic visual logic for simplicity)
+        function resetValvesVisual() {
             if (Object.keys(activeOscillators).length === 0) {
                  document.querySelectorAll('.valve-cap').forEach(el => el.classList.remove('active'));
             }
         }
 
-        // Canvas Visualizer
-        function drawVisualizer() {
-            const canvas = document.getElementById('visualizer');
-            const ctx = canvas.getContext('2d');
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-
-            // Handle Resize
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-
-            function render() {
-                requestAnimationFrame(render);
-                analyser.getByteFrequencyData(dataArray);
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw wave/bars
-                const barWidth = (canvas.width / bufferLength) * 2.5;
-                let barHeight;
-                let x = 0;
-
-                for(let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i];
-                    // Gold color with opacity
-                    ctx.fillStyle = `rgba(255, 215, 0, ${barHeight / 255})`; 
-                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                    x += barWidth + 1;
-                }
-            }
-            render();
+        function startSongTraining(songIdx) {
+            activeTrainingIdx = songIdx;
+            targetSongStep = 0;
+            trainingScore = 0;
+            
+            const song = trainerSongs[songIdx];
+            document.getElementById('songScore').innerText = `คะแนน: 0`;
+            document.getElementById('trainerBar').classList.remove('hidden');
+            document.getElementById('targetNote').innerText = song.sequence[0];
+            
+            showToast(`เริ่มหลักสูตร: ${song.name} !`);
+            initAudio();
         }
 
-        // --- 3. Interaction Handling ---
-
-        const buttons = document.querySelectorAll('.note-btn');
-
-        buttons.forEach(btn => {
-            const note = btn.dataset.note;
+        function checkTrainerStep(playedNote) {
+            if (activeTrainingIdx === null) return;
             
-            // Mouse Events
+            const song = trainerSongs[activeTrainingIdx];
+            const nextExpected = song.sequence[targetSongStep];
+
+            if (playedNote === nextExpected) {
+                trainingScore += 10;
+                targetSongStep++;
+                document.getElementById('songScore').innerText = `คะแนน: ${trainingScore}`;
+                
+                triggerCorrectSparks();
+
+                if (targetSongStep >= song.sequence.length) {
+                    showToast(`ยินดีด้วย! บรรเลงจบเพลงแล้ว คะแนนรวม: ${trainingScore}`);
+                    stopTraining();
+                } else {
+                    document.getElementById('targetNote').innerText = song.sequence[targetSongStep];
+                }
+            }
+        }
+
+        function stopTraining() {
+            activeTrainingIdx = null;
+            document.getElementById('trainerBar').classList.add('hidden');
+            stopAllNotes();
+        }
+
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let sparksCount = 0;
+        let isCorrectToneSpark = false;
+
+        class SoundParticle {
+            constructor(x, y, scale) {
+                this.x = x;
+                this.y = y;
+                // Shoot outward to the right simulating sound from flugelhorn bell
+                this.vx = Math.random() * 5 + 2; 
+                this.vy = (Math.random() * 2 - 1) * 3;
+                this.alpha = 1.0;
+                this.color = isCorrectToneSpark ? '#22c55e' : `rgba(${220 + Math.random()*35}, ${180 + Math.random()*40}, 50, `;
+                this.radius = Math.random() * 6 + 2 * scale;
+                this.decay = Math.random() * 0.02 + 0.015;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color.endsWith(',') ? this.color + this.alpha + ')' : this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#fbbf24';
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function triggerSparks() {
+            sparksCount = 12;
+            isCorrectToneSpark = false;
+        }
+
+        function triggerCorrectSparks() {
+            sparksCount = 25;
+            isCorrectToneSpark = true;
+        }
+
+        function initCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        function renderVisualizer() {
+            requestAnimationFrame(renderVisualizer);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fetch Frequency Spectrum Data from Analyser
+            const bufferLength = analyser ? analyser.frequencyBinCount : 0;
+            const dataArray = new Uint8Array(bufferLength);
+            if (analyser) {
+                analyser.getByteFrequencyData(dataArray);
+            }
+
+            // Estimate coordinates of the Bell on dynamic responsive SVG
+            const bellX = canvas.width * 0.78; 
+            const bellY = canvas.height * 0.52;
+
+            // Continously spawn light floating sound waves when active oscillators exist
+            if (Object.keys(activeOscillators).length > 0) {
+                particles.push(new SoundParticle(bellX, bellY, 1.0));
+                if (Math.random() > 0.6) {
+                    particles.push(new SoundParticle(bellX, bellY, 1.5));
+                }
+            }
+
+            // Explosive particles
+            if (sparksCount > 0) {
+                for(let i=0; i < 3; i++) {
+                    particles.push(new SoundParticle(bellX, bellY, 2.0));
+                }
+                sparksCount--;
+            }
+
+            // Draw and update active particles
+            particles.forEach((p, index) => {
+                p.update();
+                p.draw();
+                if (p.alpha <= 0 || p.x > canvas.width) {
+                    particles.splice(index, 1);
+                }
+            });
+
+            // Draw sound bar background reflections
+            if (analyser) {
+                ctx.save();
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let x = 0;
+                for(let i = 0; i < bufferLength; i++) {
+                    const barHeight = dataArray[i];
+                    ctx.fillStyle = `rgba(180, 130, 30, ${barHeight / 600})`;
+                    ctx.fillRect(x, canvas.height - barHeight * 0.5, barWidth, barHeight * 0.5);
+                    x += barWidth + 2;
+                }
+                ctx.restore();
+            }
+        }
+        renderVisualizer();
+
+        // Interface Toggle Tabs listeners
+        const tabFxBtn = document.getElementById('tabFxBtn');
+        const tabProBtn = document.getElementById('tabProBtn');
+        const tabDemoBtn = document.getElementById('tabDemoBtn');
+
+        const panelFx = document.getElementById('panelFx');
+        const panelPro = document.getElementById('panelPro');
+        const panelDemo = document.getElementById('panelDemo');
+
+        const keyboardInterface = document.getElementById('keyboardInterface');
+        const proInterface = document.getElementById('proInterface');
+
+        tabFxBtn.addEventListener('click', () => {
+            setTabActive(tabFxBtn, panelFx);
+            setPerformanceMode('easy');
+        });
+
+        tabProBtn.addEventListener('click', () => {
+            setTabActive(tabProBtn, panelPro);
+            setPerformanceMode('pro');
+        });
+
+        tabDemoBtn.addEventListener('click', () => {
+            setTabActive(tabDemoBtn, panelDemo);
+            setPerformanceMode('easy'); // Keep trainer on Easy mode
+        });
+
+        function setTabActive(btn, panel) {
+            [tabFxBtn, tabProBtn, tabDemoBtn].forEach(b => b.classList.remove('active'));
+            [panelFx, panelPro, panelDemo].forEach(p => p.classList.add('hidden'));
+            btn.classList.add('active');
+            panel.classList.remove('hidden');
+        }
+
+        function setPerformanceMode(mode) {
+            activeAppMode = mode;
+            stopAllNotes();
+            stopTraining();
+            if (mode === 'easy') {
+                keyboardInterface.classList.remove('hidden');
+                keyboardInterface.classList.add('flex');
+                proInterface.classList.add('hidden');
+                proInterface.classList.remove('flex');
+            } else {
+                keyboardInterface.classList.add('hidden');
+                keyboardInterface.classList.remove('flex');
+                proInterface.classList.remove('hidden');
+                proInterface.classList.add('flex');
+            }
+        }
+
+        // Custom sliders adjustment
+        document.getElementById('sliderTone').addEventListener('input', (e) => {
+            currentToneCutoff = parseInt(e.target.value);
+            const lbl = document.getElementById('valTone');
+            if(currentToneCutoff < 800) lbl.innerText = "หนาอุ่นทึบ";
+            else if(currentToneCutoff < 1500) lbl.innerText = "อุ่นนุ่มนวล";
+            else lbl.innerText = "ใสกระจ่าง";
+        });
+
+        document.getElementById('sliderEcho').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            currentEchoMix = val / 100;
+            document.getElementById('valEcho').innerText = val + "%";
+            if (delayMix) delayMix.gain.value = currentEchoMix;
+        });
+
+        document.getElementById('selectAcoustic').addEventListener('change', (e) => {
+            const preset = e.target.value;
+            if (preset === 'dry') {
+                currentEchoMix = 0;
+                currentVibratoDepth = 15;
+            } else if (preset === 'studio') {
+                currentEchoMix = 0.25;
+                currentVibratoDepth = 30;
+            } else if (preset === 'hall') {
+                currentEchoMix = 0.48;
+                currentVibratoDepth = 45;
+            } else if (preset === 'cathedral') {
+                currentEchoMix = 0.70;
+                currentVibratoDepth = 60;
+            }
+            document.getElementById('sliderEcho').value = Math.round(currentEchoMix * 100);
+            document.getElementById('valEcho').innerText = Math.round(currentEchoMix * 100) + "%";
+            document.getElementById('valVibrato').innerText = currentVibratoDepth + "%";
+            if (delayMix) delayMix.gain.value = currentEchoMix;
+            showToast(`เปลี่ยนพรีเซ็ตเสียงเป็นรูปแบบเดี่ยวสำเร็จ!`);
+        });
+
+        // Trigger Songbook training
+        document.querySelectorAll('.songbook-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const songId = parseInt(btn.dataset.song);
+                startSongTraining(songId);
+            });
+        });
+
+        document.getElementById('quitTrainerBtn').addEventListener('click', stopTraining);
+
+        // Responsive Keyboard note click handlers
+        const noteBtns = document.querySelectorAll('.note-btn');
+        noteBtns.forEach(btn => {
+            const note = btn.dataset.note;
+
             btn.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 playNote(note);
@@ -474,13 +1041,12 @@
                 e.preventDefault();
                 stopNote(note);
             });
-            btn.addEventListener('mouseleave', (e) => {
+            btn.addEventListener('mouseleave', () => {
                 stopNote(note);
             });
 
-            // Touch Events (Mobile responsiveness)
             btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Prevent scroll/zoom
+                e.preventDefault();
                 btn.classList.add('active');
                 playNote(note);
             }, { passive: false });
@@ -490,21 +1056,99 @@
                 btn.classList.remove('active');
                 stopNote(note);
             }, { passive: false });
-            
-            // Handle touch cancel (e.g. call interrupt)
+
             btn.addEventListener('touchcancel', () => {
                 btn.classList.remove('active');
                 stopNote(note);
             });
         });
-        
-        // Safety: Stop all sounds if window loses focus or is hidden
+
+        // Pro Mode Perform Multi-Touch Event Handlers
+        const blowPads = [
+            { el: document.getElementById('blowLow'), range: 'low' },
+            { el: document.getElementById('blowMid'), range: 'mid' },
+            { el: document.getElementById('blowHigh'), range: 'high' }
+        ];
+
+        blowPads.forEach(pad => {
+            // Mouse
+            pad.el.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                currentProBlowOctave = pad.range;
+                updateProPerformance();
+            });
+            pad.el.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                currentProBlowOctave = null;
+                updateProPerformance();
+            });
+            pad.el.addEventListener('mouseleave', () => {
+                if (currentProBlowOctave === pad.range) {
+                    currentProBlowOctave = null;
+                    updateProPerformance();
+                }
+            });
+
+            // Mobile native touch
+            pad.el.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                pad.el.classList.add('active');
+                currentProBlowOctave = pad.range;
+                updateProPerformance();
+            }, { passive: false });
+
+            pad.el.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                pad.el.classList.remove('active');
+                if (currentProBlowOctave === pad.range) {
+                    currentProBlowOctave = null;
+                }
+                updateProPerformance();
+            }, { passive: false });
+        });
+
+        const valveTriggers = [
+            document.getElementById('vbtn1'),
+            document.getElementById('vbtn2'),
+            document.getElementById('vbtn3')
+        ];
+
+        valveTriggers.forEach(vbtn => {
+            // Mouse togglers
+            vbtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                vbtn.classList.add('active');
+                updateProPerformance();
+            });
+            vbtn.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                vbtn.classList.remove('active');
+                updateProPerformance();
+            });
+            vbtn.addEventListener('mouseleave', () => {
+                vbtn.classList.remove('active');
+                updateProPerformance();
+            });
+
+            // Native Touch triggers
+            vbtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                vbtn.classList.add('active');
+                updateProPerformance();
+            }, { passive: false });
+
+            vbtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                vbtn.classList.remove('active');
+                updateProPerformance();
+            }, { passive: false });
+        });
+
+        // Global security failsafes
         window.addEventListener('blur', stopAllNotes);
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) stopAllNotes();
         });
-
-        // --- 4. Recorder Logic ---
 
         const recordBtn = document.getElementById('recordBtn');
         const playBtn = document.getElementById('playBtn');
@@ -522,14 +1166,11 @@
 
         function startRecording() {
             recordedChunks = [];
-            // Stream from the destination node we created earlier
             const stream = recordingDest.stream;
             mediaRecorder = new MediaRecorder(stream);
 
             mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                }
+                if (event.data.size > 0) recordedChunks.push(event.data);
             };
 
             mediaRecorder.onstop = () => {
@@ -537,41 +1178,40 @@
                 const audioUrl = URL.createObjectURL(audioBlob);
                 audioPlayback.src = audioUrl;
                 
-                // Enable controls
                 playBtn.disabled = false;
                 playBtn.style.opacity = '1';
                 downloadBtn.disabled = false;
                 downloadBtn.style.opacity = '1';
+                showToast("อัดเสียงดนตรีเสร็จสิ้น! พร้อมส่งออกไฟล์แล้ว");
             };
 
             mediaRecorder.start();
             isRecording = true;
             
-            // UI Update
             recordBtn.classList.add('recording');
-            recordBtn.innerHTML = `<i data-lucide="square"></i><span class="label-text">หยุด</span>`;
+            recordBtn.innerHTML = `<i data-lucide="square" class="w-5 h-5"></i><span class="label-text">หยุดอัด</span>`;
             lucide.createIcons();
             
-            // Clear previous recording UI state
             playBtn.disabled = true;
-            playBtn.style.opacity = '0.5';
+            playBtn.style.opacity = '0.3';
             downloadBtn.disabled = true;
-            downloadBtn.style.opacity = '0.5';
+            downloadBtn.style.opacity = '0.3';
         }
 
         function stopRecording() {
-            mediaRecorder.stop();
-            isRecording = false;
-            
-            // UI Update
-            recordBtn.classList.remove('recording');
-            recordBtn.innerHTML = `<i data-lucide="mic"></i><span class="label-text">อัดเสียง</span>`;
-            lucide.createIcons();
+            if(mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = `<i data-lucide="mic" class="w-5 h-5"></i><span class="label-text">อัดเสียง</span>`;
+                lucide.createIcons();
+            }
         }
 
         playBtn.addEventListener('click', () => {
             if (audioPlayback.src) {
                 audioPlayback.play();
+                showToast("กำลังเล่นเสียงบันทึกของคุณ...");
             }
         });
 
@@ -581,26 +1221,35 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'flugelhorn_recording_' + new Date().getTime() + '.webm';
+                a.download = 'flugelhorn_studio_' + new Date().getTime() + '.webm';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => {
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
-                }, 100);
+                }, 150);
             }
         });
 
-        // Initialize Icons
+        // Custom toast indicator replacement for alerts
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize Lucide icons
         lucide.createIcons();
 
-        // Prevent Context Menu on long press
-        window.oncontextmenu = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
+        // Standard anti context menus trigger
+        window.oncontextmenu = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             return false;
         };
-
     </script>
 </body>
 </html>
