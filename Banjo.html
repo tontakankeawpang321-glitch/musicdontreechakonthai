@@ -3,408 +3,787 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Banjo Pro - Vertical</title>
+    <title>Banjo Pro - Vertical Studio Edition</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for gorgeous studio icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
 
         body {
             font-family: 'Sarabun', sans-serif;
-            touch-action: none; /* ห้าม Scroll เพื่อให้เล่นดนตรีได้ */
+            touch-action: none; /* Prevents scrolling for seamless multi-touch instrument play */
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden;
-            background-color: #1c1917; /* Stone 900 */
+            background-color: #0c0a09; /* Stone 950 */
         }
 
-        /* ลายไม้ */
+        /* High-quality mahogany/walnut wood texture */
         .wood-texture {
-            background-color: #5c4033;
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 4px),
-                              linear-gradient(to right, #3e2723, #5d4037, #3e2723);
+            background-color: #3e2723;
+            background-image: 
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 8px),
+                repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 2px, transparent 2px, transparent 15px),
+                linear-gradient(to right, #1a0f0d, #4e342e 20%, #5d4037 50%, #4e342e 80%, #1a0f0d);
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
         }
 
-        /* สายแบนโจ */
-        .string {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(to right, #9ca3af, #e5e7eb, #9ca3af); /* สีเงิน */
-            box-shadow: 1px 0 2px rgba(0,0,0,0.5);
-            pointer-events: none; /* ให้ Event ทะลุไปที่ Fretboard */
-            transform-origin: center;
-            transition: transform 0.05s;
-            z-index: 10;
-        }
-
-        /* อนิเมชั่นสายสั่น */
-        .string.vibrate {
-            animation: string-vibrate 0.15s linear infinite;
-        }
-
-        @keyframes string-vibrate {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-2px); }
-            50% { transform: translateX(0); }
-            75% { transform: translateX(2px); }
-            100% { transform: translateX(0); }
-        }
-
-        /* เฟร็ต (Frets) */
+        /* Shiny metal fret wire styles */
         .fret-line {
             position: absolute;
             left: 0;
             right: 0;
-            height: 4px;
-            background: linear-gradient(to bottom, #d1d5db, #9ca3af, #6b7280);
-            box-shadow: 0 2px 2px rgba(0,0,0,0.3);
+            height: 5px;
+            background: linear-gradient(to bottom, #f3f4f6, #9ca3af 40%, #4b5563 80%, #1f2937);
+            border-bottom: 1px solid rgba(0,0,0,0.6);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
             z-index: 5;
         }
 
-        /* จุดมาร์คเกอร์ (Inlays) */
-        .inlay {
+        /* Ivory bone nut styling */
+        .bone-nut {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 12px;
+            background: linear-gradient(to bottom, #fffae8, #e5dfc9, #b5ae95);
+            border-bottom: 2px solid #5d4037;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            z-index: 6;
+        }
+
+        /* Pearloid fretboard marker inlays */
+        .inlay-pearl {
             position: absolute;
             width: 20px;
             height: 20px;
-            background-color: rgba(255,255,255,0.8);
+            background: radial-gradient(circle, #ffffff 10%, #e5e7eb 50%, #9ca3af 90%);
+            border: 2px solid #1e293b;
             border-radius: 50%;
             left: 50%;
             transform: translateX(-50%);
-            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 2px 6px rgba(0,0,0,0.6);
             z-index: 4;
+            opacity: 0.85;
         }
 
-        /* พื้นที่กด (Touch Area) */
+        /* Steel Banjo strings */
+        .string {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2.5px;
+            background: linear-gradient(to right, #9ca3af, #f3f4f6, #9ca3af, #4b5563);
+            box-shadow: 1.5px 0 3px rgba(0,0,0,0.6);
+            pointer-events: none;
+            transform-origin: center;
+            z-index: 10;
+        }
+
+        /* Dynamic string thickness configuration */
+        .string-0 { width: 1.8px; } /* G4 (Thumb / Drone string) */
+        .string-1 { width: 3.2px; } /* D3 */
+        .string-2 { width: 2.5px; } /* G3 */
+        .string-3 { width: 2.2px; } /* B3 */
+        .string-4 { width: 1.8px; } /* D4 */
+
+        /* Pluck vibration keyframe animation */
+        .string.vibrate {
+            animation: vibrate-string 0.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes vibrate-string {
+            0% { transform: translateX(-2.5px) scaleX(1.1); }
+            100% { transform: translateX(2.5px) scaleX(0.9); }
+        }
+
+        /* Fully interactive touch grids */
         .fret-cell {
-            /* border: 1px solid rgba(255,255,255,0.1); Debugging */ 
             position: absolute;
             z-index: 20;
+            transition: background-color 0.1s;
         }
         
         .fret-cell:active {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(234, 179, 8, 0.25); /* Gold sheen feedback */
         }
 
-        /* Active highlight for visual feedback */
+        /* String glow effect on pick activation */
         .string-glow {
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 10px;
-            transform: translateX(-4px);
-            background: rgba(255, 223, 0, 0);
-            transition: background 0.1s;
+            width: 14px;
+            transform: translateX(-6px);
+            background: radial-gradient(circle, rgba(234, 179, 8, 0.4) 0%, rgba(234, 179, 8, 0) 70%);
+            mix-blend-mode: screen;
+            opacity: 0;
+            transition: opacity 0.05s;
+            pointer-events: none;
             z-index: 9;
         }
+        
         .string-glow.active {
-            background: rgba(255, 223, 0, 0.3);
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            opacity: 1;
         }
 
-        /* Note Labels */
+        /* Automated note pulsing visualization */
+        .auto-pulse {
+            animation: pulse-glow 0.4s ease-out;
+        }
+
+        @keyframes pulse-glow {
+            0% { background-color: rgba(234, 179, 8, 0.6); box-shadow: 0 0 20px rgba(234,179,8,0.8); }
+            100% { background-color: transparent; box-shadow: none; }
+        }
+
+        /* Floating musical note labels */
         .note-label {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 12px;
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.9);
-            text-shadow: 0 1px 2px black;
+            transform: translate(-50%, -50%) scale(0.9);
+            font-size: 11px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0,0,0,1);
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
             z-index: 25;
-            background-color: rgba(0,0,0,0.3);
-            padding: 2px 6px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid #eab308;
+            padding: 3px 7px;
+            border-radius: 9999px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* Class to toggle visibility */
+        /* Toggle show status for note indicators */
         .show-notes .note-label {
             opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
         }
 
+        .gold-border {
+            border-color: #d97706;
+        }
+        .wood-inset {
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.9);
+        }
     </style>
 </head>
-<body class="h-screen w-full flex flex-col items-center justify-center text-white">
+<body class="h-screen w-full flex flex-col items-center justify-between text-white overflow-hidden">
 
-    <!-- Overlay สำหรับเริ่ม Audio Context -->
-    <div id="startOverlay" class="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-4">
-        <h1 class="text-4xl font-bold mb-4 text-yellow-500">Banjo Pro</h1>
-        <p class="text-gray-300 mb-8 text-center">แตะเพื่อเริ่มเล่นแบนโจแนวตั้ง<br>รองรับ Multi-touch</p>
-        <button id="startBtn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition active:scale-95 text-xl">
-            <i class="fas fa-play mr-2"></i> เริ่มเล่นเลย
-        </button>
-    </div>
-
-    <!-- ส่วนหัว (Headstock Area) -->
-    <div class="w-full max-w-md h-16 bg-black flex items-center justify-between px-4 shrink-0 shadow-xl z-30 border-b-4 border-yellow-900">
-        <span class="text-yellow-500 font-bold tracking-widest text-lg">BANJO</span>
-        <div class="flex space-x-1">
-            <div class="w-2 h-2 rounded-full bg-red-500" id="audioStatus"></div>
+    <!-- Web Audio Activation Overlay -->
+    <div id="startOverlay" class="fixed inset-0 bg-stone-950/95 z-50 flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500">
+        <div class="bg-gradient-to-b from-stone-900 to-stone-950 border-2 border-amber-600/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
+            
+            <span class="text-6xl mb-4 block">🪕</span>
+            <h1 class="text-4xl font-extrabold mb-2 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-amber-400 to-amber-600">Banjo Pro</h1>
+            <p class="text-amber-500/80 font-semibold mb-6 text-sm tracking-widest uppercase">Studio Edition</p>
+            
+            <p class="text-stone-300 text-sm mb-8 leading-relaxed">
+                จำลองสัมผัสแห่งดนตรีบลูแกรสส์แนวตั้ง<br>
+                รองรับการแตะพร้อมกันหลายหน้าจอ (Multi-touch) และปรับแต่งเสียงได้สมบูรณ์แบบ
+            </p>
+            
+            <button id="startBtn" class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-stone-950 font-extrabold py-4 px-8 rounded-2xl shadow-lg shadow-amber-600/30 transform transition duration-200 active:scale-95 text-lg flex items-center justify-center gap-2">
+                <i class="fas fa-play"></i> เริ่มบรรเลงเพลง
+            </button>
         </div>
     </div>
 
-    <!-- คอแบนโจ (Fretboard Container) -->
-    <div id="fretboard" class="w-full max-w-md flex-1 relative wood-texture shadow-2xl overflow-hidden mx-auto">
-        <!-- Elements will be generated by JS -->
-    </div>
-
-    <!-- ส่วนล่าง (Control/Bridge) -->
-    <div class="w-full max-w-md h-20 bg-stone-900 flex items-center justify-around shrink-0 border-t-4 border-yellow-900 z-30 px-2">
-        <div class="text-center">
-            <div class="text-xs text-stone-400">Tuning</div>
-            <div class="font-bold text-yellow-500">Open G</div>
+    <!-- Application Top Headbar (Headstock) -->
+    <header class="w-full max-w-md h-16 bg-gradient-to-b from-stone-900 to-stone-950 flex items-center justify-between px-4 shrink-0 shadow-2xl z-30 border-b border-amber-600/30">
+        <div class="flex items-center gap-2">
+            <span class="text-xl">🪕</span>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-amber-500 font-black tracking-wider text-md">BANJO PRO</span>
+            <span class="text-[9px] bg-amber-600/20 text-amber-500 border border-amber-600/40 font-bold px-1.5 py-0.5 rounded uppercase">PRO</span>
         </div>
         
-        <!-- Note Toggle Button -->
-        <div class="text-center">
-            <button onclick="toggleNotes()" id="noteBtn" class="w-10 h-10 rounded-full bg-stone-700 flex items-center justify-center active:bg-yellow-600 transition">
-               <i class="fas fa-music text-white"></i>
-           </button>
-           <div class="text-[10px] text-stone-400 mt-1">โน้ต</div>
-       </div>
-
-        <div class="text-center">
-             <button onclick="toggleMetronome()" id="metroBtn" class="w-10 h-10 rounded-full bg-stone-700 flex items-center justify-center active:bg-yellow-600 transition">
-                <i class="fas fa-clock text-white"></i>
-            </button>
-            <div class="text-[10px] text-stone-400 mt-1">จังหวะ</div>
+        <!-- Audio Live Indicator -->
+        <div class="flex items-center gap-3">
+            <div id="playbackIndicator" class="hidden text-xs text-amber-400 font-semibold flex items-center gap-1.5 bg-amber-950/40 border border-amber-600/30 px-2 py-0.5 rounded-full">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span id="playbackText">กำลังเล่นเพลง</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-stone-900 border border-stone-800 px-2.5 py-1 rounded-full">
+                <span class="text-[10px] text-stone-400 font-bold uppercase tracking-wider" id="audioStateText">Muted</span>
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500 transition-colors duration-300" id="audioStatus"></div>
+            </div>
         </div>
+    </header>
+
+    <!-- Playback Success Toast Alert -->
+    <div id="endSongToast" class="fixed top-20 z-40 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold py-3 px-6 rounded-full shadow-2xl flex items-center gap-2 transition-all duration-500 transform translate-y-[-150%] opacity-0">
+        <i class="fas fa-check-circle text-lg"></i>
+        <span>การแสดงสำเร็จ "จบเพลงเดโมแล้ว!" 🌟</span>
     </div>
 
+    <!-- Fretboard & Settings Overlay Container -->
+    <div class="w-full max-w-md flex-1 relative overflow-hidden mx-auto flex flex-col bg-stone-950">
+        
+        <!-- Visual Neck & Frets -->
+        <main id="fretboard" class="w-full h-full relative wood-texture overflow-hidden flex-1">
+            <!-- Dynamic components inject here -->
+        </main>
+        
+        <!-- Advanced Synthesis settings panel (Safe placement: outside fretboard canvas to prevent destruction on resize) -->
+        <section id="advancedPanel" class="absolute inset-x-0 top-0 bg-stone-950/95 border-b-2 border-amber-600/40 z-40 p-4 transition-all duration-300 transform -translate-y-full opacity-0 pointer-events-none shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-black text-yellow-500 flex items-center gap-2 uppercase tracking-widest">
+                    <i class="fas fa-sliders-h"></i> ปรับแต่งสังเคราะห์เสียงขั้นสูง
+                </h2>
+                <button onclick="toggleAdvancedPanel()" class="text-stone-400 hover:text-white transition">
+                    <i class="fas fa-times-circle text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-xs">
+                <!-- Sustain Settings -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-stone-300 font-semibold">เวลาหางเสียงหน่วง (Sustain):</span>
+                        <span id="valSustain" class="text-yellow-400 font-bold">1.8 วินาที</span>
+                    </div>
+                    <input type="range" min="0.4" max="4.0" step="0.1" value="1.8" id="sliderSustain" class="w-full accent-amber-500 bg-stone-800 h-2 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Twang/Resonant Filter Peaking -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-stone-300 font-semibold">สัมผัสเสียงแหลมสะบัด (Twang / Body Resonance):</span>
+                        <span id="valTwang" class="text-yellow-400 font-bold">8.0 dB</span>
+                    </div>
+                    <input type="range" min="0" max="18" step="0.5" value="8" id="sliderTwang" class="w-full accent-amber-500 bg-stone-800 h-2 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Resonance echo -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-stone-300 font-semibold">กังวานกระทะแบนโจ (Resonator Ring Echo):</span>
+                        <span id="valEcho" class="text-yellow-400 font-bold">40%</span>
+                    </div>
+                    <input type="range" min="0" max="80" step="5" value="40" id="sliderEcho" class="w-full accent-amber-500 bg-stone-800 h-2 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Tuning presets -->
+                <div>
+                    <span class="text-stone-300 font-semibold block mb-2">เลือกตั้งค่าจูนเสียงสาย (Tuning Preset):</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="changeTuning('openG')" id="btnTune-openG" class="bg-amber-600 text-stone-950 font-bold py-1.5 px-3 rounded-lg border border-amber-500 transition text-center text-[10px]">
+                            Open G (gDGBD)
+                        </button>
+                        <button onclick="changeTuning('doubleC')" id="btnTune-doubleC" class="bg-stone-850 text-stone-300 hover:text-white font-bold py-1.5 px-3 rounded-lg border border-stone-800 transition text-center text-[10px]">
+                            Double C (gCGCD)
+                        </button>
+                        <button onclick="changeTuning('sawmill')" id="btnTune-sawmill" class="bg-stone-850 text-stone-300 hover:text-white font-bold py-1.5 px-3 rounded-lg border border-stone-800 transition text-center text-[10px]">
+                            Sawmill (gDGCD)
+                        </button>
+                        <button onclick="changeTuning('gMinor')" id="btnTune-gMinor" class="bg-stone-850 text-stone-300 hover:text-white font-bold py-1.5 px-3 rounded-lg border border-stone-800 transition text-center text-[10px]">
+                            G Minor (gDGBbD)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Action Center & Controls (Bridge area) -->
+    <footer class="w-full max-w-md bg-stone-950 flex flex-col shrink-0 border-t-2 border-amber-600/30 z-30 py-3 px-3">
+        <!-- Top Status strip -->
+        <div class="flex items-center justify-between px-2 mb-3 text-xs text-stone-400 border-b border-stone-900 pb-2">
+            <div>
+                <span class="text-[10px] text-stone-500 uppercase font-black block tracking-widest">Tuning</span>
+                <span class="font-bold text-yellow-500" id="currentTuningName">Open G</span>
+            </div>
+            
+            <!-- Playback/Demo progress track -->
+            <div id="demoProgressContainer" class="hidden flex-1 mx-6">
+                <div class="flex justify-between text-[9px] text-amber-500 font-bold mb-1">
+                    <span>ความคืบหน้าเพลงสาธิต:</span>
+                    <span id="demoProgressPct">0%</span>
+                </div>
+                <div class="w-full bg-stone-900 h-1.5 rounded-full overflow-hidden border border-stone-800">
+                    <div id="demoProgressBar" class="h-full bg-gradient-to-r from-amber-600 to-yellow-400 transition-all duration-100" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="text-right">
+                <span class="text-[10px] text-stone-500 uppercase font-black block tracking-widest">Acoustic</span>
+                <span class="font-bold text-yellow-500" id="currentSustainVal">1.8s</span>
+            </div>
+        </div>
+
+        <!-- Action Dashboard (Touch-friendly buttons grid) -->
+        <nav class="grid grid-cols-4 gap-2">
+            <!-- Music note labels switch -->
+            <button onclick="toggleNotes()" id="noteBtn" class="h-12 rounded-xl bg-stone-900 hover:bg-stone-850 active:bg-amber-600/20 text-stone-300 hover:text-white border border-stone-800 flex flex-col items-center justify-center gap-1 transition">
+                <i class="fas fa-music text-sm text-stone-400" id="noteIcon"></i>
+                <span class="text-[9px] font-bold uppercase tracking-wider">ดูตัวโน้ต</span>
+            </button>
+
+            <!-- Advanced synthesizer slide trigger -->
+            <button onclick="toggleAdvancedPanel()" id="advancedBtn" class="h-12 rounded-xl bg-stone-900 hover:bg-stone-850 active:bg-amber-600/20 text-stone-300 hover:text-white border border-stone-800 flex flex-col items-center justify-center gap-1 transition">
+                <i class="fas fa-sliders-h text-sm text-stone-400"></i>
+                <span class="text-[9px] font-bold uppercase tracking-wider">ปรับซินธ์</span>
+            </button>
+
+            <!-- Precision Metronome -->
+            <button onclick="toggleMetronome()" id="metroBtn" class="h-12 rounded-xl bg-stone-900 hover:bg-stone-850 active:bg-amber-600/20 text-stone-300 hover:text-white border border-stone-800 flex flex-col items-center justify-center gap-1 transition relative overflow-hidden">
+                <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-stone-850 transition-colors duration-200" id="metroLed"></div>
+                <i class="fas fa-clock text-sm text-stone-400"></i>
+                <span class="text-[9px] font-bold uppercase tracking-wider" id="metroText">เคาะจังหวะ</span>
+            </button>
+
+            <!-- Classic Banjp roll / Demo sequence -->
+            <button onclick="toggleDemoSong()" id="demoBtn" class="h-12 rounded-xl bg-gradient-to-b from-stone-900 to-stone-950 active:from-amber-600 text-yellow-500 hover:text-yellow-400 border border-stone-800 flex flex-col items-center justify-center gap-1 transition shadow-lg">
+                <i class="fas fa-play text-sm text-yellow-500" id="demoIcon"></i>
+                <span class="text-[9px] font-extrabold uppercase tracking-widest" id="demoBtnLabel">เพลงสาธิต</span>
+            </button>
+        </nav>
+    </footer>
+
     <script>
-        // --- Audio Engine ---
-        let audioCtx;
-        const volume = 0.5;
+        let audioCtx = null;
+        let mainVolume = 0.45;
 
-        // ความถี่สายเปล่า (Open Strings: g, D, G, B, D) - 5th string is high g
-        // String 0 (Leftmost visually) to String 4 (Rightmost)
-        // Banjo String Layout (Left to Right): 5th(High G), 4th(Low D), 3rd(Low G), 2nd(B), 1st(High D)
-        const openStrings = [
-            392.00, // String 5: G4 (Short string)
-            146.83, // String 4: D3
-            196.00, // String 3: G3
-            246.94, // String 2: B3
-            293.66  // String 1: D4
-        ];
+        // Tuning presets frequency arrays
+        const tunings = {
+            openG: {
+                name: "Open G",
+                strings: [392.00, 146.83, 196.00, 246.94, 293.66], // g4, d3, g3, b3, d4
+                baseIndices: [7, 2, 7, 11, 2] // Index distance values relative to C
+            },
+            doubleC: {
+                name: "Double C",
+                strings: [392.00, 130.81, 196.00, 261.63, 293.66], // g4, c3, g3, c4, d4
+                baseIndices: [7, 0, 7, 0, 2]
+            },
+            sawmill: {
+                name: "Sawmill",
+                strings: [392.00, 146.83, 196.00, 261.63, 293.66], // g4, d3, g3, c4, d4
+                baseIndices: [7, 2, 7, 0, 2]
+            },
+            gMinor: {
+                name: "G Minor",
+                strings: [392.00, 146.83, 196.00, 233.08, 293.66], // g4, d3, g3, bb3, d4
+                baseIndices: [7, 2, 7, 10, 2]
+            }
+        };
 
-        // Chromatic Scale & Base Indices for Banjo Open G (g, D, G, B, D)
+        let currentTuningKey = "openG";
         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        // Indices in noteNames array corresponding to Open Strings:
-        // String 0 (g) -> G -> 7
-        // String 1 (D) -> D -> 2
-        // String 2 (G) -> G -> 7
-        // String 3 (B) -> B -> 11
-        // String 4 (D) -> D -> 2
-        const stringBaseNoteIndices = [7, 2, 7, 11, 2];
+
+        // Synth filter variables
+        let paramSustain = 1.8;
+        let paramTwang = 8.0;   
+        let paramEcho = 40;     
+
+        // Timing variables
+        let isMetroOn = false;
+        let metroInterval = null;
+        let metroBpm = 110;
+        let metroStep = 0;
+
+        // Playback sequence variables
+        let isDemoPlaying = false;
+        let demoTimer = null;
+        let demoIndex = 0;
+
+        // Bluegrass masterpiece sequence: "Cripple Creek" Banjo solo roll
+        const crippleCreekSong = [
+            { s: 3, f: 0, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 4, f: 0, d: 200 }, { s: 2, f: 0, d: 200 },
+            { s: 3, f: 2, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 4, f: 0, d: 200 }, { s: 2, f: 0, d: 200 },
+            { s: 3, f: 3, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 4, f: 0, d: 200 }, { s: 2, f: 0, d: 200 },
+            { s: 3, f: 4, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 4, f: 0, d: 400 }, 
+            
+            // Sliding melody roll sequence
+            { s: 2, f: 2, d: 150 }, { s: 2, f: 3, d: 150 }, { s: 4, f: 0, d: 200 }, { s: 0, f: 0, d: 200 },
+            { s: 2, f: 0, d: 200 }, { s: 3, f: 0, d: 200 }, { s: 1, f: 0, d: 200 }, { s: 0, f: 0, d: 200 },
+            { s: 2, f: 2, d: 150 }, { s: 2, f: 3, d: 150 }, { s: 4, f: 0, d: 200 }, { s: 0, f: 0, d: 200 },
+            { s: 2, f: 0, d: 200 }, { s: 3, f: 0, d: 200 }, { s: 4, f: 0, d: 400 },
+
+            // Bridge transition
+            { s: 4, f: 5, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 4, f: 5, d: 200 }, { s: 2, f: 0, d: 200 },
+            { s: 4, f: 4, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 4, f: 2, d: 200 }, { s: 2, f: 0, d: 200 },
+            { s: 4, f: 0, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 3, f: 0, d: 200 }, { s: 2, f: 0, d: 200 },
+            { s: 1, f: 2, d: 200 }, { s: 0, f: 0, d: 200 }, { s: 4, f: 0, d: 400 },
+
+            // Outro final rolls
+            { s: 2, f: 0, d: 150 }, { s: 4, f: 0, d: 150 }, { s: 0, f: 0, d: 150 }, { s: 2, f: 0, d: 150 },
+            { s: 3, f: 0, d: 150 }, { s: 4, f: 0, d: 150 }, { s: 0, f: 0, d: 150 }, { s: 2, f: 0, d: 300 },
+            { s: 1, f: 0, d: 300 }, { s: 2, f: 0, d: 600 }
+        ];
 
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                document.getElementById('audioStatus').classList.remove('bg-red-500');
-                document.getElementById('audioStatus').classList.add('bg-green-500');
+                
+                const statusDot = document.getElementById('audioStatus');
+                statusDot.classList.remove('bg-rose-500');
+                statusDot.classList.add('bg-emerald-500');
+                statusDot.classList.add('shadow-[0_0_10px_#10b981]');
+                document.getElementById('audioStateText').innerText = "Live";
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
+        // Custom metallic pluck synthesizer logic
         function playSound(frequency, stringIndex) {
             if (!audioCtx) return;
 
-            const t = audioCtx.currentTime;
-            
-            // 1. Create Oscillators (Mix Sawtooth + Triangle for twang)
+            const now = audioCtx.currentTime;
+
+            // Dual tone generator paths (Sawtooth for twang sharp edges + Triangle for full wood resonance)
             const osc1 = audioCtx.createOscillator();
             const osc2 = audioCtx.createOscillator();
-            const mainGain = audioCtx.createGain();
             
             osc1.type = 'sawtooth';
             osc2.type = 'triangle';
 
-            osc1.frequency.value = frequency;
-            osc2.frequency.value = frequency;
+            osc1.frequency.setValueAtTime(frequency, now);
+            osc2.frequency.setValueAtTime(frequency, now);
 
-            // Detune slightly for chorus effect
-            osc2.detune.value = 5; 
+            osc2.detune.setValueAtTime(6, now); // Micro choral detuning
 
-            // 2. Filter (Bandpass to simulate body resonance)
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'highpass';
-            filter.frequency.value = 300; // Cut mud
+            // Finger pick metallic release click simulation
+            const noise = audioCtx.createOscillator();
+            const noiseGain = audioCtx.createGain();
+            noise.type = 'sine';
+            noise.frequency.setValueAtTime(3500, now);
             
-            const peaking = audioCtx.createBiquadFilter();
-            peaking.type = 'peaking';
-            peaking.frequency.value = 2000; // Emphasize banjo twang
-            peaking.Q.value = 1;
-            peaking.gain.value = 5;
+            noiseGain.gain.setValueAtTime(0.08, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
 
-            // 3. Envelope
-            // Attack: Very fast
-            // Decay: Plucked string exponential decay
-            mainGain.gain.setValueAtTime(0, t);
-            mainGain.gain.linearRampToValueAtTime(volume, t + 0.005); // Attack
-            mainGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5); // Decay duration
+            // Resonator body tone filter peak customization
+            const twangFilter = audioCtx.createBiquadFilter();
+            twangFilter.type = 'peaking';
+            twangFilter.frequency.setValueAtTime(1900, now); 
+            twangFilter.Q.setValueAtTime(2.0, now);
+            twangFilter.gain.setValueAtTime(paramTwang, now); 
 
-            // Connect graph
-            osc1.connect(filter);
-            osc2.connect(filter);
-            filter.connect(peaking);
-            peaking.connect(mainGain);
-            mainGain.connect(audioCtx.destination);
+            // High pass mud block
+            const hpFilter = audioCtx.createBiquadFilter();
+            hpFilter.type = 'highpass';
+            hpFilter.frequency.setValueAtTime(160, now); 
 
-            osc1.start(t);
-            osc2.start(t);
-            osc1.stop(t + 2);
-            osc2.stop(t + 2);
+            // Resonating echo chamber loop simulator
+            const delayNode = audioCtx.createDelay(0.1);
+            const delayGain = audioCtx.createGain();
+            
+            delayNode.delayTime.setValueAtTime(0.024, now); 
+            delayGain.gain.setValueAtTime((paramEcho / 100) * 0.45, now); 
 
-            // Visual Feedback
+            // Volume Decay envelope dynamics
+            const synthGain = audioCtx.createGain();
+            synthGain.gain.setValueAtTime(0, now);
+            synthGain.gain.linearRampToValueAtTime(mainVolume, now + 0.003); 
+            synthGain.gain.exponentialRampToValueAtTime(0.0001, now + paramSustain);
+
+            // Node structure linkage
+            osc1.connect(twangFilter);
+            osc2.connect(twangFilter);
+            noise.connect(noiseGain);
+            
+            noiseGain.connect(synthGain);
+            twangFilter.connect(hpFilter);
+            hpFilter.connect(synthGain);
+
+            synthGain.connect(delayNode);
+            delayNode.connect(delayGain);
+            delayGain.connect(synthGain); 
+
+            synthGain.connect(audioCtx.destination);
+
+            osc1.start(now);
+            osc2.start(now);
+            noise.start(now);
+
+            osc1.stop(now + paramSustain + 0.1);
+            osc2.stop(now + paramSustain + 0.1);
+            noise.stop(now + 0.05);
+
             animateString(stringIndex);
         }
 
-        // --- Visual Engine ---
+        function toggleMetronome() {
+            const btn = document.getElementById('metroBtn');
+            const icon = btn.querySelector('i');
+            const led = document.getElementById('metroLed');
+            const txt = document.getElementById('metroText');
+            
+            if (isMetroOn) {
+                clearInterval(metroInterval);
+                isMetroOn = false;
+                btn.classList.remove('bg-amber-600/30', 'gold-border');
+                btn.classList.add('bg-stone-900');
+                icon.className = 'fas fa-clock text-stone-400';
+                led.className = 'absolute top-1 right-1 w-2 h-2 rounded-full bg-stone-850';
+                txt.innerText = "เคาะจังหวะ";
+            } else {
+                initAudio();
+                isMetroOn = true;
+                btn.classList.add('bg-amber-600/30', 'gold-border');
+                btn.classList.remove('bg-stone-900');
+                icon.className = 'fas fa-stop text-amber-500';
+                txt.innerText = "หยุดจังหวะ";
+                
+                playMetroBeat();
+                metroStep = 0;
+                metroInterval = setInterval(() => {
+                    playMetroBeat();
+                }, (60 * 1000) / metroBpm);
+            }
+        }
+
+        function playMetroBeat() {
+            if (!audioCtx) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            const isFirstBeat = (metroStep % 4 === 0);
+            osc.frequency.setValueAtTime(isFirstBeat ? 1200 : 700, audioCtx.currentTime);
+            osc.type = 'triangle';
+            
+            gain.gain.setValueAtTime(isFirstBeat ? 0.07 : 0.03, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+
+            const led = document.getElementById('metroLed');
+            led.className = isFirstBeat 
+                ? 'absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]'
+                : 'absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_#eab308]';
+            
+            setTimeout(() => {
+                led.className = 'absolute top-1 right-1 w-2 h-2 rounded-full bg-stone-850';
+            }, 100);
+
+            metroStep++;
+        }
+
+        function toggleDemoSong() {
+            if (isDemoPlaying) {
+                stopDemoSong();
+            } else {
+                startDemoSong();
+            }
+        }
+
+        function startDemoSong() {
+            initAudio();
+            isDemoPlaying = true;
+            demoIndex = 0;
+
+            const btn = document.getElementById('demoBtn');
+            const icon = document.getElementById('demoIcon');
+            const label = document.getElementById('demoBtnLabel');
+            
+            btn.classList.add('bg-red-900/30', 'border-red-600');
+            btn.classList.remove('border-stone-800');
+            icon.className = 'fas fa-stop text-red-500';
+            label.innerText = "หยุดเพลง";
+
+            document.getElementById('demoProgressContainer').classList.remove('hidden');
+            document.getElementById('playbackIndicator').classList.remove('hidden');
+            document.getElementById('playbackText').innerText = "เพลง Cripple Creek";
+
+            runNextDemoStep();
+        }
+
+        function runNextDemoStep() {
+            if (!isDemoPlaying) return;
+
+            if (demoIndex >= crippleCreekSong.length) {
+                stopDemoSong(true);
+                return;
+            }
+
+            const currentNote = crippleCreekSong[demoIndex];
+            const currentTuning = tunings[currentTuningKey];
+            
+            const baseFreq = currentTuning.strings[currentNote.s];
+            const finalFreq = baseFreq * Math.pow(2, currentNote.f / 12);
+
+            playSound(finalFreq, currentNote.s);
+
+            const matchingCell = document.querySelector(`.fret-cell[data-string="${currentNote.s}"][data-fret="${currentNote.f}"]`);
+            if (matchingCell) {
+                matchingCell.classList.add('auto-pulse');
+                setTimeout(() => {
+                    matchingCell.classList.remove('auto-pulse');
+                }, 350);
+            }
+
+            const progress = (demoIndex / (crippleCreekSong.length - 1)) * 100;
+            document.getElementById('demoProgressBar').style.width = `${progress}%`;
+            document.getElementById('demoProgressPct').innerText = `${Math.round(progress)}%`;
+
+            demoTimer = setTimeout(() => {
+                demoIndex++;
+                runNextDemoStep();
+            }, currentNote.d);
+        }
+
+        function stopDemoSong(isCompleted = false) {
+            isDemoPlaying = false;
+            if (demoTimer) clearTimeout(demoTimer);
+
+            const btn = document.getElementById('demoBtn');
+            const icon = document.getElementById('demoIcon');
+            const label = document.getElementById('demoBtnLabel');
+            
+            btn.classList.remove('bg-red-900/30', 'border-red-600');
+            btn.classList.add('border-stone-800');
+            icon.className = 'fas fa-play text-yellow-500';
+            label.innerText = "เพลงสาธิต";
+
+            document.getElementById('demoProgressContainer').classList.add('hidden');
+            document.getElementById('playbackIndicator').classList.add('hidden');
+
+            if (isCompleted) {
+                const endToast = document.getElementById('endSongToast');
+                endToast.classList.remove('translate-y-[-150%]', 'opacity-0');
+                endToast.classList.add('translate-y-0', 'opacity-100');
+
+                setTimeout(() => {
+                    endToast.classList.remove('translate-y-0', 'opacity-100');
+                    endToast.classList.add('translate-y-[-150%]', 'opacity-0');
+                }, 3000);
+            }
+        }
+
         const fretboard = document.getElementById('fretboard');
         const numStrings = 5;
-        const numFrets = 12; // 1 Octave visible usually fits well
+        const numFrets = 11; 
 
+        // Completely safe from DOM clearing errors, no cloneNode needed
         function createFretboard() {
+            fretboard.innerHTML = ''; 
+            
+            const boneNut = document.createElement('div');
+            boneNut.className = 'bone-nut top-0';
+            fretboard.appendChild(boneNut);
+
             const width = fretboard.clientWidth;
             const height = fretboard.clientHeight;
             const stringSpacing = width / numStrings;
             
-            // Calculate fret distances (approximate rule of 18)
-            // But for a mobile game, linear or slightly progressive is easier to hit.
-            // Let's use equal spacing for UI usability over physical accuracy
-            const fretHeight = height / (numFrets + 1.5); // +1.5 for open string area
+            const fretHeight = height / (numFrets + 1.4); 
 
-            // 1. Draw Frets
+            // 1. Draw shiny fret lines on neck
             for (let i = 0; i <= numFrets; i++) {
-                const y = i * fretHeight + fretHeight; // Start after open string area
+                const y = i * fretHeight + fretHeight;
                 const fretLine = document.createElement('div');
                 fretLine.className = 'fret-line';
                 fretLine.style.top = `${y}px`;
                 fretboard.appendChild(fretLine);
 
-                // Add Inlays (dots)
-                if ([3, 5, 7, 10, 12].includes(i)) {
+                // Add Standard inlays
+                if ([3, 5, 7, 10].includes(i)) {
                     const dot = document.createElement('div');
-                    dot.className = 'inlay';
-                    // Double dot at 12
-                    if (i === 12) {
-                        // Logic for double dot omitted for simplicity, centering one big dot
-                    }
-                    // Place dot in the middle of the fret space ABOVE the line
-                    dot.style.top = `${y - (fretHeight / 2) - 10}px`; 
+                    dot.className = 'inlay-pearl';
+                    dot.style.top = `${y - (fretHeight / 2) - 10}px`;
                     fretboard.appendChild(dot);
                 }
                 
-                // Add Fret Number
+                // Print fret numbers cleanly
                 if (i > 0) {
-                     const num = document.createElement('div');
-                     num.innerText = i;
-                     num.className = 'absolute right-1 text-[10px] text-stone-400 opacity-50 font-bold';
-                     num.style.top = `${y - (fretHeight/2) - 6}px`;
-                     fretboard.appendChild(num);
+                    const num = document.createElement('div');
+                    num.innerText = i;
+                    num.className = 'absolute right-2 text-[10px] text-stone-500 font-extrabold opacity-60';
+                    num.style.top = `${y - (fretHeight / 2) - 6}px`;
+                    fretboard.appendChild(num);
                 }
             }
 
-            // 2. Draw Strings & Interaction Areas
+            // 2. Generate Banjo Steel string channels
             for (let s = 0; s < numStrings; s++) {
                 const x = (s * stringSpacing) + (stringSpacing / 2);
-                
-                // Glow effect bg
+
                 const glow = document.createElement('div');
                 glow.className = 'string-glow';
                 glow.id = `glow-${s}`;
                 glow.style.left = `${x}px`;
                 fretboard.appendChild(glow);
 
-                // Physical String Line
                 const str = document.createElement('div');
-                str.className = 'string';
+                str.className = `string string-${s}`;
                 str.id = `string-${s}`;
                 str.style.left = `${x}px`;
-                
-                // 5th string logic (Short string on Banjo)
-                // Starts at 5th fret usually. 
-                // For this app, to make it playable, we keep it full length but maybe color it differently?
-                // Let's keep it full length for easier playability on phone.
                 fretboard.appendChild(str);
 
-                // 3. Create Touch Zones (Cells)
-                // Row 0 = Open String (Top area)
-                // Row 1..12 = Frets
-                
-                // Open String Zone (Top part)
-                createTouchZone(s, 0, x, 0, stringSpacing, fretHeight, true);
+                // Top Open strings
+                createTouchZone(s, 0, x, 0, stringSpacing, fretHeight);
 
-                // Fret Zones
+                // Dynamic fret cells
                 for (let f = 1; f <= numFrets; f++) {
-                    const topY = f * fretHeight;
-                    // Fret 1 ends at line 1, starts at open area end
-                    // Actually let's just stack them mathematically
-                    const cellY = (f-1) * fretHeight + fretHeight; 
-                    
-                    createTouchZone(s, f, x, cellY, stringSpacing, fretHeight, false);
+                    const cellY = (f - 1) * fretHeight + fretHeight;
+                    createTouchZone(s, f, x, cellY, stringSpacing, fretHeight);
                 }
             }
         }
 
-        function createTouchZone(stringIndex, fretIndex, xCenter, yTop, width, height, isOpen) {
+        function createTouchZone(stringIndex, fretIndex, xCenter, yTop, width, height) {
             const cell = document.createElement('div');
             cell.className = 'fret-cell';
-            cell.style.left = `${xCenter - (width/2)}px`;
+            cell.style.left = `${xCenter - (width / 2)}px`;
             cell.style.top = `${yTop}px`;
             cell.style.width = `${width}px`;
             cell.style.height = `${height}px`;
-            
-            // Store data
+
             cell.dataset.string = stringIndex;
             cell.dataset.fret = fretIndex;
 
-            // Calculate Note Name
-            const baseIndex = stringBaseNoteIndices[stringIndex];
-            const currentNoteIndex = (baseIndex + fretIndex) % 12;
-            const noteName = noteNames[currentNoteIndex];
+            const currentTuning = tunings[currentTuningKey];
+            const baseIndex = currentTuning.baseIndices[stringIndex];
+            const noteIndex = (baseIndex + fretIndex) % 12;
+            const noteName = noteNames[noteIndex];
 
-            // Create Note Label Element
             const label = document.createElement('span');
             label.className = 'note-label';
             label.innerText = noteName;
             cell.appendChild(label);
 
-            // Touch Events
-            const triggerNote = (e) => {
-                e.preventDefault(); 
-                // Calculate Frequency
-                // Formula: f = f0 * (2 ^ (n/12))
-                const baseFreq = openStrings[stringIndex];
-                const noteFreq = baseFreq * Math.pow(2, fretIndex / 12);
+            const triggerPlay = (e) => {
+                e.preventDefault();
+                initAudio();
                 
+                const baseFreq = currentTuning.strings[stringIndex];
+                const noteFreq = baseFreq * Math.pow(2, fretIndex / 12);
+
                 playSound(noteFreq, stringIndex);
             };
 
-            // Support both touch and mouse
-            cell.addEventListener('touchstart', triggerNote, {passive: false});
-            cell.addEventListener('mousedown', triggerNote);
-            
-            // Hover/Slide logic for mouse (optional, mainly for touch)
-            // For true sliding (glissando), we need touchmove on the container, not individual cells
-            // But distinct tapping is better for Banjo picking.
-            
+            cell.addEventListener('touchstart', triggerPlay, { passive: false });
+            cell.addEventListener('mousedown', triggerPlay);
+
             fretboard.appendChild(cell);
         }
 
         function animateString(index) {
             const str = document.getElementById(`string-${index}`);
             const glow = document.getElementById(`glow-${index}`);
-            
-            // Reset animation
+            if (!str || !glow) return;
+
             str.classList.remove('vibrate');
-            void str.offsetWidth; // trigger reflow
+            void str.offsetWidth; 
             str.classList.add('vibrate');
 
             glow.classList.add('active');
@@ -415,96 +794,96 @@
             }, 300);
         }
 
-        // --- Note Toggle Logic ---
+        let isAdvancedPanelOpen = false;
+        function toggleAdvancedPanel() {
+            const panel = document.getElementById('advancedPanel');
+            const btn = document.getElementById('advancedBtn');
+            isAdvancedPanelOpen = !isAdvancedPanelOpen;
+
+            if (isAdvancedPanelOpen) {
+                panel.classList.remove('-translate-y-full', 'opacity-0', 'pointer-events-none');
+                panel.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                btn.classList.add('bg-amber-600/30', 'gold-border');
+                btn.querySelector('i').classList.add('text-amber-500');
+            } else {
+                panel.classList.add('-translate-y-full', 'opacity-0', 'pointer-events-none');
+                panel.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                btn.classList.remove('bg-amber-600/30', 'gold-border');
+                btn.querySelector('i').classList.remove('text-amber-500');
+            }
+        }
+
+        document.getElementById('sliderSustain').addEventListener('input', (e) => {
+            paramSustain = parseFloat(e.target.value);
+            document.getElementById('valSustain').innerText = `${paramSustain.toFixed(1)} วินาที`;
+            document.getElementById('currentSustainVal').innerText = `${paramSustain.toFixed(1)}s`;
+        });
+
+        document.getElementById('sliderTwang').addEventListener('input', (e) => {
+            paramTwang = parseFloat(e.target.value);
+            document.getElementById('valTwang').innerText = `${paramTwang.toFixed(1)} dB`;
+        });
+
+        document.getElementById('sliderEcho').addEventListener('input', (e) => {
+            paramEcho = parseInt(e.target.value);
+            document.getElementById('valEcho').innerText = `${paramEcho}%`;
+        });
+
         let areNotesVisible = false;
         function toggleNotes() {
             const btn = document.getElementById('noteBtn');
+            const icon = document.getElementById('noteIcon');
             areNotesVisible = !areNotesVisible;
-            
+
             if (areNotesVisible) {
                 fretboard.classList.add('show-notes');
-                btn.classList.remove('bg-stone-700');
-                btn.classList.add('bg-blue-600'); // Different color for distinction
+                btn.classList.add('bg-amber-600/30', 'gold-border');
+                icon.classList.remove('text-stone-400');
+                icon.classList.add('text-amber-500');
             } else {
                 fretboard.classList.remove('show-notes');
-                btn.classList.add('bg-stone-700');
-                btn.classList.remove('bg-blue-600');
+                btn.classList.remove('bg-amber-600/30', 'gold-border');
+                icon.classList.add('text-stone-400');
+                icon.classList.remove('text-amber-500');
             }
         }
 
-        // --- Metronome Logic (Simple Click) ---
-        let metroInterval;
-        let isMetroOn = false;
-        function toggleMetronome() {
-            const btn = document.getElementById('metroBtn');
-            const icon = btn.querySelector('i');
+        // Real-time Tuning selector
+        function changeTuning(tuningKey) {
+            if (!tunings[tuningKey]) return;
             
-            if (isMetroOn) {
-                clearInterval(metroInterval);
-                isMetroOn = false;
-                btn.classList.remove('bg-yellow-600');
-                btn.classList.add('bg-stone-700');
-                icon.classList.add('fa-clock');
-                icon.classList.remove('fa-stop');
-            } else {
-                if(!audioCtx) initAudio();
-                isMetroOn = true;
-                btn.classList.remove('bg-stone-700');
-                btn.classList.add('bg-yellow-600');
-                icon.classList.remove('fa-clock');
-                icon.classList.add('fa-stop');
-                
-                playClick();
-                metroInterval = setInterval(playClick, 600); // 100 BPM approx
+            Object.keys(tunings).forEach(key => {
+                const btn = document.getElementById(`btnTune-${key}`);
+                if (btn) {
+                    btn.className = "bg-stone-850 text-stone-300 hover:text-white font-bold py-1.5 px-3 rounded-lg border border-stone-800 transition text-center text-[10px]";
+                }
+            });
+
+            const activeBtn = document.getElementById(`btnTune-${tuningKey}`);
+            if (activeBtn) {
+                activeBtn.className = "bg-amber-600 text-stone-950 font-black py-1.5 px-3 rounded-lg border border-amber-500 transition text-center text-[10px]";
             }
+
+            currentTuningKey = tuningKey;
+            document.getElementById('currentTuningName').innerText = tunings[tuningKey].name;
+
+            createFretboard();
         }
 
-        function playClick() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.frequency.value = 800;
-            osc.type = 'square';
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
-        }
-
-        // --- Initialization ---
-        document.getElementById('startBtn').addEventListener('click', () => {
-            initAudio();
-            document.getElementById('startOverlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('startOverlay').style.display = 'none';
-            }, 500);
-        });
-        
-        // Handle Global Touch Move for "Strumming" or Gliding
-        // This is complex to get perfect, but basic slide support helps
-        fretboard.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            // Iterate through changed touches
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                
-                // If we moved into a NEW cell that isn't the one we started in? 
-                // For simplicity, let's just re-trigger if it's a fret-cell
-                // BUT we must debounce so it doesn't machine-gun fire.
-                // Current implementation: tap-based is safer for Banjo picking style.
-            }
-        }, {passive: false});
-
-        // Initialize Layout
         window.addEventListener('load', createFretboard);
+        
         window.addEventListener('resize', () => {
-            fretboard.innerHTML = '';
             createFretboard();
         });
 
+        document.getElementById('startBtn').addEventListener('click', () => {
+            initAudio();
+            const overlay = document.getElementById('startOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 500);
+        });
     </script>
 </body>
 </html>
