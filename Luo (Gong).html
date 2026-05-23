@@ -3,573 +3,1023 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chinese Luo (Gong) Instrument</title>
+    <title>Chinese Luo (Gong) - Ultra-Realistic Synthesis</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Thai and elegant headings -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #1a0505;
-            --gong-gold: #d4af37;
-            --gong-shadow: #8a6e18;
-            --text-color: #f0e6d2;
-            --accent-red: #c92a2a;
+            --bg-color: #0d0202;
+            --gong-gold: #e5c158;
+            --gong-shadow: #7a5c0d;
+            --text-color: #f7ebd3;
+            --accent-red: #da251d;
+            --accent-red-dark: #80110b;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at center, #2b0b0b 0%, #000000 100%);
-            color: var(--text-color);
             font-family: 'Sarabun', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-            touch-action: none; /* Prevent zoom/scroll on mobile */
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 30%, #300606 0%, #050000 100%),
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 10px);
+            color: var(--text-color);
+            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        h1 {
-            margin: 10px 0 5px 0;
-            font-size: 1.3rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            letter-spacing: 1px;
+        .header-title {
+            font-family: 'Cinzel', 'Sarabun', serif;
+            text-shadow: 0 0 10px rgba(218, 37, 29, 0.6), 0 2px 4px rgba(0,0,0,0.8);
         }
 
-        .subtitle {
-            font-size: 0.8rem;
-            color: #aaa;
-            margin-bottom: 10px;
+        @keyframes vibrate {
+            0% { transform: scale(1) rotate(0deg); }
+            15% { transform: scale(0.97) rotate(-1.5deg); }
+            30% { transform: scale(1.02) rotate(1.5deg); }
+            45% { transform: scale(0.98) rotate(-1deg); }
+            60% { transform: scale(1.01) rotate(0.8deg); }
+            75% { transform: scale(0.99) rotate(-0.5deg); }
+            90% { transform: scale(1) rotate(0.2deg); }
+            100% { transform: scale(1) rotate(0deg); }
         }
 
-        /* Controls Area */
-        .controls {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 5px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            transform: scale(0.9); /* Slightly smaller controls */
+        @keyframes screen-shake {
+            0% { transform: translate(0, 0); }
+            10% { transform: translate(-3px, 3px); }
+            20% { transform: translate(3px, -3px); }
+            30% { transform: translate(-2px, -2px); }
+            40% { transform: translate(2px, 2px); }
+            50% { transform: translate(-1px, 2px); }
+            60% { transform: translate(2px, -1px); }
+            70% { transform: translate(-2px, -2px); }
+            80% { transform: translate(1px, 1px); }
+            100% { transform: translate(0, 0); }
         }
 
-        .btn {
-            border: none;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .shake-active {
+            animation: screen-shake 0.4s ease-out;
+        }
+
+        .vibrate-gong {
+            animation: vibrate 0.5s ease-out;
+        }
+
+        /* Elegant custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-red);
+            border-radius: 4px;
+        }
+
+        /* Custom style for range input */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #2d1010;
+            height: 6px;
+            border-radius: 3px;
             outline: none;
         }
 
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-record {
-            background-color: #444;
-            color: white;
-        }
-
-        .btn-record.recording {
-            background-color: var(--accent-red);
-            animation: pulse 1.5s infinite;
-        }
-
-        .btn-play {
-            background-color: var(--gong-gold);
-            color: #332600;
-        }
-
-        .btn-play:disabled {
-            background-color: #555;
-            color: #888;
-            cursor: not-allowed;
-        }
-
-        .btn-download {
-            background-color: #2b8a3e;
-            color: white;
-        }
-        
-        .btn-download:disabled {
-            background-color: #555;
-            color: #888;
-        }
-
-        /* Instrument Area */
-        .instrument-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-grow: 1;
-            width: 100%;
-            gap: 20px;
-            padding-bottom: 30px;
-        }
-
-        .gong-wrapper {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .gong {
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
+            background: var(--gong-gold);
             cursor: pointer;
-            position: relative;
-            box-shadow: 
-                0 10px 20px rgba(0,0,0,0.6),
-                inset 0 0 40px rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.1s;
-            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 0 5px rgba(229, 193, 88, 0.8);
         }
 
-        .gong:active, .gong.hit {
-            transform: scale(0.96);
-        }
-
-        /* Realistic Gong Visuals */
         .gong-face {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
             background: radial-gradient(
-                circle at 30% 30%,
-                #f3d878 0%,
-                #d4af37 20%,
-                #b88a00 50%,
-                #7a5c00 90%,
-                #423200 100%
+                circle at 35% 35%,
+                #ffe699 0%,
+                #e5c158 25%,
+                #b58d1d 55%,
+                #6b4f0b 85%,
+                #2e2001 100%
             );
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            border: 4px solid #5c4500;
+            box-shadow: 
+                0 15px 30px rgba(0,0,0,0.8),
+                inset 0 0 25px rgba(0,0,0,0.6);
         }
 
-        /* Concentric circles pattern (lathe marks) */
-        .gong-face::after {
-            content: '';
+        .gong-face-ring {
             position: absolute;
-            top: 5%;
-            left: 5%;
-            width: 90%;
-            height: 90%;
+            top: 5%; left: 5%; width: 90%; height: 90%;
             border-radius: 50%;
             background: repeating-radial-gradient(
-                transparent 0,
-                transparent 4px,
-                rgba(0,0,0,0.1) 5px,
-                transparent 6px
+                transparent 0px,
+                transparent 6px,
+                rgba(0, 0, 0, 0.15) 7px,
+                transparent 8px
             );
             pointer-events: none;
         }
 
-        .gong-center {
+        .gong-beaten-texture {
             position: absolute;
-            z-index: 2;
+            top: 15%; left: 15%; width: 70%; height: 70%;
             border-radius: 50%;
-            background: radial-gradient(circle at 40% 40%, #5c4500, #2e2300);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .gong-label {
-            position: absolute;
-            bottom: -25px;
-            font-size: 0.9rem;
-            color: var(--gong-gold);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-        }
-
-        /* Sizes - Optimized for Mobile */
-        .gong-large {
-            width: 230px;
-            height: 230px;
-        }
-        .gong-large .gong-center {
-            width: 65px;
-            height: 65px;
-        }
-
-        .gong-small {
-            width: 150px;
-            height: 150px;
-        }
-        .gong-small .gong-center {
-            width: 45px;
-            height: 45px;
-        }
-
-        /* Ripple Effect */
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(0);
-            animation: ripple-anim 0.6s linear;
+            background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
+            border: 2px dashed rgba(0,0,0,0.12);
             pointer-events: none;
-            z-index: 10;
         }
 
-        @keyframes ripple-anim {
-            to {
-                transform: scale(2.5);
-                opacity: 0;
-            }
+        .gong-boss {
+            background: radial-gradient(circle at 40% 40%, #523b05 0%, #171101 100%);
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.6),
+                inset 0 1px 3px rgba(255,255,255,0.1);
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(201, 42, 42, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(201, 42, 42, 0); }
-        }
-
-        .status-msg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 100;
-            display: none;
-        }
-
-        /* Desktop Layout adjustments */
-        @media (min-width: 768px) {
-            .instrument-container {
-                flex-direction: row;
-                gap: 50px;
-            }
-            .gong-large {
-                width: 350px;
-                height: 350px;
-            }
-            .gong-large .gong-center {
-                width: 90px;
-                height: 90px;
-            }
-            .gong-small {
-                width: 220px;
-                height: 220px;
-            }
-            .gong-small .gong-center {
-                width: 60px;
-                height: 60px;
-            }
+        /* Tabs CSS styling */
+        .tab-btn.active {
+            background-color: var(--accent-red);
+            color: #fff;
+            border-color: var(--gong-gold);
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center min-height-screen p-3 md:p-6 justify-between select-none overflow-x-hidden">
 
-    <h1>เครื่องดนตรีจีน: ลั้ว (ฆ้อง)</h1>
-    <div class="subtitle">แตะเพื่อเล่น • รองรับมัลติทัช</div>
+    <!-- App Container -->
+    <div id="mainApp" class="w-full max-w-lg flex flex-col items-center flex-grow justify-between gap-4">
+        
+        <!-- Header Section -->
+        <header class="text-center w-full">
+            <h1 class="header-title text-xl md:text-2xl font-extrabold text-amber-400 tracking-wider flex items-center justify-center gap-2">
+                <span class="text-red-500 font-bold">🏮</span> เครื่องดนตรีจีน: ลั้ว (ฆ้อง) <span class="text-red-500 font-bold">🏮</span>
+            </h1>
+            <p class="text-[11px] md:text-xs text-amber-200/60 mt-1 uppercase tracking-widest">
+                Traditional Chinese Luo Synthesizer • Physical Modeling Audio v2.0
+            </p>
+        </header>
 
-    <div class="controls">
-        <button id="btnRecord" class="btn btn-record">
-            <span>●</span> อัดเสียง
-        </button>
-        <button id="btnPlay" class="btn btn-play" disabled>
-            <span>▶</span> ฟังเสียง
-        </button>
-        <button id="btnDownload" class="btn btn-download" disabled>
-            <span>⬇</span> โหลด
-        </button>
-    </div>
-
-    <div class="instrument-container">
-        <!-- Gong 1: Small Luo (High Pitch) -->
-        <div class="gong-wrapper">
-            <div class="gong gong-small" id="gongSmall" data-pitch="high">
-                <div class="gong-face"></div>
-                <div class="gong-center"></div>
+        <!-- Tabbed Dashboard Container -->
+        <div class="w-full bg-[#1b0707]/90 border border-amber-900/40 rounded-2xl p-3 shadow-2xl backdrop-blur-md">
+            <!-- Tabs Menu -->
+            <div class="flex justify-between border-b border-amber-900/30 pb-2 mb-3 gap-1">
+                <button onclick="switchTab('sound')" id="tabBtn-sound" class="tab-btn flex-1 py-1.5 px-1 text-xs md:text-sm font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg active">
+                    🎛️ ปรับแต่งเสียงสมจริง
+                </button>
+                <button onclick="switchTab('demo')" id="tabBtn-demo" class="tab-btn flex-1 py-1.5 px-1 text-xs md:text-sm font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg">
+                    🎶 เพลงสาธิต
+                </button>
+                <button onclick="switchTab('record')" id="tabBtn-record" class="tab-btn flex-1 py-1.5 px-1 text-xs md:text-sm font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg">
+                    🎙️ บันทึกเสียง
+                </button>
             </div>
-            <div class="gong-label">ลั้วเล็ก (Small)</div>
+
+            <!-- Tab Content 1: Advanced Sound Settings -->
+            <div id="tabContent-sound" class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">ฟิสิกส์โมเดลลิงและการจำลองโลหะสัมฤทธิ์</h3>
+                    <button onclick="resetSliders()" class="text-[10px] bg-amber-900/40 hover:bg-amber-900/80 px-2 py-0.5 rounded border border-amber-700/40 text-amber-200">
+                        ค่าเริ่มต้น ↺
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <!-- Low Base Pitch -->
+                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                        <div class="flex justify-between text-amber-100/80">
+                            <span>ความถี่หลักฆ้องใหญ่:</span>
+                            <span id="valLowPitch" class="text-amber-400 font-mono">110 Hz</span>
+                        </div>
+                        <input type="range" id="slideLowPitch" min="60" max="200" value="110" oninput="updateSliderVal('LowPitch', this.value, ' Hz')" class="w-full">
+                    </div>
+
+                    <!-- High Base Pitch -->
+                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                        <div class="flex justify-between text-amber-100/80">
+                            <span>ความถี่หลักฆ้องเล็ก:</span>
+                            <span id="valHighPitch" class="text-amber-400 font-mono">220 Hz</span>
+                        </div>
+                        <input type="range" id="slideHighPitch" min="150" max="400" value="220" oninput="updateSliderVal('HighPitch', this.value, ' Hz')" class="w-full">
+                    </div>
+
+                    <!-- Sound Decay -->
+                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                        <div class="flex justify-between text-amber-100/80">
+                            <span>ความยาวหางเสียงสะท้อน:</span>
+                            <span id="valDecay" class="text-amber-400 font-mono">1.2x</span>
+                        </div>
+                        <input type="range" id="slideDecay" min="0.3" max="2.5" step="0.1" value="1.2" oninput="updateSliderVal('Decay', this.value, 'x')" class="w-full">
+                    </div>
+
+                    <!-- Echo Reverb -->
+                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                        <div class="flex justify-between text-amber-100/80">
+                            <span>ความก้องสะท้อน (Space Echo):</span>
+                            <span id="valEcho" class="text-amber-400 font-mono">40%</span>
+                        </div>
+                        <input type="range" id="slideEcho" min="0" max="80" value="40" oninput="updateSliderVal('Echo', this.value, '%')" class="w-full">
+                    </div>
+                </div>
+
+                <!-- Custom Sound parameters -->
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <!-- Clang Saturation (New Parameter!) -->
+                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                        <div class="flex justify-between text-amber-100/80">
+                            <span>ความแกร่งกระทบ (Saturation):</span>
+                            <span id="valClang" class="text-amber-400 font-mono">60%</span>
+                        </div>
+                        <input type="range" id="slideClang" min="0" max="100" value="60" oninput="updateSliderVal('Clang', this.value, '%')" class="w-full">
+                    </div>
+
+                    <!-- FM Pitch Bend Sensitivity -->
+                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                        <div class="flex justify-between text-amber-100/80">
+                            <span>ความชันสไลด์โทนเสียง (Pitch Bend):</span>
+                            <span id="valBend" class="text-amber-400 font-mono">110%</span>
+                        </div>
+                        <input type="range" id="slideBend" min="0" max="200" value="110" oninput="updateSliderVal('Bend', this.value, '%')" class="w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Demo Songs Playback -->
+            <div id="tabContent-demo" class="space-y-3 hidden">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">เพลงสาธิตสำหรับบรรเลง</h3>
+                    <div class="flex items-center gap-1.5 text-xs text-amber-200/90 bg-red-950/40 px-2 py-1 rounded border border-red-900/40">
+                        <input type="checkbox" id="chkFinalStrike" checked class="accent-red-600 cursor-pointer h-3.5 w-3.5 rounded">
+                        <label for="chkFinalStrike" class="cursor-pointer select-none text-[11px]">ตีฆ้องใหญ่จบเพลงสุดทรงพลัง</label>
+                    </div>
+                </div>
+
+                <!-- Playlists Grid -->
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- Song 1 -->
+                    <button onclick="playDemoSong(1)" id="btnSong1" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center">
+                        <span class="text-xs text-red-400">🦁 เชิดสิงโต</span>
+                        <span class="text-[9px] text-amber-200/60 leading-tight">รื่นเริงเร่งเร้า</span>
+                        <span class="text-[10px] text-emerald-400 font-semibold" id="songStatus1">เล่นเพลง</span>
+                    </button>
+                    <!-- Song 2 -->
+                    <button onclick="playDemoSong(2)" id="btnSong2" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center">
+                        <span class="text-xs text-amber-400">⛪ รุ่งอรุณเซน</span>
+                        <span class="text-[9px] text-amber-200/60 leading-tight">กึกก้องผ่อนคลาย</span>
+                        <span class="text-[10px] text-emerald-400 font-semibold" id="songStatus2">เล่นเพลง</span>
+                    </button>
+                    <!-- Song 3 -->
+                    <button onclick="playDemoSong(3)" id="btnSong3" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center">
+                        <span class="text-xs text-cyan-400">🐉 มังกรทอง</span>
+                        <span class="text-[9px] text-amber-200/60 leading-tight">จังหวะเฉลิมฉลอง</span>
+                        <span class="text-[10px] text-emerald-400 font-semibold" id="songStatus3">เล่นเพลง</span>
+                    </button>
+                </div>
+                
+                <!-- Stop Button -->
+                <button id="btnStopSong" onclick="stopDemoSong()" disabled class="w-full py-1 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-800/40 rounded-lg text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+                    ⏹️ หยุดเล่นเพลงทั้งหมด
+                </button>
+            </div>
+
+            <!-- Tab Content 3: Recording Tools -->
+            <div id="tabContent-record" class="space-y-3 hidden">
+                <div class="flex items-center justify-between text-xs">
+                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">บันทึกการแสดงของคุณ</h3>
+                    <span id="recordTimer" class="font-mono text-red-400 font-semibold hidden">REC 0:00</span>
+                </div>
+
+                <div class="flex gap-2">
+                    <!-- Record Button -->
+                    <button id="btnRecord" class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-xs text-white font-bold rounded-xl border border-neutral-600 transition-all">
+                        <span id="recDot" class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                        <span id="recText">เริ่มบันทึก</span>
+                    </button>
+                    <!-- Play Back Button -->
+                    <button id="btnPlay" disabled class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-amber-600/20 hover:bg-amber-600/30 text-amber-200 active:scale-95 text-xs font-bold rounded-xl border border-amber-700/30 disabled:opacity-30 disabled:pointer-events-none transition-all">
+                        <span>▶️ Play</span>
+                        <span>ฟังเสียงอัด</span>
+                    </button>
+                    <!-- Download Button -->
+                    <button id="btnDownload" disabled class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-200 active:scale-95 text-xs font-bold rounded-xl border border-emerald-700/30 disabled:opacity-30 disabled:pointer-events-none transition-all">
+                        <span>📥 Save</span>
+                        <span>ดาวน์โหลด</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Gong 2: Large Luo (Low Pitch) -->
-        <div class="gong-wrapper">
-            <div class="gong gong-large" id="gongLarge" data-pitch="low">
-                <div class="gong-face"></div>
-                <div class="gong-center"></div>
-            </div>
-            <div class="gong-label">ลั้วใหญ่ (Large)</div>
+        <div class="text-center text-[10px] text-amber-200/50 bg-black/40 px-3 py-1 rounded-full border border-amber-900/10">
+            👉 เคาะ <span class="text-amber-400 font-semibold">ตรงกลางปุ่มนูน</span> เพื่อเสียงทุ้มลึกกังวาน • เคาะ <span class="text-amber-400 font-semibold">ขอบแผ่น</span> เพื่อเสียงซ่าสั่นระฆัง
         </div>
-    </div>
 
-    <div id="statusMsg" class="status-msg">แตะหน้าจอเพื่อเริ่มใช้งานเสียง</div>
+        <!-- Instruments Interactive Stage -->
+        <div id="instrumentStage" class="w-full flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 py-1 flex-grow">
+            
+            <!-- Gong 1: Small Luo (High Pitch) -->
+            <div class="flex flex-col items-center">
+                <div class="relative group cursor-pointer active:scale-95 transition-transform" id="gongContainerSmall">
+                    <!-- Outer Decorative Glow -->
+                    <div class="absolute inset-0 bg-red-600/10 blur-xl rounded-full scale-110 pointer-events-none"></div>
+                    <!-- Gong Body -->
+                    <div id="gongSmall" class="w-[145px] h-[145px] md:w-[190px] md:h-[190px] rounded-full relative flex items-center justify-center transition-all">
+                        <!-- Simulated Gold Texture -->
+                        <div class="gong-face absolute inset-0 rounded-full border-[3px] border-[#5e4406]"></div>
+                        <!-- Concentric Lathe Ring Lines -->
+                        <div class="gong-face-ring"></div>
+                        <!-- Beaten Center Region -->
+                        <div class="gong-beaten-texture"></div>
+                        <!-- Central Knob (Boss) -->
+                        <div class="gong-boss w-[38px] h-[38px] md:w-[50px] md:h-[50px] rounded-full absolute z-10"></div>
+                    </div>
+                </div>
+                <div class="mt-2 text-center">
+                    <span class="text-xs md:text-sm text-amber-300 font-semibold tracking-wider block">ลั้วเล็ก (Xiaoluo)</span>
+                    <span class="text-[10px] text-amber-200/40">สไลด์เสียงสูงคมชัด (Rising Pitch)</span>
+                </div>
+            </div>
+
+            <!-- Gong 2: Large Luo (Low Pitch) -->
+            <div class="flex flex-col items-center">
+                <div class="relative group cursor-pointer active:scale-95 transition-transform" id="gongContainerLarge">
+                    <!-- Outer Decorative Glow -->
+                    <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full scale-110 pointer-events-none"></div>
+                    <!-- Gong Body -->
+                    <div id="gongLarge" class="w-[210px] h-[210px] md:w-[270px] md:h-[270px] rounded-full relative flex items-center justify-center transition-all">
+                        <!-- Simulated Gold Texture -->
+                        <div class="gong-face absolute inset-0 rounded-full border-[4px] border-[#453202]"></div>
+                        <!-- Concentric Lathe Ring Lines -->
+                        <div class="gong-face-ring"></div>
+                        <!-- Beaten Center Region -->
+                        <div class="gong-beaten-texture"></div>
+                        <!-- Central Knob (Boss) -->
+                        <div class="gong-boss w-[62px] h-[62px] md:w-[80px] md:h-[80px] rounded-full absolute z-10"></div>
+                    </div>
+                </div>
+                <div class="mt-2 text-center">
+                    <span class="text-xs md:text-sm text-amber-400 font-semibold tracking-wider block">ลั้วใหญ่ (Daluo)</span>
+                    <span class="text-[10px] text-amber-200/40">สไลด์เสียงต่ำทรงพลัง (Falling Pitch)</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Custom Warning / Notification Toast System -->
+        <div id="customToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-950/95 border border-red-700/50 text-red-200 text-xs px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 z-50 text-center w-[85%] max-w-sm">
+            <span id="toastMessage">ระบบเสียงพร้อมใช้งาน</span>
+        </div>
+
+        <!-- Footer -->
+        <footer class="w-full text-center text-[10px] text-amber-200/30 pb-1 mt-auto">
+            เคาะตำแหน่งกึ่งกลางเพื่อเสียงที่อิ่มทุ้ม หรือเคาะรอบนอกเพื่อเสียงสว่างซ่า 🏮
+        </footer>
+
+    </div>
 
     <script>
-        /**
-         * Audio Engine Implementation
-         * Uses Web Audio API for synthesized sound to ensure stability without external assets.
-         */
+        // Audio Synthesis & State Config
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         let masterGain;
+        let waveshaperNode;
+        let echoGainNode;
+        let echoDelayNode;
         let recorderDestination;
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob;
         let isRecording = false;
+        let recInterval;
+        let recSeconds = 0;
 
-        // Sound Parameters (Gong Synthesis)
-        const GONG_PRESETS = {
-            low: {
-                baseFreq: 110, // Hz
-                ratios: [1, 1.34, 1.76, 2.4, 3.8, 5.2],
-                gains: [1, 0.7, 0.6, 0.4, 0.2, 0.1],
-                decay: 3.5 // seconds
-            },
-            high: {
-                baseFreq: 196, // Hz (G3)
-                ratios: [1, 1.15, 1.56, 2.1, 3.5],
-                gains: [1, 0.8, 0.5, 0.3, 0.1],
-                decay: 2.0 // seconds
-            }
+        // Active timers for demo songs
+        let activeSongTimeline = [];
+        let currentlyPlayingSongId = null;
+
+        // Sound Configuration values updated by sliders (Physically Optimized defaults)
+        const soundConfig = {
+            lowPitch: 110,
+            highPitch: 220,
+            decay: 1.2,
+            echo: 0.40,
+            bend: 1.10,
+            clang: 60 // Soft saturation / metallic overdrive
         };
 
-        // Initialize Audio Context (Must be done on user interaction)
+        // Custom Notification Toast function
+        function showToast(message, isSuccess = false) {
+            const toast = document.getElementById('customToast');
+            const msgSpan = document.getElementById('toastMessage');
+            msgSpan.innerText = message;
+            
+            if (isSuccess) {
+                toast.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+                toast.style.backgroundColor = 'rgba(6, 78, 59, 0.95)';
+                toast.style.color = '#a7f3d0';
+            } else {
+                toast.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                toast.style.backgroundColor = 'rgba(127, 29, 29, 0.95)';
+                toast.style.color = '#fecaca';
+            }
+
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        // Switch panel tabs
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-amber-500', 'text-amber-200'));
+            document.querySelectorAll('[id^="tabContent-"]').forEach(c => c.classList.add('hidden'));
+
+            const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+            activeBtn.classList.add('active');
+            
+            document.getElementById(`tabContent-${tabId}`).classList.remove('hidden');
+        }
+
+        // Sliders handler
+        function updateSliderVal(param, val, unit) {
+            document.getElementById(`val${param}`).innerText = val + unit;
+            
+            if (param === 'LowPitch') soundConfig.lowPitch = parseFloat(val);
+            if (param === 'HighPitch') soundConfig.highPitch = parseFloat(val);
+            if (param === 'Decay') soundConfig.decay = parseFloat(val);
+            if (param === 'Echo') {
+                soundConfig.echo = parseFloat(val) / 100;
+                if (echoGainNode) {
+                    echoGainNode.gain.setValueAtTime(soundConfig.echo * 0.65, audioCtx.currentTime);
+                }
+            }
+            if (param === 'Bend') soundConfig.bend = parseFloat(val) / 100;
+            if (param === 'Clang') {
+                soundConfig.clang = parseFloat(val);
+                if (waveshaperNode) {
+                    waveshaperNode.curve = makeDistortionCurve(soundConfig.clang * 0.7);
+                }
+            }
+        }
+
+        function resetSliders() {
+            document.getElementById('slideLowPitch').value = 110;
+            document.getElementById('slideHighPitch').value = 220;
+            document.getElementById('slideDecay').value = 1.2;
+            document.getElementById('slideEcho').value = 40;
+            document.getElementById('slideClang').value = 60;
+            document.getElementById('slideBend').value = 110;
+
+            updateSliderVal('LowPitch', 110, ' Hz');
+            updateSliderVal('HighPitch', 220, ' Hz');
+            updateSliderVal('Decay', 1.2, 'x');
+            updateSliderVal('Echo', 40, '%');
+            updateSliderVal('Clang', 60, '%');
+            updateSliderVal('Bend', 110, '%');
+        }
+
+        // Generate Waveshaper Curve for metallic bronze saturation and bite
+        function makeDistortionCurve(amount) {
+            const k = typeof amount === 'number' ? amount : 50;
+            const n_samples = 44100;
+            const curve = new Float32Array(n_samples);
+            const deg = Math.PI / 180;
+            
+            for (let i = 0; i < n_samples; ++i) {
+                const x = (i * 2) / n_samples - 1;
+                // Elegant soft distortion mapping mimicking solid copper overload
+                curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+            }
+            return curve;
+        }
+
+        // Web Audio Initializer
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new AudioContext();
                 
-                // Create Master Gain (Volume)
+                // Master volume node
                 masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.8;
+                masterGain.gain.value = 0.85;
+
+                // Create custom waveshaper to simulate metallic bronze saturation
+                waveshaperNode = audioCtx.createWaveShaper();
+                waveshaperNode.curve = makeDistortionCurve(soundConfig.clang * 0.7);
+                waveshaperNode.oversample = '4x';
+
+                // Connect routing chain: Synthesizer Nodes -> Saturation -> Master Output
+                waveshaperNode.connect(masterGain);
                 masterGain.connect(audioCtx.destination);
 
-                // Setup Recording Stream
+                // Space/Echo Delay setup for lush atmospheric sound
+                echoDelayNode = audioCtx.createDelay(1.5);
+                echoGainNode = audioCtx.createGain();
+
+                echoDelayNode.delayTime.value = 0.36; // Reflective theater resonance
+                echoGainNode.gain.value = soundConfig.echo * 0.65; // Feedback amount
+
+                // Create feedback delay loop
+                masterGain.connect(echoDelayNode);
+                echoDelayNode.connect(echoGainNode);
+                echoGainNode.connect(echoDelayNode);
+                echoGainNode.connect(audioCtx.destination); // Wet signal
+
+                // Setup Media Recording Stream
                 recorderDestination = audioCtx.createMediaStreamDestination();
                 masterGain.connect(recorderDestination);
+                echoGainNode.connect(recorderDestination);
 
-                console.log("Audio Engine Started");
+                showToast("ระบบเสียงฟิสิกส์โมเดลสัมฤทธิ์พร้อมเล่นแล้ว!", true);
             } else if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // Play Gong Sound
-        function playGong(type) {
+        /**
+         * Ultra-Realistic Chinese Luo physical model
+         * @param {string} pitchType 'low' (Daluo) or 'high' (Xiaoluo)
+         * @param {number} intensity Strike force (0.0 - 1.0)
+         * @param {number} strikeRatio Position on gong: 0.0 (exact center), 1.0 (very rim)
+         */
+        function playGongSound(pitchType, intensity = 1.0, strikeRatio = 0.2) {
             initAudio();
-            
-            const preset = GONG_PRESETS[type];
-            const now = audioCtx.currentTime;
-            
-            // Create a gain node for this specific hit (Envelope)
-            const hitGain = audioCtx.createGain();
-            hitGain.connect(masterGain);
-            
-            // Amplitude Envelope
-            hitGain.gain.setValueAtTime(0, now);
-            hitGain.gain.linearRampToValueAtTime(1.0, now + 0.01); // Fast attack
-            hitGain.gain.exponentialRampToValueAtTime(0.001, now + preset.decay); // Long decay
 
-            // Synthesis: Additive + FM to create inharmonic metallic sound
-            preset.ratios.forEach((ratio, index) => {
+            const isLow = pitchType === 'low';
+            const baseFreq = isLow ? soundConfig.lowPitch : soundConfig.highPitch;
+            const now = audioCtx.currentTime;
+
+            // Attack dynamic gains based on hit location
+            // Center hits emphasize fundamental bass; rim hits bring massive crash-highs and faster decay
+            const rimEffect = strikeRatio; // 0 (center) to 1 (rim)
+            
+            // Overall decay determined by user slider, pitch preset, and strike location
+            const baseDecay = isLow ? (4.2 * soundConfig.decay) : (2.2 * soundConfig.decay);
+            const decayFactor = baseDecay * (1.0 - rimEffect * 0.4); // Rim strikes dampen faster
+
+            // Amplitude envelope for the overall hit
+            const voiceGain = audioCtx.createGain();
+            voiceGain.connect(waveshaperNode); // Rout into waveshaper for metallic snap
+
+            voiceGain.gain.setValueAtTime(0, now);
+            voiceGain.gain.linearRampToValueAtTime(intensity * 0.9, now + 0.003); // Instant acoustic impact
+            voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + decayFactor);
+
+            // Inharmonic Partial Ratios - modeling the irregular bronze plate modes
+            // Low Daluo vs High Xiaoluo frequencies
+            const partialRatios = isLow 
+                ? [1.0, 1.48, 2.05, 2.72, 3.55, 4.48, 5.52, 6.7] 
+                : [1.0, 1.39, 1.82, 2.38, 3.05, 4.15, 5.4];
+                
+            // Balanced volumes for each partial.
+            // Center strikes dampen highs; rim strikes exaggerate them.
+            const baseGains = isLow
+                ? [1.0, 0.70, 0.50, 0.35, 0.22, 0.12, 0.06, 0.02]
+                : [1.0, 0.60, 0.40, 0.25, 0.15, 0.08, 0.03];
+
+            // Real physical gongs drop high frequencies faster than low ones!
+            // We apply individual decaying factors to each frequency partial.
+            partialRatios.forEach((ratio, index) => {
                 const osc = audioCtx.createOscillator();
                 const oscGain = audioCtx.createGain();
-                
-                // Slight detuning for realism
-                const detune = (Math.random() - 0.5) * 10; 
-                
-                // Main oscillators (Sine/Triangle mix for body)
-                osc.type = index === 0 ? 'triangle' : 'sine';
-                osc.frequency.value = preset.baseFreq * ratio;
-                osc.detune.value = detune;
 
-                // Frequency Modulation for "Crash" effect on attack
-                if (index > 0) {
-                     // Pitch envelope (pitch drops slightly after hit)
-                    osc.frequency.setValueAtTime(preset.baseFreq * ratio * 1.05, now);
-                    osc.frequency.exponentialRampToValueAtTime(preset.baseFreq * ratio, now + 0.1);
+                // Core frequencies use triangle waves for wooden mallet body warmth;
+                // High frequency metallic resonances are modeled with sine waves.
+                osc.type = (index === 0) ? 'triangle' : 'sine';
+                
+                const targetFreq = baseFreq * ratio;
+                osc.frequency.setValueAtTime(targetFreq, now);
+
+                // Authentic Gong Pitch Sweeps (Daluo falls, Xiaoluo rises)
+                // Sweeps are more intense on heavy hits (higher intensity)
+                const bendIntensity = soundConfig.bend;
+                const sweepAmount = bendIntensity * (isLow ? -0.25 : 0.32); 
+                const sweepTime = isLow ? (0.42 * (1.0 + rimEffect)) : 0.28;
+
+                if (sweepAmount !== 0) {
+                    osc.frequency.setValueAtTime(targetFreq * (1 + sweepAmount * intensity), now);
+                    osc.frequency.exponentialRampToValueAtTime(targetFreq, now + sweepTime);
                 }
 
-                oscGain.gain.value = preset.gains[index];
+                // Detuning the partials slightly dynamically over time to emulate beating bronze sheets
+                osc.detune.setValueAtTime((Math.random() - 0.5) * 8, now);
+                osc.detune.linearRampToValueAtTime((Math.random() - 0.5) * 20, now + decayFactor);
+
+                // Apply positional strike volume adjustments to partials
+                let partialVolume = baseGains[index];
+                if (index > 0) {
+                    // Rim strikes boost upper harmonics significantly
+                    partialVolume *= (1.0 - (1.0 - rimEffect * 1.5) * (1.0 - index / partialRatios.length));
+                } else {
+                    // Center strikes boost core fundamental
+                    partialVolume *= (1.2 - rimEffect * 0.7);
+                }
+
+                oscGain.gain.setValueAtTime(partialVolume, now);
                 
+                // Frequency-dependent exponential decay! High partials fade out instantly
+                const partialDecayFactor = decayFactor * Math.pow(0.82 - (rimEffect * 0.12), index);
+                oscGain.gain.exponentialRampToValueAtTime(0.0005, now + Math.max(0.05, partialDecayFactor));
+
                 osc.connect(oscGain);
-                oscGain.connect(hitGain);
-                
+                oscGain.connect(voiceGain);
+
                 osc.start(now);
-                osc.stop(now + preset.decay + 1);
+                osc.stop(now + decayFactor + 0.2);
             });
 
-            // Add some noise burst for the initial impact
-            const noiseBufferSize = audioCtx.sampleRate * 0.1; // 0.1 seconds
-            const buffer = audioCtx.createBuffer(1, noiseBufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < noiseBufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
+            // Dual-Stage mallet friction strike excitation sound
+            const noiseBufferLen = audioCtx.sampleRate * 0.08; // 80ms of wood-felt impact
+            const noiseBuffer = audioCtx.createBuffer(1, noiseBufferLen, audioCtx.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseBufferLen; i++) {
+                noiseData[i] = Math.random() * 2 - 1;
             }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            const noiseGain = audioCtx.createGain();
-            
-            // Lowpass filter the noise so it's not too harsh
+
+            const noiseSource = audioCtx.createBufferSource();
+            noiseSource.buffer = noiseBuffer;
+
+            // Sweeping bandpass filter to model dynamic compression of soft mallet mallet
             const noiseFilter = audioCtx.createBiquadFilter();
-            noiseFilter.type = 'lowpass';
-            noiseFilter.frequency.value = 1000;
-
-            noiseGain.gain.setValueAtTime(0.5, now);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            noiseFilter.type = 'bandpass';
             
-            noise.connect(noiseFilter);
+            // Rim strikes produce much brighter high frequency impact noise
+            const filterStartFreq = isLow ? (300 + rimEffect * 1200) : (800 + rimEffect * 2000);
+            const filterEndFreq = isLow ? 150 : 350;
+            
+            noiseFilter.frequency.setValueAtTime(filterStartFreq, now);
+            noiseFilter.frequency.exponentialRampToValueAtTime(filterEndFreq, now + 0.04);
+            noiseFilter.Q.value = isLow ? 3.0 : 5.0;
+
+            const noiseGain = audioCtx.createGain();
+            // Edge hit has more prominent initial friction splash
+            const noiseLevel = isLow ? (0.35 + rimEffect * 0.3) : (0.45 + rimEffect * 0.4);
+            noiseGain.gain.setValueAtTime(noiseLevel * intensity, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+            noiseSource.connect(noiseFilter);
             noiseFilter.connect(noiseGain);
-            noiseGain.connect(hitGain);
-            noise.start(now);
+            noiseGain.connect(voiceGain);
+            noiseSource.start(now);
 
-            // Cleanup
+            // Clean up node references
             setTimeout(() => {
-                hitGain.disconnect();
-            }, (preset.decay + 1) * 1000);
+                voiceGain.disconnect();
+            }, (decayFactor + 0.5) * 1000);
         }
 
-        // --- Interaction Logic ---
+        // Interaction Animations and Shake
+        function triggerGongImpact(gongType, event = null) {
+            const isLow = gongType === 'low';
+            const gongNode = isLow ? document.getElementById('gongLarge') : document.getElementById('gongSmall');
+            
+            // Add vibration class
+            gongNode.classList.remove('vibrate-gong');
+            void gongNode.offsetWidth; // Force Reflow
+            gongNode.classList.add('vibrate-gong');
 
-        function createRipple(event, element) {
-            const circle = document.createElement("div");
-            const diameter = Math.max(element.clientWidth, element.clientHeight);
-            const radius = diameter / 2;
+            // Calculate striking position (from exact center of gong) to model physics
+            let strikeRatio = 0.15; // default near center
+            
+            if (event) {
+                const rect = gongNode.getBoundingClientRect();
+                const gongCenterX = rect.left + rect.width / 2;
+                const gongCenterY = rect.top + rect.height / 2;
+                
+                let clientX, clientY;
+                if (event.touches && event.touches.length > 0) {
+                    clientX = event.touches[0].clientX;
+                    clientY = event.touches[0].clientY;
+                } else {
+                    clientX = event.clientX;
+                    clientY = event.clientY;
+                }
 
+                const dx = clientX - gongCenterX;
+                const dy = clientY - gongCenterY;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                const maxRadius = rect.width / 2;
+                
+                // Normalise striking distance: 0.0 (perfect center), 1.0 (outermost rim boundary)
+                strikeRatio = Math.min(1.0, distance / maxRadius);
+            }
+
+            // Trigger visual ripple at collision coordinate
+            createRippleEffect(gongNode, event);
+
+            // Physical Sound Strike using Strike Ratio
+            playGongSound(gongType, 1.0, strikeRatio);
+
+            // Subtle Screen Shake on Low Large Gong hit (increases if struck towards center)
+            if (isLow) {
+                const shakeIntensity = 1.0 - (strikeRatio * 0.4); // Center hit shakes more
+                if (shakeIntensity > 0.5) {
+                    const app = document.getElementById('mainApp');
+                    app.classList.remove('shake-active');
+                    void app.offsetWidth;
+                    app.classList.add('shake-active');
+                    setTimeout(() => app.classList.remove('shake-active'), 400);
+                }
+            }
+        }
+
+        // Touch/Mouse Coordinate Ripple
+        function createRippleEffect(element, event) {
+            const ripple = document.createElement("div");
             const rect = element.getBoundingClientRect();
-            
-            // Check if it's a touch event or mouse event
-            let clientX, clientY;
-            if (event.changedTouches && event.changedTouches.length > 0) {
-                clientX = event.changedTouches[0].clientX;
-                clientY = event.changedTouches[0].clientY;
+            const size = Math.max(rect.width, rect.height) * 1.8;
+
+            let x = rect.width / 2;
+            let y = rect.height / 2;
+
+            if (event) {
+                let clientX, clientY;
+                if (event.touches && event.touches.length > 0) {
+                    clientX = event.touches[0].clientX;
+                    clientY = event.touches[0].clientY;
+                } else {
+                    clientX = event.clientX;
+                    clientY = event.clientY;
+                }
+                x = clientX - rect.left;
+                y = clientY - rect.top;
+            }
+
+            ripple.className = "absolute bg-white/40 rounded-full pointer-events-none transform -translate-x-1/2 -translate-y-1/2 scale-0 animate-[ripple-anim_0.5s_linear]";
+            ripple.style.width = `${size}px`;
+            ripple.style.height = `${size}px`;
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+
+            if (!document.getElementById('rippleStyle')) {
+                const style = document.createElement('style');
+                style.id = 'rippleStyle';
+                style.innerHTML = `
+                    @keyframes ripple-anim {
+                        to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            element.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        // Attach touch and mouse events safely
+        function setupEventListeners() {
+            const smallCont = document.getElementById('gongContainerSmall');
+            const largeCont = document.getElementById('gongContainerLarge');
+
+            // Small Gong
+            smallCont.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerGongImpact('high', e);
+            }, { passive: false });
+
+            smallCont.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                triggerGongImpact('high', e);
+            });
+
+            // Large Gong
+            largeCont.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerGongImpact('low', e);
+            }, { passive: false });
+
+            largeCont.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                triggerGongImpact('low', e);
+            });
+        }
+
+        const DEMO_SONGS = {
+            1: [ // Chinese Lion Dance / เชิดสิงโตเร้าใจ
+                { time: 0, type: 'low', vol: 0.9, pos: 0.1 },
+                { time: 400, type: 'high', vol: 0.7, pos: 0.3 },
+                { time: 600, type: 'high', vol: 0.7, pos: 0.3 },
+                { time: 900, type: 'low', vol: 0.9, pos: 0.1 },
+                { time: 1300, type: 'high', vol: 0.7, pos: 0.3 },
+                { time: 1500, type: 'high', vol: 0.7, pos: 0.3 },
+                { time: 1800, type: 'low', vol: 0.8, pos: 0.15 },
+                { time: 2100, type: 'low', vol: 0.8, pos: 0.15 },
+                { time: 2400, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 2600, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 2800, type: 'high', vol: 0.9, pos: 0.4 },
+                { time: 3000, type: 'low', vol: 1.0, pos: 0.05 },
+                { time: 3200, type: 'high', vol: 0.7, pos: 0.3 },
+                { time: 3400, type: 'high', vol: 0.7, pos: 0.3 },
+                { time: 3550, type: 'high', vol: 0.8, pos: 0.3 },
+                { time: 3700, type: 'high', vol: 0.9, pos: 0.5 },
+                { time: 3850, type: 'high', vol: 1.0, pos: 0.6 }
+            ],
+            2: [ // Temple Dawn Bell / รุ่งอรุณเซน (Deeper resonances)
+                { time: 0, type: 'low', vol: 1.0, pos: 0.0 }, // pure center hits
+                { time: 1200, type: 'high', vol: 0.5, pos: 0.1 },
+                { time: 2000, type: 'low', vol: 0.8, pos: 0.0 },
+                { time: 3200, type: 'high', vol: 0.6, pos: 0.1 },
+                { time: 4400, type: 'low', vol: 0.9, pos: 0.0 },
+                { time: 5600, type: 'high', vol: 0.6, pos: 0.2 },
+                { time: 6200, type: 'high', vol: 0.6, pos: 0.3 },
+                { time: 7000, type: 'low', vol: 0.7, pos: 0.0 }
+            ],
+            3: [ // Golden Dragon Festival / เทศกาลมังกรทอง
+                { time: 0, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 250, type: 'low', vol: 0.8, pos: 0.1 },
+                { time: 500, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 750, type: 'low', vol: 0.8, pos: 0.1 },
+                { time: 1000, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 1150, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 1300, type: 'low', vol: 0.9, pos: 0.1 },
+                { time: 1700, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 1950, type: 'low', vol: 0.8, pos: 0.1 },
+                { time: 2200, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 2450, type: 'low', vol: 0.8, pos: 0.1 },
+                { time: 2700, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 2850, type: 'high', vol: 0.8, pos: 0.3 },
+                { time: 3000, type: 'low', vol: 1.0, pos: 0.05 },
+                { time: 3400, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 3650, type: 'high', vol: 0.8, pos: 0.2 },
+                { time: 3900, type: 'low', vol: 0.7, pos: 0.15 },
+                { time: 4150, type: 'low', vol: 0.8, pos: 0.2 }
+            ]
+        };
+
+        // Play Selected Demo Song
+        function playDemoSong(songId) {
+            initAudio();
+            stopDemoSong(); // Clear active songs
+
+            currentlyPlayingSongId = songId;
+            document.getElementById('btnStopSong').disabled = false;
+
+            // Highlight active song in UI
+            document.getElementById(`songStatus${songId}`).innerText = "กำลังบรรเลง...";
+            document.getElementById(`songStatus${songId}`).classList.replace('text-emerald-400', 'text-amber-300');
+            document.getElementById(`btnSong${songId}`).classList.add('ring-2', 'ring-red-500');
+
+            const pattern = [...DEMO_SONGS[songId]];
+            let lastEventTime = 0;
+
+            // Handle optional Grand Final Strike (Strike ratio set to 0.0 for pure center force)
+            if (document.getElementById('chkFinalStrike').checked) {
+                const lastNote = pattern[pattern.length - 1];
+                lastEventTime = lastNote.time + 800;
+                pattern.push({ time: lastEventTime, type: 'low', vol: 1.45, pos: 0.0, isGrandFinal: true });
             } else {
-                clientX = event.clientX;
-                clientY = event.clientY;
+                lastEventTime = pattern[pattern.length - 1].time + 600;
             }
 
-            circle.style.width = circle.style.height = `${diameter}px`;
-            circle.style.left = `${clientX - rect.left - radius}px`;
-            circle.style.top = `${clientY - rect.top - radius}px`;
-            circle.classList.add("ripple");
+            // Schedule note triggers
+            pattern.forEach(note => {
+                const timerId = setTimeout(() => {
+                    const isLow = note.type === 'low';
+                    const gongNode = isLow ? document.getElementById('gongLarge') : document.getElementById('gongSmall');
+                    
+                    if (note.isGrandFinal) {
+                        gongNode.classList.remove('vibrate-gong');
+                        void gongNode.offsetWidth;
+                        gongNode.classList.add('vibrate-gong');
+                        
+                        // Extra massive shake
+                        const app = document.getElementById('mainApp');
+                        app.classList.remove('shake-active');
+                        void app.offsetWidth;
+                        app.classList.add('shake-active');
+                        
+                        playGongSound('low', note.vol, note.pos);
+                        createRippleEffect(gongNode, null);
+                        showToast("🐉 ปิดฉากการแสดงด้วยความก้องกังวานปฐพี!", true);
+                    } else {
+                        gongNode.classList.remove('vibrate-gong');
+                        void gongNode.offsetWidth;
+                        gongNode.classList.add('vibrate-gong');
+                        playGongSound(note.type, note.vol, note.pos);
+                    }
+                }, note.time);
 
-            const ripple = element.getElementsByClassName("ripple")[0];
-            if (ripple) {
-                ripple.remove();
+                activeSongTimeline.push(timerId);
+            });
+
+            // Schedule ending of the song
+            const endTimer = setTimeout(() => {
+                cleanupSongUI(songId);
+            }, lastEventTime + 1200);
+
+            activeSongTimeline.push(endTimer);
+        }
+
+        // Clean UI after playing
+        function cleanupSongUI(songId) {
+            document.getElementById(`songStatus${songId}`).innerText = "เล่นเพลง";
+            document.getElementById(`songStatus${songId}`).classList.replace('text-amber-300', 'text-emerald-400');
+            document.getElementById(`btnSong${songId}`).classList.remove('ring-2', 'ring-red-500');
+            document.getElementById('btnStopSong').disabled = true;
+            currentlyPlayingSongId = null;
+        }
+
+        // Stop all active song schedules
+        function stopDemoSong() {
+            activeSongTimeline.forEach(id => clearTimeout(id));
+            activeSongTimeline = [];
+            
+            if (currentlyPlayingSongId) {
+                cleanupSongUI(currentlyPlayingSongId);
             }
-
-            element.appendChild(circle);
         }
 
-        function handleHit(e, type) {
-            e.preventDefault(); // Prevent default touch actions (scrolling/zoom)
-            playGong(type);
-            
-            const target = e.currentTarget;
-            createRipple(e, target);
-            
-            // Visual feedback
-            target.classList.add('hit');
-            setTimeout(() => target.classList.remove('hit'), 100);
-        }
-
-        // Event Listeners for Gongs
-        const smallGong = document.getElementById('gongSmall');
-        const largeGong = document.getElementById('gongLarge');
-
-        // Touch Events (Multi-touch support)
-        smallGong.addEventListener('touchstart', (e) => handleHit(e, 'high'), {passive: false});
-        largeGong.addEventListener('touchstart', (e) => handleHit(e, 'low'), {passive: false});
-
-        // Mouse Events (Fallback)
-        smallGong.addEventListener('mousedown', (e) => handleHit(e, 'high'));
-        largeGong.addEventListener('mousedown', (e) => handleHit(e, 'low'));
-
-        // --- Recording Logic ---
-
+        // Recording Logic
         const btnRecord = document.getElementById('btnRecord');
         const btnPlay = document.getElementById('btnPlay');
         const btnDownload = document.getElementById('btnDownload');
+        const recTimer = document.getElementById('recordTimer');
+        const recDot = document.getElementById('recDot');
+        const recText = document.getElementById('recText');
+        
         let recordedAudio = new Audio();
 
         btnRecord.addEventListener('click', () => {
-            initAudio(); // Ensure context is ready
-            
+            initAudio();
             if (!isRecording) {
-                // Start Recording
                 startRecording();
             } else {
-                // Stop Recording
                 stopRecording();
             }
         });
 
         function startRecording() {
             audioChunks = [];
-            
-            // Use mimeType supported by browser
             const options = { mimeType: 'audio/webm' };
             if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                delete options.mimeType; // Fallback to default
+                delete options.mimeType;
             }
 
             try {
                 mediaRecorder = new MediaRecorder(recorderDestination.stream, options);
             } catch (err) {
-                alert("Browser not supported for recording.");
+                showToast("ไม่รองรับการบันทึกเสียงในเบราว์เซอร์นี้");
                 return;
             }
 
-            mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
             };
 
             mediaRecorder.onstop = () => {
                 audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const audioUrl = URL.createObjectURL(audioBlob);
                 recordedAudio.src = audioUrl;
-                
-                // Enable buttons
+
                 btnPlay.disabled = false;
                 btnDownload.disabled = false;
+                showToast("บันทึกเสียงสะท้อนสมจริงเสร็จสิ้น!", true);
             };
 
             mediaRecorder.start();
             isRecording = true;
-            
-            // UI Updates
-            btnRecord.innerHTML = "<span>■</span> หยุดอัด";
-            btnRecord.classList.add('recording');
+
+            // Setup Recording Timer
+            recSeconds = 0;
+            recTimer.classList.remove('hidden');
+            recTimer.innerText = "REC 0:00";
+            recDot.classList.add('animate-ping');
+            recText.innerText = "หยุดการบันทึก";
+            btnRecord.classList.replace('bg-neutral-800', 'bg-red-700');
+
+            recInterval = setInterval(() => {
+                recSeconds++;
+                const mins = Math.floor(recSeconds / 60);
+                const secs = recSeconds % 60;
+                recTimer.innerText = `REC ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }, 1000);
+
             btnPlay.disabled = true;
             btnDownload.disabled = true;
         }
 
         function stopRecording() {
-            mediaRecorder.stop();
-            isRecording = false;
-            
-            // UI Updates
-            btnRecord.innerHTML = "<span>●</span> อัดเสียง";
-            btnRecord.classList.remove('recording');
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+
+                clearInterval(recInterval);
+                recTimer.classList.add('hidden');
+                recDot.classList.remove('animate-ping');
+                recText.innerText = "เริ่มบันทึก";
+                btnRecord.classList.replace('bg-red-700', 'bg-neutral-800');
+            }
         }
 
         btnPlay.addEventListener('click', () => {
             if (recordedAudio.src) {
                 recordedAudio.play();
-                btnPlay.innerHTML = "<span>🔊</span> กำลังเล่น...";
+                btnPlay.innerHTML = "<span>🔊 Playing...</span>";
                 recordedAudio.onended = () => {
-                    btnPlay.innerHTML = "<span>▶</span> ฟังเสียง";
+                    btnPlay.innerHTML = "<span>▶️ Play</span><span>ฟังเสียงอัด</span>";
                 };
             }
         });
@@ -580,7 +1030,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'my-gong-performance.webm';
+                a.download = 'chinese-luo-realistic.webm';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => {
@@ -590,10 +1040,12 @@
             }
         });
 
-        // Initialize audio on first click anywhere if not started
-        document.body.addEventListener('click', initAudio, { once: true });
-        document.body.addEventListener('touchstart', initAudio, { once: true });
-
+        // Initialize engine on interaction
+        window.addEventListener('load', () => {
+            setupEventListeners();
+            document.body.addEventListener('click', initAudio, { once: true });
+            document.body.addEventListener('touchstart', initAudio, { once: true });
+        });
     </script>
 </body>
 </html>
