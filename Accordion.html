@@ -3,149 +3,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobile Accordion Pro + Rec</title>
+    <title>Mobile Accordion Pro + Rec Extreme</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Sarabun & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* ป้องกันการเลือกข้อความและการซูมบนมือถือ */
         body {
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
             overscroll-behavior: none;
-            font-family: 'Sarabun', sans-serif;
-            background-color: #2d3748;
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1f2937, #111827);
             height: 100dvh;
             width: 100vw;
             overflow: hidden;
         }
 
+        /* Keyboard styling & active keys */
         .key {
-            transition: background-color 0.05s;
+            transition: background-color 0.08s, transform 0.05s, box-shadow 0.05s;
             position: relative;
-            border-radius: 0 0 4px 4px;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 0 #cbd5e1, inset 0 -3px 0 #f1f5f9;
         }
         .key.active {
-            background-color: #ffd700 !important;
-            transform: scale(0.98);
+            background: linear-gradient(to bottom, #fef08a, #eab308) !important;
+            box-shadow: 0 1px 0 #ca8a04, inset 0 2px 4px rgba(0,0,0,0.2);
+            transform: translateY(3px);
         }
+
+        /* Black keys styling */
         .black-key {
-            z-index: 10;
-            height: 60%;
+            z-index: 20;
+            height: 55%;
             width: 70%;
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
             top: 0;
-            border-radius: 0 0 4px 4px;
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            border-radius: 0 0 5px 5px;
+            box-shadow: -2px 3px 3px rgba(0,0,0,0.4), inset 0 -4px 0 #1e293b;
             pointer-events: none;
+            transition: background-color 0.08s, transform 0.05s, box-shadow 0.05s;
         }
         .black-key-hitbox {
             pointer-events: auto;
         }
         .black-key.active {
-            background-color: #b8860b !important;
-            transform: translateX(-50%) scale(0.98);
+            background: linear-gradient(to bottom, #d97706, #78350f) !important;
+            box-shadow: -1px 1px 2px rgba(0,0,0,0.3), inset 0 2px 2px rgba(0,0,0,0.4);
+            transform: translateX(-50%) translateY(2px);
         }
 
+        /* Bass Pearl-like Buttons */
         .bass-btn {
             border-radius: 50%;
-            box-shadow: inset 0 -4px 4px rgba(0,0,0,0.3), 0 4px 4px rgba(0,0,0,0.3);
-            transition: all 0.05s;
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,0.4), 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.06s ease;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            background: radial-gradient(circle at 35% 35%, #4b5563, #1f2937);
         }
         .bass-btn:active, .bass-btn.active {
-            transform: scale(0.9);
-            background-color: #48bb78;
-            box-shadow: inset 0 4px 4px rgba(0,0,0,0.3);
+            transform: scale(0.9) translateY(2px);
+            background: radial-gradient(circle at 35% 35%, #34d399, #059669) !important;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.5);
         }
 
-        .bellows {
+        /* Accordion Bellows */
+        .bellows-fold {
             background: repeating-linear-gradient(
-                45deg,
-                #1a202c,
-                #1a202c 10px,
-                #4a5568 10px,
-                #4a5568 20px
+                90deg,
+                #111827,
+                #111827 15px,
+                #d97706 15px,
+                #d97706 18px,
+                #374151 18px,
+                #374151 30px
             );
-            transition: transform 0.1s ease-out;
+            transition: transform 0.1s ease-out, filter 0.1s ease;
         }
-        .bellows.expanding {
-            transform: scaleX(1.05);
+        .bellows-fold.pulsing {
+            filter: brightness(1.15);
+        }
+
+        /* Scrollbar customization */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
         }
     </style>
 </head>
-<body class="flex flex-col text-white">
+<body class="flex flex-col text-white antialiased">
 
-    <!-- Header / Controls -->
-    <div class="h-16 bg-gray-900 flex items-center justify-between px-2 sm:px-4 shadow-lg z-20 shrink-0 gap-2">
-        <h1 class="text-sm sm:text-lg font-bold text-yellow-500 truncate">ThaiAccordion</h1>
-        <div class="flex space-x-2 items-center">
-            <button id="toggle-notes" class="bg-blue-600 active:bg-blue-700 px-2 py-1 rounded text-xs sm:text-sm shadow whitespace-nowrap">
-                โน้ต
+    <!-- Top Header -->
+    <header class="h-14 bg-slate-950 border-b border-amber-500/30 flex items-center justify-between px-3 shadow-lg z-30 shrink-0 gap-2">
+        <div class="flex items-center gap-2">
+            <span class="text-xl">🪗</span>
+            <div>
+                <h1 class="text-sm sm:text-base font-extrabold text-amber-500 tracking-wider">THAI ACCORDION PRO</h1>
+                <p class="text-[9px] text-gray-400 -mt-1 hidden sm:block">Extreme Mobile Simulation & Recorder</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-1 sm:gap-2">
+            <!-- คีย์บอร์ดซูม/ย่อสำหรับมือถือ -->
+            <div class="flex items-center bg-gray-900 rounded-lg p-0.5 border border-gray-800 text-xs">
+                <button id="oct-low" class="px-2 py-1 rounded-md text-gray-400 hover:text-white transition">ต่ำ</button>
+                <button id="oct-full" class="px-2 py-1 rounded-md bg-amber-500 text-slate-950 font-bold transition">ทั้งหมด</button>
+                <button id="oct-high" class="px-2 py-1 rounded-md text-gray-400 hover:text-white transition">สูง</button>
+            </div>
+
+            <button id="toggle-fx-btn" class="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 p-1.5 rounded-lg text-xs font-semibold shadow flex items-center gap-1">
+                <span>🎛️</span> <span class="hidden md:inline">ปรับแต่งเสียง</span>
             </button>
-            <button id="record-btn" class="bg-red-600 active:bg-red-700 px-3 py-1 rounded text-xs sm:text-sm shadow flex items-center gap-1 whitespace-nowrap min-w-[70px] justify-center">
-                <span id="rec-dot" class="w-2 h-2 bg-white rounded-full"></span>
-                <span id="rec-text">อัดเสียง</span>
+            
+            <button id="toggle-songs-btn" class="bg-teal-600 hover:bg-teal-500 active:bg-teal-700 p-1.5 rounded-lg text-xs font-semibold shadow flex items-center gap-1">
+                <span>🎶</span> <span class="hidden md:inline">เพลงสาธิต</span>
             </button>
-            <!-- ปุ่มดาวน์โหลด (ซ่อนอยู่ตอนแรก) -->
-            <a id="download-link" class="hidden bg-green-500 active:bg-green-600 px-3 py-1 rounded text-xs sm:text-sm shadow text-white flex items-center gap-1 whitespace-nowrap cursor-pointer hover:bg-green-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                โหลด
+
+            <button id="record-btn" class="bg-red-600 hover:bg-red-500 active:bg-red-700 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow flex items-center gap-1.5 shrink-0">
+                <span id="rec-dot" class="w-2.5 h-2.5 bg-white rounded-full"></span>
+                <span id="rec-text" class="hidden xs:inline">อัดเสียง</span>
+            </button>
+
+            <a id="download-link" class="hidden bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow text-white flex items-center gap-1 cursor-pointer animate-bounce">
+                ⬇️ <span class="hidden xs:inline">เซฟ</span>
             </a>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <div class="flex-1 flex flex-col relative overflow-hidden">
+
+        <!-- Panel 1: Advanced FX Adjustments Panel (Collapsible Drawer) -->
+        <div id="fx-panel" class="absolute inset-x-0 top-0 bg-slate-900/95 border-b-2 border-indigo-500/50 p-4 shadow-2xl transition-all duration-300 transform -translate-y-full z-40 max-h-[85%] overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-md font-bold text-indigo-400 flex items-center gap-2">
+                        <span>🎛️</span> คอนโซลควบคุมเสียงขั้นสูง (Advanced Sound Board)
+                    </h3>
+                    <button id="close-fx" class="text-gray-400 hover:text-white text-xl">✕</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Column 1: Timbre & Sound Profile -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-gray-800">
+                        <h4 class="text-xs font-extrabold text-amber-500 mb-2">เสียงแอกคอร์เดียน (Instrument Preset)</h4>
+                        <div class="grid grid-cols-2 gap-2" id="preset-selector">
+                            <button data-preset="classic" class="py-2 px-1 rounded-lg border-2 border-amber-500 bg-amber-500/10 text-xs font-bold hover:bg-amber-500/20 text-white">Classic (ดั้งเดิม)</button>
+                            <button data-preset="musette" class="py-2 px-1 rounded-lg border border-gray-700 bg-gray-900 text-xs font-bold hover:bg-gray-800 text-gray-300">Musette (โฟล์ค)</button>
+                            <button data-preset="bassoon" class="py-2 px-1 rounded-lg border border-gray-700 bg-gray-900 text-xs font-bold hover:bg-gray-800 text-gray-300">Bassoon (ทุ้มลึก)</button>
+                            <button data-preset="organ" class="py-2 px-1 rounded-lg border border-gray-700 bg-gray-900 text-xs font-bold hover:bg-gray-800 text-gray-300">Organ (แกรนด์)</button>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between">
+                            <label class="text-xs text-gray-400">เป่าลมแอกคอร์เดียนอัตโนมัติ (Auto-Bellows)</label>
+                            <input type="checkbox" id="auto-bellows" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Volume & Expression -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-gray-800 flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-xs font-extrabold text-indigo-400 mb-2">ความดัง & ความทุ้มของฟิลเตอร์</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-[11px] text-gray-400">
+                                        <span>ความดังสูงสุด (Master Gain)</span>
+                                        <span id="val-vol">60%</span>
+                                    </div>
+                                    <input type="range" id="slider-vol" class="w-full accent-indigo-500" min="0" max="100" value="60">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[11px] text-gray-400">
+                                        <span>ความสว่างของเสียง (Filter Cutoff)</span>
+                                        <span id="val-filter">1800 Hz</span>
+                                    </div>
+                                    <input type="range" id="slider-filter" class="w-full accent-indigo-500" min="200" max="5000" value="1800">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Space Effects -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-gray-800">
+                        <h4 class="text-xs font-extrabold text-teal-400 mb-2">มิติเอฟเฟกต์ (Audio Effects)</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-[11px] text-gray-400">
+                                    <span>ห้องเสียงสะท้อน (Space Reverb)</span>
+                                    <span id="val-reverb">35%</span>
+                                </div>
+                                <input type="range" id="slider-reverb" class="w-full accent-teal-500" min="0" max="100" value="35">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[11px] text-gray-400">
+                                    <span>เสียงดีเลย์เอคโค่ (Delay)</span>
+                                    <span id="val-delay">20%</span>
+                                </div>
+                                <input type="range" id="slider-delay" class="w-full accent-teal-500" min="0" max="100" value="20">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 2: 10 Thai Demo Songs Selector Menu -->
+        <div id="songs-panel" class="absolute inset-x-0 top-0 bg-slate-900/95 border-b-2 border-teal-500/50 p-4 shadow-2xl transition-all duration-300 transform -translate-y-full z-40 max-h-[85%] overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-md font-bold text-teal-400 flex items-center gap-2">
+                        <span>🎶</span> เครื่องเล่นเพลงสาธิตแอกคอร์เดียน (10 Demo Masterpieces)
+                    </h3>
+                    <button id="close-songs" class="text-gray-400 hover:text-white text-xl">✕</button>
+                </div>
+
+                <!-- Song Player Dashboard -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-gray-800 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <button id="song-play-toggle" class="w-12 h-12 bg-teal-500 active:bg-teal-600 text-slate-950 rounded-full font-bold text-xl flex items-center justify-center shadow-lg transform active:scale-95 transition">
+                            ▶️
+                        </button>
+                        <div>
+                            <div class="text-[10px] text-teal-400 uppercase font-semibold">ขณะนี้กำลังเล่น:</div>
+                            <div id="current-song-title" class="text-sm font-bold text-white">ไม่ได้เลือกเพลงสาธิต</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <div class="flex-1 sm:w-32">
+                            <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                                <span>ความเร็วเพลง (Tempo)</span>
+                                <span id="val-tempo">100%</span>
+                            </div>
+                            <input type="range" id="slider-tempo" class="w-full accent-teal-500" min="50" max="150" value="100">
+                        </div>
+                        <button id="stop-song-btn" class="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-2 rounded-lg font-bold border border-gray-700">
+                            ⏹️ หยุดเล่น
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 10 Famous Thai Songs Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="song-list-grid">
+                    <!-- Programmatically filled inside JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Instrument Section (Split screen format) -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- A: Bass Chord Keyboard (Top Section) -->
+            <div class="h-[43%] bg-slate-900 flex flex-col p-2 relative shrink-0 border-b border-gray-950 justify-between">
+                <div class="flex items-center justify-between px-2 mb-1">
+                    <span class="text-[10px] font-bold text-amber-500 tracking-wider">แผงเบสแมนนวล & คอร์ด (Bass & Chords Cabinet)</span>
+                    <button id="toggle-notes" class="text-[10px] bg-slate-800 border border-gray-700 active:bg-slate-700 px-2 py-0.5 rounded text-gray-300">
+                        แสดงชื่อโน้ต
+                    </button>
+                </div>
+                
+                <!-- Double grid for traditional Bass System -->
+                <div class="flex-1 grid grid-cols-6 gap-2 items-center justify-items-center relative z-10 max-h-[160px]">
+                    <!-- Row 1: Bass single notes -->
+                    <button class="bass-btn w-11 h-11 sm:w-12 sm:h-12 text-white font-bold text-xs sm:text-sm border border-slate-600/50 touch-none" data-note="F2" data-type="bass">F</button>
+                    <button class="bass-btn w-11 h-11 sm:w-12 sm:h-12 text-white font-bold text-xs sm:text-sm border-2 border-yellow-500/80 touch-none" data-note="C2" data-type="bass">C</button>
+                    <button class="bass-btn w-11 h-11 sm:w-12 sm:h-12 text-white font-bold text-xs sm:text-sm border border-slate-600/50 touch-none" data-note="G2" data-type="bass">G</button>
+                    <button class="bass-btn w-11 h-11 sm:w-12 sm:h-12 text-white font-bold text-xs sm:text-sm border border-slate-600/50 touch-none" data-note="D2" data-type="bass">D</button>
+                    <button class="bass-btn w-11 h-11 sm:w-12 sm:h-12 text-white font-bold text-xs sm:text-sm border border-slate-600/50 touch-none" data-note="A2" data-type="bass">A</button>
+                    <button class="bass-btn w-11 h-11 sm:w-12 sm:h-12 text-white font-bold text-xs sm:text-sm border border-slate-600/50 touch-none" data-note="E2" data-type="bass">E</button>
+
+                    <!-- Row 2: Chords -->
+                    <button class="bass-btn w-10 h-10 sm:w-11 sm:h-11 text-amber-400 text-[10px] font-semibold touch-none" data-note="F3,A3,C4" data-type="chord">FM</button>
+                    <button class="bass-btn w-10 h-10 sm:w-11 sm:h-11 text-amber-400 text-[10px] font-semibold touch-none" data-note="C3,E3,G3" data-type="chord">CM</button>
+                    <button class="bass-btn w-10 h-10 sm:w-11 sm:h-11 text-amber-400 text-[10px] font-semibold touch-none" data-note="G3,B3,D4" data-type="chord">GM</button>
+                    <button class="bass-btn w-10 h-10 sm:w-11 sm:h-11 text-amber-400 text-[10px] font-semibold touch-none" data-note="D3,F#3,A3" data-type="chord">DM</button>
+                    <button class="bass-btn w-10 h-10 sm:w-11 sm:h-11 text-amber-400 text-[10px] font-semibold touch-none" data-note="A3,C#4,E4" data-type="chord">AM</button>
+                    <button class="bass-btn w-10 h-10 sm:w-11 sm:h-11 text-amber-400 text-[10px] font-semibold touch-none" data-note="E3,G#3,B3" data-type="chord">EM</button>
+                </div>
+            </div>
+
+            <!-- B: Interactive Expression Bellows (Middle Section) -->
+            <div id="bellows" class="h-10 w-full bellows-fold shadow-inner border-y border-black shrink-0 flex items-center justify-center relative select-none">
+                <span class="text-[9px] bg-black/80 text-amber-500/90 font-bold px-3 py-1 rounded-full border border-amber-500/20 uppercase tracking-widest pointer-events-none">
+                    💨 แผงชักลมอัดเสียง (BELLOWS EXPR) <span id="bellows-pressure-display" class="text-white">100%</span>
+                </span>
+            </div>
+
+            <!-- C: Right-Hand Piano Treble Keyboard (Bottom Section) -->
+            <div class="flex-1 bg-slate-950 relative flex justify-center pb-2 px-1">
+                <!-- Treble Keyboard Wrapper with precise styling -->
+                <div class="flex w-full max-w-4xl h-full relative" id="keyboard-container">
+                    <!-- Key components generated by JS -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- UI Custom Toast Alert System -->
+    <div id="toast-notif" class="fixed bottom-6 right-6 bg-slate-900 border-2 border-amber-500 p-4 rounded-xl shadow-2xl z-50 transform translate-y-24 opacity-0 transition-all duration-300 max-w-sm">
+        <div class="flex items-center gap-3">
+            <span id="toast-icon" class="text-2xl">📢</span>
+            <div>
+                <h4 id="toast-title" class="font-bold text-amber-500 text-sm">ข้อความแจ้งเตือน</h4>
+                <p id="toast-desc" class="text-xs text-gray-300 mt-0.5">รายละเอียดของข้อมูลแจ้งเตือนที่นี่...</p>
+            </div>
         </div>
     </div>
 
-    <!-- Bass Section (Top Half) -->
-    <div class="flex-1 bg-gray-800 grid grid-cols-6 gap-2 p-2 items-center justify-items-center relative z-10 border-b-4 border-gray-900 overflow-hidden">
-        <div class="col-span-6 w-full text-center text-xs text-gray-400 mb-1">เบส (Bass) & คอร์ด (Chords)</div>
-        
-        <button class="bass-btn w-12 h-12 bg-gray-300 text-gray-900 font-bold touch-none" data-note="F2" data-type="bass">F</button>
-        <button class="bass-btn w-12 h-12 bg-gray-200 text-gray-900 font-bold border-4 border-gray-400 touch-none" data-note="C2" data-type="bass">C</button>
-        <button class="bass-btn w-12 h-12 bg-gray-300 text-gray-900 font-bold touch-none" data-note="G2" data-type="bass">G</button>
-        <button class="bass-btn w-12 h-12 bg-gray-300 text-gray-900 font-bold touch-none" data-note="D2" data-type="bass">D</button>
-        <button class="bass-btn w-12 h-12 bg-gray-300 text-gray-900 font-bold touch-none" data-note="A2" data-type="bass">A</button>
-        <button class="bass-btn w-12 h-12 bg-gray-300 text-gray-900 font-bold touch-none" data-note="E2" data-type="bass">E</button>
-
-        <button class="bass-btn w-10 h-10 bg-gray-600 text-white text-xs touch-none" data-note="F3,A3,C4" data-type="chord">F M</button>
-        <button class="bass-btn w-10 h-10 bg-gray-600 text-white text-xs touch-none" data-note="C3,E3,G3" data-type="chord">C M</button>
-        <button class="bass-btn w-10 h-10 bg-gray-600 text-white text-xs touch-none" data-note="G3,B3,D4" data-type="chord">G M</button>
-        <button class="bass-btn w-10 h-10 bg-gray-600 text-white text-xs touch-none" data-note="D3,F#3,A3" data-type="chord">D M</button>
-        <button class="bass-btn w-10 h-10 bg-gray-600 text-white text-xs touch-none" data-note="A3,C#4,E4" data-type="chord">A M</button>
-        <button class="bass-btn w-10 h-10 bg-gray-600 text-white text-xs touch-none" data-note="E3,G#3,B3" data-type="chord">E M</button>
-    </div>
-
-    <!-- Bellows Visual -->
-    <div id="bellows" class="h-8 w-full bellows shadow-inner border-y border-black shrink-0"></div>
-
-    <!-- Treble Keyboard -->
-    <div class="h-48 bg-gray-900 relative flex justify-center px-1 pb-1 shrink-0">
-        <div class="flex w-full max-w-3xl h-full relative" id="keyboard-container"></div>
-    </div>
-
     <script>
-        // --- 1. Audio Engine & Recorder Setup ---
+        // --- Core States & Variables ---
         let audioCtx;
         let dest; // MediaStreamDestination for recording
         let mediaRecorder;
         let audioChunks = [];
-        const activeOscillators = {};
-        const masterGainValue = 0.4;
+        let activeOscillators = {};
+        let isRecording = false;
+        
+        // Advanced FX nodes
+        let globalFilterNode;
+        let globalReverbNode;
+        let globalReverbWet;
+        let globalDelayNode;
+        let globalDelayFeedback;
+        let globalDelayWet;
+        let globalMasterGain;
 
+        // Configuration variables
+        let presetType = 'classic'; // classic, musette, bassoon, organ
+        let masterGainVal = 0.6;
+        let filterFreqVal = 1800;
+        let reverbAmtVal = 0.35;
+        let delayAmtVal = 0.20;
+        let enableAutoBellows = true;
+        let autoBellowsPhase = 0;
+        let manualBellowsScale = 1.0;
+        let isNotesVisible = false;
+
+        // Piano keyboard layout settings
+        // White key strings and corresponding black keys
+        const allWhiteKeys = ['C3','D3','E3','F3','G3','A3','B3','C4','D4','E4','F4','G4','A4','B4','C5'];
+        const allBlackKeys = ['C#3','D#3',null,'F#3','G#3','A#3',null,'C#4','D#4',null,'F#4','G#4','A#4',null];
+        let currentOctaveFocus = 'full'; // low, high, full
+
+        // Frequencies mapped
+        const noteFreqs = {
+            'C2': 65.41, 'D2': 73.42, 'E2': 82.41, 'F2': 87.31, 'G2': 98.00, 'A2': 110.00, 'B2': 123.47,
+            'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
+            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+            'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.25
+        };
+
+        // Custom Dynamic Toast Alert instead of Window Alert
+        function showToast(title, desc, icon = "🔔") {
+            const toast = document.getElementById('toast-notif');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-desc').textContent = desc;
+            document.getElementById('toast-icon').textContent = icon;
+            
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+
+        // Procedural Reverb Impulse Generator (Synthesizes lush acoustic space)
+        function createReverbImpulse(context, seconds = 2.0, decay = 2.0) {
+            const sampleRate = context.sampleRate;
+            const length = sampleRate * seconds;
+            const impulse = context.createBuffer(2, length, sampleRate);
+            
+            for (let channel = 0; channel < impulse.numberOfChannels; channel++) {
+                const data = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+                }
+            }
+            return impulse;
+        }
+
+        // Initialize Web Audio API nodes in graph structure
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
-                // Create a destination node for the recorder
                 dest = audioCtx.createMediaStreamDestination();
+
+                // Create master routing system
+                globalFilterNode = audioCtx.createBiquadFilter();
+                globalFilterNode.type = 'lowpass';
+                globalFilterNode.frequency.value = filterFreqVal;
+
+                // Create Reverb node & Wet Level node
+                globalReverbNode = audioCtx.createConvolver();
+                globalReverbNode.buffer = createReverbImpulse(audioCtx, 1.8, 2.5);
+                globalReverbWet = audioCtx.createGain();
+                globalReverbWet.gain.value = reverbAmtVal;
+
+                // Create Delay node, feedback loop, & Wet node
+                globalDelayNode = audioCtx.createDelay(1.0);
+                globalDelayNode.delayTime.value = 0.35; // 350ms delay
+                globalDelayFeedback = audioCtx.createGain();
+                globalDelayFeedback.gain.value = 0.4; // 40% feedback loop
+                globalDelayWet = audioCtx.createGain();
+                globalDelayWet.gain.value = delayAmtVal;
+
+                // Main Master volume container
+                globalMasterGain = audioCtx.createGain();
+                globalMasterGain.gain.value = masterGainVal;
+
+                // Audio Wiring Connections:
+                // Voice Outputs -> globalFilterNode -> globalMasterGain
+                // globalFilterNode -> globalReverbNode -> globalReverbWet -> globalMasterGain
+                // globalFilterNode -> globalDelayNode -> globalDelayWet -> globalMasterGain
+                // globalDelayNode -> globalDelayFeedback -> globalDelayNode (feedback loops)
+                globalFilterNode.connect(globalMasterGain);
+
+                globalFilterNode.connect(globalReverbNode);
+                globalReverbNode.connect(globalReverbWet);
+                globalReverbWet.connect(globalMasterGain);
+
+                globalFilterNode.connect(globalDelayNode);
+                globalDelayNode.connect(globalDelayFeedback);
+                globalDelayFeedback.connect(globalDelayNode);
+                globalDelayNode.connect(globalDelayWet);
+                globalDelayWet.connect(globalMasterGain);
+
+                // Speaker and Recorder Hook-up
+                globalMasterGain.connect(audioCtx.destination);
+                globalMasterGain.connect(dest);
+
+                // Auto-Bellows rhythmic breath simulation loop
+                setInterval(() => {
+                    if (enableAutoBellows) {
+                        autoBellowsPhase += 0.05;
+                        const mod = 0.85 + Math.sin(autoBellowsPhase * 4) * 0.15;
+                        updateBellowsVisual(mod);
+                    }
+                }, 40);
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // Accordion Sound Synthesis
+        // Calculate visual expansion/brightness of bellows
+        function updateBellowsVisual(scale) {
+            const bellowsEl = document.getElementById('bellows');
+            const displayVal = Math.round(scale * manualBellowsScale * 100);
+            document.getElementById('bellows-pressure-display').textContent = `${displayVal}%`;
+            bellowsEl.style.transform = `scaleX(${1.0 + (scale - 1) * 0.15})`;
+            
+            if (globalMasterGain && enableAutoBellows) {
+                // Apply expressional scale parameter onto overall volume dynamically
+                globalMasterGain.gain.setValueAtTime(masterGainVal * scale * manualBellowsScale, audioCtx.currentTime);
+            }
+        }
+
+        // Polyphonic Multi-reed sound production representing acoustic reeds (Double or Triple Reed sets)
         function playSound(noteFreq, type = 'key') {
             if (!audioCtx) initAudio();
 
@@ -154,71 +479,115 @@
                 activeOscillators[safeId].stop(); 
             }
 
-            const osc1 = audioCtx.createOscillator();
-            const osc2 = audioCtx.createOscillator();
-            const sub = audioCtx.createOscillator(); 
-            
-            const gainNode = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
+            // Create oscillators for multiple voice reeds
+            const reed1 = audioCtx.createOscillator(); // Principal Reed
+            const reed2 = audioCtx.createOscillator(); // Musette or Sub Reed
+            const reed3 = audioCtx.createOscillator(); // High pitch Reed
 
+            const voiceGainNode = audioCtx.createGain();
+            voiceGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+
+            // Configure waveforms based on reed preset
             if (type === 'bass') {
-                osc1.type = 'sawtooth';
-                osc2.type = 'square';
-                filter.type = 'lowpass';
-                filter.frequency.value = 400;
+                reed1.type = 'sawtooth';
+                reed2.type = 'square';
+                reed1.frequency.value = noteFreq;
+                reed2.frequency.value = noteFreq / 2; // Bass register drops down half octave
+                reed1.connect(voiceGainNode);
+                reed2.connect(voiceGainNode);
             } else if (type === 'chord') {
-                osc1.type = 'sawtooth';
-                osc2.type = 'triangle';
-                filter.type = 'lowpass';
-                filter.frequency.value = 800;
-            } else {
-                osc1.type = 'sawtooth';
-                osc2.type = 'sawtooth'; 
-                sub.type = 'triangle';
-                filter.type = 'lowpass';
-                filter.frequency.value = 3000;
+                reed1.type = 'sawtooth';
+                reed2.type = 'triangle';
+                reed1.frequency.value = noteFreq;
+                reed2.frequency.value = noteFreq;
+                reed1.connect(voiceGainNode);
+                reed2.connect(voiceGainNode);
+            } else { // Melodic Treble Key Reeds
+                if (presetType === 'classic') {
+                    reed1.type = 'sawtooth';
+                    reed2.type = 'sawtooth';
+                    reed3.type = 'triangle';
+                    
+                    reed1.frequency.value = noteFreq;
+                    reed2.frequency.value = noteFreq;
+                    reed2.detune.value = 14; // Light wet chorus detune
+                    reed3.frequency.value = noteFreq / 2; // low register bassoon coupling
+
+                    reed1.connect(voiceGainNode);
+                    reed2.connect(voiceGainNode);
+                    reed3.connect(voiceGainNode);
+                } 
+                else if (presetType === 'musette') {
+                    // Detuned triple accordion reed (French Folk / Thai country vibe)
+                    reed1.type = 'sawtooth';
+                    reed2.type = 'sawtooth';
+                    reed3.type = 'sawtooth';
+
+                    reed1.frequency.value = noteFreq;
+                    reed2.frequency.value = noteFreq;
+                    reed2.detune.value = 22; // Wet sharp detune
+                    reed3.frequency.value = noteFreq;
+                    reed3.detune.value = -20; // Wet flat detune
+
+                    reed1.connect(voiceGainNode);
+                    reed2.connect(voiceGainNode);
+                    reed3.connect(voiceGainNode);
+                }
+                else if (presetType === 'bassoon') {
+                    // Mellow low frequency reed sound
+                    reed1.type = 'square';
+                    reed1.frequency.value = noteFreq / 2;
+                    reed2.type = 'sawtooth';
+                    reed2.frequency.value = noteFreq;
+                    reed2.detune.value = 5;
+
+                    reed1.connect(voiceGainNode);
+                    reed2.connect(voiceGainNode);
+                }
+                else if (presetType === 'organ') {
+                    // Powerful symphonic tone with sub and high couplers
+                    reed1.type = 'sawtooth';
+                    reed2.type = 'square';
+                    reed3.type = 'sawtooth';
+
+                    reed1.frequency.value = noteFreq;
+                    reed2.frequency.value = noteFreq / 2;
+                    reed3.frequency.value = noteFreq * 2;
+
+                    reed1.connect(voiceGainNode);
+                    reed2.connect(voiceGainNode);
+                    reed3.connect(voiceGainNode);
+                }
             }
 
-            osc1.frequency.value = noteFreq;
-            osc2.frequency.value = noteFreq;
-            sub.frequency.value = noteFreq / 2; 
+            // Voice routing to master system filter
+            voiceGainNode.connect(globalFilterNode);
 
-            if (type === 'key') {
-                osc2.detune.value = 15;
-            }
-
-            osc1.connect(filter);
-            osc2.connect(filter);
-            if (type === 'key') sub.connect(filter);
-            
-            filter.connect(gainNode);
-            
-            // CRITICAL CHANGE: Connect to BOTH speakers AND recorder
-            gainNode.connect(audioCtx.destination); // Hear it
-            if (dest) gainNode.connect(dest);       // Record it
-
+            // Smooth volume ramping (Attack phase)
             const now = audioCtx.currentTime;
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(masterGainValue, now + 0.05);
-            
-            osc1.start(now);
-            osc2.start(now);
-            if (type === 'key') sub.start(now);
+            voiceGainNode.gain.linearRampToValueAtTime(0.35, now + 0.04);
+
+            // Fire sound production
+            reed1.start(now);
+            reed2.start(now);
+            if (presetType === 'classic' || presetType === 'musette' || presetType === 'organ') {
+                if (type === 'key') reed3.start(now);
+            }
 
             const stopFunc = () => {
                 try {
                     const stopTime = audioCtx.currentTime;
-                    gainNode.gain.cancelScheduledValues(stopTime);
-                    gainNode.gain.setValueAtTime(gainNode.gain.value, stopTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.001, stopTime + 0.1);
+                    voiceGainNode.gain.cancelScheduledValues(stopTime);
+                    voiceGainNode.gain.setValueAtTime(voiceGainNode.gain.value, stopTime);
+                    voiceGainNode.gain.exponentialRampToValueAtTime(0.001, stopTime + 0.12);
                     
-                    osc1.stop(stopTime + 0.1);
-                    osc2.stop(stopTime + 0.1);
-                    if (type === 'key') sub.stop(stopTime + 0.1);
+                    reed1.stop(stopTime + 0.15);
+                    reed2.stop(stopTime + 0.15);
+                    if (type === 'key') reed3.stop(stopTime + 0.15);
                     
                     setTimeout(() => {
-                        gainNode.disconnect();
-                    }, 200);
+                        voiceGainNode.disconnect();
+                    }, 250);
                 } catch(e) {}
             };
 
@@ -226,30 +595,39 @@
             return { stop: stopFunc };
         }
 
-        const noteFreqs = {
-            'C2': 65.41, 'D2': 73.42, 'E2': 82.41, 'F2': 87.31, 'G2': 98.00, 'A2': 110.00, 'B2': 123.47,
-            'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
-            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
-            'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.25
-        };
-
-        // --- 2. Keyboard UI ---
+        // Responsive Keyboard builder which handles zooming into low or high ranges for small mobile screens
         const keyboardContainer = document.getElementById('keyboard-container');
-        const whiteKeys = ['C3','D3','E3','F3','G3','A3','B3','C4','D4','E4','F4','G4','A4','B4','C5'];
-        const blackKeys = ['C#3','D#3',null,'F#3','G#3','A#3',null,'C#4','D#4',null,'F#4','G#4','A#4',null];
 
         function createKeyboard() {
-            whiteKeys.forEach((note, index) => {
+            keyboardContainer.innerHTML = ''; // Reset DOM
+
+            let activeWhiteKeys = [...allWhiteKeys];
+            let activeBlackKeys = [...allBlackKeys];
+
+            // Filter key set if user zoomed on mobile screen
+            if (currentOctaveFocus === 'low') {
+                activeWhiteKeys = allWhiteKeys.slice(0, 8); // C3 to C4
+                activeBlackKeys = allBlackKeys.slice(0, 8);
+            } else if (currentOctaveFocus === 'high') {
+                activeWhiteKeys = allWhiteKeys.slice(7); // C4 to C5
+                activeBlackKeys = allBlackKeys.slice(7);
+            }
+
+            activeWhiteKeys.forEach((note, index) => {
                 const key = document.createElement('div');
-                key.className = 'key bg-white border border-gray-300 flex-1 flex items-end justify-center pb-2 text-gray-500 font-bold select-none touch-none';
+                key.className = 'key bg-white border border-gray-300 flex-1 flex items-end justify-center pb-2 text-slate-500 font-extrabold select-none touch-none text-[10px] sm:text-xs';
                 key.dataset.note = note;
-                key.innerHTML = `<span class="note-label hidden text-xs sm:text-base pointer-events-none">${note}</span>`;
                 
-                if (index < whiteKeys.length - 1 && blackKeys[index]) {
+                // Keep the label hidden if user prefers no labels visual
+                const labelHiddenClass = isNotesVisible ? '' : 'hidden';
+                key.innerHTML = `<span class="note-label ${labelHiddenClass} pointer-events-none">${note}</span>`;
+                
+                // Add flat/sharp black notes conditionally inside container index
+                if (index < activeWhiteKeys.length - 1 && activeBlackKeys[index]) {
                     const blackKey = document.createElement('div');
-                    blackKey.className = 'key black-key black-key-hitbox bg-black text-white flex items-end justify-center pb-2 touch-none';
-                    blackKey.dataset.note = blackKeys[index];
-                    blackKey.innerHTML = `<span class="note-label hidden text-[10px] pointer-events-none">${blackKeys[index]}</span>`;
+                    blackKey.className = 'key black-key black-key-hitbox bg-slate-900 text-white flex items-end justify-center pb-1 touch-none text-[8px] sm:text-[9px] font-semibold';
+                    blackKey.dataset.note = activeBlackKeys[index];
+                    blackKey.innerHTML = `<span class="note-label ${labelHiddenClass} pointer-events-none">${activeBlackKeys[index]}</span>`;
                     key.appendChild(blackKey);
                 }
                 keyboardContainer.appendChild(key);
@@ -257,17 +635,16 @@
         }
         createKeyboard();
 
-        // --- 3. Interaction Logic ---
-        const bellows = document.getElementById('bellows');
-        let isNotesVisible = false;
-
+        // Advanced Gesture tracker supporting sliding and gliding (Glissando) on touchscreens
         function handleNoteOn(element) {
             if (!element || element.classList.contains('active')) return;
             const noteStr = element.dataset.note;
             const type = element.dataset.type || 'key';
             
             element.classList.add('active');
-            bellows.classList.add('expanding');
+            
+            // Flex the accordion bellows visual dynamic
+            document.getElementById('bellows').classList.add('pulsing');
 
             const notes = noteStr.split(',');
             notes.forEach(n => {
@@ -283,8 +660,11 @@
             
             element.classList.remove('active');
             
-            const activeKeys = document.querySelectorAll('.active');
-            if (activeKeys.length === 0) bellows.classList.remove('expanding');
+            // Remove pulsing of bellows if no other key is pressed down
+            const activeKeys = document.querySelectorAll('.key.active, .bass-btn.active');
+            if (activeKeys.length === 0) {
+                document.getElementById('bellows').classList.remove('pulsing');
+            }
 
             const notes = noteStr.split(',');
             notes.forEach(n => {
@@ -300,7 +680,7 @@
         }
 
         function setupInputListeners() {
-            // Touch
+            // Touch handlers supporting sliding play style (glissando)
             document.body.addEventListener('touchstart', (e) => {
                 if(e.target.closest('.key') || e.target.closest('.bass-btn')) e.preventDefault();
                 initAudio();
@@ -318,7 +698,6 @@
                 }
             }, { passive: false });
 
-            // Glissando
             document.body.addEventListener('touchmove', (e) => {
                 if(e.target.closest('.key') || e.target.closest('.bass-btn')) e.preventDefault();
                 for (let i = 0; i < e.changedTouches.length; i++) {
@@ -359,10 +738,10 @@
             document.body.addEventListener('touchend', endTouch);
             document.body.addEventListener('touchcancel', endTouch);
             
-            // Mouse
+            // Mouse Play Support
             let isMouseDown = false;
             document.addEventListener('mousedown', (e) => {
-                if (e.target.closest('button:not(.bass-btn):not(.key)')) return; 
+                if (e.target.closest('button') && !e.target.closest('.bass-btn')) return; 
                 isMouseDown = true;
                 initAudio();
                 const target = e.target.closest('.bass-btn') || e.target.closest('.black-key') || e.target.closest('.key');
@@ -384,40 +763,811 @@
                      handleNoteOn(target);
                 }
             });
+
+            // Interactive dragging over Bellows element for sound dynamic expression scaling
+            const bellowsEl = document.getElementById('bellows');
+            let isDraggingBellows = false;
+            let startBellowsX = 0;
+
+            bellowsEl.addEventListener('pointerdown', (e) => {
+                isDraggingBellows = true;
+                startBellowsX = e.clientX;
+                bellowsEl.setPointerCapture(e.pointerId);
+            });
+
+            bellowsEl.addEventListener('pointermove', (e) => {
+                if (!isDraggingBellows) return;
+                const dist = Math.abs(e.clientX - startBellowsX);
+                // Dynamically update pressure modifier between 0.5 to 1.5 based on speed
+                manualBellowsScale = Math.min(1.5, Math.max(0.5, 0.5 + (dist / 100)));
+                updateBellowsVisual(manualBellowsScale);
+            });
+
+            bellowsEl.addEventListener('pointerup', () => {
+                isDraggingBellows = false;
+                manualBellowsScale = 1.0;
+                updateBellowsVisual(1.0);
+            });
         }
         setupInputListeners();
 
-        // --- 4. Controls & Recording Logic ---
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden) {
-                const activeElements = document.querySelectorAll('.active');
-                activeElements.forEach(el => handleNoteOff(el));
-                Object.values(activeOscillators).forEach(o => o.stop());
+        // Professional arrangement array holding 10 famous Thai masterpieces playable automatically (Full Songs)
+        const DEMO_SONGS = [
+            {
+                name: "ลอยกระทง (ฉบับเต็ม)",
+                desc: "เพลงรำวงวันประเพณีลอยกระทง บรรเลงครบทุกวรรคพร้อมไลน์ประสานคอร์ดและเบสอย่างสมบูรณ์",
+                tempo: 125,
+                notes: [
+                    // วรรค 1: วันเพ็ญเดือนสิบสอง น้ำก็นองเต็มตลิ่ง
+                    { time: 0, note: "G4", bass: "C2", dur: 0.25 },
+                    { time: 0.25, note: "G4", dur: 0.25 },
+                    { time: 0.5, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 0.75, note: "A4", dur: 0.25 },
+                    { time: 1.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 1.5, note: "C5", dur: 0.25 },
+                    { time: 1.75, note: "A4", dur: 0.25 },
+                    { time: 2.0, note: "G4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 2.5, note: "C5", dur: 0.5 },
+                    { time: 3.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 3.5, note: "G4", dur: 0.5 },
+                    { time: 4.0, note: "A4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 4.5, note: "G4", dur: 0.25 },
+                    { time: 4.75, note: "E4", dur: 0.25 },
+                    { time: 5.0, note: "D4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // วรรค 2: เราทั้งหลายชายหญิง สนุกกันจริงวันลอยกระทง
+                    { time: 6.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.25 },
+                    { time: 6.25, note: "G4", dur: 0.25 },
+                    { time: 6.5, note: "G4", dur: 0.25 },
+                    { time: 6.75, note: "A4", dur: 0.25 },
+                    { time: 7.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 7.5, note: "C5", dur: 0.25 },
+                    { time: 7.75, note: "A4", dur: 0.25 },
+                    { time: 8.0, note: "G4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 8.5, note: "C5", dur: 0.5 },
+                    { time: 9.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 9.5, note: "G4", dur: 0.5 },
+                    { time: 10.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 10.5, note: "D4", dur: 0.25 },
+                    { time: 10.75, note: "C4", dur: 0.25 },
+                    { time: 11.0, note: "D4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // วรรค 3: ท่อนฮุค ลอย ลอยกระทง ลอย ลอยกระทง
+                    { time: 12.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 12.5, note: "G4", dur: 0.25 },
+                    { time: 12.75, note: "A4", dur: 0.25 },
+                    { time: 13.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 13.5, note: "C5", dur: 0.25 },
+                    { time: 13.75, note: "A4", dur: 0.25 },
+                    { time: 14.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 15.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 15.5, note: "G4", dur: 0.25 },
+                    { time: 15.75, note: "A4", dur: 0.25 },
+                    { time: 16.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 16.5, note: "C5", dur: 0.25 },
+                    { time: 16.75, note: "A4", dur: 0.25 },
+                    { time: 17.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // วรรค 4: ลอยกระทงกันแล้ว ขอเชิญน้องแก้วออกมารำวง
+                    { time: 18.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.25 },
+                    { time: 18.25, note: "C5", dur: 0.25 },
+                    { time: 18.5, note: "D5", bass: "F2", dur: 0.25 },
+                    { time: 18.75, note: "E5", dur: 0.25 },
+                    { time: 19.0, note: "D5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 19.5, note: "C5", dur: 0.25 },
+                    { time: 19.75, note: "A4", dur: 0.25 },
+                    { time: 20.0, note: "G4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 20.5, note: "A4", dur: 0.25 },
+                    { time: 20.75, note: "C5", dur: 0.25 },
+                    { time: 21.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 21.5, note: "A4", dur: 0.25 },
+                    { time: 21.75, note: "G4", dur: 0.25 },
+                    { time: 22.0, note: "A4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // วรรค 5: รำวงวันลอยกระทง รำวงวันลอยกระทง บุญจะส่งให้เราสุขใจ
+                    { time: 23.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 23.5, note: "C5", dur: 0.5 },
+                    { time: 24.0, note: "C5", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 24.5, note: "A4", dur: 0.25 },
+                    { time: 24.75, note: "G4", dur: 0.25 },
+                    { time: 25.0, note: "A4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 26.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 26.5, note: "C5", dur: 0.5 },
+                    { time: 27.0, note: "C5", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 27.5, note: "A4", dur: 0.25 },
+                    { time: 27.75, note: "G4", dur: 0.25 },
+                    { time: 28.0, note: "A4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 29.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.25 },
+                    { time: 29.25, note: "G4", dur: 0.25 },
+                    { time: 29.5, note: "A4", bass: "G2", dur: 0.25 },
+                    { time: 29.75, note: "G4", dur: 0.25 },
+                    { time: 30.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 30.5, note: "D4", dur: 0.5 },
+                    { time: 31.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 }
+                ]
+            },
+            {
+                name: "ค้างคาวกินกล้วย (ฉบับเต็ม)",
+                desc: "เพลงเดี่ยวทางไว ยอดนิยมของนักเล่นแอกคอร์เดียน มีทั้งท่อน A และท่อน B รวดเร็วเร้าใจ",
+                tempo: 140,
+                notes: [
+                    // ท่อน A วรรค 1
+                    { time: 0, note: "E4", bass: "A2", chord: "A3,C#4,E4", dur: 0.25 },
+                    { time: 0.25, note: "A4", dur: 0.25 },
+                    { time: 0.5, note: "B4", dur: 0.25 },
+                    { time: 0.75, note: "C5", dur: 0.25 },
+                    { time: 1.0, note: "B4", bass: "E2", chord: "E3,G#3,B3", dur: 0.25 },
+                    { time: 1.25, note: "A4", dur: 0.25 },
+                    { time: 1.5, note: "G#4", dur: 0.25 },
+                    { time: 1.75, note: "A4", dur: 0.25 },
+                    { time: 2.0, note: "B4", bass: "A2", chord: "A3,C#4,E4", dur: 0.5 },
+                    { time: 2.5, note: "E4", dur: 0.5 },
+                    { time: 3.0, note: "B4", bass: "E2", chord: "E3,G#3,B3", dur: 0.5 },
+                    { time: 3.5, note: "E4", dur: 0.5 },
+                    { time: 4.0, note: "C5", bass: "A2", chord: "A3,C#4,E4", dur: 0.25 },
+                    { time: 4.25, note: "D5", dur: 0.25 },
+                    { time: 4.5, note: "E5", dur: 0.25 },
+                    { time: 4.75, note: "D5", dur: 0.25 },
+                    { time: 5.0, note: "C5", bass: "D2", chord: "D3,F#3,A3", dur: 0.25 },
+                    { time: 5.25, note: "B4", dur: 0.25 },
+                    { time: 5.5, note: "A4", dur: 0.25 },
+                    { time: 5.75, note: "B4", dur: 0.25 },
+                    { time: 6.0, note: "A4", bass: "A2", chord: "A3,C#4,E4", dur: 1.0 },
+
+                    // ท่อน A วรรค 2 (ซ้ำเพื่อความสมบูรณ์ของประโยคเพลง)
+                    { time: 7.0, note: "E4", bass: "A2", chord: "A3,C#4,E4", dur: 0.25 },
+                    { time: 7.25, note: "A4", dur: 0.25 },
+                    { time: 7.5, note: "B4", dur: 0.25 },
+                    { time: 7.75, note: "C5", dur: 0.25 },
+                    { time: 8.0, note: "B4", bass: "E2", chord: "E3,G#3,B3", dur: 0.25 },
+                    { time: 8.25, note: "A4", dur: 0.25 },
+                    { time: 8.5, note: "G#4", dur: 0.25 },
+                    { time: 8.75, note: "A4", dur: 0.25 },
+                    { time: 9.0, note: "B4", bass: "A2", chord: "A3,C#4,E4", dur: 0.5 },
+                    { time: 9.5, note: "E4", dur: 0.5 },
+                    { time: 10.0, note: "B4", bass: "E2", chord: "E3,G#3,B3", dur: 0.5 },
+                    { time: 10.5, note: "E4", dur: 0.5 },
+                    { time: 11.0, note: "C5", bass: "A2", chord: "A3,C#4,E4", dur: 0.25 },
+                    { time: 11.25, note: "D5", dur: 0.25 },
+                    { time: 11.5, note: "E5", dur: 0.25 },
+                    { time: 11.75, note: "D5", dur: 0.25 },
+                    { time: 12.0, note: "C5", bass: "D2", chord: "D3,F#3,A3", dur: 0.25 },
+                    { time: 12.25, note: "B4", dur: 0.25 },
+                    { time: 12.5, note: "A4", dur: 0.25 },
+                    { time: 12.75, note: "B4", dur: 0.25 },
+                    { time: 13.0, note: "A4", bass: "A2", chord: "A3,C#4,E4", dur: 1.0 },
+
+                    // ท่อน B (ท่อนส่งรับอารมณ์สูง)
+                    { time: 14.0, note: "E5", bass: "A2", chord: "A3,C#4,E4", dur: 0.25 },
+                    { time: 14.25, note: "D5", dur: 0.25 },
+                    { time: 14.5, note: "C5", dur: 0.25 },
+                    { time: 14.75, note: "B4", dur: 0.25 },
+                    { time: 15.0, note: "C5", bass: "D2", chord: "D3,F#3,A3", dur: 0.5 },
+                    { time: 15.5, note: "A4", dur: 0.5 },
+                    { time: 16.0, note: "D5", bass: "G2", chord: "G3,B3,D4", dur: 0.25 },
+                    { time: 16.25, note: "C5", dur: 0.25 },
+                    { time: 16.5, note: "B4", dur: 0.25 },
+                    { time: 16.75, note: "A4", dur: 0.25 },
+                    { time: 17.0, note: "B4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 17.5, note: "G4", dur: 0.5 },
+                    { time: 18.0, note: "C5", bass: "F2", chord: "F3,A3,C4", dur: 0.25 },
+                    { time: 18.25, note: "B4", dur: 0.25 },
+                    { time: 18.5, note: "A4", dur: 0.25 },
+                    { time: 18.75, note: "G4", dur: 0.25 },
+                    { time: 19.0, note: "A4", bass: "D2", chord: "D3,F#3,A3", dur: 0.25 },
+                    { time: 19.25, note: "F#4", dur: 0.25 },
+                    { time: 19.5, note: "G4", dur: 0.25 },
+                    { time: 19.75, note: "A4", dur: 0.25 },
+                    { time: 20.0, note: "B4", bass: "E2", chord: "E3,G#3,B3", dur: 1.0 },
+                    { time: 21.0, note: "E4", bass: "E2", dur: 0.5 },
+                    { time: 21.5, note: "G#4", dur: 0.5 },
+                    { time: 22.0, note: "A4", bass: "A2", chord: "A3,C#4,E4", dur: 1.5 }
+                ]
+            },
+            {
+                name: "เพลงช้าง (ฉบับเต็ม)",
+                desc: "เพลงวัยเด็กสุดน่ารักที่เรียบเรียงขึ้นใหม่ให้ฟังดูอลังการครบทั้งท่อนร้องปกติและท่อนส่งเสียงร้อง",
+                tempo: 110,
+                notes: [
+                    // ช้าง ช้าง ช้าง ช้าง ช้าง
+                    { time: 0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 0.3 },
+                    { time: 0.4, note: "C4", dur: 0.3 },
+                    { time: 0.8, note: "C4", bass: "C2", dur: 0.3 },
+                    { time: 1.2, note: "C4", dur: 0.3 },
+                    { time: 1.6, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 0.6 },
+                    
+                    // น้องเคยเห็นช้างหรือเปล่า
+                    { time: 2.4, note: "F4", bass: "F2", chord: "F3,A3,C4", dur: 0.4 },
+                    { time: 2.8, note: "A4", dur: 0.4 },
+                    { time: 3.2, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.4 },
+                    { time: 3.6, note: "F4", dur: 0.4 },
+                    { time: 4.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.4 },
+                    { time: 4.4, note: "C4", dur: 0.8 },
+                    
+                    // ช้างมันตัวโตไม่เบา
+                    { time: 5.4, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.4 },
+                    { time: 5.8, note: "A4", dur: 0.4 },
+                    { time: 6.2, note: "A#4", bass: "F2", chord: "F3,A3,C4", dur: 0.4 },
+                    { time: 6.6, note: "A4", dur: 0.4 },
+                    { time: 7.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.4 },
+                    { time: 7.4, note: "F4", dur: 0.8 },
+
+                    // จมูกยาวๆ เรียกว่างวง
+                    { time: 8.4, note: "F4", bass: "F2", chord: "F3,A3,C4", dur: 0.4 },
+                    { time: 8.8, note: "D4", dur: 0.4 },
+                    { time: 9.2, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 0.4 },
+                    { time: 9.6, note: "D4", dur: 0.4 },
+                    { time: 10.0, note: "F4", bass: "F2", chord: "F3,A3,C4", dur: 0.4 },
+                    { time: 10.4, note: "G4", dur: 0.4 },
+                    { time: 10.8, note: "F4", bass: "C2", chord: "C3,E3,G3", dur: 0.8 },
+
+                    // มีเขี้ยวใต้งวงเรียกว่างา
+                    { time: 11.8, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.4 },
+                    { time: 12.2, note: "A4", dur: 0.4 },
+                    { time: 12.6, note: "A#4", bass: "F2", chord: "F3,A3,C4", dur: 0.4 },
+                    { time: 13.0, note: "A4", dur: 0.4 },
+                    { time: 13.4, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.4 },
+                    { time: 13.8, note: "F4", dur: 0.8 },
+
+                    // มีหูมีตาหางยาว
+                    { time: 14.8, note: "F4", bass: "F2", chord: "F3,A3,C4", dur: 0.4 },
+                    { time: 15.2, note: "D4", dur: 0.4 },
+                    { time: 15.6, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 0.4 },
+                    { time: 16.0, note: "D4", dur: 0.4 },
+                    { time: 16.4, note: "F4", bass: "G2", chord: "G3,B3,D4", dur: 0.4 },
+                    { time: 16.8, note: "G4", dur: 0.4 },
+                    { time: 17.2, note: "F4", bass: "C2", chord: "C3,E3,G3", dur: 1.5 }
+                ]
+            },
+            {
+                name: "ลาวดวงเดือน (ฉบับเต็ม)",
+                desc: "เพลงพื้นบ้านล้านนาสุดคลาสสิก บรรเลงอย่างแช่มช้า อบอุ่น และโหยหาในแบบแอกคอร์เดียนโบราณ",
+                tempo: 80,
+                notes: [
+                    // ท่อน 1: โอ้ละหนอดวงเดือนเอย
+                    { time: 0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 0.5, note: "G4", dur: 0.5 },
+                    { time: 1.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 1.0 },
+                    { time: 2.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 2.5, note: "A4", dur: 0.5 },
+                    { time: 3.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // พี่มาเว้า รักเจ้าสาวคำดวง
+                    { time: 4.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 4.5, note: "G4", dur: 0.5 },
+                    { time: 5.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 5.5, note: "D4", dur: 0.5 },
+                    { time: 6.0, note: "E4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 6.5, note: "G4", dur: 0.5 },
+                    { time: 7.0, note: "D4", bass: "C2", chord: "C3,E3,G3", dur: 1.5 },
+
+                    // โอ้ว่าดึกแล้วหนอ พี่ขอลาล่วง
+                    { time: 9.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 9.5, note: "E4", dur: 0.5 },
+                    { time: 10.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 11.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 11.5, note: "G4", dur: 0.5 },
+                    { time: 12.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 13.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 13.5, note: "C4", dur: 0.5 },
+                    { time: 14.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 14.5, note: "E4", dur: 0.5 },
+                    { time: 15.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 },
+
+                    // ท่อน 2: อกพี่เป็นห่วง รักเจ้าดวงเดือนเอย
+                    { time: 17.5, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 18.0, note: "G4", dur: 0.5 },
+                    { time: 18.5, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 1.0 },
+                    { time: 19.5, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 20.0, note: "A4", dur: 0.5 },
+                    { time: 20.5, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 21.5, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 22.0, note: "G4", dur: 0.5 },
+                    { time: 22.5, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 23.0, note: "D4", dur: 0.5 },
+                    { time: 23.5, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 }
+                ]
+            },
+            {
+                name: "ส้มตำ (ฉบับเต็ม)",
+                desc: "บทเพลงพระราชนิพนธ์ ท่วงทำนองลูกทุ่งไทยสุดสนุก สนุกสนานครบถ้วนด้วยไลน์เบสสามช่า",
+                tempo: 120,
+                notes: [
+                    // ท่อนเปิด: ต่อไปนี้จะพูดถึงเรื่องส้มตำ
+                    { time: 0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 0.25, note: "E4", dur: 0.25 },
+                    { time: 0.5, note: "G4", bass: "C2", dur: 0.25 },
+                    { time: 0.75, note: "A4", dur: 0.25 },
+                    { time: 1.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 1.5, note: "E4", dur: 0.5 },
+                    { time: 2.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.25 },
+                    { time: 2.25, note: "C4", dur: 0.25 },
+                    { time: 2.5, note: "D4", bass: "G2", dur: 0.5 },
+                    { time: 3.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // อร่อยเหลือล้ำรสดีมีฝีมือ
+                    { time: 4.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 4.25, note: "G4", dur: 0.25 },
+                    { time: 4.5, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.25 },
+                    { time: 4.75, note: "C5", dur: 0.25 },
+                    { time: 5.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 5.5, note: "G4", dur: 0.5 },
+                    { time: 6.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 6.5, note: "D4", dur: 0.5 },
+                    { time: 7.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // เตรียมมะละกอฝานเป็นเส้นยาว
+                    { time: 8.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 8.5, note: "G4", dur: 0.25 },
+                    { time: 8.75, note: "A4", dur: 0.25 },
+                    { time: 9.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 9.5, note: "C5", dur: 0.5 },
+                    { time: 10.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 10.5, note: "G4", dur: 0.5 },
+                    { time: 11.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 1.0 },
+
+                    // พริกขี้หนูแดงขาวถั่วฝักยาวฝานหั่น
+                    { time: 12.0, note: "C5", bass: "F2", chord: "F3,A3,C4", dur: 0.25 },
+                    { time: 12.25, note: "D5", dur: 0.25 },
+                    { time: 12.5, note: "E5", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 12.75, note: "D5", dur: 0.25 },
+                    { time: 13.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 13.5, note: "A4", dur: 0.5 },
+                    { time: 14.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 14.5, note: "D4", dur: 0.5 },
+                    { time: 15.0, note: "E4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 15.5, note: "D4", dur: 0.5 },
+                    { time: 16.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 }
+                ]
+            },
+            {
+                name: "เต้ยโขง (ฉบับเต็ม)",
+                desc: "เพลงบรรเลงลายอีสานสุดโจ๊ะ ท่วงทำนองกระฉับกระเฉงสไตล์งานเทศกาลไทบ้าน",
+                tempo: 135,
+                notes: [
+                    // ท่อน 1
+                    { time: 0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.25 },
+                    { time: 0.25, note: "A4", dur: 0.25 },
+                    { time: 0.5, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 1.0, note: "C5", bass: "C2", dur: 0.25 },
+                    { time: 1.25, note: "D5", dur: 0.25 },
+                    { time: 1.5, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 1.75, note: "A4", dur: 0.25 },
+                    { time: 2.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 2.5, note: "A4", dur: 0.5 },
+                    { time: 3.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // ท่อน 2
+                    { time: 4.0, note: "D5", bass: "D2", chord: "D3,F#3,A3", dur: 0.25 },
+                    { time: 4.25, note: "E5", dur: 0.25 },
+                    { time: 4.5, note: "D5", bass: "D2", dur: 0.5 },
+                    { time: 5.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 5.25, note: "A4", dur: 0.25 },
+                    { time: 5.5, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 6.0, note: "A4", bass: "G2", dur: 0.5 },
+                    { time: 6.5, note: "G4", dur: 0.5 },
+                    { time: 7.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // ท่อน 3 (สะพานเชื่อม)
+                    { time: 8.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 8.5, note: "A4", dur: 0.5 },
+                    { time: 9.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 9.5, note: "D5", dur: 0.5 },
+                    { time: 10.0, note: "E5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 10.5, note: "D5", dur: 0.5 },
+                    { time: 11.0, note: "E5", bass: "G2", chord: "G3,B3,D4", dur: 1.0 },
+
+                    // ท่อนจบเต้ย
+                    { time: 12.0, note: "D5", bass: "D2", chord: "D3,F#3,A3", dur: 0.25 },
+                    { time: 12.25, note: "C5", dur: 0.25 },
+                    { time: 12.5, note: "A4", bass: "D2", dur: 0.5 },
+                    { time: 13.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.25 },
+                    { time: 13.25, note: "A4", dur: 0.25 },
+                    { time: 13.5, note: "G4", bass: "G2", dur: 0.5 },
+                    { time: 14.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 14.5, note: "D4", dur: 0.5 },
+                    { time: 15.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 }
+                ]
+            },
+            {
+                name: "เดือนเพ็ญ (ฉบับเต็ม)",
+                desc: "เพลงเพื่อชีวิตระดับตำนาน สื่อสารอารมณ์ที่ลึกซึ้ง หดหู่ และงดงามในยามค่ำคืน",
+                tempo: 80,
+                notes: [
+                    // เดือนเพ็ญสวยเย็นเห็นอรุณ
+                    { time: 0, note: "D4", bass: "D2", chord: "D3,F#3,A3", dur: 0.5 },
+                    { time: 0.5, note: "E4", dur: 0.5 },
+                    { time: 1.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 1.0 },
+                    { time: 2.0, note: "A4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 2.5, note: "G4", dur: 0.5 },
+                    { time: 3.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // แผ่คลุมโพ้นป่าเขาเขียวครึ้มหมอกบัง
+                    { time: 4.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 4.5, note: "A4", dur: 0.5 },
+                    { time: 5.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 6.0, note: "D5", bass: "D2", chord: "D3,F#3,A3", dur: 0.5 },
+                    { time: 6.5, note: "C5", dur: 0.5 },
+                    { time: 7.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 2.0 },
+
+                    // พร่าจากฟากฟ้าสู่ดินดินกว้าง
+                    { time: 9.0, note: "C5", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 9.5, note: "D5", dur: 0.5 },
+                    { time: 10.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 11.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 11.5, note: "G4", dur: 0.5 },
+                    { time: 12.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // ทางช้างเผือกทอแสงประกายไกลตา
+                    { time: 13.0, note: "D4", bass: "D2", chord: "D3,F#3,A3", dur: 0.5 },
+                    { time: 13.5, note: "E4", dur: 0.5 },
+                    { time: 14.0, note: "G4", bass: "G2", chord: "G3,B3,D4", dur: 1.0 },
+                    { time: 15.0, note: "A4", bass: "G2", dur: 0.5 },
+                    { time: 15.5, note: "G4", dur: 0.5 },
+                    { time: 16.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 16.5, note: "D4", dur: 0.5 },
+                    { time: 17.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 }
+                ]
+            },
+            {
+                name: "สายฝน (ฉบับเต็ม)",
+                desc: "บทเพลงพระราชนิพนธ์ ท่วงทำนองแจ๊สวอลท์ซหวานซึ้ง อบอุ่น มีมิติคอร์ดประสานที่ซับซ้อนงดงาม",
+                tempo: 95,
+                notes: [
+                    // ท่อน 1: ยามสายฝนโปรยโบกพลิ้วพัด
+                    { time: 0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 0.5, note: "G4", dur: 0.5 },
+                    { time: 1.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.75 },
+                    { time: 1.75, note: "C5", dur: 0.25 },
+                    { time: 2.0, note: "A4", bass: "F2", dur: 0.5 },
+                    { time: 2.5, note: "G4", dur: 0.5 },
+                    { time: 3.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // พัดพาความเย็นฉ่ำสู่แผ่นดิน
+                    { time: 4.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 4.5, note: "E4", dur: 0.5 },
+                    { time: 5.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 6.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 },
+
+                    // พืชพรรณพราวเขียวส้มลิ้มรสหวาน
+                    { time: 8.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 8.5, note: "G4", dur: 0.5 },
+                    { time: 9.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.75 },
+                    { time: 9.75, note: "C5", dur: 0.25 },
+                    { time: 10.0, note: "A4", bass: "F2", dur: 0.5 },
+                    { time: 10.5, note: "G4", dur: 0.5 },
+                    { time: 11.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // ลำธารไหลหลั่งหล่อเลี้ยงประชา
+                    { time: 12.0, note: "D5", bass: "D2", chord: "D3,F#3,A3", dur: 0.5 },
+                    { time: 12.5, note: "E5", dur: 0.5 },
+                    { time: 13.0, note: "D5", bass: "G2", chord: "G3,B3,D4", dur: 1.0 },
+                    { time: 14.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 2.0 }
+                ]
+            },
+            {
+                name: "ใกล้รุ่ง (ฉบับเต็ม)",
+                desc: "บทเพลงพระราชนิพนธ์ ท่วงทำนองสว่างไสว อ่อนโยน บรรเลงอย่างสุนทรีย์ต้อนรับอรุณรุ่ง",
+                tempo: 105,
+                notes: [
+                    // ท่อน 1: ได้ยินเสียงแว่วดังแผ่วมาแต่ไกลไกล
+                    { time: 0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 0.5, note: "A4", dur: 0.5 },
+                    { time: 1.0, note: "C5", bass: "C2", dur: 0.75 },
+                    { time: 1.75, note: "D5", dur: 0.25 },
+                    { time: 2.0, note: "E5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 2.5, note: "D5", dur: 0.5 },
+                    { time: 3.0, note: "C5", bass: "F2", chord: "F3,A3,C4", dur: 1.0 },
+
+                    // เสียงเพลงบรรเลงขับกล่อมใจ
+                    { time: 4.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 4.5, note: "G4", dur: 0.5 },
+                    { time: 5.0, note: "C5", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+                    { time: 6.0, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 },
+
+                    // ขจัดความเงียบเหงาเปล่าเปลี่ยวพลัน
+                    { time: 8.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 8.5, note: "A4", dur: 0.5 },
+                    { time: 9.0, note: "C5", bass: "C2", dur: 0.75 },
+                    { time: 9.75, note: "D5", dur: 0.25 },
+                    { time: 10.0, note: "E5", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 10.5, note: "D5", dur: 0.5 },
+                    { time: 11.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 1.0 },
+
+                    // แสงทองส่องหล้าเรืองรุ่งทิวา
+                    { time: 12.0, note: "C5", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 12.5, note: "D5", dur: 0.5 },
+                    { time: 13.0, note: "C5", bass: "G2", dur: 1.0 },
+                    { time: 14.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 2.0 }
+                ]
+            },
+            {
+                name: "สาวรำวง (ฉบับเต็ม)",
+                desc: "เพลงจังหวะสามช่า ยอดฮิตสนุกสนานระดับตำนาน เพลงครึกครื้นประจำวงแอกคอร์เดียนงานบุญ",
+                tempo: 130,
+                notes: [
+                    // ท่อนร้อง 1
+                    { time: 0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 0.25, note: "D4", dur: 0.25 },
+                    { time: 0.5, note: "E4", bass: "C2", dur: 0.25 },
+                    { time: 0.75, note: "G4", dur: 0.25 },
+                    { time: 1.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 1.5, note: "A4", dur: 0.5 },
+                    { time: 2.0, note: "C5", bass: "F2", chord: "F3,A3,C4", dur: 0.5 },
+                    { time: 2.5, note: "A4", dur: 0.5 },
+                    { time: 3.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 1.0 },
+
+                    // ท่อนร้อง 2
+                    { time: 4.0, note: "G4", bass: "C2", dur: 0.25 },
+                    { time: 4.25, note: "A4", dur: 0.25 },
+                    { time: 4.5, note: "G4", bass: "C2", dur: 0.25 },
+                    { time: 4.75, note: "E4", dur: 0.25 },
+                    { time: 5.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 5.5, note: "C4", dur: 0.5 },
+                    { time: 6.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 0.5 },
+                    { time: 6.5, note: "E4", dur: 0.5 },
+                    { time: 7.0, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 1.5 },
+
+                    // ท่อนรับส่งกลองยาวโจ๊ะๆ
+                    { time: 8.5, note: "E4", bass: "C2", chord: "C3,E3,G3", dur: 0.25 },
+                    { time: 8.75, note: "G4", dur: 0.25 },
+                    { time: 9.0, note: "A4", bass: "F2", chord: "F3,A3,C4", dur: 0.25 },
+                    { time: 9.25, note: "C5", dur: 0.25 },
+                    { time: 9.5, note: "A4", bass: "F2", dur: 0.5 },
+                    { time: 10.0, note: "G4", bass: "C2", chord: "C3,E3,G3", dur: 0.5 },
+                    { time: 10.5, note: "E4", dur: 0.5 },
+                    { time: 11.0, note: "D4", bass: "G2", chord: "G3,B3,D4", dur: 1.0 },
+                    { time: 12.0, note: "E4", bass: "G2", dur: 0.25 },
+                    { time: 12.25, note: "D4", dur: 0.25 },
+                    { time: 12.5, note: "C4", bass: "C2", chord: "C3,E3,G3", dur: 1.5 }
+                ]
+            }
+        ];
+
+        // Precision sequencer mapping notes to visual triggers so accordion keys depress automatically
+        let currentSongIndex = -1;
+        let activeSongTimeoutIds = [];
+        let isSongPlaying = false;
+        let songPlaybackSpeedFactor = 1.0;
+
+        // Render Demo Song selection grid
+        const songGrid = document.getElementById('song-list-grid');
+        DEMO_SONGS.forEach((song, idx) => {
+            const btn = document.createElement('button');
+            btn.className = "bg-slate-950 border border-gray-800 hover:border-teal-500 p-2.5 rounded-xl text-left hover:bg-slate-900 transition flex flex-col justify-between h-20";
+            btn.innerHTML = `
+                <span class="text-xs font-bold text-white block truncate">${song.name}</span>
+                <span class="text-[9px] text-gray-400 block line-clamp-2 leading-tight">${song.desc}</span>
+            `;
+            btn.addEventListener('click', () => selectDemoSong(idx));
+            songGrid.appendChild(btn);
+        });
+
+        function selectDemoSong(idx) {
+            stopDemoPlayback();
+            currentSongIndex = idx;
+            const song = DEMO_SONGS[idx];
+            document.getElementById('current-song-title').textContent = song.name;
+            showToast("เลือกเพลงแล้ว", `พร้อมบรรเลงเพลง: ${song.name}`, "🎶");
+            
+            // Auto close songs drawer to view the keyboard playing
+            document.getElementById('songs-panel').classList.add('-translate-y-full');
+            startDemoPlayback();
+        }
+
+        function startDemoPlayback() {
+            if (currentSongIndex === -1) {
+                showToast("ยังไม่ได้เลือกเพลง", "กรุณาเลือกเพลงจากรายชื่อเพลงสาธิตก่อน", "⚠️");
+                return;
+            }
+            
+            initAudio();
+            stopDemoPlayback();
+            isSongPlaying = true;
+            document.getElementById('song-play-toggle').textContent = "⏸️";
+
+            const song = DEMO_SONGS[currentSongIndex];
+            const beatDurationMs = (60 / song.tempo) * 1000 / songPlaybackSpeedFactor;
+
+            song.notes.forEach(noteItem => {
+                const triggerTime = noteItem.time * beatDurationMs;
+                const releaseTime = (noteItem.time + noteItem.dur) * beatDurationMs;
+
+                // Schedule note start
+                const playTimeoutId = setTimeout(() => {
+                    // Trigger Melodic Key
+                    if (noteItem.note) {
+                        const targetKey = document.querySelector(`[data-note="${noteItem.note}"]`);
+                        if (targetKey) handleNoteOn(targetKey);
+                    }
+                    // Trigger Bass button
+                    if (noteItem.bass) {
+                        const targetBass = document.querySelector(`[data-note="${noteItem.bass}"][data-type="bass"]`);
+                        if (targetBass) handleNoteOn(targetBass);
+                    }
+                    // Trigger Chord button
+                    if (noteItem.chord) {
+                        const targetChord = document.querySelector(`[data-note="${noteItem.chord}"][data-type="chord"]`);
+                        if (targetChord) handleNoteOn(targetChord);
+                    }
+                }, triggerTime);
+
+                // Schedule note release
+                const stopTimeoutId = setTimeout(() => {
+                    if (noteItem.note) {
+                        const targetKey = document.querySelector(`[data-note="${noteItem.note}"]`);
+                        if (targetKey) handleNoteOff(targetKey);
+                    }
+                    if (noteItem.bass) {
+                        const targetBass = document.querySelector(`[data-note="${noteItem.bass}"][data-type="bass"]`);
+                        if (targetBass) handleNoteOff(targetBass);
+                    }
+                    if (noteItem.chord) {
+                        const targetChord = document.querySelector(`[data-note="${noteItem.chord}"][data-type="chord"]`);
+                        if (targetChord) handleNoteOff(targetChord);
+                    }
+                }, releaseTime);
+
+                activeSongTimeoutIds.push(playTimeoutId, stopTimeoutId);
+            });
+
+            // เมื่อเล่นจบเพลง ให้หยุดบรรเลงและรีเซ็ตปุ่ม (แทนการวนซ้ำแบบเดิม)
+            const totalDurationMs = Math.max(...song.notes.map(n => n.time + n.dur)) * beatDurationMs + 500;
+            const endTimeoutId = setTimeout(() => {
+                if (isSongPlaying) {
+                    stopDemoPlayback();
+                    showToast("จบเพลงแล้ว", `เพลง ${song.name} บรรเลงเสร็จสิ้นเรียบร้อยแล้ว`, "✨");
+                }
+            }, totalDurationMs);
+            activeSongTimeoutIds.push(endTimeoutId);
+        }
+
+        function stopDemoPlayback() {
+            isSongPlaying = false;
+            document.getElementById('song-play-toggle').textContent = "▶️";
+            activeSongTimeoutIds.forEach(id => clearTimeout(id));
+            activeSongTimeoutIds = [];
+            
+            // Force release all active notes on the keyboard
+            const activeElements = document.querySelectorAll('.active');
+            activeElements.forEach(el => handleNoteOff(el));
+        }
+
+        // Play/Pause toggle
+        document.getElementById('song-play-toggle').addEventListener('click', () => {
+            if (isSongPlaying) {
+                stopDemoPlayback();
+            } else {
+                startDemoPlayback();
             }
         });
-        
+
+        document.getElementById('stop-song-btn').addEventListener('click', stopDemoPlayback);
+
+        // Tempo control
+        document.getElementById('slider-tempo').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-tempo').textContent = `${val}%`;
+            songPlaybackSpeedFactor = val / 100;
+            if (isSongPlaying) {
+                // Restart immediately with new tempo adjustments
+                startDemoPlayback();
+            }
+        });
+
+        // Wiring GUI slider adjustments to Web Audio Graph nodes
         document.getElementById('toggle-notes').addEventListener('click', () => {
             isNotesVisible = !isNotesVisible;
             const labels = document.querySelectorAll('.note-label');
             labels.forEach(l => l.classList.toggle('hidden'));
         });
 
-        // RECORDER LOGIC
+        // Menu panels display toggle buttons
+        document.getElementById('toggle-fx-btn').addEventListener('click', () => {
+            document.getElementById('songs-panel').classList.add('-translate-y-full'); // close other
+            document.getElementById('fx-panel').classList.toggle('-translate-y-full');
+        });
+        document.getElementById('close-fx').addEventListener('click', () => {
+            document.getElementById('fx-panel').classList.add('-translate-y-full');
+        });
+
+        document.getElementById('toggle-songs-btn').addEventListener('click', () => {
+            document.getElementById('fx-panel').classList.add('-translate-y-full'); // close other
+            document.getElementById('songs-panel').classList.toggle('-translate-y-full');
+        });
+        document.getElementById('close-songs').addEventListener('click', () => {
+            document.getElementById('songs-panel').classList.add('-translate-y-full');
+        });
+
+        // Octave range focus selector for mobile portrait
+        const octBtns = {
+            low: document.getElementById('oct-low'),
+            full: document.getElementById('oct-full'),
+            high: document.getElementById('oct-high')
+        };
+
+        function setOctaveFocus(focus) {
+            currentOctaveFocus = focus;
+            Object.keys(octBtns).forEach(key => {
+                if (key === focus) {
+                    octBtns[key].className = "px-2 py-1 rounded-md bg-amber-500 text-slate-950 font-bold transition";
+                } else {
+                    octBtns[key].className = "px-2 py-1 rounded-md text-gray-400 hover:text-white transition";
+                }
+            });
+            createKeyboard();
+            showToast("ปรับขนาดคีย์แล้ว", `เปลี่ยนช่วงระดับเสียงเป็น: ${focus === 'full' ? 'ทั้งหมด' : (focus === 'low' ? 'คีย์ต่ำ' : 'คีย์สูง')}`, "🎹");
+        }
+
+        octBtns.low.addEventListener('click', () => setOctaveFocus('low'));
+        octBtns.full.addEventListener('click', () => setOctaveFocus('full'));
+        octBtns.high.addEventListener('click', () => setOctaveFocus('high'));
+
+        // FX Sliders wiring
+        document.getElementById('slider-vol').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-vol').textContent = `${val}%`;
+            masterGainVal = (val / 100) * 0.7; // Scale max volume output
+            if (globalMasterGain) globalMasterGain.gain.setValueAtTime(masterGainVal, audioCtx.currentTime);
+        });
+
+        document.getElementById('slider-filter').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-filter').textContent = `${val} Hz`;
+            filterFreqVal = val;
+            if (globalFilterNode) globalFilterNode.frequency.setValueAtTime(filterFreqVal, audioCtx.currentTime);
+        });
+
+        document.getElementById('slider-reverb').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-reverb').textContent = `${val}%`;
+            reverbAmtVal = val / 100;
+            if (globalReverbWet) globalReverbWet.gain.setValueAtTime(reverbAmtVal, audioCtx.currentTime);
+        });
+
+        document.getElementById('slider-delay').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-delay').textContent = `${val}%`;
+            delayAmtVal = val / 100;
+            if (globalDelayWet) globalDelayWet.gain.setValueAtTime(delayAmtVal, audioCtx.currentTime);
+        });
+
+        document.getElementById('auto-bellows').addEventListener('change', (e) => {
+            enableAutoBellows = e.target.checked;
+            if (!enableAutoBellows) {
+                // Return to normal scale state
+                manualBellowsScale = 1.0;
+                updateBellowsVisual(1.0);
+            }
+        });
+
+        // Timbre instrument selector click triggers
+        const presetButtons = document.querySelectorAll('#preset-selector button');
+        presetButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                presetType = btn.dataset.preset;
+                presetButtons.forEach(b => {
+                    b.className = "py-2 px-1 rounded-lg border border-gray-700 bg-gray-900 text-xs font-bold hover:bg-gray-800 text-gray-300";
+                });
+                btn.className = "py-2 px-1 rounded-lg border-2 border-amber-500 bg-amber-500/10 text-xs font-bold hover:bg-amber-500/20 text-white";
+                showToast("เปลี่ยนเครื่องดนตรี", `ใช้งานระบบเสียงแอกคอร์เดียน: ${btn.textContent}`, "🎷");
+            });
+        });
+
+        // MediaStream Recorder to capture performances in real-time
         const recBtn = document.getElementById('record-btn');
         const recDot = document.getElementById('rec-dot');
         const recText = document.getElementById('rec-text');
         const downloadLink = document.getElementById('download-link');
-        let isRecording = false;
 
         recBtn.addEventListener('click', () => {
-            initAudio(); // Ensure context is running
+            initAudio(); // Confirm audio routing is ready
             
             if (!isRecording) {
-                // START RECORDING
+                // Trigger live recorder
                 audioChunks = [];
-                // Check if MediaRecorder is supported
                 if (!dest || !window.MediaRecorder) {
-                    alert("Browser not supported for recording.");
+                    showToast("ไม่รองรับการบันทึกเสียง", "เบราว์เซอร์หรือเครื่องของคุณไม่สนับสนุนระบบ MediaRecorder API", "❌");
                     return;
                 }
 
@@ -425,7 +1575,7 @@
                     mediaRecorder = new MediaRecorder(dest.stream);
                 } catch (err) {
                     console.error(err);
-                    alert("Cannot start recording: " + err.message);
+                    showToast("ไม่สามารถเริ่มการอัดเสียง", err.message, "❌");
                     return;
                 }
 
@@ -434,39 +1584,98 @@
                 };
 
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' }); // Chrome/Android support webm
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
                     const url = URL.createObjectURL(blob);
                     
-                    // Show download button
+                    // Show download button link
                     downloadLink.href = url;
-                    downloadLink.download = `accordion_solo_${Date.now()}.webm`;
+                    downloadLink.download = `thai_accordion_${Date.now()}.webm`;
                     downloadLink.classList.remove('hidden');
                     
-                    // Allow restarting recording logic
                     isRecording = false;
                     recText.textContent = "อัดเสียง";
                     recDot.classList.remove('animate-pulse', 'bg-red-200');
-                    recBtn.classList.remove('bg-gray-600');
+                    recBtn.classList.remove('bg-gray-700');
                     recBtn.classList.add('bg-red-600');
+                    
+                    showToast("บันทึกเสียงเสร็จสิ้น!", "ปุ่มดาวน์โหลดไฟล์เสียงปรากฏแล้ว คุณสามารถกดเซฟบันทึกได้ทันที", "🎉");
                 };
 
                 mediaRecorder.start();
                 isRecording = true;
                 
-                // UI Updates
+                // Set visual dynamic buttons active
                 recText.textContent = "หยุดอัด";
                 recDot.classList.add('animate-pulse', 'bg-red-200');
                 recBtn.classList.remove('bg-red-600');
-                recBtn.classList.add('bg-gray-600');
-                downloadLink.classList.add('hidden'); // Hide old download link
+                recBtn.classList.add('bg-gray-700');
+                downloadLink.classList.add('hidden'); // Clear previous sessions
+                
+                showToast("กำลังเริ่มบันทึกเสียง...", "เล่นแอกคอร์เดียนเพื่อสร้างประวัติการบันทึกเสียงพรีเมียม", "🎙️");
 
             } else {
-                // STOP RECORDING
+                // Finalize live recorder session
                 if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                     mediaRecorder.stop();
                 }
             }
         });
+
+        // ฟังก์ชันรีเซ็ตระบบทั้งหมดเมื่ออก ย่อหน้า หรือสลับแอป
+        function resetAll() {
+            // 1. หยุดบรรเลงเพลงสาธิตที่กำลังเล่นอยู่
+            stopDemoPlayback();
+
+            // 2. หยุดอัดเสียงทันทีเพื่อป้องกันไฟล์เสียงเสียหายหรือค้าง
+            if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
+                try {
+                    mediaRecorder.stop();
+                } catch (e) {
+                    console.error("Error stopping recorder during reset:", e);
+                }
+            }
+
+            // 3. ปิด Oscillator ที่ส่งเสียงค้างอยู่ทั้งหมด
+            Object.keys(activeOscillators).forEach(key => {
+                if (activeOscillators[key]) {
+                    try {
+                        activeOscillators[key].stop();
+                    } catch (e) {}
+                    delete activeOscillators[key];
+                }
+            });
+
+            // 4. ลบเอฟเฟกต์ไฟและปุ่มค้างทั้งหมดออกจากหน้าจอ
+            const activeElements = document.querySelectorAll('.active, .pulsing, .expanding');
+            activeElements.forEach(el => {
+                el.classList.remove('active', 'pulsing', 'expanding');
+                delete el.dataset.touchId;
+            });
+
+            // 5. คืนค่ากล่องลม bellows
+            manualBellowsScale = 1.0;
+            updateBellowsVisual(1.0);
+
+            // 6. พักระบบเสียง (Suspend AudioContext) ป้องกันเสียงหวีด/ค้างเมื่อไม่ได้เปิดหน้านี้
+            if (audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend();
+            }
+        }
+
+        // จับเหตุการณ์ย่อหน้าจอ/สลับแท็บ หรือปิดหน้าเว็บเพื่อสั่ง Reset
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                resetAll();
+            } else {
+                // กลับมาทำงานต่อเมื่อผู้ใช้งานเปิดหน้าเว็บขึ้นมาอีกครั้ง
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+        });
+
+        window.addEventListener("pagehide", resetAll);
+        window.addEventListener("beforeunload", resetAll);
 
     </script>
 </body>
