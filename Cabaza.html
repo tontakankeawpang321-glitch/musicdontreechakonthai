@@ -2,622 +2,1023 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>คาบาซาจำลอง (Cabasa Simulator)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>คาบาซาจำลองระดับโปร (Cabasa Simulator Pro)</title>
+    <!-- Tailwind CSS for Modern & Responsive UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for premium Thai/English look -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS Reset & Basic Setup */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
         }
-
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a1a1a;
-            color: white;
-            font-family: 'Sarabun', sans-serif;
-            overflow: hidden; /* Prevent scrolling */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            touch-action: none; /* Critical for touch games */
-        }
-
-        /* Background Pattern */
-        .bg-pattern {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(#333 1px, transparent 1px);
-            background-size: 20px 20px;
-            opacity: 0.2;
-            z-index: -1;
-        }
-
-        /* Title & Info */
-        .header {
-            position: absolute;
-            top: 20px;
-            text-align: center;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin: 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            color: #f0c040;
-        }
-
-        p {
-            font-size: 0.9rem;
-            color: #aaa;
-            margin-top: 5px;
-        }
-
-        /* The Cabasa Instrument Container */
-        #cabasa-container {
-            position: relative;
-            width: 300px;
-            height: 500px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transform-origin: center center;
-            transition: transform 0.05s ease-out;
-            cursor: pointer;
-        }
-
-        /* Handle */
-        .handle {
-            width: 40px;
-            height: 180px;
-            background: linear-gradient(90deg, #3e2723, #8d6e63, #3e2723);
-            border-radius: 0 0 10px 10px;
-            position: relative;
-            top: -10px;
-            z-index: 1;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .handle::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 100%;
-            background: rgba(255,255,255,0.05);
-            border-radius: 5px;
-        }
-
-        /* The Head (Cylinder) */
-        .head {
-            width: 220px;
-            height: 220px;
-            background: linear-gradient(90deg, #444, #888, #444);
-            border-radius: 15px;
-            position: relative;
-            z-index: 2;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-evenly;
-            padding: 10px 0;
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #0f1115 0%, #1a1d24 100%);
             overflow: hidden;
-            border: 4px solid #222;
+            touch-action: none;
         }
-
-        /* Top cap of the head */
-        .head-cap {
+        /* Soft pulsing light effect in background */
+        .ambient-glow {
             position: absolute;
-            top: -15px;
-            width: 200px;
-            height: 30px;
-            background: #2a2a2a;
-            border-radius: 50%;
-            z-index: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, rgba(0,0,0,0) 70%);
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            pointer-events: none;
+            transition: transform 0.1s ease;
         }
-
-        /* Beads Rows */
-        .bead-row {
-            width: 100%;
-            height: 18px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 5px;
+        /* Custom scrollbar for settings drawer if needed */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-
-        /* Individual Bead */
-        .bead {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fff, #bdc3c7, #7f8c8d);
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-            transform: scale(1);
-            transition: transform 0.1s;
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-
-        /* Start Overlay */
-        #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .start-btn {
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            background: #f0c040;
-            color: #1a1a1a;
-            border: none;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(240, 192, 64, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(240, 192, 64, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(240, 192, 64, 0); }
-        }
-
-        /* Recording Button Styles */
-        .controls {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 20;
-            display: flex;
-            gap: 15px;
-        }
-
-        .record-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #e74c3c;
-            border: 4px solid #fff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.1s, background-color 0.3s, border-color 0.3s;
-        }
-
-        .record-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Button State: Recording */
-        .record-btn.recording {
-            background-color: #fff;
-            border-color: #e74c3c;
-            animation: pulse-record 2s infinite;
-        }
-
-        .record-shape {
-            width: 24px;
-            height: 24px;
-            background-color: white;
-            border-radius: 50%; /* Circle shape for 'Record' */
-            transition: all 0.3s ease;
-        }
-
-        .record-btn.recording .record-shape {
-            background-color: #e74c3c;
-            border-radius: 4px; /* Square shape for 'Stop' */
-            width: 20px;
-            height: 20px;
-        }
-        
-        @keyframes pulse-record {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
-
-        /* Animation classes */
-        .shake-anim {
-            animation: shake 0.15s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0) rotate(-1deg); }
-            20%, 80% { transform: translate3d(2px, 0, 0) rotate(2deg); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0) rotate(-4deg); }
-            40%, 60% { transform: translate3d(4px, 0, 0) rotate(4deg); }
-        }
-
-        .bead-spin {
-            animation: spinBeads 0.2s linear infinite;
-        }
-
-        @keyframes spinBeads {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(1px); }
-            100% { transform: translateY(0); }
-        }
-
     </style>
 </head>
-<body>
+<body class="w-screen h-screen flex flex-col justify-between text-white p-4 pb-safe">
 
-    <div class="bg-pattern"></div>
+    <!-- Ambient Glow behind instrument -->
+    <div id="ambient-glow" class="ambient-glow"></div>
 
-    <div class="header">
-        <h1>Cabasa</h1>
-        <p>แตะเพื่อเขย่า • ลากเพื่อถู</p>
-    </div>
-
-    <!-- Instrument Visual -->
-    <div id="cabasa-container">
-        <div class="head" id="cabasa-head">
-            <!-- Beads generated by JS -->
+    <!-- Top Bar with Title and Status -->
+    <header class="w-full z-10 flex justify-between items-start mt-2">
+        <div>
+            <h1 class="text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500">
+                CABASA PRO <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 font-semibold border border-yellow-500/30">V2.0</span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-0.5">สัมผัส ถู หมุน หรือเขย่ามือถือเพื่อเล่น</p>
         </div>
-        <div class="handle"></div>
-    </div>
+        <div class="flex flex-col items-end gap-1">
+            <span id="tempo-display" class="text-xs font-semibold px-2.5 py-1 bg-slate-800/80 backdrop-blur rounded-lg border border-slate-700/50 hidden text-amber-400 animate-pulse">
+                BPM: --
+            </span>
+        </div>
+    </header>
 
-    <!-- Recording Controls -->
-    <div class="controls">
-        <div class="record-btn" id="record-btn" title="บันทึกเสียง/หยุด">
-            <div class="record-shape"></div>
+    <!-- Play Area / Cabasa visual representation -->
+    <main class="flex-grow flex flex-col items-center justify-center relative w-full z-10 my-4">
+        <!-- Interactive play surface feedback -->
+        <div id="cabasa-container" class="relative flex flex-col items-center justify-center w-64 h-96 transition-all duration-75 cursor-pointer origin-center">
+            
+            <!-- Metallic Cylinder Top (Head Cap) -->
+            <div class="w-48 h-6 bg-gradient-to-r from-zinc-700 via-zinc-400 to-zinc-700 rounded-t-full shadow-lg border-b border-zinc-900 relative z-20">
+                <div class="absolute inset-x-0 bottom-0 h-1 bg-black/40"></div>
+                <div class="absolute top-1 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-yellow-400/40 rounded-full blur-[1px]"></div>
+            </div>
+
+            <!-- Metallic Cylinder Body (The Head) containing Beads -->
+            <div id="cabasa-head" class="w-48 h-48 bg-gradient-to-r from-zinc-800 via-zinc-600 to-zinc-800 border-x-4 border-zinc-900 shadow-2xl relative z-10 flex flex-col justify-between py-1 overflow-hidden">
+                <!-- Inner shining reflection line -->
+                <div class="absolute left-1/4 top-0 w-8 h-full bg-white/5 skew-x-12 pointer-events-none"></div>
+                <!-- Dynamic beads rows will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Metallic Cylinder Bottom (Head Cap) -->
+            <div class="w-48 h-5 bg-gradient-to-r from-zinc-700 via-zinc-500 to-zinc-700 rounded-b-xl shadow-md border-t border-zinc-900 relative z-20">
+                <div class="absolute inset-x-0 top-0 h-1 bg-white/20"></div>
+            </div>
+
+            <!-- Cabasa Handle (Wooden) -->
+            <div id="cabasa-handle" class="w-9 h-36 bg-gradient-to-r from-amber-950 via-amber-800 to-amber-950 rounded-b-2xl shadow-xl border-t-2 border-zinc-900 relative z-0 origin-top transition-transform duration-100">
+                <!-- Grip textures -->
+                <div class="w-full h-8 border-b border-black/40 mt-6 bg-black/10"></div>
+                <div class="w-full h-8 border-b border-black/40 bg-black/10"></div>
+                <div class="w-full h-8 border-b border-black/40 bg-black/10"></div>
+            </div>
+
+            <!-- Visual Ripple Rings on shake/tap -->
+            <div id="ripple-ring" class="absolute w-56 h-56 rounded-full border-2 border-yellow-400/0 pointer-events-none transition-all duration-300 scale-75 z-0"></div>
+        </div>
+    </main>
+
+    <!-- Action buttons and drawers -->
+    <div class="w-full z-10 flex flex-col gap-3">
+        
+        <!-- Backing Tracks / Demo Songs section -->
+        <section class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-3 shadow-lg">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                จังหวะประกอบ (Demo Backing Tracks)
+            </h2>
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="toggleBackingTrack(0)" id="song-btn-0" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/50 transition-all">
+                    <span class="text-sm font-semibold text-white">Bossa Nova</span>
+                    <span class="text-[10px] text-slate-400">80 BPM</span>
+                </button>
+                <button onclick="toggleBackingTrack(1)" id="song-btn-1" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/50 transition-all">
+                    <span class="text-sm font-semibold text-white">Samba</span>
+                    <span class="text-[10px] text-slate-400">112 BPM</span>
+                </button>
+                <button onclick="toggleBackingTrack(2)" id="song-btn-2" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/50 transition-all">
+                    <span class="text-sm font-semibold text-white">Cha-Cha-Cha</span>
+                    <span class="text-[10px] text-slate-400">120 BPM</span>
+                </button>
+            </div>
+            
+            <!-- Song progress bar -->
+            <div id="song-progress-container" class="mt-2.5 h-1.5 w-full bg-slate-950 rounded-full overflow-hidden hidden">
+                <div id="song-progress-bar" class="h-full bg-gradient-to-r from-yellow-500 to-amber-400 w-0 transition-all duration-300"></div>
+            </div>
+        </section>
+
+        <div class="flex items-center justify-between gap-3">
+            <!-- Record Button -->
+            <button id="record-btn" class="flex-grow flex items-center justify-center gap-2 py-3.5 bg-rose-600/20 border border-rose-500/30 hover:bg-rose-600/30 text-rose-200 rounded-2xl font-semibold transition-all">
+                <span class="w-3 h-3 bg-rose-500 rounded-full animate-pulse" id="record-dot"></span>
+                <span id="record-text">บันทึกเสียง</span>
+            </button>
+
+            <!-- Advanced Config Toggle -->
+            <button onclick="toggleSettingsDrawer()" class="flex-none p-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 rounded-2xl transition-all" title="ปรับแต่งเสียง">
+                <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                </svg>
+            </button>
         </div>
     </div>
 
-    <!-- Start Overlay -->
-    <div id="start-overlay">
-        <button class="start-btn" id="start-btn">เริ่มเล่น (Start)</button>
-        <p style="margin-top: 20px; font-size: 0.8rem; opacity: 0.7;">เปิดเสียงเพื่อประสบการณ์ที่ดีที่สุด</p>
+    <!-- Drawer is absolutely positioned inside body with slide-up effect -->
+    <div id="settings-drawer" class="fixed inset-x-0 bottom-0 z-30 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/80 rounded-t-[2.5rem] p-6 shadow-2xl transition-all duration-300 transform translate-y-full max-h-[85vh] overflow-y-auto no-scrollbar">
+        <!-- Close Drag Handle -->
+        <div onclick="toggleSettingsDrawer()" class="w-16 h-1.5 bg-slate-700 rounded-full mx-auto mb-6 cursor-pointer hover:bg-slate-500 transition-colors"></div>
+        
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300">เครื่องผสมเสียงขั้นสูง (Acoustic Synthesizer)</h3>
+            <button onclick="resetParameters()" class="text-xs text-amber-500 hover:text-amber-400 font-semibold uppercase tracking-wider">รีเซ็ตค่าเริ่มต้น</button>
+        </div>
+
+        <div class="space-y-5">
+            <!-- 1. Bead Pitch Freq (Metallic Core) -->
+            <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                    <span class="text-slate-300">ขนาดลูกปัด (โทนเสียงสูง-ต่ำ)</span>
+                    <span id="param-freq-val" class="text-yellow-400 font-semibold font-mono">3500 Hz</span>
+                </div>
+                <input type="range" id="slider-freq" min="1200" max="7500" value="3500" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-yellow-400">
+                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                    <span>ใหญ่ (เสียงทุ้ม)</span>
+                    <span>เล็ก (เสียงแหลมใส)</span>
+                </div>
+            </div>
+
+            <!-- 2. Decay / Release (Bead Loose-ness) -->
+            <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                    <span class="text-slate-300">ระยะเวลาเสียงกังวาน (Sustain)</span>
+                    <span id="param-decay-val" class="text-yellow-400 font-semibold font-mono">0.12 วินาที</span>
+                </div>
+                <input type="range" id="slider-decay" min="0.04" max="0.45" step="0.01" value="0.12" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-yellow-400">
+                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                    <span>กระชับ (แน่น)</span>
+                    <span>กังวานยาว (หลวม)</span>
+                </div>
+            </div>
+
+            <!-- 3. Bandpass Resonance (Q-factor) -->
+            <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                    <span class="text-slate-300">ความสั่นสะท้าน (Metallic Resonance)</span>
+                    <span id="param-q-val" class="text-yellow-400 font-semibold font-mono">1.2</span>
+                </div>
+                <input type="range" id="slider-q" min="0.3" max="4.0" step="0.1" value="1.2" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-yellow-400">
+                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                    <span>นุ่มนวล</span>
+                    <span>โลหะเสียดสีเด่นชัด</span>
+                </div>
+            </div>
+
+            <!-- 4. Echo / Delay Feedback -->
+            <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                    <span class="text-slate-300">ระบบเสียงสะท้อนตู้ไม้ (Chamber Echo)</span>
+                    <span id="param-echo-val" class="text-yellow-400 font-semibold font-mono">25%</span>
+                </div>
+                <input type="range" id="slider-echo" min="0" max="80" value="25" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-yellow-400">
+                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                    <span>ปิดเอฟเฟกต์</span>
+                    <span>หางเสียงก้องสะท้อนกว้าง</span>
+                </div>
+            </div>
+
+            <!-- 5. Backing Track Volume -->
+            <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                    <span class="text-slate-300">ระดับเสียงดนตรีประกอบ (Backing Vol)</span>
+                    <span id="param-bg-vol-val" class="text-yellow-400 font-semibold font-mono">60%</span>
+                </div>
+                <input type="range" id="slider-bg-vol" min="0" max="100" value="60" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-yellow-400">
+            </div>
+        </div>
+
+        <button onclick="toggleSettingsDrawer()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-bold rounded-xl mt-6 transition-all shadow-lg shadow-yellow-500/10">
+            ตกลงและบันทึก
+        </button>
+    </div>
+
+    <!-- Start/Activation Overlay to allow Web Audio Context activation -->
+    <div id="start-overlay" class="fixed inset-0 z-50 bg-slate-950/95 flex flex-col justify-center items-center text-center p-6">
+        <div class="w-24 h-24 mb-6 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center shadow-2xl shadow-yellow-500/20 animate-pulse">
+            <!-- Icon of Shake Instrument -->
+            <svg class="w-12 h-12 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-white mb-2">คาบาซาจำลองสเตอริโอขั้นสูง</h2>
+        <p class="text-sm text-slate-400 max-w-xs mb-8">สัมผัสประสบการณ์เสียงเพอร์คัชชันสังเคราะห์เสมือนจริง เปิดลำโพงหรือสวมหูฟังเพื่อเสียงที่ดีที่สุด</p>
+        
+        <button id="start-btn" class="px-10 py-4 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 hover:scale-105 transition-transform text-slate-950 text-lg font-bold rounded-full shadow-lg shadow-yellow-500/20">
+            เริ่มใช้งานเครื่องดนตรี
+        </button>
     </div>
 
     <script>
-        /**
-         * Cabasa Sound Engine using Web Audio API
-         */
+        // Web Audio API State Variables
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
+        let audioCtx = null;
+        let masterGainNode = null;
+        let delayNode = null;
+        let feedbackGainNode = null;
+        let backingTrackGainNode = null;
         let noiseBuffer = null;
-        let isSetup = false;
-        
-        // Recording variables
-        let masterGain;
-        let destNode;
-        let mediaRecorder;
-        let chunks = [];
+        let isAudioSetup = false;
+
+        // Custom Sound synthesis tuning params
+        const synthParams = {
+            beadPitch: 3500,
+            decay: 0.12,
+            resonance: 1.2,
+            echoFeedback: 0.25,
+            backingVolume: 0.60
+        };
+
+        // UI & Motion State
+        let isSettingsOpen = false;
+        let beadsArr = [];
+        let accumulatedDragX = 0;
+        let accumulatedDragY = 0;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        let isInteracting = false;
+
+        // Recording State
+        let mediaRecorder = null;
+        let audioChunks = [];
         let isRecording = false;
+        let recordingDestNode = null;
 
-        // Visual Elements
-        const container = document.getElementById('cabasa-container');
-        const head = document.getElementById('cabasa-head');
-        const overlay = document.getElementById('start-overlay');
-        const startBtn = document.getElementById('start-btn');
-        const recordBtn = document.getElementById('record-btn');
+        // Backing Track State
+        let currentActiveSongIdx = -1;
+        let backingSchedulerId = null;
+        let currentMeasure = 0;
+        let nextNoteTime = 0.0;
+        let bpm = 120;
+        const songDurationSecs = 20; // Each demo song will play for 20 seconds, fade out, then stop (ปิดเมื่อจบ)
+        let songStartTime = 0;
+        let progressBarIntervalId = null;
 
-        // Generate Beads visually
-        function generateBeads() {
-            for (let i = 0; i < 11; i++) { // 11 rows
-                const row = document.createElement('div');
-                row.className = 'bead-row';
-                // Offset rows slightly for realism
-                row.style.transform = i % 2 === 0 ? 'translateX(3px)' : 'translateX(-3px)';
+        // Generates realistic bead lines and individual beads inside container
+        function buildCabasaBeads() {
+            const headContainer = document.getElementById('cabasa-head');
+            headContainer.innerHTML = ''; // Reset container
+            beadsArr = [];
+            const rowsCount = 10;
+            const beadsPerRow = 15;
+
+            for (let r = 0; r < rowsCount; r++) {
+                const rowElement = document.createElement('div');
+                rowElement.className = 'w-full h-4 flex justify-between px-1 relative transition-transform duration-75 pointer-events-none';
                 
-                for (let j = 0; j < 14; j++) { // 14 beads per row
+                // Stagger alternate rows to represent genuine mesh weave
+                const offset = (r % 2 === 0) ? 'translateX(3px)' : 'translateX(-3px)';
+                rowElement.style.transform = offset;
+                
+                const beadRowGroup = [];
+                for (let b = 0; b < beadsPerRow; b++) {
                     const bead = document.createElement('div');
-                    bead.className = 'bead';
-                    row.appendChild(bead);
+                    // Style realistic metal bead sphere
+                    bead.className = 'w-3.5 h-3.5 rounded-full shadow-[inset_-1px_-1px_3px_rgba(0,0,0,0.8)] transition-all duration-100';
+                    bead.style.background = 'radial-gradient(circle at 35% 35%, #ffffff 0%, #a8a29e 50%, #44403c 100%)';
+                    rowElement.appendChild(bead);
+                    beadRowGroup.push(bead);
                 }
-                head.appendChild(row);
-            }
-        }
-        generateBeads();
-
-        // --- AUDIO ENGINE ---
-
-        // 1. Create White Noise Buffer (Static Sound Source)
-        function createNoiseBuffer() {
-            if (!audioCtx) return;
-            const bufferSize = audioCtx.sampleRate * 2.0; // 2 seconds buffer
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1; // White noise
-            }
-            noiseBuffer = buffer;
-        }
-
-        // 2. Play Sound Function
-        function playSound(type, velocity = 1.0) {
-            if (!audioCtx || !noiseBuffer || !masterGain) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            const t = audioCtx.currentTime;
-            const source = audioCtx.createBufferSource();
-            source.buffer = noiseBuffer;
-            source.loop = true;
-
-            // Filter to simulate metallic beads (High Bandpass)
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'bandpass';
-            // Randomize freq slightly for natural variation
-            filter.frequency.value = 3000 + (Math.random() * 1000); 
-            filter.Q.value = 1.0; // Width of the band
-
-            // Secondary Filter for "air"
-            const highShelf = audioCtx.createBiquadFilter();
-            highShelf.type = 'highshelf';
-            highShelf.frequency.value = 8000;
-            highShelf.gain.value = 10;
-
-            // Envelope (Volume Control)
-            const gainNode = audioCtx.createGain();
-            
-            // Connect Graph: Source -> Filter -> HighShelf -> Gain -> MASTER -> Destination
-            source.connect(filter);
-            filter.connect(highShelf);
-            highShelf.connect(gainNode);
-            gainNode.connect(masterGain); // Connect to Master Gain instead of direct destination
-
-            // Start Noise
-            source.start(t);
-
-            // Apply Envelope based on type
-            if (type === 'hit') {
-                // Sharp attack, fast decay
-                const attack = 0.01;
-                const decay = 0.08 + (Math.random() * 0.05);
-                gainNode.gain.setValueAtTime(0, t);
-                gainNode.gain.linearRampToValueAtTime(0.8 * velocity, t + attack);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, t + attack + decay);
-                source.stop(t + attack + decay + 0.1);
-            } else if (type === 'scrape') {
-                // Slower attack, slightly longer decay, less sharp
-                const duration = 0.15; 
-                gainNode.gain.setValueAtTime(0, t);
-                gainNode.gain.linearRampToValueAtTime(0.4 * velocity, t + 0.02);
-                gainNode.gain.linearRampToValueAtTime(0.01, t + duration);
-                source.stop(t + duration + 0.05);
+                headContainer.appendChild(rowElement);
+                beadsArr.push({
+                    el: rowElement,
+                    beads: beadRowGroup,
+                    currentOffset: (r % 2 === 0) ? 3 : -3
+                });
             }
         }
 
-        // --- INTERACTION & INIT ---
+        buildCabasaBeads();
 
-        function initAudio() {
-            if (isSetup) return;
+        // Sets up nodes, dynamic noise generators, spatial echoes, and master controls
+        function initWebAudio() {
+            if (isAudioSetup) return;
+
             audioCtx = new AudioContext();
             
-            // Setup Master Gain & Recording Destination
-            masterGain = audioCtx.createGain();
-            masterGain.gain.value = 1.0;
-            
-            // Connect Master to physical speakers
-            masterGain.connect(audioCtx.destination);
-            
-            // Connect Master to MediaStream for recording
-            destNode = audioCtx.createMediaStreamDestination();
-            masterGain.connect(destNode);
+            // Create master system output controls
+            masterGainNode = audioCtx.createGain();
+            masterGainNode.gain.setValueAtTime(0.85, audioCtx.currentTime);
+            masterGainNode.connect(audioCtx.destination);
 
-            createNoiseBuffer();
-            isSetup = true;
-            overlay.style.display = 'none';
+            // Establish recording architecture
+            if (typeof audioCtx.createMediaStreamDestination === 'function') {
+                recordingDestNode = audioCtx.createMediaStreamDestination();
+                masterGainNode.connect(recordingDestNode);
+            }
+
+            // Create Wood Chamber Echo using custom recursive Delay setup
+            delayNode = audioCtx.createDelay(1.0);
+            feedbackGainNode = audioCtx.createGain();
+            
+            // Set delay params
+            delayNode.delayTime.setValueAtTime(0.08, audioCtx.currentTime); // Quick spatial reflection
+            feedbackGainNode.gain.setValueAtTime(synthParams.echoFeedback, audioCtx.currentTime);
+
+            // Connect Echo feedback loop
+            delayNode.connect(feedbackGainNode);
+            feedbackGainNode.connect(delayNode);
+            
+            // Connect Echo to master out
+            delayNode.connect(masterGainNode);
+
+            // Backing track gain node
+            backingTrackGainNode = audioCtx.createGain();
+            backingTrackGainNode.gain.setValueAtTime(synthParams.backingVolume, audioCtx.currentTime);
+            backingTrackGainNode.connect(masterGainNode);
+
+            // Generate premium white noise array for bead scraping simulation
+            const sampleRate = audioCtx.sampleRate;
+            const bufferSize = sampleRate * 1.5; // 1.5s Loop
+            noiseBuffer = audioCtx.createBuffer(1, bufferSize, sampleRate);
+            const outputData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                outputData[i] = Math.random() * 2.0 - 1.0;
+            }
+
+            isAudioSetup = true;
+            document.getElementById('start-overlay').classList.add('hidden');
         }
 
-        startBtn.addEventListener('click', initAudio);
+        // Plays organic metallic percussion sounds
+        function playCabasaSound(type, velocity = 1.0) {
+            if (!isAudioSetup || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
-        // --- RECORDING LOGIC ---
+            const timeNow = audioCtx.currentTime;
+
+            // Generate source node from pre-allocated white noise buffer
+            const bufferSource = audioCtx.createBufferSource();
+            bufferSource.buffer = noiseBuffer;
+
+            // Bandpass filter centered at dynamic frequency representing bead size
+            const bandpassFilter = audioCtx.createBiquadFilter();
+            bandpassFilter.type = 'bandpass';
+            // Slight natural drift to make play non-repetitive
+            const dynamicFreq = synthParams.beadPitch + (Math.random() * 240 - 120);
+            bandpassFilter.frequency.setValueAtTime(dynamicFreq, timeNow);
+            bandpassFilter.Q.setValueAtTime(synthParams.resonance, timeNow);
+
+            // Highpass filter to emulate top-end crispiness of metal meshes
+            const highpassFilter = audioCtx.createBiquadFilter();
+            highpassFilter.type = 'highpass';
+            highpassFilter.frequency.setValueAtTime(8000, timeNow);
+
+            // Decay amplitude envelope setup
+            const envelopeGain = audioCtx.createGain();
+            
+            // Connect synthesis path
+            bufferSource.connect(bandpassFilter);
+            bandpassFilter.connect(highpassFilter);
+            highpassFilter.connect(envelopeGain);
+            
+            // Connect dry sound direct to output
+            envelopeGain.connect(masterGainNode);
+            // Connect wet sound to delay echo processor
+            envelopeGain.connect(delayNode);
+
+            // Trigger playback depending on action (sharp shake vs smooth scrape)
+            bufferSource.start(timeNow);
+
+            if (type === 'shake') {
+                // Instantly explosive volume, extremely steep decay curve
+                const attackTime = 0.005;
+                const releaseTime = synthParams.decay * (0.5 + Math.random() * 0.5) * velocity;
+                
+                envelopeGain.gain.setValueAtTime(0, timeNow);
+                envelopeGain.gain.linearRampToValueAtTime(0.7 * velocity, timeNow + attackTime);
+                envelopeGain.gain.exponentialRampToValueAtTime(0.001, timeNow + attackTime + releaseTime);
+                
+                bufferSource.stop(timeNow + attackTime + releaseTime + 0.1);
+            } else if (type === 'scrape') {
+                // Slower attack, slightly padded slide sound
+                const attackTime = 0.02;
+                const releaseTime = synthParams.decay * 1.5 * velocity;
+
+                envelopeGain.gain.setValueAtTime(0, timeNow);
+                envelopeGain.gain.linearRampToValueAtTime(0.35 * velocity, timeNow + attackTime);
+                envelopeGain.gain.exponentialRampToValueAtTime(0.001, timeNow + attackTime + releaseTime);
+
+                bufferSource.stop(timeNow + attackTime + releaseTime + 0.1);
+            }
+        }
+
+        // Synthesizes basic percussion accompaniments directly with Web Audio OSCs
+        function playKickSynth(time, gainVal = 0.8) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(backingTrackGainNode);
+
+            osc.frequency.setValueAtTime(150, time);
+            osc.frequency.exponentialRampToValueAtTime(45, time + 0.15);
+
+            gain.gain.setValueAtTime(gainVal, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+            osc.start(time);
+            osc.stop(time + 0.2);
+        }
+
+        function playWoodblockSynth(time, freq = 900, gainVal = 0.4) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.connect(gain);
+            gain.connect(backingTrackGainNode);
+
+            osc.frequency.setValueAtTime(freq, time);
+
+            gain.gain.setValueAtTime(gainVal, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+            osc.start(time);
+            osc.stop(time + 0.1);
+        }
+
+        function playClaveSynth(time, gainVal = 0.4) {
+            // Metallic resonance combining high frequencies
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+
+            osc1.frequency.setValueAtTime(1800, time);
+            osc2.frequency.setValueAtTime(2500, time);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(backingTrackGainNode);
+
+            gain.gain.setValueAtTime(gainVal, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+
+            osc1.start(time);
+            osc2.start(time);
+            osc1.stop(time + 0.06);
+            osc2.stop(time + 0.06);
+        }
+
+        // Precise Backing Track Sequencer Scheduling Loop
+        function runBackingScheduler() {
+            while (nextNoteTime < audioCtx.currentTime + 0.1) {
+                schedulePatternNote(currentMeasure, nextNoteTime);
+                advanceToNextNote();
+            }
+            backingSchedulerId = setTimeout(runBackingScheduler, 25);
+        }
+
+        function advanceToNextNote() {
+            const secondsPerBeat = 60.0 / bpm;
+            const secondsPerSixteenth = 0.25 * secondsPerBeat;
+            nextNoteTime += secondsPerSixteenth;
+
+            currentMeasure = (currentMeasure + 1) % 16; // 16-step grid (1 bar)
+        }
+
+        // Schedules musical beats for 3 distinctive genres
+        function schedulePatternNote(step, time) {
+            if (currentActiveSongIdx === 0) {
+                // 1. BOSSANOVA (80 BPM)
+                // Kick: Downbeat steady groove
+                if (step === 0 || step === 6 || step === 8 || step === 14) {
+                    playKickSynth(time, 0.7);
+                }
+                // Rim/Clave: Syncopated brazilian rhythm
+                if (step === 0 || step === 3 || step === 6 || step === 10 || step === 13) {
+                    playClaveSynth(time, 0.35);
+                }
+                // High block tick for tempo guide
+                if (step % 4 === 0) {
+                    playWoodblockSynth(time, 1100, 0.15);
+                }
+            } else if (currentActiveSongIdx === 1) {
+                // 2. SAMBA (112 BPM)
+                // Strong surdo bass drum simulation
+                if (step === 0 || step === 4 || step === 8 || step === 12) {
+                    playKickSynth(time, 0.8);
+                }
+                if (step === 3 || step === 7 || step === 11 || step === 15) {
+                    playKickSynth(time, 0.4); // Ghost kick
+                }
+                // Syncopated agogo percussion bell pattern
+                if (step === 0 || step === 2 || step === 5 || step === 8 || step === 10 || step === 13) {
+                    const pitch = (step % 8 < 4) ? 900 : 700;
+                    playWoodblockSynth(time, pitch, 0.3);
+                }
+            } else if (currentActiveSongIdx === 2) {
+                // 3. CHA-CHA-CHA (120 BPM)
+                // Straight quarters kick
+                if (step % 4 === 0) {
+                    playKickSynth(time, 0.75);
+                }
+                // Cowbell classic rhythm pattern (Step 4, 8, 12, 14, 15)
+                if (step === 0 || step === 4 || step === 8 || step === 12 || step === 14 || step === 15) {
+                    playWoodblockSynth(time, 1300, 0.4);
+                }
+                // Woodblock counter accents
+                if (step === 2 || step === 6 || step === 10) {
+                    playWoodblockSynth(time, 800, 0.25);
+                }
+            }
+        }
+
+        // Starts/Stops Backing Tracks with automatic duration termination (Fade Out)
+        function toggleBackingTrack(songIndex) {
+            initWebAudio();
+
+            // Clear old timer if running
+            if (progressBarIntervalId) {
+                clearInterval(progressBarIntervalId);
+            }
+
+            // If clicking the currently playing track, switch it off
+            if (currentActiveSongIdx === songIndex) {
+                stopBackingTrack();
+                return;
+            }
+
+            // Stop any track currently running
+            stopBackingTrack(false);
+
+            currentActiveSongIdx = songIndex;
+            songStartTime = audioCtx.currentTime;
+
+            // Set appropriate tempos for tracks
+            if (songIndex === 0) { bpm = 80; }
+            else if (songIndex === 1) { bpm = 112; }
+            else if (songIndex === 2) { bpm = 120; }
+
+            // UI feedback
+            document.getElementById(`song-btn-${songIndex}`).classList.remove('bg-slate-800', 'border-slate-700/50');
+            document.getElementById(`song-btn-${songIndex}`).classList.add('bg-gradient-to-tr', 'from-amber-500/20', 'to-yellow-500/10', 'border-yellow-400/50', 'shadow-md', 'shadow-yellow-500/5');
+            document.getElementById('tempo-display').innerText = `BPM: ${bpm}`;
+            document.getElementById('tempo-display').classList.remove('hidden');
+            
+            // Show & animate progress bar
+            const progContainer = document.getElementById('song-progress-container');
+            const progBar = document.getElementById('song-progress-bar');
+            progContainer.classList.remove('hidden');
+            progBar.style.width = '0%';
+
+            // Start synthesis schedule loop
+            nextNoteTime = audioCtx.currentTime + 0.05;
+            currentMeasure = 0;
+            
+            // Instant volume fade-in
+            backingTrackGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            backingTrackGainNode.gain.linearRampToValueAtTime(synthParams.backingVolume, audioCtx.currentTime + 0.3);
+
+            runBackingScheduler();
+
+            // Track Playback Progress & Auto Shut-off (เพลงจบปิดอัตโนมัติ)
+            const trackDurationMs = songDurationSecs * 1000;
+            const startTimeMs = Date.now();
+
+            progressBarIntervalId = setInterval(() => {
+                const elapsedMs = Date.now() - startTimeMs;
+                const percentage = Math.min((elapsedMs / trackDurationMs) * 100, 100);
+                progBar.style.width = `${percentage}%`;
+
+                // Initiate soft fadeout 2 seconds before termination limit
+                if (elapsedMs >= trackDurationMs - 2000) {
+                    const timeRemaining = (trackDurationMs - elapsedMs) / 1000;
+                    if (timeRemaining > 0) {
+                        backingTrackGainNode.gain.setValueAtTime(synthParams.backingVolume * (timeRemaining / 2), audioCtx.currentTime);
+                    }
+                }
+
+                // Auto stop when finished
+                if (elapsedMs >= trackDurationMs) {
+                    stopBackingTrack();
+                }
+            }, 100);
+        }
+
+        function stopBackingTrack(resetUI = true) {
+            if (backingSchedulerId) {
+                clearTimeout(backingSchedulerId);
+                backingSchedulerId = null;
+            }
+            if (progressBarIntervalId) {
+                clearInterval(progressBarIntervalId);
+                progressBarIntervalId = null;
+            }
+
+            if (resetUI) {
+                // Reset button highlights
+                for (let i = 0; i < 3; i++) {
+                    const btn = document.getElementById(`song-btn-${i}`);
+                    btn.classList.add('bg-slate-800', 'border-slate-700/50');
+                    btn.classList.remove('bg-gradient-to-tr', 'from-amber-500/20', 'to-yellow-500/10', 'border-yellow-400/50', 'shadow-md', 'shadow-yellow-500/5');
+                }
+                document.getElementById('tempo-display').classList.add('hidden');
+                document.getElementById('song-progress-container').classList.add('hidden');
+                document.getElementById('song-progress-bar').style.width = '0%';
+            }
+
+            currentActiveSongIdx = -1;
+        }
+
+        // Physically responds to sliding/dragging to spin the cabasa cylinder
+        const container = document.getElementById('cabasa-container');
+        const handle = document.getElementById('cabasa-handle');
+        const visualHead = document.getElementById('cabasa-head');
+
+        function triggerVisualRipple() {
+            const ripple = document.getElementById('ripple-ring');
+            ripple.classList.remove('scale-75', 'border-yellow-400/0');
+            ripple.classList.add('scale-125', 'border-yellow-400/40');
+            
+            // Soft glow behind cabasa
+            const glow = document.getElementById('ambient-glow');
+            glow.style.transform = 'translate(-50%, -50%) scale(1.15)';
+
+            setTimeout(() => {
+                ripple.classList.remove('scale-125', 'border-yellow-400/40');
+                ripple.classList.add('scale-75', 'border-yellow-400/0');
+                glow.style.transform = 'translate(-50%, -50%) scale(1.0)';
+            }, 250);
+        }
+
+        // Animate beads side-to-side on friction
+        function updateBeadsShift(deltaX) {
+            beadsArr.forEach((rowObj, i) => {
+                // Alternative row directions for complex rotation look
+                const speedModifier = (i % 2 === 0) ? 0.35 : -0.35;
+                rowObj.currentOffset += deltaX * speedModifier;
+                
+                // Keep wrap-around limits to loop rows
+                if (rowObj.currentOffset > 24) rowObj.currentOffset = -24;
+                if (rowObj.currentOffset < -24) rowObj.currentOffset = 24;
+
+                rowObj.el.style.transform = `translateX(${rowObj.currentOffset}px)`;
+                
+                // Color lighting highlight variation on friction
+                rowObj.beads.forEach(b => {
+                    b.style.background = `radial-gradient(circle at 35% 35%, #ffffff 0%, #ca8a04 10%, #44403c 100%)`;
+                    setTimeout(() => {
+                        b.style.background = 'radial-gradient(circle at 35% 35%, #ffffff 0%, #a8a29e 50%, #44403c 100%)';
+                    }, 80);
+                });
+            });
+        }
+
+        // Handle touch gesture starts
+        function handleInteractionStart(e) {
+            e.preventDefault();
+            initWebAudio();
+            isInteracting = true;
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            lastTouchX = clientX;
+            lastTouchY = clientY;
+            accumulatedDragX = 0;
+            accumulatedDragY = 0;
+
+            // Sharp direct hit on touch down
+            playCabasaSound('shake', 0.95);
+            triggerVisualRipple();
+
+            // Slight physical compression visual swing
+            container.style.transform = 'scale(0.97) rotate(1.5deg)';
+            handle.style.transform = 'rotate(-1.5deg)';
+        }
+
+        // Handle continuous drags / rubbing of beads
+        function handleInteractionMove(e) {
+            if (!isInteracting) return;
+            e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const dX = clientX - lastTouchX;
+            const dY = clientY - lastTouchY;
+
+            accumulatedDragX += Math.abs(dX);
+            accumulatedDragY += Math.abs(dY);
+
+            // Turn cylinder dynamically on horizontal sweeps
+            if (Math.abs(dX) > 1.2) {
+                updateBeadsShift(dX);
+                
+                // Rotate cylinder slightly based on drag direction
+                const maxRotation = 6; // Limit twist angles
+                const targetRotate = Math.max(-maxRotation, Math.min(maxRotation, dX * 0.4));
+                visualHead.style.transform = `rotate(${targetRotate}deg)`;
+            }
+
+            // Trigger friction scraping sounds once move threshold exceeded
+            const frictionThreshold = 14;
+            if (accumulatedDragX > frictionThreshold || accumulatedDragY > frictionThreshold) {
+                const totalSpeed = Math.sqrt(dX*dX + dY*dY);
+                const computedVelocity = Math.max(0.4, Math.min(1.15, totalSpeed / 10));
+                
+                playCabasaSound('scrape', computedVelocity);
+                
+                accumulatedDragX = 0;
+                accumulatedDragY = 0;
+            }
+
+            lastTouchX = clientX;
+            lastTouchY = clientY;
+        }
+
+        // Handle interaction ends
+        function handleInteractionEnd() {
+            if (!isInteracting) return;
+            isInteracting = false;
+            
+            // Elastic snapback animations
+            container.style.transform = 'scale(1.0) rotate(0deg)';
+            visualHead.style.transform = 'rotate(0deg)';
+            handle.style.transform = 'rotate(0deg)';
+        }
+
+        // Wire Event Listeners to Play Surface
+        container.addEventListener('mousedown', handleInteractionStart);
+        window.addEventListener('mousemove', handleInteractionMove);
+        window.addEventListener('mouseup', handleInteractionEnd);
+
+        container.addEventListener('touchstart', handleInteractionStart, { passive: false });
+        container.addEventListener('touchmove', handleInteractionMove, { passive: false });
+        container.addEventListener('touchend', handleInteractionEnd);
+
+        // Uses phone acceleration sensor to play real shake hits when physically shaking mobile
+        let previousX = 0, previousY = 0, previousZ = 0;
+        let lastAccelerationTime = 0;
+        const shakeAmplitudeThreshold = 18; // Sensible shake trigger point
+
+        function parseDeviceAcceleration(event) {
+            if (!isAudioSetup) return;
+
+            const accel = event.accelerationIncludingGravity;
+            if (!accel) return;
+
+            const currentTime = Date.now();
+            const timeDiff = currentTime - lastAccelerationTime;
+
+            if (timeDiff > 100) { // Throttle calculations every 100ms
+                const deltaX = accel.x - previousX;
+                const deltaY = accel.y - previousY;
+                const deltaZ = accel.z - previousZ;
+
+                const shakeVelocity = Math.abs(deltaX + deltaY + deltaZ) / timeDiff * 10000;
+
+                if (shakeVelocity > shakeAmplitudeThreshold * 100) {
+                    const scaledVol = Math.min(1.0, shakeVelocity / 8000);
+                    playCabasaSound('shake', scaledVol);
+                    triggerVisualRipple();
+                    
+                    // Shake visual feedback on cylinder
+                    visualHead.style.transform = `translate(${(Math.random()-0.5)*15}px, ${(Math.random()-0.5)*15}px)`;
+                    setTimeout(() => { visualHead.style.transform = 'translate(0, 0)'; }, 80);
+                }
+
+                previousX = accel.x;
+                previousY = accel.y;
+                previousZ = accel.z;
+                lastAccelerationTime = currentTime;
+            }
+        }
+
+        // Activate device acceleration listener securely
+        function requestMotionAccess() {
+            if (typeof DeviceMotionEvent !== 'undefined') {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    DeviceMotionEvent.requestPermission()
+                        .then(response => {
+                            if (response === 'granted') {
+                                window.addEventListener('devicemotion', parseDeviceAcceleration, true);
+                            }
+                        })
+                        .catch(err => console.warn('Motion permission rejected or not supported on device:', err));
+                } else {
+                    window.addEventListener('devicemotion', parseDeviceAcceleration, true);
+                }
+            }
+        }
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            initWebAudio();
+            requestMotionAccess();
+        });
+
+        // UI Drawers & Parameter Slider Management
+        const settingsDrawer = document.getElementById('settings-drawer');
+        const sFreq = document.getElementById('slider-freq');
+        const sDecay = document.getElementById('slider-decay');
+        const sQ = document.getElementById('slider-q');
+        const sEcho = document.getElementById('slider-echo');
+        const sBgVol = document.getElementById('slider-bg-vol');
+
+        function toggleSettingsDrawer() {
+            isSettingsOpen = !isSettingsOpen;
+            if (isSettingsOpen) {
+                settingsDrawer.classList.remove('translate-y-full');
+            } else {
+                settingsDrawer.classList.add('translate-y-full');
+            }
+        }
+
+        // Listen for tuning controls slider alterations
+        sFreq.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            synthParams.beadPitch = val;
+            document.getElementById('param-freq-val').innerText = `${val} Hz`;
+        });
+
+        sDecay.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            synthParams.decay = val;
+            document.getElementById('param-decay-val').innerText = `${val.toFixed(2)} วินาที`;
+        });
+
+        sQ.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            synthParams.resonance = val;
+            document.getElementById('param-q-val').innerText = val.toFixed(1);
+        });
+
+        sEcho.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            synthParams.echoFeedback = val / 100;
+            document.getElementById('param-echo-val').innerText = `${val}%`;
+            if (isAudioSetup && feedbackGainNode) {
+                feedbackGainNode.gain.setValueAtTime(synthParams.echoFeedback, audioCtx.currentTime);
+            }
+        });
+
+        sBgVol.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            synthParams.backingVolume = val / 100;
+            document.getElementById('param-bg-vol-val').innerText = `${val}%`;
+            if (isAudioSetup && backingTrackGainNode) {
+                backingTrackGainNode.gain.setValueAtTime(synthParams.backingVolume, audioCtx.currentTime);
+            }
+        });
+
+        function resetParameters() {
+            sFreq.value = 3500;
+            sDecay.value = 0.12;
+            sQ.value = 1.2;
+            sEcho.value = 25;
+            sBgVol.value = 60;
+
+            synthParams.beadPitch = 3500;
+            synthParams.decay = 0.12;
+            synthParams.resonance = 1.2;
+            synthParams.echoFeedback = 0.25;
+            synthParams.backingVolume = 0.60;
+
+            document.getElementById('param-freq-val').innerText = "3500 Hz";
+            document.getElementById('param-decay-val').innerText = "0.12 วินาที";
+            document.getElementById('param-q-val').innerText = "1.2";
+            document.getElementById('param-echo-val').innerText = "25%";
+            document.getElementById('param-bg-vol-val').innerText = "60%";
+
+            if (isAudioSetup) {
+                feedbackGainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                backingTrackGainNode.gain.setValueAtTime(0.60, audioCtx.currentTime);
+            }
+        }
+
+        // Saves instrument outputs locally without requesting server interaction
+        const recordBtn = document.getElementById('record-btn');
+        const recordText = document.getElementById('record-text');
+        const recordDot = document.getElementById('record-dot');
 
         recordBtn.addEventListener('click', () => {
-            if (!isSetup) {
-                // In case user somehow clicks record without starting audio (should be blocked by overlay)
+            initWebAudio();
+            if (!recordingDestNode) {
+                alert("เบราว์เซอร์ไม่รองรับการบันทึกเสียงแบบเรียลไทม์");
                 return;
             }
 
             if (!isRecording) {
-                startRecording();
+                startPerformanceRecording();
             } else {
-                stopRecording();
+                stopPerformanceRecording();
             }
         });
 
-        function startRecording() {
-            chunks = [];
-            // Try to use webm, fallback to whatever browser supports if needed
+        function startPerformanceRecording() {
+            audioChunks = [];
             let options = { mimeType: 'audio/webm' };
             if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                 options = { mimeType: 'audio/mp4' }; // Safari 14.1+
-                 if (!MediaRecorder.isTypeSupported('audio/mp4')) {
-                     options = {}; // Default browser format
-                 }
+                options = { mimeType: 'audio/mp4' }; // Safari support
+                if (!MediaRecorder.isTypeSupported('audio/mp4')) {
+                    options = {}; // Basic default fallback
+                }
             }
 
             try {
-                mediaRecorder = new MediaRecorder(destNode.stream, options);
+                mediaRecorder = new MediaRecorder(recordingDestNode.stream, options);
             } catch (err) {
-                console.error("MediaRecorder error:", err);
-                mediaRecorder = new MediaRecorder(destNode.stream); // Try without options
+                console.warn('Fallback standard initialization due to constraints:', err);
+                mediaRecorder = new MediaRecorder(recordingDestNode.stream);
             }
 
-            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-            mediaRecorder.onstop = exportAudio;
-            
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = exportCreatedAudioFile;
+
             mediaRecorder.start();
             isRecording = true;
-            recordBtn.classList.add('recording');
+
+            // Update UI status
+            recordBtn.classList.remove('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+            recordBtn.classList.add('bg-rose-600', 'border-rose-700', 'text-white', 'scale-95');
+            recordText.innerText = 'หยุดบันทึก';
+            recordDot.classList.remove('bg-rose-500');
+            recordDot.classList.add('bg-white');
         }
 
-        function stopRecording() {
+        function stopPerformanceRecording() {
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                 mediaRecorder.stop();
-                isRecording = false;
-                recordBtn.classList.remove('recording');
             }
+            isRecording = false;
+
+            // Restore UI status
+            recordBtn.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+            recordBtn.classList.remove('bg-rose-600', 'border-rose-700', 'text-white', 'scale-95');
+            recordText.innerText = 'บันทึกเสียง';
+            recordDot.classList.add('bg-rose-500');
+            recordDot.classList.remove('bg-white');
         }
 
-        function exportAudio() {
-            // Determine MIME type for file extension
-            const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            
-            const timestamp = new Date().toLocaleTimeString('th-TH').replace(/:/g, '-');
-            const ext = (mediaRecorder.mimeType && mediaRecorder.mimeType.includes('mp4')) ? 'mp4' : 'webm';
-            
-            a.download = `cabasa-jam-${timestamp}.${ext}`;
-            document.body.appendChild(a);
-            a.click();
-            
-            // Cleanup
+        function exportCreatedAudioFile() {
+            const blobType = mediaRecorder.mimeType || 'audio/webm';
+            const blob = new Blob(audioChunks, { type: blobType });
+            const downloadUrl = URL.createObjectURL(blob);
+
+            const anchor = document.createElement('a');
+            anchor.style.display = 'none';
+            anchor.href = downloadUrl;
+
+            const timeLabel = new Date().toISOString().slice(0, 10) + '_' + new Date().toTimeString().slice(0, 8).replace(/:/g, '-');
+            const fileExtension = blobType.includes('mp4') ? 'mp4' : 'webm';
+            anchor.download = `cabasa_jam_${timeLabel}.${fileExtension}`;
+
+            document.body.appendChild(anchor);
+            anchor.click();
+
+            // Perform minor cleanup tasks
             setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
+                document.body.removeChild(anchor);
+                window.URL.revokeObjectURL(downloadUrl);
             }, 100);
         }
 
-        // --- INPUT HANDLING ---
-
-        // Visual Feedback
-        function triggerVisualShake() {
-            container.classList.remove('shake-anim');
-            void container.offsetWidth; // Trigger reflow
-            container.classList.add('shake-anim');
-            
-            const beads = document.querySelectorAll('.bead');
-            beads.forEach(b => b.style.background = 'radial-gradient(circle at 30% 30%, #fff, #ecf0f1, #bdc3c7)');
-            setTimeout(() => {
-                beads.forEach(b => b.style.background = 'radial-gradient(circle at 30% 30%, #fff, #bdc3c7, #7f8c8d)');
-            }, 100);
-        }
-
-        // Touch & Mouse Events
-        let lastY = 0;
-        let isTouching = false;
-        let scrapeThreshold = 5;
-        let accumulatedDist = 0;
-
-        const handleStart = (e) => {
-            if(!isSetup) initAudio();
-            e.preventDefault(); 
-            isTouching = true;
-            
-            if (e.touches) {
-                lastY = e.touches[0].clientY;
-            } else {
-                lastY = e.clientY;
+        // Initialize viewports appropriately on orientation changes
+        window.addEventListener('resize', () => {
+            const glow = document.getElementById('ambient-glow');
+            if (glow) {
+                glow.style.top = '35%';
+                glow.style.left = '50%';
             }
-
-            playSound('hit', 1.0);
-            triggerVisualShake();
-        };
-
-        const handleMove = (e) => {
-            if (!isTouching) return;
-            e.preventDefault();
-
-            let currentY;
-            if (e.touches) {
-                currentY = e.touches[0].clientY;
-            } else {
-                currentY = e.clientY;
-            }
-
-            const delta = Math.abs(currentY - lastY);
-            accumulatedDist += delta;
-
-            if (accumulatedDist > scrapeThreshold) {
-                let velocity = Math.min(delta / 10, 1.2); 
-                playSound('scrape', 0.5 + (velocity * 0.5));
-                
-                const rotation = (currentY - lastY) > 0 ? 2 : -2;
-                head.style.transform = `rotate(${rotation}deg)`;
-                
-                accumulatedDist = 0;
-                lastY = currentY;
-            }
-        };
-
-        const handleEnd = () => {
-            isTouching = false;
-            head.style.transform = `rotate(0deg)`;
-        };
-
-        container.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
-
-        container.addEventListener('touchstart', handleStart, { passive: false });
-        container.addEventListener('touchmove', handleMove, { passive: false });
-        container.addEventListener('touchend', handleEnd);
-
-        // --- SHAKE DETECTION ---
-        let shakeThreshold = 15;
-        let lastX = 0, lastY_acc = 0, lastZ = 0;
-        let lastTime = 0;
-
-        function handleMotion(event) {
-            if (!isSetup) return;
-            
-            let current = event.accelerationIncludingGravity;
-            if (!current) return;
-
-            let curTime = new Date().getTime();
-            if ((curTime - lastTime) > 100) {
-                let diffTime = curTime - lastTime;
-                lastTime = curTime;
-
-                let speed = Math.abs(current.x + current.y + current.z - lastX - lastY_acc - lastZ) / diffTime * 10000;
-
-                if (speed > shakeThreshold * 100) { 
-                     playSound('hit', 0.8);
-                     triggerVisualShake();
-                }
-
-                lastX = current.x;
-                lastY_acc = current.y;
-                lastZ = current.z;
-            }
-        }
-
-        if (typeof DeviceMotionEvent !== 'undefined') {
-            if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                startBtn.addEventListener('click', () => {
-                    DeviceMotionEvent.requestPermission()
-                        .then(response => {
-                            if (response === 'granted') {
-                                window.addEventListener('devicemotion', handleMotion, true);
-                            }
-                        })
-                        .catch(console.error);
-                });
-            } else {
-                window.addEventListener('devicemotion', handleMotion, true);
-            }
-        }
-
+        });
     </script>
 </body>
 </html>
