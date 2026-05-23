@@ -3,294 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>กรับสเปนจำลอง (Virtual Castanets)</title>
+    <title>กรับสเปนจำลองระดับโปร (Virtual Castanets Pro)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-
-        * {
-            -webkit-tap-highlight-color: transparent;
-            box-sizing: border-box;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #fceeb5;
-            background-image: radial-gradient(#ffeebb 20%, #eebd73 80%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            height: 100dvh; 
             font-family: 'Sarabun', sans-serif;
-            overflow: hidden;
+            background: radial-gradient(circle at center, #2c1a13 0%, #120907 100%);
+            overscroll-behavior: none;
             touch-action: none;
-            user-select: none;
             -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .serif-font {
+            font-family: 'Playfair Display', serif;
         }
 
-        h1 {
-            color: #5d4037;
-            margin-bottom: 5px;
-            font-size: 1.5rem;
-            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
-            text-align: center;
-            pointer-events: none;
+        /* 3D wooden look & realistic click animations */
+        .castanet-wrapper {
+            perspective: 800px;
         }
 
-        .instruction {
-            color: #795548;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            opacity: 0.8;
-            text-align: center;
-            pointer-events: none;
-        }
-
-        .container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            margin-bottom: 20px;
-            -webkit-touch-callout: none;
-        }
-
-        /* ดีไซน์ตัวกรับ (Castanet) */
-        .castanet {
-            width: 40vw;
-            height: 45vw;
-            max-width: 180px;
-            max-height: 220px;
-            background: radial-gradient(circle at 30% 30%, #8d6e63, #3e2723);
-            border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
-            position: relative;
+        .castanet-body {
+            transition: transform 0.05s cubic-bezier(0.1, 0.8, 0.3, 1.25);
+            transform-style: preserve-3d;
             box-shadow: 
-                0 10px 20px rgba(0,0,0,0.4),
-                inset 0 0 20px rgba(0,0,0,0.8);
-            cursor: pointer;
-            transition: transform 0.03s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            border: 4px solid #3e2723;
-            touch-action: manipulation;
+                0 15px 30px rgba(0,0,0,0.7),
+                inset 0 2px 5px rgba(255,255,255,0.15);
         }
 
-        .castanet::after {
-            content: '';
-            position: absolute;
-            top: 25%;
-            width: 70%;
-            height: 60%;
-            background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.1), transparent 60%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .ear {
-            width: 40px;
-            height: 30px;
-            background: #3e2723;
-            border-radius: 10px 10px 0 0;
-            position: absolute;
-            top: -20px;
-            z-index: -1;
-        }
-
-        .string {
-            position: absolute;
-            top: -50px;
-            width: 60px;
-            height: 60px;
-            border: 6px solid #d32f2f;
-            border-radius: 50%;
-            z-index: -2;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        .knot {
-            position: absolute;
-            top: -25px;
-            width: 20px;
-            height: 20px;
-            background: #b71c1c;
-            border-radius: 50%;
-            z-index: -1;
-        }
-
-        .castanet.active {
-            transform: scale(0.94) translateY(3px);
+        /* Custom realistic shadow & tilt on tap */
+        .castanet-body.active {
+            transform: scale(0.92) rotateX(15deg) translateY(4px);
             box-shadow: 
-                0 2px 5px rgba(0,0,0,0.4),
-                inset 0 0 30px rgba(0,0,0,0.9);
-            border-color: #5d4037;
+                0 5px 10px rgba(0,0,0,0.9),
+                inset 0 -2px 5px rgba(0,0,0,0.5);
         }
 
-        .label {
-            position: absolute;
-            bottom: 20px;
-            color: rgba(255,255,255,0.3);
-            font-weight: bold;
-            font-size: 1.2rem;
-            pointer-events: none;
+        /* Ribbon swaying animations */
+        .ribbon {
+            transform-origin: top center;
+            transition: transform 0.2s ease-out;
         }
 
-        /* ปุ่มบันทึกเสียง */
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            align-items: center;
-            margin-top: 10px;
-            z-index: 10;
+        .castanet-body.active .ribbon {
+            transform: scaleY(0.9) rotate(8deg);
         }
 
-        .record-btn {
-            background-color: white;
-            color: #d32f2f;
-            border: 2px solid #d32f2f;
-            padding: 12px 28px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-family: 'Sarabun', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            touch-action: manipulation;
+        /* Soft pulsing animation for active playing indicator */
+        .glow-active {
+            box-shadow: 0 0 15px #e53e3e, inset 0 0 10px #e53e3e;
+            animation: pulse-glow 1s infinite alternate;
         }
 
-        .record-btn:active {
-            transform: scale(0.95);
+        @keyframes pulse-glow {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
         }
 
-        .record-btn.recording {
-            background-color: #d32f2f;
-            color: white;
-            animation: pulse-red 1.5s infinite;
-            border-color: #b71c1c;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            background-color: #d32f2f;
-            border-radius: 50%;
-            transition: background-color 0.3s;
-        }
-
-        .record-btn.recording .dot {
-            background-color: white;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-
-        #status-msg {
-            margin-top: 10px;
-            height: 20px;
-            font-size: 0.9rem;
-            color: #d32f2f;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        /* Overlay */
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            flex-direction: column;
-            color: white;
-            text-align: center;
-            backdrop-filter: blur(5px);
-        }
-
-        #start-btn {
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            background: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: 'Sarabun', sans-serif;
-            margin-top: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            animation: pulse 1.5s infinite;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Responsive */
-        @media (max-width: 400px) {
-            .castanet { width: 42vw; height: 48vw; }
-            h1 { font-size: 1.2rem; }
-            .record-btn { padding: 10px 20px; font-size: 1rem; }
+        /* Hide scrollbars for absolute clean dashboard fit */
+        ::-webkit-scrollbar {
+            display: none;
         }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col justify-between overflow-hidden text-amber-50/90 p-4">
 
-    <div id="start-overlay">
-        <h2>🎵 กรับสเปนจำลอง</h2>
-        <p>แตะปุ่มเพื่อเริ่มใช้งาน</p>
-        <button id="start-btn">เริ่มเล่น (Start)</button>
-    </div>
-
-    <h1>Castanets Simulator</h1>
-    <p class="instruction">แตะที่กรับทั้งสองเพื่อเล่นเสียง</p>
-
-    <div class="container">
-        <div class="castanet" id="left-castanet" data-pitch="low">
-            <div class="ear"></div>
-            <div class="knot"></div>
-            <div class="string"></div>
-            <span class="label">L</span>
-        </div>
-
-        <div class="castanet" id="right-castanet" data-pitch="high">
-            <div class="ear"></div>
-            <div class="knot"></div>
-            <div class="string"></div>
-            <span class="label">R</span>
+    <!-- Start Overlay for unlocking Web Audio on iOS/Safari -->
+    <div id="start-overlay" class="fixed inset-0 bg-stone-950/95 flex flex-col items-center justify-center z-50 p-6 text-center backdrop-blur-md transition-all duration-500">
+        <div class="max-w-md bg-stone-900 border border-amber-500/30 p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-12 -left-12 w-32 h-32 bg-red-600/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+            
+            <span class="text-amber-500 text-5xl mb-4 block"><i class="fa-solid fa-guitars"></i></span>
+            <h1 class="serif-font text-3xl font-bold text-amber-400 mb-2">Virtual Castanets Pro</h1>
+            <h2 class="text-sm tracking-wider text-amber-200/60 uppercase mb-6">กรับสเปนจำลองระดับมืออาชีพ</h2>
+            
+            <p class="text-stone-300 text-sm mb-6 leading-relaxed">
+                สัมผัสเสน่ห์เครื่องดนตรีแฟลเมนโกสเปน ด้วยระบบสังเคราะห์เสียงไม้จริงขั้นสูง, ริธึมเพลงสาธิต พร้อมชุดควบคุมแบบเรียลไทม์
+            </p>
+            
+            <button id="start-btn" class="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-red-900/40 transform active:scale-95 transition-all duration-150 text-lg">
+                <i class="fa-solid fa-play mr-2"></i> เข้าสู่หน้าหลัก (Start)
+            </button>
+            
+            <p class="text-xs text-stone-500 mt-4">ระบบทำงานร่วมกับ Web Audio API เพื่อความไวเสียงแบบทันที</p>
         </div>
     </div>
 
-    <div class="controls">
-        <button id="record-btn" class="record-btn">
-            <span class="dot"></span>
-            <span id="record-text">บันทึกเสียง</span>
-        </button>
+    <!-- Header -->
+    <header class="w-full text-center py-2 flex-none z-10">
+        <h1 class="serif-font text-2xl md:text-3xl font-bold text-gradient bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-300 to-amber-500 tracking-wide drop-shadow-md">
+            Castanets Pro
+        </h1>
+        <p class="text-xs text-amber-200/50 tracking-widest uppercase">Virtual Flamenco Instrument</p>
+    </header>
+
+    <!-- Visual Rhythmic Indicators -->
+    <div class="w-full flex justify-center gap-16 py-1 flex-none">
+        <div id="left-flash" class="w-4 h-4 rounded-full bg-stone-800 border border-stone-700 transition-all duration-75"></div>
+        <div id="right-flash" class="w-4 h-4 rounded-full bg-stone-800 border border-stone-700 transition-all duration-75"></div>
     </div>
-    <div id="status-msg"></div>
+
+    <!-- Main Instrument Area (Responsive size) -->
+    <main class="flex-grow flex items-center justify-center px-4 py-2 flex-none">
+        <div class="w-full max-w-lg flex justify-around gap-4 md:gap-8 castanet-wrapper">
+            
+            <!-- Left Castanet (Macho / Pitch ต่ำกว่าปกติ) -->
+            <div class="flex flex-col items-center">
+                <div id="left-castanet" data-pitch="low" class="castanet-body w-32 h-36 sm:w-36 sm:h-44 md:w-44 md:h-52 bg-gradient-to-br from-[#70422c] via-[#3a1d11] to-[#1c0b05] rounded-[50%_50%_45%_45%_/_60%_60%_40%_40%] relative flex flex-col justify-between items-center p-4 border-2 border-[#1c0b05] cursor-pointer">
+                    <!-- Ribbon tie at top -->
+                    <div class="absolute -top-6 flex flex-col items-center">
+                        <div class="w-4 h-4 bg-red-700 rounded-full border border-amber-500/20 z-10 shadow-md"></div>
+                        <!-- Ribbon strips -->
+                        <div class="ribbon flex gap-1 -mt-1">
+                            <div class="w-1.5 h-10 bg-gradient-to-b from-red-600 to-red-800 rounded shadow"></div>
+                            <div class="w-1.5 h-10 bg-gradient-to-b from-red-700 to-red-900 rounded shadow"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Highlight Reflection -->
+                    <div class="absolute top-4 left-6 w-1/2 h-1/2 bg-gradient-to-br from-white/10 to-transparent rounded-full pointer-events-none"></div>
+                    
+                    <span class="text-xs tracking-wider text-amber-500/40 mt-8 font-mono select-none">MACHO (L)</span>
+                    <span class="serif-font font-bold text-xl sm:text-2xl text-amber-100/20 mb-2 select-none">A</span>
+                </div>
+                <span class="text-xs text-stone-500 mt-2 font-semibold">แป้นซ้าย (A)</span>
+            </div>
+
+            <!-- Right Castanet (Hembra / Pitch สูงกว่า) -->
+            <div class="flex flex-col items-center">
+                <div id="right-castanet" data-pitch="high" class="castanet-body w-32 h-36 sm:w-36 sm:h-44 md:w-44 md:h-52 bg-gradient-to-br from-[#804e33] via-[#4a2717] to-[#241008] rounded-[50%_50%_45%_45%_/_60%_60%_40%_40%] relative flex flex-col justify-between items-center p-4 border-2 border-[#241008] cursor-pointer">
+                    <!-- Ribbon tie at top -->
+                    <div class="absolute -top-6 flex flex-col items-center">
+                        <div class="w-4 h-4 bg-amber-600 rounded-full border border-amber-500/20 z-10 shadow-md"></div>
+                        <!-- Ribbon strips -->
+                        <div class="ribbon flex gap-1 -mt-1">
+                            <div class="w-1.5 h-10 bg-gradient-to-b from-amber-500 to-amber-700 rounded shadow"></div>
+                            <div class="w-1.5 h-10 bg-gradient-to-b from-amber-600 to-amber-800 rounded shadow"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Highlight Reflection -->
+                    <div class="absolute top-4 left-6 w-1/2 h-1/2 bg-gradient-to-br from-white/10 to-transparent rounded-full pointer-events-none"></div>
+                    
+                    <span class="text-xs tracking-wider text-amber-500/40 mt-8 font-mono select-none">HEMBRA (R)</span>
+                    <span class="serif-font font-bold text-xl sm:text-2xl text-amber-100/20 mb-2 select-none">L</span>
+                </div>
+                <span class="text-xs text-stone-500 mt-2 font-semibold">แป้นขวา (L)</span>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Control Dashboard Interface (Compact & Responsive Tabs to fit perfectly) -->
+    <div class="w-full max-w-lg mx-auto bg-stone-900/80 border border-stone-800 rounded-3xl p-3 flex flex-col gap-3 flex-none mb-2 backdrop-blur-md">
+        
+        <!-- Tab Selectors -->
+        <div class="flex bg-stone-950/90 rounded-2xl p-1 border border-stone-800 text-xs">
+            <button onclick="switchTab('demo-tab')" id="btn-demo-tab" class="tab-btn flex-1 py-2 text-center rounded-xl font-bold transition-all text-amber-500 bg-stone-900">
+                <i class="fa-solid fa-music mr-1"></i> เพลงสาธิต
+            </button>
+            <button onclick="switchTab('tuning-tab')" id="btn-tuning-tab" class="tab-btn flex-1 py-2 text-center rounded-xl font-bold transition-all text-stone-400 hover:text-stone-200">
+                <i class="fa-solid fa-sliders mr-1"></i> ปรับแต่งเสียง
+            </button>
+            <button onclick="switchTab('record-tab')" id="btn-record-tab" class="tab-btn flex-1 py-2 text-center rounded-xl font-bold transition-all text-stone-400 hover:text-stone-200">
+                <i class="fa-solid fa-microphone mr-1"></i> บันทึกเสียง
+            </button>
+        </div>
+
+        <!-- Content 1: Demo Songs -->
+        <div id="demo-tab" class="tab-content block">
+            <div class="flex flex-col gap-2">
+                <!-- Song Buttons -->
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button onclick="playDemo(1)" id="song-btn-1" class="song-selector bg-stone-800 hover:bg-stone-700/80 text-stone-200 py-2 px-1 rounded-xl text-center text-xs transition-all flex flex-col justify-center items-center gap-1 border border-stone-700/30">
+                        <span class="font-bold text-amber-400 text-sm">1. Bolero</span>
+                        <span class="text-[9px] text-stone-400">จังหวะพื้นฐานช้า</span>
+                    </button>
+                    <button onclick="playDemo(2)" id="song-btn-2" class="song-selector bg-stone-800 hover:bg-stone-700/80 text-stone-200 py-2 px-1 rounded-xl text-center text-xs transition-all flex flex-col justify-center items-center gap-1 border border-stone-700/30">
+                        <span class="font-bold text-amber-400 text-sm">2. Sevillanas</span>
+                        <span class="text-[9px] text-stone-400">จังหวะ 3 ชนเผ่า</span>
+                    </button>
+                    <button onclick="playDemo(3)" id="song-btn-3" class="song-selector bg-stone-800 hover:bg-stone-700/80 text-stone-200 py-2 px-1 rounded-xl text-center text-xs transition-all flex flex-col justify-center items-center gap-1 border border-stone-700/30">
+                        <span class="font-bold text-amber-400 text-sm">3. Fandango</span>
+                        <span class="text-[9px] text-stone-400">จังหวะรัวกระแทก</span>
+                    </button>
+                </div>
+
+                <!-- Live Playback Status & Controls -->
+                <div class="flex items-center justify-between bg-stone-950/60 p-2 rounded-xl text-xs border border-stone-800/80">
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-2 w-2">
+                            <span id="playing-status-glow" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+                            <span id="playing-status-dot" class="relative inline-flex rounded-full h-2 w-2 bg-stone-600"></span>
+                        </span>
+                        <span id="song-status-text" class="text-stone-400 font-medium">รอการเลือกเล่นเพลงสาธิต...</span>
+                    </div>
+                    
+                    <!-- Performance / Stop Buttons -->
+                    <div class="flex gap-1.5">
+                        <button id="ending-btn" onclick="triggerSongEnding()" disabled class="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 text-white font-bold py-1 px-3 rounded-lg text-xs opacity-50 cursor-not-allowed transition-all duration-150 flex items-center gap-1">
+                            <i class="fa-solid fa-flag-checkered"></i> เล่นท่อนจบ
+                        </button>
+                        <button id="stop-btn" onclick="stopDemo()" disabled class="bg-red-950/50 text-red-400 border border-red-900/60 hover:bg-red-900 hover:text-white font-bold py-1 px-3 rounded-lg text-xs opacity-50 cursor-not-allowed transition-all duration-150">
+                            <i class="fa-solid fa-circle-stop mr-0.5"></i> หยุด
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content 2: Audio Tuning Controls -->
+        <div id="tuning-tab" class="tab-content hidden">
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <!-- Left Pitch -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[11px] text-stone-400">
+                        <span>โทนเสียงซ้าย (Macho)</span>
+                        <span id="label-pitch-left" class="text-amber-400 font-bold">1150 Hz</span>
+                    </div>
+                    <input id="slider-pitch-left" type="range" min="800" max="1400" value="1150" class="w-full accent-amber-500 h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Right Pitch -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[11px] text-stone-400">
+                        <span>โทนเสียงขวา (Hembra)</span>
+                        <span id="label-pitch-right" class="text-amber-400 font-bold">1450 Hz</span>
+                    </div>
+                    <input id="slider-pitch-right" type="range" min="1100" max="1800" value="1450" class="w-full accent-amber-500 h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Decay (Wood tightness) -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[11px] text-stone-400">
+                        <span>ความแน่นเนื้อไม้ (Decay)</span>
+                        <span id="label-decay" class="text-amber-400 font-bold">0.08s</span>
+                    </div>
+                    <input id="slider-decay" type="range" min="30" max="250" value="80" class="w-full accent-amber-500 h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Reverb / Echo -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[11px] text-stone-400">
+                        <span>เสียงก้องกังวาน (Reverb)</span>
+                        <span id="label-reverb" class="text-amber-400 font-bold">35%</span>
+                    </div>
+                    <input id="slider-reverb" type="range" min="0" max="100" value="35" class="w-full accent-amber-500 h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Clack Transient mix -->
+                <div class="flex flex-col col-span-2 gap-1 mt-1 border-t border-stone-800/60 pt-2">
+                    <div class="flex justify-between text-[11px] text-stone-400">
+                        <span>เสียงตอกไม้แรกกระทบ (Wood Clack Transient Level)</span>
+                        <span id="label-clack" class="text-amber-400 font-bold">75%</span>
+                    </div>
+                    <input id="slider-clack" type="range" min="10" max="100" value="75" class="w-full accent-amber-500 h-1 bg-stone-800 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+        </div>
+
+        <!-- Content 3: Recording Module -->
+        <div id="record-tab" class="tab-content hidden">
+            <div class="flex items-center justify-between gap-3 bg-stone-950/40 p-2.5 rounded-2xl border border-stone-800/50">
+                <div class="flex flex-col">
+                    <span class="text-xs font-semibold text-stone-200">เครื่องบันทึกเสียง Web Audio</span>
+                    <span id="record-status-msg" class="text-[10px] text-stone-500">พร้อมเริ่มบันทึกการเล่นสด...</span>
+                </div>
+                
+                <button id="record-btn" class="bg-stone-800 hover:bg-stone-700 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 active:scale-95">
+                    <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" id="record-dot"></span>
+                    <span id="record-text">บันทึกสด</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Info / Footer Section (Always compact and non-obtrusive) -->
+    <footer class="w-full text-center py-2 flex-none">
+        <p class="text-[10px] text-stone-600 font-medium">
+            คีย์ลัด: แป้นซ้าย <kbd class="px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 font-mono text-[9px] border border-stone-700/60">A</kbd> หรือ <kbd class="px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 font-mono text-[9px] border border-stone-700/60">←</kbd> | แป้นขวา <kbd class="px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 font-mono text-[9px] border border-stone-700/60">L</kbd> หรือ <kbd class="px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 font-mono text-[9px] border border-stone-700/60">→</kbd>
+        </p>
+    </footer>
 
     <script>
-        // --- Web Audio Context Setup ---
+        // --- Global Web Audio & Interaction State Variables ---
         let audioCtx;
         let destNode;
         let mediaRecorder;
@@ -298,6 +300,48 @@
         let isRecording = false;
         let audioUnlocked = false;
 
+        // Sound Engine Tuning settings (dynamically read from controls or set defaults)
+        let configLeftPitch = 1150;
+        let configRightPitch = 1450;
+        let configDecay = 0.08;
+        let configReverbMix = 0.35;
+        let configTransientMix = 0.75;
+
+        // Custom acoustic echo nodes
+        let delayNode;
+        let feedbackGain;
+
+        // Demo Sequence Controller Variables
+        let activeSequencerId = null;
+        let playbackTimes = [];
+        let currentlyPlayingSong = 0; // 0 = none, 1 = Bolero, 2 = Sevillanas, 3 = Fandango
+        let sequencerStartTime = 0;
+        let sequencerTimeoutRefs = [];
+
+        // --- Tab switching controller ---
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+            // Reset tab button states
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-amber-500', 'bg-stone-900');
+                btn.classList.add('text-stone-400', 'hover:text-stone-200');
+            });
+
+            // Show current active content
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+
+            // Style active button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('text-stone-400', 'hover:text-stone-200');
+            activeBtn.classList.add('text-amber-500', 'bg-stone-900');
+        }
+
+        // --- Audio Context Initialization with physical modeling generators ---
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -306,7 +350,24 @@
                     sampleRate: 44100
                 });
                 
+                // Destination Node for Recording
                 destNode = audioCtx.createMediaStreamDestination();
+
+                // Setup Room Reverb (using a delay system to recreate Spanish caves/flamenco cafes)
+                delayNode = audioCtx.createDelay(1.0);
+                feedbackGain = audioCtx.createGain();
+                
+                delayNode.delayTime.value = 0.045; // 45ms slapback
+                feedbackGain.gain.value = configReverbMix; // Feedback level
+
+                // Highpass filter inside delay to avoid muddiness
+                const delayFilter = audioCtx.createBiquadFilter();
+                delayFilter.type = 'highpass';
+                delayFilter.frequency.setValueAtTime(300, audioCtx.currentTime);
+
+                delayNode.connect(delayFilter);
+                delayFilter.connect(feedbackGain);
+                feedbackGain.connect(delayNode); // feedback loop
             }
             
             if (audioCtx.state === 'suspended') {
@@ -320,6 +381,7 @@
 
         function unlockAudioIOS() {
             if (audioUnlocked || !audioCtx) return;
+            // Generate standard short silent burst to unlock WebAudio API context on Apple iOS devices
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const source = audioCtx.createBufferSource();
             source.buffer = buffer;
@@ -331,53 +393,349 @@
             audioUnlocked = true;
         }
 
-        function playCastanetSound(type) {
+        // Generate physical white noise transient component (mimicking wooden impact/clack)
+        function generateClackNoiseBuffer() {
+            const bufferSize = audioCtx.sampleRate * 0.05; // extremely short (50ms)
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const outputData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                outputData[i] = Math.random() * 2 - 1;
+            }
+            return noiseBuffer;
+        }
+
+        // Sound Generator combining Tone Body and Transient Noise Click
+        function playCastanetSound(pitchType) {
             if (!audioCtx) initAudio();
 
             const t = audioCtx.currentTime;
+            const pitchFreq = (pitchType === 'high') ? configRightPitch : configLeftPitch;
+
+            // 1. Transient Element (The sharp clack of the wood piece clicking)
+            const noiseSrc = audioCtx.createBufferSource();
+            noiseSrc.buffer = generateClackNoiseBuffer();
+
+            const transientFilter = audioCtx.createBiquadFilter();
+            transientFilter.type = "highpass";
+            transientFilter.frequency.setValueAtTime(1800, t);
+
+            const transientGain = audioCtx.createGain();
+            transientGain.gain.setValueAtTime(configTransientMix * 0.9, t);
+            transientGain.gain.exponentialRampToValueAtTime(0.001, t + 0.012); // incredibly short click envelope
+
+            noiseSrc.connect(transientFilter);
+            transientFilter.connect(transientGain);
+
+            // 2. Resonating Shell Element (The hollow sound wave passing through wooden cavity)
             const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-
-            filter.type = "bandpass";
-            filter.Q.value = 4.5;
-
-            if (type === 'high') {
-                osc.frequency.setValueAtTime(1450, t);
-                filter.frequency.setValueAtTime(1450, t);
-            } else {
-                osc.frequency.setValueAtTime(1150, t);
-                filter.frequency.setValueAtTime(1150, t);
-            }
-            
             osc.type = 'triangle';
+            osc.frequency.setValueAtTime(pitchFreq, t);
 
-            osc.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            if (destNode) gainNode.connect(destNode);
+            // Pitch envelope modulation for dynamic authentic physical clack behavior
+            osc.frequency.exponentialRampToValueAtTime(pitchFreq * 0.8, t + configDecay);
 
-            gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(1.0, t + 0.003);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+            const oscFilter = audioCtx.createBiquadFilter();
+            oscFilter.type = "bandpass";
+            oscFilter.Q.setValueAtTime(6.0, t);
+            oscFilter.frequency.setValueAtTime(pitchFreq, t);
 
+            const oscGain = audioCtx.createGain();
+            oscGain.gain.setValueAtTime(1.2, t);
+            oscGain.gain.exponentialRampToValueAtTime(0.001, t + configDecay);
+
+            osc.connect(oscFilter);
+            oscFilter.connect(oscGain);
+
+            // 3. Mixing and Output Processing
+            const masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(1.0, t);
+
+            transientGain.connect(masterGain);
+            oscGain.connect(masterGain);
+
+            // Route to speakers
+            masterGain.connect(audioCtx.destination);
+            if (destNode) masterGain.connect(destNode);
+
+            // Route to echo/reverb simulator module
+            if (configReverbMix > 0.01 && delayNode && feedbackGain) {
+                feedbackGain.gain.setValueAtTime(configReverbMix * 0.75, t);
+                masterGain.connect(delayNode);
+                delayNode.connect(audioCtx.destination);
+                if (destNode) delayNode.connect(destNode);
+            }
+
+            // Fire and Forget execution cleanup
             osc.start(t);
-            osc.stop(t + 0.1);
+            osc.stop(t + configDecay + 0.1);
+            noiseSrc.start(t);
 
             setTimeout(() => {
                 osc.disconnect();
-                gainNode.disconnect();
-                filter.disconnect();
-            }, 200);
+                oscFilter.disconnect();
+                oscGain.disconnect();
+                noiseSrc.disconnect();
+                transientFilter.disconnect();
+                transientGain.disconnect();
+                masterGain.disconnect();
+            }, 500);
         }
 
-        // --- Recording Logic ---
+        // --- Live Interaction Triggering ---
+        function triggerCastanet(element) {
+            const pitch = element.getAttribute('data-pitch');
+            playCastanetSound(pitch);
+
+            // Update layout flashers
+            const flasherId = (pitch === 'high') ? 'right-flash' : 'left-flash';
+            const flasher = document.getElementById(flasherId);
+            flasher.classList.add('bg-amber-400', 'glow-active');
+            setTimeout(() => {
+                flasher.classList.remove('bg-amber-400', 'glow-active');
+            }, 80);
+
+            // Handle touch scaling animations
+            element.classList.remove('active');
+            void element.offsetWidth; // browser reflow trigger trick
+            element.classList.add('active');
+            setTimeout(() => { element.classList.remove('active'); }, 55); 
+        }
+
+        // Sliders Listeners for real-time adjustments
+        document.getElementById('slider-pitch-left').addEventListener('input', (e) => {
+            configLeftPitch = parseInt(e.target.value);
+            document.getElementById('label-pitch-left').innerText = `${configLeftPitch} Hz`;
+        });
+        document.getElementById('slider-pitch-right').addEventListener('input', (e) => {
+            configRightPitch = parseInt(e.target.value);
+            document.getElementById('label-pitch-right').innerText = `${configRightPitch} Hz`;
+        });
+        document.getElementById('slider-decay').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            configDecay = val / 1000;
+            document.getElementById('label-decay').innerText = `${configDecay.toFixed(2)}s`;
+        });
+        document.getElementById('slider-reverb').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            configReverbMix = val / 100;
+            document.getElementById('label-reverb').innerText = `${val}%`;
+        });
+        document.getElementById('slider-clack').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            configTransientMix = val / 100;
+            document.getElementById('label-clack').innerText = `${val}%`;
+        });
+
+        // --- Demo Songs Engine & Sequencer Database ---
+        // Predefined Spanish Castanets Rhythmic Sequences
+        const songDB = {
+            // Bolero: Slow elegant triplets in 3/4 time signature
+            1: {
+                name: "Bolero Rítmico",
+                bpm: 95,
+                loopPattern: [
+                    { hand: 'R', beat: 1.0 }, { hand: 'L', beat: 1.33 }, { hand: 'L', beat: 1.66 },
+                    { hand: 'R', beat: 2.0 }, { hand: 'L', beat: 2.33 }, { hand: 'L', beat: 2.66 },
+                    { hand: 'R', beat: 3.0 }, { hand: 'L', beat: 3.5 }
+                ],
+                totalBeats: 4.0,
+                endingPattern: [
+                    { hand: 'R', beat: 1.0 }, { hand: 'R', beat: 1.25 }, { hand: 'R', beat: 1.5 }, { hand: 'R', beat: 1.75 },
+                    { hand: 'L', beat: 2.0 }, { hand: 'L', beat: 2.25 },
+                    { hand: 'R', beat: 2.5 }, { hand: 'L', beat: 2.75 },
+                    { hand: 'both', beat: 3.2 } // final bold clash
+                ]
+            },
+            // Sevillanas: Lively syncopated Flamenco style
+            2: {
+                name: "Sevillanas Gitana",
+                bpm: 125,
+                loopPattern: [
+                    { hand: 'L', beat: 1.0 }, 
+                    { hand: 'R', beat: 1.5 }, { hand: 'R', beat: 1.75 },
+                    { hand: 'L', beat: 2.0 }, 
+                    { hand: 'R', beat: 2.5 }, 
+                    { hand: 'L', beat: 3.0 }, { hand: 'R', beat: 3.5 }
+                ],
+                totalBeats: 3.0,
+                endingPattern: [
+                    { hand: 'L', beat: 1.0 }, { hand: 'R', beat: 1.33 }, { hand: 'L', beat: 1.66 },
+                    { hand: 'R', beat: 2.0 }, { hand: 'L', beat: 2.33 }, { hand: 'R', beat: 2.66 },
+                    { hand: 'both', beat: 3.0 }
+                ]
+            },
+            // Fandango: Classic heavy rolls (carretillas) running rapidly
+            3: {
+                name: "Fandango Carretilla",
+                bpm: 135,
+                loopPattern: [
+                    // Dynamic rolling sequence (R-R-R-R-L)
+                    { hand: 'R', beat: 1.0 }, { hand: 'R', beat: 1.15 }, { hand: 'R', beat: 1.3 }, { hand: 'R', beat: 1.45 },
+                    { hand: 'L', beat: 1.6 },
+                    { hand: 'R', beat: 2.0 }, { hand: 'L', beat: 2.5 },
+                    { hand: 'R', beat: 3.0 }, { hand: 'L', beat: 3.5 }
+                ],
+                totalBeats: 3.0,
+                endingPattern: [
+                    { hand: 'R', beat: 1.0 }, { hand: 'R', beat: 1.15 }, { hand: 'R', beat: 1.3 }, { hand: 'R', beat: 1.45 },
+                    { hand: 'L', beat: 1.6 },
+                    { hand: 'R', beat: 1.75 }, { hand: 'R', beat: 1.9 }, { hand: 'R', beat: 2.05 }, { hand: 'R', beat: 2.2 },
+                    { hand: 'L', beat: 2.35 },
+                    { hand: 'both', beat: 2.7 }
+                ]
+            }
+        };
+
+        function playDemo(songId) {
+            initAudio();
+            unlockAudioIOS();
+
+            // If selected song is already running, treat it as toggled stop
+            if (currentlyPlayingSong === songId) {
+                stopDemo();
+                return;
+            }
+
+            // Cleanup any running instance first
+            stopSequencer();
+
+            currentlyPlayingSong = songId;
+            const song = songDB[songId];
+            
+            // UI updates
+            document.querySelectorAll('.song-selector').forEach(btn => btn.classList.remove('border-amber-500', 'bg-stone-800/20'));
+            document.getElementById(`song-btn-${songId}`).classList.add('border-amber-500', 'bg-stone-800/20');
+
+            document.getElementById('playing-status-dot').className = "relative inline-flex rounded-full h-2 w-2 bg-red-500 glow-active";
+            document.getElementById('playing-status-glow').className = "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-red-500";
+            document.getElementById('song-status-text').innerText = `กำลังเล่น: ${song.name}`;
+
+            // Enable control action buttons
+            document.getElementById('stop-btn').disabled = false;
+            document.getElementById('stop-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('ending-btn').disabled = false;
+            document.getElementById('ending-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            const leftCastanet = document.getElementById('left-castanet');
+            const rightCastanet = document.getElementById('right-castanet');
+
+            // Set up looped scheduling sequence using precise timeouts
+            const msPerBeat = 60000 / song.bpm;
+            let currentSequenceStep = 0;
+
+            function scheduleLoop() {
+                const baseTime = currentSequenceStep * song.totalBeats * msPerBeat;
+                
+                song.loopPattern.forEach(note => {
+                    const scheduledTime = baseTime + (note.beat - 1) * msPerBeat;
+                    const timeoutId = setTimeout(() => {
+                        if (note.hand === 'L') {
+                            triggerCastanet(leftCastanet);
+                        } else if (note.hand === 'R') {
+                            triggerCastanet(rightCastanet);
+                        }
+                    }, scheduledTime);
+                    sequencerTimeoutRefs.push(timeoutId);
+                });
+
+                currentSequenceStep++;
+                
+                // Cycle loop scheduling indefinitely until ending triggered or stopped
+                const loopDuration = song.totalBeats * msPerBeat;
+                const nextLoopId = setTimeout(scheduleLoop, loopDuration);
+                activeSequencerId = nextLoopId;
+            }
+
+            // Begin Sequencer scheduling loop
+            scheduleLoop();
+        }
+
+        // Execute ending phrase then automatically shutdown playback
+        function triggerSongEnding() {
+            if (currentlyPlayingSong === 0) return;
+
+            const songId = currentlyPlayingSong;
+            const song = songDB[songId];
+            
+            // Stop ongoing repeat scheduler
+            if (activeSequencerId) clearTimeout(activeSequencerId);
+            // Cancel pending hits scheduled beyond the next beat boundary
+            sequencerTimeoutRefs.forEach(id => clearTimeout(id));
+            sequencerTimeoutRefs = [];
+
+            document.getElementById('song-status-text').innerText = `กำลังเร่งจังหวะท่อนจบ...`;
+            document.getElementById('ending-btn').disabled = true;
+            document.getElementById('ending-btn').classList.add('opacity-50', 'cursor-not-allowed');
+
+            const msPerBeat = 60000 / song.bpm;
+            const leftCastanet = document.getElementById('left-castanet');
+            const rightCastanet = document.getElementById('right-castanet');
+
+            // Play the rich ending rhythm sequence (usually faster flourishes)
+            song.endingPattern.forEach(note => {
+                const actionDelay = (note.beat - 1) * msPerBeat;
+                
+                const endingTimeout = setTimeout(() => {
+                    if (note.hand === 'L') {
+                        triggerCastanet(leftCastanet);
+                    } else if (note.hand === 'R') {
+                        triggerCastanet(rightCastanet);
+                    } else if (note.hand === 'both') {
+                        // Dramatic dual strike clack
+                        triggerCastanet(leftCastanet);
+                        triggerCastanet(rightCastanet);
+                    }
+                }, actionDelay);
+                sequencerTimeoutRefs.push(endingTimeout);
+            });
+
+            // Automatically clean-up and disable player UI states after final beat finishes
+            const finalHitBeat = song.endingPattern[song.endingPattern.length - 1].beat;
+            const shutdownDelay = (finalHitBeat - 0.7) * msPerBeat + 300;
+
+            const completionId = setTimeout(() => {
+                cleanResetSequencerUI();
+            }, shutdownDelay);
+            sequencerTimeoutRefs.push(completionId);
+        }
+
+        // Clean cancel actions
+        function stopSequencer() {
+            if (activeSequencerId) clearTimeout(activeSequencerId);
+            sequencerTimeoutRefs.forEach(id => clearTimeout(id));
+            sequencerTimeoutRefs = [];
+            activeSequencerId = null;
+        }
+
+        // Hard interrupt stop
+        function stopDemo() {
+            stopSequencer();
+            cleanResetSequencerUI();
+        }
+
+        // Return components back to their natural idle/ready forms
+        function cleanResetSequencerUI() {
+            currentlyPlayingSong = 0;
+            document.querySelectorAll('.song-selector').forEach(btn => btn.classList.remove('border-amber-500', 'bg-stone-800/20'));
+            
+            // Revoke indicator pulses
+            document.getElementById('playing-status-dot').className = "relative inline-flex rounded-full h-2 w-2 bg-stone-600";
+            document.getElementById('playing-status-glow').className = "";
+            document.getElementById('song-status-text').innerText = "รอการเลือกเล่นเพลงสาธิต...";
+            
+            // Disable interface buttons
+            document.getElementById('stop-btn').disabled = true;
+            document.getElementById('stop-btn').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('ending-btn').disabled = true;
+            document.getElementById('ending-btn').classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // --- Live Performance Capture Recording Logic ---
         const recordBtn = document.getElementById('record-btn');
         const recordText = document.getElementById('record-text');
-        const statusMsg = document.getElementById('status-msg');
+        const recordStatusMsg = document.getElementById('record-status-msg');
 
-        recordBtn.addEventListener('click', (e) => {
-            // ไม่ต้องใส่ preventDefault ที่นี่ เพื่อให้คลิกทำงานได้ปกติบน desktop/mobile
+        recordBtn.addEventListener('click', () => {
             toggleRecording();
         });
 
@@ -391,6 +749,7 @@
             recordedChunks = [];
             const stream = destNode.stream;
             
+            // Standardizing formats across browsers
             let options = { mimeType: 'audio/webm' };
             if (!MediaRecorder.isTypeSupported('audio/webm')) {
                  if (MediaRecorder.isTypeSupported('audio/mp4')) {
@@ -403,7 +762,7 @@
             try {
                 mediaRecorder = new MediaRecorder(stream, options);
             } catch (e) {
-                statusMsg.textContent = "Browser not supported";
+                recordStatusMsg.textContent = "ไม่รองรับอุปกรณ์บันทึกเสียงบนเบราว์เซอร์นี้";
                 return;
             }
 
@@ -415,9 +774,11 @@
             mediaRecorder.start();
 
             isRecording = true;
-            recordBtn.classList.add('recording');
-            recordText.textContent = "หยุด";
-            statusMsg.textContent = "กำลังอัด...";
+            recordBtn.classList.add('text-white', 'bg-red-600', 'hover:bg-red-500', 'border-red-600');
+            document.getElementById('record-dot').classList.remove('bg-red-500');
+            document.getElementById('record-dot').classList.add('bg-white');
+            recordText.textContent = "หยุดบันทึก";
+            recordStatusMsg.textContent = "กำลังจับสัญญาณเสียงสด...";
         }
 
         function stopRecording() {
@@ -425,10 +786,13 @@
                 mediaRecorder.stop();
             }
             isRecording = false;
-            recordBtn.classList.remove('recording');
-            recordText.textContent = "บันทึกเสียง";
+            recordBtn.classList.remove('text-white', 'bg-red-600', 'hover:bg-red-500', 'border-red-600');
+            document.getElementById('record-dot').classList.remove('bg-white');
+            document.getElementById('record-dot').classList.add('bg-red-500');
+            recordText.textContent = "บันทึกสด";
         }
 
+        // Generate download action of performance clip
         function saveRecording() {
             const blob = new Blob(recordedChunks, { type: 'audio/webm' });
             const url = URL.createObjectURL(blob);
@@ -438,7 +802,7 @@
             
             const date = new Date();
             const timestamp = `${date.getHours()}${date.getMinutes()}${date.getSeconds()}`;
-            a.download = `castanets_${timestamp}.webm`;
+            a.download = `flamenco_castanets_${timestamp}.webm`;
             
             document.body.appendChild(a);
             a.click();
@@ -446,13 +810,12 @@
             setTimeout(() => {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-                statusMsg.textContent = "บันทึกเรียบร้อย!";
-                setTimeout(() => { statusMsg.textContent = ""; }, 2000);
+                recordStatusMsg.textContent = "ส่งออกไฟล์เสียงเรียบร้อย!";
+                setTimeout(() => { recordStatusMsg.textContent = "พร้อมเริ่มบันทึกการเล่นสด..."; }, 2500);
             }, 100);
         }
 
-        // --- Touch & Interaction Logic (FIXED) ---
-        
+        // --- Interaction Handlers (Multi-touch support & Desktop Keyboards) ---
         const leftCastanet = document.getElementById('left-castanet');
         const rightCastanet = document.getElementById('right-castanet');
         const startOverlay = document.getElementById('start-overlay');
@@ -463,37 +826,23 @@
             unlockAudioIOS();
         }
 
-        // ปุ่ม Start
+        // Click handler to unlock audio interface on entrance
         startBtn.addEventListener('click', (e) => {
             globalUnlock();
-            startOverlay.style.opacity = '0';
+            startOverlay.classList.add('opacity-0', 'pointer-events-none');
             setTimeout(() => {
                 startOverlay.style.display = 'none';
             }, 500);
         });
 
-        function triggerCastanet(element) {
-            const pitch = element.getAttribute('data-pitch');
-            playCastanetSound(pitch);
-            element.classList.remove('active');
-            void element.offsetWidth;
-            element.classList.add('active');
-            setTimeout(() => {
-                element.classList.remove('active');
-            }, 60); 
-        }
-
-        // Multi-touch Handler (Fixed for buttons)
+        // Fixed Multi-touch Event Interceptor
         function handleTouch(e) {
-            // **แก้ไขสำคัญ:** ถ้าสิ่งที่แตะเป็นปุ่ม (Button) หรืออยู่ในปุ่ม ให้ข้ามไปเลย
-            // เพื่อให้ Event การคลิก (Click) ทำงานตามปกติ
-            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            // Check if touch hits button tabs or inputs so they retain their natural active behavior
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT') {
                 return;
             }
 
-            // ถ้าไม่ได้แตะปุ่ม ให้ป้องกัน Default เพื่อกันการซูม/เลื่อนหน้าจอ
             if(e.cancelable) e.preventDefault();
-            
             globalUnlock();
 
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -510,20 +859,27 @@
             }
         }
 
-        // Listeners
+        // Touch listeners
         document.addEventListener('touchstart', handleTouch, { passive: false });
 
-        // Mouse Listeners
+        // Mouse listeners
         leftCastanet.addEventListener('mousedown', (e) => {
-            if(e.button === 0) triggerCastanet(leftCastanet);
+            if(e.button === 0) {
+                globalUnlock();
+                triggerCastanet(leftCastanet);
+            }
         });
         rightCastanet.addEventListener('mousedown', (e) => {
-            if(e.button === 0) triggerCastanet(rightCastanet);
+            if(e.button === 0) {
+                globalUnlock();
+                triggerCastanet(rightCastanet);
+            }
         });
 
-        // Keyboard
+        // Keyboard mappings (Traditional Left 'A'/'ArrowLeft', Right 'L'/'ArrowRight')
         document.addEventListener('keydown', (e) => {
             if (e.repeat) return;
+            globalUnlock();
             if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
                 triggerCastanet(leftCastanet);
             }
