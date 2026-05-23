@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Electone Mobile Pro (Strict Split)</title>
+    <title>Electone Mobile Pro (Strict Split with Synth Panel)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             overscroll-behavior: none;
@@ -12,70 +13,66 @@
             -webkit-user-select: none;
             touch-action: none;
             font-family: 'Sarabun', sans-serif;
-            background-color: #111; /* Dark background for the 'void' areas */
+            background-color: #0b0b0c; /* High contrast void color */
+        }
+
+        /* Keyboard line separation down the exact middle */
+        .keyboard-split-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, rgba(239, 68, 68, 0.4) 0%, rgba(217, 119, 6, 0.4) 50%, rgba(34, 197, 94, 0.4) 100%);
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(217, 119, 6, 0.5);
         }
 
         /* Container for the row */
         .key {
             position: relative;
             cursor: pointer;
-            /* No border on the container itself, specific borders on keys */
             -webkit-tap-highlight-color: transparent;
         }
 
         /* --- WHITE KEY (LEFT SIDE ONLY) --- */
         .white-key {
-            /* Strictly 50% width */
             width: 50%;
-            height: 100%; /* Full height of the assigned slot */
-            
-            /* Visuals */
-            background: linear-gradient(to right, #ffffff 0%, #d4d4d4 100%);
+            height: 100%; 
+            background: linear-gradient(to right, #ffffff 0%, #ececec 85%, #d1d5db 100%);
             z-index: 1;
-            
-            /* Borders */
-            border-bottom: 1px solid #999;
-            border-right: 2px solid #000; /* Distinct separation line */
+            border-bottom: 1px solid #a1a1aa;
+            border-right: 1px solid #1f2937;
             box-sizing: border-box;
-            
-            /* Animation */
-            transition: background 0.05s;
+            transition: background 0.04s, box-shadow 0.04s;
         }
 
         .white-key:active, .white-key.active {
-            background: #bbb; /* Darker when pressed */
-            box-shadow: inset 3px 0 5px rgba(0,0,0,0.3);
+            background: linear-gradient(to right, #d1d5db 0%, #a1a1aa 100%);
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.35), 0 0 12px rgba(245, 158, 11, 0.5);
         }
 
         /* --- BLACK KEY (RIGHT SIDE ONLY) --- */
-        /* Note: Black key is a child of the .key div */
         .black-key {
-            /* Position: Move to the right half (100% of the 50% parent) */
             position: absolute;
             left: 100%; 
-            width: 100%; /* Fill the right half */
-            
-            /* Height & Vertical Alignment */
-            /* Straddle logic: Top -50% to cover the gap between notes */
+            width: 100%; 
             top: -50%;
             height: 100%; 
-            
-            /* Visuals */
-            background: linear-gradient(to right, #444 0%, #1a1a1a 100%);
-            z-index: 2; /* On top */
-            
-            /* Borders */
-            border-bottom: 1px solid #333;
-            border-top: 1px solid #555; /* Highlight */
-            border-left: 1px solid #000;
+            background: linear-gradient(to right, #3f3f46 0%, #18181b 75%, #09090b 100%);
+            z-index: 2; 
+            border-bottom: 1px solid #111827;
+            border-top: 1px solid #52525b; 
+            border-left: 1px solid #09090b;
             box-sizing: border-box;
-            
-            transition: background 0.05s;
+            transition: background 0.04s, box-shadow 0.04s;
+            border-radius: 0 2px 2px 0;
         }
 
         .black-key:active, .black-key.active {
-            background: #222;
-            box-shadow: inset 3px 0 8px rgba(0,0,0,0.5);
+            background: linear-gradient(to right, #1f2937 0%, #030712 100%);
+            box-shadow: inset 5px 0 12px rgba(0,0,0,0.6), 0 0 12px rgba(59, 130, 246, 0.6);
         }
 
         /* --- LABELS --- */
@@ -84,95 +81,290 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.75rem;
-            font-weight: bold;
+            font-size: 0.65rem;
+            font-weight: 700;
             pointer-events: none;
+            letter-spacing: -0.05em;
         }
 
         .white-key .note-label {
-            color: #555;
+            color: #4b5563;
         }
 
         .black-key .note-label {
-            color: #ddd;
-            text-shadow: 0 1px 2px black;
+            color: #e4e4e7;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
 
         /* C notes highlight */
         .note-c-highlight {
-            color: #d97706 !important; /* Amber-600 */
-            font-size: 0.9rem !important;
+            color: #ef4444 !important; /* Vivid Red */
+            font-size: 0.8rem !important;
+            text-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
         }
 
         /* --- CONTROLS UI --- */
         .wood-grain {
-            background: #271c19;
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 8px);
-            border-bottom: 2px solid #000;
+            background: #1e1310;
+            background-image: linear-gradient(to bottom, #2b1d19 0%, #150c0a 100%), repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 10px);
+            border-bottom: 3px solid #000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         
-        .control-btn { transition: transform 0.1s; }
-        .control-btn:active { transform: scale(0.95); }
+        .control-btn { 
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .control-btn:active { 
+            transform: scale(0.93); 
+        }
         
         .led {
-            width: 6px; height: 6px; border-radius: 50%;
-            background-color: #333; display: inline-block; margin-right: 4px;
+            width: 7px; height: 7px; border-radius: 50%;
+            background-color: #1f2937; display: inline-block; margin-right: 5px;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            border: 1px solid #000;
         }
-        .led.on { background-color: #ef4444; box-shadow: 0 0 4px #ef4444; }
-        .led.play-on { background-color: #22c55e; box-shadow: 0 0 4px #22c55e; }
+        .led.on { background-color: #ef4444; box-shadow: 0 0 6px #ef4444, inset 0 0 2px #fff; }
+        .led.play-on { background-color: #22c55e; box-shadow: 0 0 6px #22c55e, inset 0 0 2px #fff; }
+        .led.demo-on { background-color: #3b82f6; box-shadow: 0 0 8px #3b82f6, inset 0 0 2px #fff; }
+
+        /* Custom Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #27272a;
+            height: 6px;
+            border-radius: 9999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #f59e0b;
+            cursor: pointer;
+            border: 2px solid #18181b;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            transition: background-color 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:active {
+            background: #fbbf24;
+        }
+
+        /* Scrollbars for panel */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden text-white">
 
     <!-- Top Bar -->
-    <div class="wood-grain p-1 flex-none shadow-lg z-20">
+    <div class="wood-grain p-1 flex-none shadow-lg z-30">
         <div class="flex justify-between items-center max-w-4xl mx-auto px-2 h-10">
-            <h1 class="text-xs font-bold text-yellow-600 tracking-wider">ELECTONE <span class="text-gray-400 font-normal">Strict Split</span></h1>
+            <h1 class="text-xs font-bold text-amber-500 tracking-wider flex items-center gap-1">
+                <span>🎹</span> ELECTONE <span class="text-gray-400 font-light text-[10px]">Strict Split Pro</span>
+            </h1>
             
-            <button id="toggleNotes" class="control-btn bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-[10px] border border-gray-600">
-                แสดงโน้ต
-            </button>
+            <div class="flex gap-1.5">
+                <button id="toggleSynthPanel" class="control-btn bg-amber-600/20 text-amber-300 hover:bg-amber-600/30 px-2 py-1 rounded text-[10px] border border-amber-600/50 flex items-center gap-1 font-semibold">
+                    🎛️ ปรับแต่งเสียง
+                </button>
+                <button id="toggleNotes" class="control-btn bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded text-[10px] border border-zinc-600 text-zinc-300">
+                    แสดงโน้ต
+                </button>
+            </div>
         </div>
 
-        <div class="flex justify-center gap-2 pb-1 bg-black/20">
-            <button id="recordBtn" class="control-btn flex items-center bg-gray-800 px-3 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center">
-                <span id="recLed" class="led"></span> อัด
-            </button>
-            <button id="playBtn" class="control-btn flex items-center bg-gray-800 px-3 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center disabled:opacity-50">
-                <span id="playLed" class="led"></span> ฟัง
-            </button>
-            <a id="downloadBtn" class="control-btn flex items-center bg-gray-700 opacity-50 pointer-events-none px-3 py-1 rounded text-[10px] border border-gray-600 min-w-[60px] justify-center text-white no-underline">
-                ⬇️ โหลด
-            </a>
-            <button id="clearBtn" class="control-btn bg-red-900/40 text-red-300 px-2 py-1 rounded text-[10px] border border-red-900">
-                ลบ
-            </button>
+        <!-- Upper Instrument Dashboard (Recording + Demos) -->
+        <div class="bg-black/40 border-t border-white/5 py-1 px-2">
+            <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
+                <!-- Record / Play / Tools -->
+                <div class="flex gap-1.5 items-center">
+                    <button id="recordBtn" class="control-btn flex items-center bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded text-[10px] border border-zinc-600 justify-center">
+                        <span id="recLed" class="led"></span> อัด
+                    </button>
+                    <button id="playBtn" class="control-btn flex items-center bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded text-[10px] border border-zinc-600 justify-center disabled:opacity-50">
+                        <span id="playLed" class="led"></span> ฟัง
+                    </button>
+                    <a id="downloadBtn" class="control-btn flex items-center bg-zinc-800 opacity-40 pointer-events-none px-2.5 py-1 rounded text-[10px] border border-zinc-600 justify-center text-zinc-300 no-underline">
+                        ⬇️ โหลด
+                    </a>
+                    <button id="clearBtn" class="control-btn bg-red-950/40 text-red-300 hover:bg-red-950/60 px-2 py-1 rounded text-[10px] border border-red-900/40">
+                        ลบ
+                    </button>
+                </div>
+
+                <!-- Demo Songs Selection -->
+                <div class="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded-lg border border-zinc-700/60">
+                    <span class="text-[9px] text-zinc-400 px-1 font-semibold">🎵 เพลงสาธิต:</span>
+                    <button id="demo1Btn" class="control-btn px-2 py-0.5 rounded text-[9px] bg-zinc-800 border border-zinc-700 hover:text-white" onclick="triggerDemo('odeToJoy')">
+                        โอเดทูจอย
+                    </button>
+                    <button id="demo2Btn" class="control-btn px-2 py-0.5 rounded text-[9px] bg-zinc-800 border border-zinc-700 hover:text-white" onclick="triggerDemo('twinkle')">
+                        ดาวดวงน้อย
+                    </button>
+                    <button id="demo3Btn" class="control-btn px-2 py-0.5 rounded text-[9px] bg-zinc-800 border border-zinc-700 hover:text-white" onclick="triggerDemo('canon')">
+                        แคนอน
+                    </button>
+                    <button id="stopDemoBtn" class="control-btn px-1.5 py-0.5 rounded text-[9px] bg-red-900/50 hover:bg-red-900 text-red-200 hidden" onclick="stopDemoSong()">
+                        หยุด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Sound Settings Panel (Drawer) -->
+    <div id="synthPanel" class="fixed top-[78px] left-0 right-0 max-h-[50vh] bg-zinc-950/95 backdrop-blur-md border-b border-amber-600/30 shadow-2xl z-20 transition-all duration-300 transform -translate-y-full overflow-y-auto custom-scrollbar">
+        <div class="max-w-xl mx-auto p-4 space-y-4">
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-1.5">
+                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                    🎛️ เครื่องผสมเสียง Electone ขั้นสูง
+                </h3>
+                <span class="text-[9px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded">Real-time Synthesizer</span>
+            </div>
+
+            <!-- Tone Presets -->
+            <div>
+                <span class="text-[10px] text-zinc-400 block mb-1.5 font-semibold">โทนเสียงสำเร็จรูป (Presets)</span>
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button onclick="loadPreset('organ')" class="preset-btn bg-amber-600 text-black font-semibold text-[10px] py-1 px-1 rounded active:scale-95 transition">คลาสสิกออร์แกน</button>
+                    <button onclick="loadPreset('synth')" class="preset-btn bg-zinc-800 text-zinc-300 text-[10px] py-1 px-1 rounded active:scale-95 transition">คีย์บอร์ดสังเคราะห์</button>
+                    <button onclick="loadPreset('warmPad')" class="preset-btn bg-zinc-800 text-zinc-300 text-[10px] py-1 px-1 rounded active:scale-95 transition">แพดเสียงอุ่น</button>
+                    <button onclick="loadPreset('retro')" class="preset-btn bg-zinc-800 text-zinc-300 text-[10px] py-1 px-1 rounded active:scale-95 transition">เกมย้อนยุค 8-bit</button>
+                </div>
+            </div>
+
+            <!-- Parameters Sliders -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Oscillator 1 Wave -->
+                <div>
+                    <label class="text-[10px] text-zinc-400 block mb-1">คลื่นเสียงหลัก (OSC 1)</label>
+                    <select id="osc1Wave" class="w-full bg-zinc-900 border border-zinc-700 text-white text-[11px] rounded p-1" onchange="updateSynthParams()">
+                        <option value="sawtooth">เลื่อย (Sawtooth)</option>
+                        <option value="sine">ไซน์ (Sine)</option>
+                        <option value="square">สี่เหลี่ยม (Square)</option>
+                        <option value="triangle">สามเหลี่ยม (Triangle)</option>
+                    </select>
+                </div>
+
+                <!-- Oscillator 2 Wave -->
+                <div>
+                    <label class="text-[10px] text-zinc-400 block mb-1">คลื่นเสียงรอง (OSC 2)</label>
+                    <select id="osc2Wave" class="w-full bg-zinc-900 border border-zinc-700 text-white text-[11px] rounded p-1" onchange="updateSynthParams()">
+                        <option value="triangle" selected>สามเหลี่ยม (Triangle)</option>
+                        <option value="sawtooth">เลื่อย (Sawtooth)</option>
+                        <option value="sine">ไซน์ (Sine)</option>
+                        <option value="square">สี่เหลี่ยม (Square)</option>
+                    </select>
+                </div>
+
+                <!-- ADSR Envelope Attack -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-zinc-400">การตอบสนองเริ่มต้น (Attack)</span>
+                        <span id="attackVal" class="text-amber-500 font-bold">0.02s</span>
+                    </div>
+                    <input type="range" id="paramAttack" min="0.01" max="1.5" step="0.01" value="0.02" class="w-full" oninput="updateSynthParams()">
+                </div>
+
+                <!-- ADSR Envelope Release -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-zinc-400">หางเสียงค้าง (Release)</span>
+                        <span id="releaseVal" class="text-amber-500 font-bold">0.20s</span>
+                    </div>
+                    <input type="range" id="paramRelease" min="0.05" max="2.5" step="0.05" value="0.20" class="w-full" oninput="updateSynthParams()">
+                </div>
+
+                <!-- Lowpass Filter Cutoff -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-zinc-400">กรองความถี่เสียง (Filter Cutoff)</span>
+                        <span id="cutoffVal" class="text-amber-500 font-bold">2500Hz</span>
+                    </div>
+                    <input type="range" id="paramCutoff" min="100" max="8000" step="50" value="2500" class="w-full" oninput="updateSynthParams()">
+                </div>
+
+                <!-- Delay / Echo Mix -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[10px]">
+                        <span class="text-zinc-400">เสียงสะท้อนหน่วง (Echo Space)</span>
+                        <span id="delayVal" class="text-amber-500 font-bold">20%</span>
+                    </div>
+                    <input type="range" id="paramDelay" min="0" max="0.8" step="0.05" value="0.20" class="w-full" oninput="updateSynthParams()">
+                </div>
+            </div>
+
+            <!-- Mini Tip -->
+            <div class="text-[9px] text-zinc-500 text-center italic bg-zinc-900/50 py-1 rounded">
+                💡 คำแนะนำ: ปรับค่าเสียงสะท้อน (Echo Space) เพิ่มเพื่อเพิ่มมิติความกว้างเหมือนเล่นในฮอลล์คอนเสิร์ต
+            </div>
         </div>
     </div>
 
     <!-- Keyboard Area -->
-    <div class="flex-grow bg-[#111] relative w-full h-full overflow-hidden">
-        <!-- Flex Column Reverse: C2 at bottom -->
+    <div class="flex-grow bg-[#09090b] relative w-full h-full overflow-hidden select-none">
+        
+        <!-- Red/Amber split-line design down the vertical center of screen -->
+        <div class="keyboard-split-line"></div>
+
+        <!-- Custom side-indicators to remind player of strict split scheme -->
+        <div class="absolute left-1 top-2 text-[9px] text-zinc-500 tracking-wider pointer-events-none uppercase font-bold z-10 select-none">
+            ← ฝั่งซ้าย: คีย์ขาว (White Keys Only)
+        </div>
+        <div class="absolute right-1 top-2 text-[9px] text-zinc-500 tracking-wider pointer-events-none uppercase font-bold z-10 select-none text-right">
+            ฝั่งขวา: คีย์ดำ (Black Keys Only) →
+        </div>
+
+        <!-- Flex Column Reverse: C2 at bottom, C7 at top -->
         <div id="keyboard" class="relative w-full h-full flex flex-col-reverse justify-center mx-auto">
-            <!-- Keys generated by JS -->
+            <!-- Keyboard elements generated by JS -->
         </div>
     </div>
 
     <!-- Start Overlay -->
-    <div id="startOverlay" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center flex-col p-6 text-center">
-        <div class="text-5xl mb-4">🎹</div>
-        <h2 class="text-xl font-bold text-white mb-2">พร้อมเล่น Electone</h2>
-        <p class="text-gray-400 text-sm mb-6">61 คีย์ แยกฝั่งขาว-ดำชัดเจน</p>
-        <button id="startBtn" class="bg-yellow-600 text-white font-bold py-3 px-10 rounded-full text-lg shadow-lg hover:bg-yellow-500 active:scale-95 transition">
-            เริ่มใช้งาน
+    <div id="startOverlay" class="fixed inset-0 bg-zinc-950/98 z-50 flex items-center justify-center flex-col p-6 text-center">
+        <div class="text-6xl mb-4 animate-bounce">🎹</div>
+        <h2 class="text-2xl font-bold text-amber-500 mb-2 tracking-wider">ELECTONE MOBILE PRO</h2>
+        <p class="text-gray-300 text-sm max-w-xs mb-6 font-light leading-relaxed">
+            สัมผัสเสียงออร์แกนอิเล็กโทรนระบบ <span class="font-bold text-amber-400">Strict Split</span> (แยกฝั่งนิ้วคีย์ขาวและคีย์ดำ 50/50 ป้องกันนิ้วชนกันบนมือถือ) ขนาด 61 คีย์เต็มรูปแบบ
+        </p>
+        <button id="startBtn" class="bg-gradient-to-r from-amber-600 to-amber-500 text-zinc-950 font-bold py-3.5 px-12 rounded-full text-lg shadow-xl hover:brightness-110 active:scale-95 transition duration-150">
+            เริ่มต้นเล่นเพลง
         </button>
+        <p class="text-zinc-500 text-[10px] mt-8">แนะนำให้หมุนล็อคทิศทางหน้าจอแนวตั้งเพื่อการเล่นที่ดีที่สุด</p>
     </div>
 
     <script>
-        // --- Audio Engine ---
+        // --- Synth Settings State ---
+        let synthParams = {
+            wave1: 'sawtooth',
+            wave2: 'triangle',
+            attack: 0.02,
+            release: 0.20,
+            cutoff: 2500,
+            delayFeedback: 0.35,
+            delayMix: 0.20
+        };
+
+        // --- Audio Engine Variables ---
         let audioCtx;
         let mainGain;
         let compressor;
+        let delayNode;
+        let delayFeedbackNode;
+        let delayMixNode;
         const activeOscillators = {}; 
         let mediaRecorder;
         let audioChunks = [];
@@ -181,9 +373,9 @@
         const notes = [];
         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const startOctave = 2; 
-        const totalKeys = 61; 
+        const totalKeys = 61; // 5 full octaves + 1 note (C2 to C7)
 
-        // Generate Note Data
+        // Generate 61 Notes Data (C2 to C7)
         let currentOctave = startOctave;
         let noteIndex = 0; 
         
@@ -207,21 +399,47 @@
             }
         }
 
+        // --- STREAMING_CHUNK: Audio Context Initialization ---
         function initAudio() {
             if (audioCtx) return;
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
+            
             mainGain = audioCtx.createGain();
-            mainGain.gain.value = 0.4; 
+            mainGain.gain.value = 0.35; 
 
+            // Compressor to prevent distortion on polyphony
             compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20;
-            compressor.ratio.value = 12;
+            compressor.threshold.value = -16;
+            compressor.ratio.value = 8;
+            compressor.attack.value = 0.01;
+            compressor.release.value = 0.15;
 
+            // Spatial Echo/Delay Circuit
+            delayNode = audioCtx.createDelay(1.0);
+            delayFeedbackNode = audioCtx.createGain();
+            delayMixNode = audioCtx.createGain();
+
+            // Configure delay time
+            delayNode.delayTime.value = 0.32; 
+            delayFeedbackNode.gain.value = synthParams.delayFeedback;
+            delayMixNode.gain.value = synthParams.delayMix;
+
+            // Route: Synth Voice -> MainGain -> Compressor -> Output
+            // Echo line: MainGain -> DelayNode -> DelayFeedback -> back to DelayNode
+            // Echo output: DelayNode -> DelayMixNode -> Compressor
             mainGain.connect(compressor);
+            
+            mainGain.connect(delayNode);
+            delayNode.connect(delayFeedbackNode);
+            delayFeedbackNode.connect(delayNode); // feedback loop
+            
+            delayNode.connect(delayMixNode);
+            delayMixNode.connect(compressor);
+
             compressor.connect(audioCtx.destination);
 
-            // Setup Recording
+            // Setup Media Recording Circuit
             try {
                 audioDest = audioCtx.createMediaStreamDestination();
                 compressor.connect(audioDest);
@@ -244,54 +462,123 @@
                     
                     let ext = (mediaRecorder.mimeType && mediaRecorder.mimeType.includes('mp4')) ? 'mp4' : 'webm';
                     const d = new Date();
-                    btn.download = `rec_${d.getHours()}${d.getMinutes()}${d.getSeconds()}.${ext}`;
+                    btn.download = `electone_${d.getHours()}${d.getMinutes()}${d.getSeconds()}.${ext}`;
                     
-                    btn.classList.remove('opacity-50', 'pointer-events-none', 'bg-gray-700');
-                    btn.classList.add('bg-green-600');
+                    btn.classList.remove('opacity-40', 'pointer-events-none');
+                    btn.classList.add('bg-green-600', 'border-green-500', 'text-white');
                 };
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error("Audio recording engine setup failed: ", err); 
+            }
         }
 
+        // --- STREAMING_CHUNK: Realtime Synth Control ---
+        function updateSynthParams() {
+            synthParams.wave1 = document.getElementById('osc1Wave').value;
+            synthParams.wave2 = document.getElementById('osc2Wave').value;
+            synthParams.attack = parseFloat(document.getElementById('paramAttack').value);
+            synthParams.release = parseFloat(document.getElementById('paramRelease').value);
+            synthParams.cutoff = parseFloat(document.getElementById('paramCutoff').value);
+            
+            const delayMixVal = parseFloat(document.getElementById('paramDelay').value);
+            synthParams.delayMix = delayMixVal;
+            // Delay feedback scales slightly with delay mix
+            synthParams.delayFeedback = delayMixVal > 0 ? (0.2 + delayMixVal * 0.4) : 0;
+
+            // Render value visual feedback
+            document.getElementById('attackVal').innerText = synthParams.attack.toFixed(2) + 's';
+            document.getElementById('releaseVal').innerText = synthParams.release.toFixed(2) + 's';
+            document.getElementById('cutoffVal').innerText = synthParams.cutoff.toFixed(0) + 'Hz';
+            document.getElementById('delayVal').innerText = Math.round(synthParams.delayMix * 100) + '%';
+
+            // Realtime update active effects node values if audio initialized
+            if (audioCtx) {
+                delayMixNode.gain.setValueAtTime(synthParams.delayMix, audioCtx.currentTime);
+                delayFeedbackNode.gain.setValueAtTime(synthParams.delayFeedback, audioCtx.currentTime);
+            }
+        }
+
+        function loadPreset(presetName) {
+            // Preset configuration maps
+            const presets = {
+                organ: { wave1: 'sawtooth', wave2: 'triangle', attack: 0.02, release: 0.15, cutoff: 3500, delayMix: 0.15 },
+                synth: { wave1: 'sawtooth', wave2: 'sawtooth', attack: 0.06, release: 0.45, cutoff: 1800, delayMix: 0.35 },
+                warmPad: { wave1: 'sine', wave2: 'triangle', attack: 0.50, release: 0.85, cutoff: 800, delayMix: 0.45 },
+                retro: { wave1: 'square', wave2: 'sine', attack: 0.01, release: 0.08, cutoff: 5000, delayMix: 0.0 }
+            };
+
+            const p = presets[presetName];
+            if (!p) return;
+
+            // Apply presets into UI controls
+            document.getElementById('osc1Wave').value = p.wave1;
+            document.getElementById('osc2Wave').value = p.wave2;
+            document.getElementById('paramAttack').value = p.attack;
+            document.getElementById('paramRelease').value = p.release;
+            document.getElementById('paramCutoff').value = p.cutoff;
+            document.getElementById('paramDelay').value = p.delayMix;
+
+            // Highlight active preset button style
+            const presetBtns = document.querySelectorAll('.preset-btn');
+            presetBtns.forEach(btn => {
+                btn.className = "preset-btn text-zinc-300 text-[10px] py-1 px-1 rounded active:scale-95 transition bg-zinc-800";
+            });
+            event.target.className = "preset-btn bg-amber-600 text-black font-semibold text-[10px] py-1 px-1 rounded active:scale-95 transition";
+
+            // Sync into state
+            updateSynthParams();
+        }
+
+        // --- STREAMING_CHUNK: Sound Voices Playback ---
         function playNote(index) {
             if (!audioCtx) initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
             if (activeOscillators[index]) return; 
 
             const freq = notes[index].freq;
+            
+            // OSC 1 Setup
             const osc1 = audioCtx.createOscillator();
-            osc1.type = 'sawtooth';
+            osc1.type = synthParams.wave1;
             osc1.frequency.value = freq;
 
+            // OSC 2 Detuned Setup
             const osc2 = audioCtx.createOscillator();
-            osc2.type = 'triangle';
+            osc2.type = synthParams.wave2;
             osc2.frequency.value = freq;
-            osc2.detune.value = 4; 
+            osc2.detune.value = 6; 
 
-            const gainNode = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 2500; 
+            // Gain envelope for ADSR Attack
+            const voiceGainNode = audioCtx.createGain();
+            
+            // Master dynamic lowpass filter per note
+            const filterNode = audioCtx.createBiquadFilter();
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = synthParams.cutoff;
+            filterNode.Q.value = 1;
 
-            osc1.connect(filter);
-            osc2.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(mainGain);
+            // Routing
+            osc1.connect(filterNode);
+            osc2.connect(filterNode);
+            filterNode.connect(voiceGainNode);
+            voiceGainNode.connect(mainGain);
 
+            // Envelope timing trigger
             const now = audioCtx.currentTime;
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(1, now + 0.02); 
-            gainNode.gain.exponentialRampToValueAtTime(0.8, now + 0.1); 
+            voiceGainNode.gain.setValueAtTime(0, now);
+            voiceGainNode.gain.linearRampToValueAtTime(1.0, now + synthParams.attack);
 
             osc1.start(now);
             osc2.start(now);
 
-            activeOscillators[index] = { osc1, osc2, gainNode };
+            // Cache active node references
+            activeOscillators[index] = { osc1, osc2, voiceGainNode };
 
-            // Visual Feedback
-            // Check if it's a white key or black key index
+            // Apply visual feedback to keyboard UI
             const keyEl = document.querySelector(`[data-index="${index}"]`);
             if (keyEl) keyEl.classList.add('active');
 
+            // Save key status if recording
             if (isRecording) {
                 recordedEvents.push({ type: 'on', index: index, time: Date.now() - recordingStartTime });
             }
@@ -302,17 +589,20 @@
             if (!active) return;
 
             const now = audioCtx.currentTime;
-            const release = 0.1; 
+            const releaseTime = synthParams.release; 
 
-            active.gainNode.gain.cancelScheduledValues(now);
-            active.gainNode.gain.setValueAtTime(active.gainNode.gain.value, now);
-            active.gainNode.gain.exponentialRampToValueAtTime(0.001, now + release);
+            // Envelope timing for Release
+            active.voiceGainNode.gain.cancelScheduledValues(now);
+            active.voiceGainNode.gain.setValueAtTime(active.voiceGainNode.gain.value, now);
+            active.voiceGainNode.gain.exponentialRampToValueAtTime(0.001, now + releaseTime);
 
-            active.osc1.stop(now + release);
-            active.osc2.stop(now + release);
+            // Stop oscillators safely after tail ends
+            active.osc1.stop(now + releaseTime + 0.05);
+            active.osc2.stop(now + releaseTime + 0.05);
 
             delete activeOscillators[index];
 
+            // UI Feedback update
             const keyEl = document.querySelector(`[data-index="${index}"]`);
             if (keyEl) keyEl.classList.remove('active');
 
@@ -321,26 +611,25 @@
             }
         }
 
-        // --- Keyboard Generation ---
+        // --- STREAMING_CHUNK: Rendering Keyboard ---
         const keyboardEl = document.getElementById('keyboard');
         let showNotes = true;
 
         function renderKeyboard() {
             keyboardEl.innerHTML = '';
             
-            // Only iterate through white keys to create the "Slots"
+            // Retrieve only White key indexes to construct grid container rows
             const whiteKeys = notes.map((n, i) => ({...n, originalIndex: i})).filter(n => n.type === 'white');
             const heightPercent = 100 / whiteKeys.length;
 
             whiteKeys.forEach((noteData) => {
-                // Container (Slot)
-                // Note: We use the white key DIV as the container but restrict its visible width
+                // Key Row container (occupies the assigned row height)
                 const keyContainer = document.createElement('div');
-                keyContainer.className = 'key white-key'; // It acts as the white key visually too
+                keyContainer.className = 'key white-key'; 
                 keyContainer.style.height = `${heightPercent}%`;
                 keyContainer.dataset.index = noteData.originalIndex;
                 
-                // Label for White Key
+                // Note Label inside
                 const label = document.createElement('div');
                 label.className = `note-label ${noteData.note === 'C' ? 'note-c-highlight' : ''}`;
                 label.innerText = showNotes ? (noteData.note + (noteData.note === 'C' ? noteData.oct : '')) : '';
@@ -348,7 +637,7 @@
                 
                 keyboardEl.appendChild(keyContainer);
 
-                // Look ahead for black key
+                // Examine whether a Black Key exists directly above this White Key row slot
                 const nextNoteIndex = noteData.originalIndex + 1;
                 if (nextNoteIndex < notes.length && notes[nextNoteIndex].type === 'black') {
                     const blackKey = document.createElement('div');
@@ -360,23 +649,20 @@
                     bLabel.innerText = showNotes ? notes[nextNoteIndex].note : '';
                     blackKey.appendChild(bLabel);
                     
-                    // Attach to the current slot (White Key Div)
-                    // CSS handles positioning it to the right half
+                    // Appended inside the white slot parent (repositioned 100% rightward via CSS split scheme)
                     keyContainer.appendChild(blackKey);
                 }
             });
         }
 
-        // --- Interaction ---
+        // --- STREAMING_CHUNK: Touch/Mouse Interaction Mechanics ---
         function setupInputs() {
-            // Re-select all keys (both white containers and black children)
-            // Note: querySelectorAll('.key') gets both because both have class 'key'
             const keys = document.querySelectorAll('.key');
             
-            // Mouse
+            // Mouse Handlers
             keys.forEach(key => {
                 key.addEventListener('mousedown', (e) => {
-                    e.stopPropagation(); // Critical: Don't trigger parent white key when clicking black key
+                    e.stopPropagation(); 
                     playNote(parseInt(key.dataset.index));
                 });
                 key.addEventListener('mouseup', (e) => stopNote(parseInt(key.dataset.index)));
@@ -385,8 +671,7 @@
                 });
             });
 
-            // Touch
-            // We use global touch handler on the container to handle sliding
+            // Multi-touch drag sliding gesture mechanics (strict 50/50 split boundary handled globally)
             keyboardEl.addEventListener('touchstart', handleTouch, { passive: false });
             keyboardEl.addEventListener('touchmove', handleTouch, { passive: false });
             keyboardEl.addEventListener('touchend', handleTouchEnd, { passive: false });
@@ -398,13 +683,13 @@
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
-                // elementFromPoint will find the top-most element (Black key takes priority via z-index)
+                // elementFromPoint will discover the highest z-index element matching point coordinates
                 const target = document.elementFromPoint(touch.clientX, touch.clientY);
                 
                 if (target && target.classList.contains('key')) {
                     const noteIndex = parseInt(target.dataset.index);
                     
-                    // Logic to handle sliding from one key to another
+                    // User slid away from original note element coordinates
                     if (activeTouches[touch.identifier] !== undefined && activeTouches[touch.identifier] !== noteIndex) {
                         stopNote(activeTouches[touch.identifier]);
                     }
@@ -414,7 +699,7 @@
                         activeTouches[touch.identifier] = noteIndex;
                     }
                 } else {
-                    // Touched void (right side with no black key)
+                    // Coordinates outside active zone
                     if (activeTouches[touch.identifier] !== undefined) {
                         stopNote(activeTouches[touch.identifier]);
                         delete activeTouches[touch.identifier];
@@ -435,7 +720,131 @@
             }
         }
 
-        // --- Recorder Logic ---
+        // --- STREAMING_CHUNK: Demo Song Definitions & Sequencer ---
+        let demoTimeouts = [];
+        let activeDemoKey = null;
+
+        // 3 Melodious Demo Songs mapping to keyboard notes
+        const demoSongs = {
+            odeToJoy: [
+                { n: "E4", d: 400 }, { n: "E4", d: 400 }, { n: "F4", d: 400 }, { n: "G4", d: 400 },
+                { n: "G4", d: 400 }, { n: "F4", d: 400 }, { n: "E4", d: 400 }, { n: "D4", d: 400 },
+                { n: "C4", d: 400 }, { n: "C4", d: 400 }, { n: "D4", d: 400 }, { n: "E4", d: 400 },
+                { n: "E4", d: 600 }, { n: "D4", d: 200 }, { n: "D4", d: 800 },
+                { n: "E4", d: 400 }, { n: "E4", d: 400 }, { n: "F4", d: 400 }, { n: "G4", d: 400 },
+                { n: "G4", d: 400 }, { n: "F4", d: 400 }, { n: "E4", d: 400 }, { n: "D4", d: 400 },
+                { n: "C4", d: 400 }, { n: "C4", d: 400 }, { n: "D4", d: 400 }, { n: "E4", d: 400 },
+                { n: "D4", d: 600 }, { n: "C4", d: 200 }, { n: "C4", d: 800 }
+            ],
+            twinkle: [
+                { n: "C4", d: 450 }, { n: "C4", d: 450 }, { n: "G4", d: 450 }, { n: "G4", d: 450 },
+                { n: "A4", d: 450 }, { n: "A4", d: 450 }, { n: "G4", d: 900 },
+                { n: "F4", d: 450 }, { n: "F4", d: 450 }, { n: "E4", d: 450 }, { n: "E4", d: 450 },
+                { n: "D4", d: 450 }, { n: "D4", d: 450 }, { n: "C4", d: 900 },
+                { n: "G4", d: 450 }, { n: "G4", d: 450 }, { n: "F4", d: 450 }, { n: "F4", d: 450 },
+                { n: "E4", d: 450 }, { n: "E4", d: 450 }, { n: "D4", d: 900 },
+                { n: "G4", d: 450 }, { n: "G4", d: 450 }, { n: "F4", d: 450 }, { n: "F4", d: 450 },
+                { n: "E4", d: 450 }, { n: "E4", d: 450 }, { n: "D4", d: 900 }
+            ],
+            canon: [
+                { n: "F#4", d: 500 }, { n: "E4", d: 500 }, { n: "D4", d: 500 }, { n: "C#4", d: 500 },
+                { n: "B3", d: 500 }, { n: "A3", d: 500 }, { n: "B3", d: 500 }, { n: "C#4", d: 500 },
+                { n: "D4", d: 500 }, { n: "C#4", d: 500 }, { n: "B3", d: 500 }, { n: "A3", d: 500 },
+                { n: "G3", d: 500 }, { n: "F#3", d: 500 }, { n: "G3", d: 500 }, { n: "E3", d: 500 },
+                { n: "D3", d: 1000 }
+            ]
+        };
+
+        // Resolve note string to keyboard index
+        function findNoteIndex(noteStr) {
+            const match = noteStr.match(/^([A-G]#?)(\d)$/);
+            if (!match) return -1;
+            const name = match[1];
+            const oct = parseInt(match[2]);
+            return notes.findIndex(n => n.note === name && n.oct === oct);
+        }
+
+        function triggerDemo(songKey) {
+            if (activeDemoKey === songKey) {
+                stopDemoSong();
+                return;
+            }
+
+            // Stop any current playbacks
+            stopPlayback();
+            stopDemoSong();
+
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            activeDemoKey = songKey;
+            
+            // Highlight active button UI state
+            updateDemoButtonsUI();
+
+            const song = demoSongs[songKey];
+            let timeAccumulator = 0;
+
+            song.forEach((noteObj) => {
+                const noteIndex = findNoteIndex(noteObj.n);
+                if (noteIndex !== -1) {
+                    // Trigger note on
+                    let playTimeout = setTimeout(() => {
+                        playNote(noteIndex);
+                    }, timeAccumulator);
+                    demoTimeouts.push(playTimeout);
+
+                    // Trigger note off slightly earlier than next note starts
+                    let stopTimeout = setTimeout(() => {
+                        stopNote(noteIndex);
+                    }, timeAccumulator + noteObj.d - 40);
+                    demoTimeouts.push(stopTimeout);
+                }
+                timeAccumulator += noteObj.d;
+            });
+
+            // Automatically clean up demo state when final note ceases
+            let finishTimeout = setTimeout(() => {
+                stopDemoSong();
+            }, timeAccumulator + 500);
+            demoTimeouts.push(finishTimeout);
+        }
+
+        function stopDemoSong() {
+            demoTimeouts.forEach(clearTimeout);
+            demoTimeouts = [];
+
+            // Deactivate all active oscillators
+            Object.keys(activeOscillators).forEach(index => {
+                stopNote(index);
+            });
+
+            activeDemoKey = null;
+            updateDemoButtonsUI();
+        }
+
+        function updateDemoButtonsUI() {
+            const stopBtn = document.getElementById('stopDemoBtn');
+            const btns = {
+                odeToJoy: document.getElementById('demo1Btn'),
+                twinkle: document.getElementById('demo2Btn'),
+                canon: document.getElementById('demo3Btn')
+            };
+
+            // Reset visual of all
+            Object.keys(btns).forEach(key => {
+                btns[key].className = "control-btn px-2 py-0.5 rounded text-[9px] bg-zinc-800 border border-zinc-700 text-zinc-300";
+            });
+
+            if (activeDemoKey) {
+                btns[activeDemoKey].className = "control-btn px-2 py-0.5 rounded text-[9px] bg-blue-600 border-blue-500 text-white font-bold";
+                stopBtn.classList.remove('hidden');
+            } else {
+                stopBtn.classList.add('hidden');
+            }
+        }
+
+        // --- STREAMING_CHUNK: Voice Recorder Logic ---
         let isRecording = false;
         let recordingStartTime = 0;
         let recordedEvents = [];
@@ -460,6 +869,7 @@
                 recordingStartTime = Date.now();
                 recLed.classList.add('on');
                 stopPlayback();
+                stopDemoSong();
                 if (mediaRecorder && mediaRecorder.state === 'inactive') mediaRecorder.start();
             }
         });
@@ -468,6 +878,7 @@
             if (playbackTimeouts.length > 0) { stopPlayback(); return; }
             if (recordedEvents.length === 0) return;
             
+            stopDemoSong();
             playLed.classList.add('play-on');
             recordedEvents.forEach(ev => {
                 playbackTimeouts.push(setTimeout(() => {
@@ -489,7 +900,25 @@
         clearBtn.addEventListener('click', () => {
             stopPlayback();
             recordedEvents = [];
-            document.getElementById('downloadBtn').classList.add('opacity-50', 'pointer-events-none');
+            const dlBtn = document.getElementById('downloadBtn');
+            dlBtn.classList.add('opacity-40', 'pointer-events-none');
+            dlBtn.className = "control-btn flex items-center bg-zinc-800 opacity-40 pointer-events-none px-2.5 py-1 rounded text-[10px] border border-zinc-600 justify-center text-zinc-300 no-underline";
+        });
+
+        // Toggle Synth Parameter Drawer
+        const synthPanel = document.getElementById('synthPanel');
+        const toggleSynthPanelBtn = document.getElementById('toggleSynthPanel');
+        let synthPanelOpen = false;
+
+        toggleSynthPanelBtn.addEventListener('click', () => {
+            synthPanelOpen = !synthPanelOpen;
+            if (synthPanelOpen) {
+                synthPanel.classList.remove('-translate-y-full');
+                toggleSynthPanelBtn.className = "control-btn bg-amber-600 text-black px-2 py-1 rounded text-[10px] border border-amber-500 flex items-center gap-1 font-bold";
+            } else {
+                synthPanel.classList.add('-translate-y-full');
+                toggleSynthPanelBtn.className = "control-btn bg-amber-600/20 text-amber-300 hover:bg-amber-600/30 px-2 py-1 rounded text-[10px] border border-amber-600/50 flex items-center gap-1 font-semibold";
+            }
         });
 
         document.getElementById('toggleNotes').addEventListener('click', () => {
@@ -503,6 +932,7 @@
             document.getElementById('startOverlay').style.display = 'none';
         });
 
+        // --- STREAMING_CHUNK: Start & Build ---
         // Initialize
         renderKeyboard();
         setupInputs();
