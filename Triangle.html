@@ -3,107 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Triangle Simulator - Realistic Sound</title>
+    <title>Triangle Simulator Pro - Advanced Audio & Demo Songs</title>
+    <!-- Tailwind CSS for modern look & feel -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for gorgeous icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-
         body {
-            margin: 0;
-            padding: 0;
-            background: radial-gradient(circle at center, #2b323c 0%, #0f1216 100%);
-            color: white;
             font-family: 'Sarabun', sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden; /* Prevent scrolling */
-            touch-action: none; /* Crucial for mobile game feel */
+            background: radial-gradient(circle at center, #1e2530 0%, #0a0c10 100%);
+            touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        .container {
-            position: relative;
-            text-align: center;
-            width: 100%;
-            max-width: 500px;
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        /* Glassmorphism utility card */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #ccc;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            pointer-events: none;
-        }
-
-        p.instruction {
-            font-size: 1rem;
-            color: #e0e0e0;
-            margin-bottom: 10px;
-            pointer-events: none;
-            background: rgba(0,0,0,0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-        }
-
-        .sub-instruction {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 20px;
-        }
-
-        /* SVG Triangle Styling */
+        /* Triangle Visuals */
         #triangle-svg {
-            width: 80%;
-            height: auto;
-            max-height: 400px;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
-            cursor: pointer;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.7));
+            transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* The metal rod */
         .triangle-path {
             fill: none;
-            stroke: #d4d4d4;
-            stroke-width: 18;
+            stroke-width: 16;
             stroke-linecap: round;
             stroke-linejoin: round;
-            /* Metallic sheen simulation */
             stroke: url(#metalGradient);
+            transition: stroke 0.2s;
         }
 
-        /* Visual guide for touch zones (optional subtle hint) */
         .triangle-path:hover {
             stroke: url(#metalGradientHover);
         }
 
-        /* The string holding it */
         .string-path {
             fill: none;
-            stroke: #ffd700; /* Gold string */
-            stroke-width: 4;
+            stroke: #fbbf24; /* Amber string */
+            stroke-width: 3;
         }
 
-        /* Animation class when hit */
+        /* Impact Vibrating Keyframe */
         .hit-anim {
-            animation: vibrate 0.2s linear;
+            animation: vibrate 0.25s linear;
         }
 
         @keyframes vibrate {
             0% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.02) rotate(1deg); }
-            50% { transform: scale(0.98) rotate(-1deg); }
-            75% { transform: scale(1.01) rotate(0.5deg); }
+            20% { transform: scale(1.04) rotate(1.5deg); }
+            40% { transform: scale(0.96) rotate(-1.5deg); }
+            60% { transform: scale(1.02) rotate(1deg); }
+            80% { transform: scale(0.98) rotate(-0.5deg); }
             100% { transform: scale(1) rotate(0deg); }
         }
 
@@ -111,163 +72,404 @@
         .ripple {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
             transform: scale(0);
-            animation: ripple-anim 0.5s linear;
+            animation: ripple-anim 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
             pointer-events: none;
-            width: 50px;
-            height: 50px;
-            margin-left: -25px;
-            margin-top: -25px;
+            width: 80px;
+            height: 80px;
+            margin-left: -40px;
+            margin-top: -40px;
         }
         
-        /* Different ripple color for short sound */
         .ripple.short {
-            background: rgba(255, 200, 100, 0.6);
+            background: radial-gradient(circle, rgba(251,191,36,0.8) 0%, rgba(251,191,36,0) 70%);
         }
 
         @keyframes ripple-anim {
             to {
-                transform: scale(4);
+                transform: scale(3.5);
                 opacity: 0;
             }
         }
 
-        /* Controls Container */
-        .controls {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* Button Styles */
-        button {
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-family: 'Sarabun', sans-serif;
-            font-size: 1rem;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-            outline: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        /* Mute Button */
-        #mute-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #aaa;
-        }
-
-        #mute-btn:active {
-            background: rgba(255, 50, 50, 0.3);
-            color: white;
-            border-color: rgba(255, 50, 50, 0.5);
-        }
-
-        /* Record Button */
-        #record-btn {
-            background: rgba(255, 50, 50, 0.2);
-            border: 1px solid rgba(255, 50, 50, 0.4);
-            color: #ff8888;
-        }
-
-        #record-btn.recording {
-            background: rgba(255, 50, 50, 0.8);
-            color: white;
-            animation: pulse-red 1.5s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(255, 50, 50, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 50, 50, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 50, 50, 0); }
-        }
-
-        /* Recording Indicator Dot */
-        .rec-dot {
-            width: 10px;
-            height: 10px;
-            background-color: currentColor;
-            border-radius: 50%;
-        }
-
-        .footer {
+        /* Floating note style */
+        .floating-note {
             position: absolute;
-            bottom: 10px;
-            font-size: 0.7rem;
-            color: #555;
+            font-size: 1.5rem;
             pointer-events: none;
+            animation: floatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            z-index: 50;
         }
 
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.5) rotate(0deg);
+            }
+            15% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1.2) rotate(-15deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-120px) scale(0.8) rotate(30deg);
+            }
+        }
+
+        /* Custom scrollbar for control elements */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Glow effect */
+        .glowing-amber {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden py-6 px-4 md:px-8">
 
-    <div class="container">
-        <h1>Triangle Simulator</h1>
-        <p class="instruction">
-            <span style="color:#ffcc80">▲ ส่วนบน: เสียงสั้น</span> &nbsp;|&nbsp; 
-            <span style="color:#ffffff">▼ ส่วนล่าง: เสียงยาว</span>
-        </p>
-        <div class="sub-instruction">(Tap Top for Short / Bottom for Long)</div>
+    <!-- App Container supporting responsive heights and dynamic scrollview -->
+    <div class="w-full max-w-2xl flex flex-col gap-5 items-center justify-start">
         
-        <!-- Interactive Area -->
-        <div id="touch-zone" style="position: relative; display: inline-block;">
-            <svg id="triangle-svg" viewBox="0 0 300 300">
-                <defs>
-                    <!-- Metallic Gradient Definition -->
-                    <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#999;stop-opacity:1" />
-                        <stop offset="25%" style="stop-color:#fff;stop-opacity:1" />
-                        <stop offset="50%" style="stop-color:#ccc;stop-opacity:1" />
-                        <stop offset="75%" style="stop-color:#666;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#bbb;stop-opacity:1" />
-                    </linearGradient>
-                    <linearGradient id="metalGradientHover" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#bbb;stop-opacity:1" />
-                        <stop offset="50%" style="stop-color:#fff;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#ddd;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                
-                <!-- The Loop/String holder -->
-                <path class="string-path" d="M150 10 L150 60" />
-                
-                <!-- The Triangle Body -->
-                <path class="triangle-path" d="M150 60 L260 250 L100 250 M80 250 L40 250 L150 60" />
-            </svg>
+        <!-- Header Panel -->
+        <header class="text-center w-full">
+            <h1 class="text-3xl md:text-4xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-slate-100 to-amber-100 flex items-center justify-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-2xl animate-pulse"></i> 
+                Triangle Pro
+            </h1>
+            <p class="text-xs md:text-sm text-slate-400 mt-1 uppercase tracking-widest">High-fidelity Multi-touch Percussion Synthesizer</p>
+        </header>
+
+        <!-- Dynamic Announcement / Lyric Bubble (Floating text indicator) -->
+        <div id="lyric-bubble" class="h-8 flex items-center justify-center text-amber-300 font-semibold text-sm md:text-base opacity-0 transition-opacity duration-300">
+            <span id="lyric-text" class="bg-black/40 px-4 py-1 rounded-full border border-amber-500/20 shadow-md">🎵 กำลังเล่นเพลง...</span>
         </div>
 
-        <div class="controls">
-            <button id="mute-btn">หยุดเสียง (Damp)</button>
-            <button id="record-btn">
-                <div class="rec-dot"></div>
-                <span id="rec-text">บันทึกเสียง</span>
+        <!-- Interactive Strike Zone Layer (Wrapper for SVG and Ripples) -->
+        <div class="relative w-full max-w-[340px] aspect-square flex items-center justify-center glass-panel rounded-3xl p-6 shadow-2xl glowing-amber/20">
+            
+            <!-- Touch Instruction guides -->
+            <div class="absolute top-4 left-4 right-4 flex justify-between pointer-events-none text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                <span class="flex items-center gap-1 text-amber-300"><i class="fa-solid fa-bolt"></i> ด้านบน: เสียงสั้น (Short)</span>
+                <span class="flex items-center gap-1 text-slate-200"><i class="fa-solid fa-wave-square"></i> ด้านล่าง: เสียงยาว (Long)</span>
+            </div>
+
+            <div id="touch-zone" class="relative w-full h-full flex items-center justify-center cursor-pointer">
+                <svg id="triangle-svg" viewBox="0 0 300 300" class="w-full h-full">
+                    <defs>
+                        <!-- Metallic Shading Gradients -->
+                        <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#78716c;stop-opacity:1" />
+                            <stop offset="20%" style="stop-color:#f5f5f4;stop-opacity:1" />
+                            <stop offset="40%" style="stop-color:#d6d3d1;stop-opacity:1" />
+                            <stop offset="60%" style="stop-color:#78716c;stop-opacity:1" />
+                            <stop offset="80%" style="stop-color:#e7e5e4;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#a8a29e;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="metalGradientHover" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#d6d3d1;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#fafaf9;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#a8a29e;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Premium Gold Suspension String -->
+                    <path class="string-path" d="M150 5 L150 50" />
+                    <circle cx="150" cy="5" r="4" fill="#fbbf24" />
+                    
+                    <!-- Solid Steel Triangle Open-Loop Frame -->
+                    <path class="triangle-path" d="M150 50 L265 255 L95 255 M75 255 L35 255 L150 50" />
+                    
+                    <!-- Decorative rubber holder rings -->
+                    <circle cx="150" cy="50" r="10" fill="#1e293b" opacity="0.8"/>
+                    <circle cx="150" cy="50" r="4" fill="#64748b" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Core Actions Panel -->
+        <div class="grid grid-cols-3 gap-2 w-full">
+            <button id="quick-damp-btn" class="glass-panel hover:bg-red-500/10 hover:border-red-500/30 active:scale-95 py-3 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all text-red-400 group">
+                <i class="fa-solid fa-hand text-lg group-hover:animate-bounce"></i>
+                <span class="text-[11px] font-semibold tracking-wide">หยุดเสียง (Damp)</span>
+            </button>
+
+            <button id="record-btn" class="glass-panel hover:bg-amber-500/10 hover:border-amber-500/30 active:scale-95 py-3 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all text-amber-300">
+                <div class="w-3.5 h-3.5 bg-red-500 rounded-full shadow-lg" id="rec-dot"></div>
+                <span id="rec-text" class="text-[11px] font-semibold tracking-wide">บันทึกเสียง (Rec)</span>
+            </button>
+
+            <button id="toggle-settings-btn" class="glass-panel hover:bg-blue-500/10 hover:border-blue-500/30 active:scale-95 py-3 px-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all text-blue-400">
+                <i class="fa-solid fa-sliders text-lg"></i>
+                <span class="text-[11px] font-semibold tracking-wide">ปรับเสียงขั้นสูง</span>
             </button>
         </div>
+
+        <!-- Advanced Settings Drawer (Toggled by Button) -->
+        <div id="settings-panel" class="w-full glass-panel rounded-3xl p-5 shadow-inner hidden flex flex-col gap-4 border-amber-500/10">
+            <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                <h3 class="text-sm font-bold text-amber-200 tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> แผงปรับแต่งเสียงเครื่องดนตรี
+                </h3>
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">Web Audio API Parameters</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Slider: Volume -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between text-xs font-semibold text-slate-300">
+                        <span>ความดังเสียง (Volume)</span>
+                        <span id="val-volume" class="text-amber-400">100%</span>
+                    </div>
+                    <input type="range" id="sld-volume" min="0" max="1.5" step="0.05" value="1.0" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Slider: Frequency (Pitch) -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between text-xs font-semibold text-slate-300">
+                        <span>ความถี่เสียง (Base Pitch)</span>
+                        <span id="val-pitch" class="text-amber-400">1200 Hz</span>
+                    </div>
+                    <input type="range" id="sld-pitch" min="600" max="2500" step="50" value="1200" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Slider: Decay Multiplier -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between text-xs font-semibold text-slate-300">
+                        <span>ระยะเวลาหางเสียง (Decay Multiplier)</span>
+                        <span id="val-decay" class="text-amber-400">1.0x</span>
+                    </div>
+                    <input type="range" id="sld-decay" min="0.1" max="3.0" step="0.1" value="1.0" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Slider: High Frequency Brightness -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between text-xs font-semibold text-slate-300">
+                        <span>ความใสสว่าง (Tone Brightness)</span>
+                        <span id="val-brightness" class="text-amber-400">1.0x</span>
+                    </div>
+                    <input type="range" id="sld-brightness" min="0.1" max="2.0" step="0.1" value="1.0" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Slider: Resonance/Delay Reverb Feed -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between text-xs font-semibold text-slate-300">
+                        <span>เสียงสะท้อนห้อง (Echo Resonance)</span>
+                        <span id="val-reverb" class="text-amber-400">30%</span>
+                    </div>
+                    <input type="range" id="sld-reverb" min="0" max="0.8" step="0.05" value="0.3" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Slider: Pitch Humanize Variance -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between text-xs font-semibold text-slate-300">
+                        <span>ความเพี้ยนเสียงมนุษย์ (Random Detune)</span>
+                        <span id="val-detune" class="text-amber-400">10 Cents</span>
+                    </div>
+                    <input type="range" id="sld-detune" min="0" max="100" step="5" value="10" class="w-full accent-amber-400 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-2 border-t border-white/5 pt-3 mt-1">
+                <button id="reset-settings-btn" class="bg-white/5 hover:bg-white/10 text-slate-300 font-semibold px-4 py-1.5 rounded-xl text-xs flex items-center gap-1 transition-all active:scale-95">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> รีเซ็ตเป็นค่าเริ่มต้น
+                </button>
+            </div>
+        </div>
+
+        <!-- Premium Demo Songs Section -->
+        <div class="w-full glass-panel rounded-3xl p-5 flex flex-col gap-4 border-amber-500/10 shadow-lg">
+            <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                <h3 class="text-sm font-bold text-amber-200 tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-music"></i> บรรเลงเพลงสาธิตอัตโนมัติ (Demo Songs)
+                </h3>
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-full text-amber-300 font-semibold animate-pulse">Auto Player</span>
+            </div>
+
+            <!-- Demo Songs Controller Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                <!-- Song 1 -->
+                <button id="song-btn-0" onclick="playSong(0)" class="song-card bg-slate-800/50 hover:bg-amber-500/20 hover:text-amber-200 active:scale-[0.98] border border-white/5 rounded-2xl py-3 px-3 text-left transition-all duration-200 flex flex-col justify-between h-20 relative overflow-hidden group">
+                    <span class="text-xs font-bold text-slate-200 group-hover:text-amber-300 transition-colors">1. เพลงระฆังคริสต์มาส</span>
+                    <span class="text-[10px] text-slate-400">Jingle Bells (Rhythm)</span>
+                    <i class="fa-solid fa-bell absolute bottom-3 right-3 text-2xl opacity-10 group-hover:opacity-30 group-hover:scale-110 transition-all text-amber-400"></i>
+                </button>
+
+                <!-- Song 2 -->
+                <button id="song-btn-1" onclick="playSong(1)" class="song-card bg-slate-800/50 hover:bg-amber-500/20 hover:text-amber-200 active:scale-[0.98] border border-white/5 rounded-2xl py-3 px-3 text-left transition-all duration-200 flex flex-col justify-between h-20 relative overflow-hidden group">
+                    <span class="text-xs font-bold text-slate-200 group-hover:text-amber-300 transition-colors">2. ดวงดาวแวววาว</span>
+                    <span class="text-[10px] text-slate-400">Twinkle Twinkle (Bell)</span>
+                    <i class="fa-solid fa-star absolute bottom-3 right-3 text-2xl opacity-10 group-hover:opacity-30 group-hover:scale-110 transition-all text-amber-400"></i>
+                </button>
+
+                <!-- Song 3 -->
+                <button id="song-btn-2" onclick="playSong(2)" class="song-card bg-slate-800/50 hover:bg-amber-500/20 hover:text-amber-200 active:scale-[0.98] border border-white/5 rounded-2xl py-3 px-3 text-left transition-all duration-200 flex flex-col justify-between h-20 relative overflow-hidden group">
+                    <span class="text-xs font-bold text-slate-200 group-hover:text-amber-300 transition-colors">3. จังหวะทริปเปิลสนุก</span>
+                    <span class="text-[10px] text-slate-400">Rhythm Samba Wave</span>
+                    <i class="fa-solid fa-drum absolute bottom-3 right-3 text-2xl opacity-10 group-hover:opacity-30 group-hover:scale-110 transition-all text-amber-400"></i>
+                </button>
+            </div>
+
+            <!-- Controls for Active Song Playback -->
+            <div id="playback-status-row" class="hidden flex items-center justify-between bg-black/30 px-4 py-2.5 rounded-2xl border border-white/5 transition-all">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-2.5 w-2.5 relative">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                    <div class="flex flex-col">
+                        <span id="playing-song-title" class="text-xs font-bold text-slate-200">เล่นเพลง...</span>
+                        <span id="playing-song-note" class="text-[10px] text-amber-400">โน้ตดนตรีลอยตัว</span>
+                    </div>
+                </div>
+                <button id="stop-song-btn" onclick="stopActiveSong()" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-md">
+                    <i class="fa-solid fa-circle-stop"></i> หยุดเล่น (Stop)
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer Signature -->
+        <footer class="text-center text-[10px] text-slate-500 mt-2 flex flex-col gap-1 w-full border-t border-white/5 pt-4">
+            <div>Triangle Synthesizer Professional Engine Version 2.0</div>
+            <div>Powered by high performance dynamic Web Audio API Synth Oscillators.</div>
+        </footer>
+
     </div>
 
-    <div class="footer">High Definition Web Audio API</div>
-
     <script>
-        // --- AUDIO ENGINE ---
+        // --- AUDIO ENGINE VARIABLES ---
         let audioCtx;
         let activeNodes = []; 
-        let mainBus; // Global Gain Node for routing all sound
-        
-        // Recording variables
+        let mainBus; 
+        let delayNode;
+        let feedbackGain;
+
+        // Custom Tuning Configuration Default Object
+        const audioParams = {
+            volume: 1.0,
+            basePitch: 1200,
+            decayMult: 1.0,
+            brightness: 1.0,
+            reverbVolume: 0.3,
+            detuneMax: 10
+        };
+
+        // Recording System Variables
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
         let recDest;
 
-        // Initialize Audio Context and Recorder Setup
+        // --- DEMO PLAYBACK SYSTEM ---
+        let activeSongTimeoutIds = [];
+        let isPlayingSong = false;
+        let activeSongIndex = -1;
+
+        // 3 Highly Optimized and Structured Percussive Triangle Song Schemas
+        const demoSongs = [
+            {
+                name: "ระฆังคริสต์มาส (Jingle Bells)",
+                tempo: 125, // BPM
+                notes: [
+                    // format: [beatOffset, isShort, lyricalText]
+                    [0, false, "Jingle 🔔"],
+                    [1, false, "Bells 🔔"],
+                    [2, false, "Jingle 🔔"],
+                    [3, false, "Bells 🔔"],
+                    [4, false, "Jingle 🔔"],
+                    [5, false, "All 🔔"],
+                    [6, false, "The 🔔"],
+                    [7.5, false, "Way! ✨"],
+                    [8, true, "Oh"],
+                    [8.5, true, "what"],
+                    [9, true, "fun"],
+                    [9.5, true, "it"],
+                    [10, false, "is"],
+                    [11, false, "to"],
+                    [12, false, "ride ✨"],
+                    [13, true, "in"],
+                    [13.5, true, "a"],
+                    [14, true, "one"],
+                    [14.5, true, "horse"],
+                    [15, false, "o-pen"],
+                    [16, false, "Sleigh! ⛄"]
+                ]
+            },
+            {
+                name: "ดวงดาวแวววาว (Twinkle Twinkle Little Star)",
+                tempo: 105,
+                notes: [
+                    [0, false, "Twin-kle 🌟"],
+                    [1, false, "Twin-kle 🌟"],
+                    [2, false, "Lit-tle ✨"],
+                    [3, false, "Star ⭐"],
+                    [4, true, "How ❓"],
+                    [4.5, true, "I"],
+                    [5, false, "won-der ❓"],
+                    [6, false, "what"],
+                    [7, false, "you"],
+                    [7.5, false, "are! ⭐"],
+                    [8, false, "Up ☁️"],
+                    [9, false, "a-bove ☁️"],
+                    [10, false, "the"],
+                    [11, false, "world"],
+                    [11.5, false, "so"],
+                    [12, false, "high 🌌"],
+                    [13, true, "Like 💎"],
+                    [13.5, true, "a"],
+                    [14, false, "dia-mond 💎"],
+                    [15, false, "in"],
+                    [15.5, false, "the"],
+                    [16, false, "sky! 🌟"]
+                ]
+            },
+            {
+                name: "แซมบ้าจังหวะสนุก (Samba Rhythmic Wave)",
+                tempo: 135,
+                notes: [
+                    [0, true, "Tick 🥁"],
+                    [0.5, true, "Tack 🥁"],
+                    [1, false, "Ping! ✨"],
+                    [1.75, true, "Chik 🥁"],
+                    [2, true, "Chik 🥁"],
+                    [2.5, false, "Chime! 🔔"],
+                    [3.5, true, "Tick"],
+                    [4, false, "Clap! 👋"],
+                    [5, true, "Tick"],
+                    [5.5, true, "Tack"],
+                    [6, false, "Samba! 💃"],
+                    [6.75, true, "Tup"],
+                    [7, true, "Tup"],
+                    [7.5, false, "Ring! 🔔"],
+                    [8.5, true, "Chik"],
+                    [9, false, "Groove! 🎶"],
+                    [10, true, "Samba"],
+                    [10.5, true, "Beat"],
+                    [11, false, "Bailar! 🇧🇷"],
+                    [12, true, "Dance"],
+                    [12.5, true, "Dance"],
+                    [13, false, "Fever! 🔥"],
+                    [14, true, "Tick"],
+                    [14.5, true, "Tack"],
+                    [15, false, "Grand Finale! 👑"]
+                ]
+            }
+        ];
+
+        // --- AUDIO ENGINE INITIALIZATION ---
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -277,16 +479,30 @@
                 audioCtx.resume();
             }
 
-            // Setup Main Bus (Mixer)
+            // Setup global outputs, filter nodes & delay/reverb effects chain
             if (!mainBus) {
                 mainBus = audioCtx.createGain();
-                mainBus.connect(audioCtx.destination); // Connect to speakers
+                mainBus.gain.setValueAtTime(audioParams.volume, audioCtx.currentTime);
+                mainBus.connect(audioCtx.destination);
 
-                // Setup Recording Stream
+                // Reverb/Delay Loop Configuration
+                delayNode = audioCtx.createDelay(1.0);
+                feedbackGain = audioCtx.createGain();
+
+                // Connect source to delay line
+                delayNode.delayTime.setValueAtTime(0.24, audioCtx.currentTime); // 240ms slapback echo
+                feedbackGain.gain.setValueAtTime(audioParams.reverbVolume, audioCtx.currentTime);
+
+                // Feedback Loop routing
+                mainBus.connect(delayNode);
+                delayNode.connect(feedbackGain);
+                feedbackGain.connect(mainBus);
+
+                // Setup dynamic recording destination nodes
                 recDest = audioCtx.createMediaStreamDestination();
-                mainBus.connect(recDest); // Also connect to recorder
+                mainBus.connect(recDest);
 
-                // Init MediaRecorder
+                // Initialize Recorder
                 try {
                     mediaRecorder = new MediaRecorder(recDest.stream);
                     
@@ -300,106 +516,219 @@
                         const blob = new Blob(recordedChunks, { type: 'audio/webm' });
                         const url = URL.createObjectURL(blob);
                         
-                        // Create download link
+                        // Dynamically compile a temporary trigger download link for the user
                         const a = document.createElement('a');
                         a.style.display = 'none';
                         a.href = url;
-                        // Timestamp filename
                         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                        a.download = `triangle-sound-${timestamp}.webm`;
+                        a.download = `triangle-simulation-${timestamp}.webm`;
                         document.body.appendChild(a);
                         a.click();
                         
-                        // Cleanup
                         setTimeout(() => {
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         }, 100);
                         
-                        // Reset chunks
                         recordedChunks = [];
                     };
                 } catch (err) {
-                    console.error("MediaRecorder not supported or error:", err);
+                    console.warn("Recording stream initialization unsuccessful:", err);
                     document.getElementById('record-btn').style.display = 'none';
                 }
             }
         }
 
+        // --- STREAMING_CHUNK: High Fidelity Tone Generation ---
         /**
-         * Generates a realistic triangle sound
+         * Synthesizes complex metallic strike frequencies utilizing dynamic sine oscillators 
+         * configured under specific overtone configurations modeling the physically suspended bell.
          */
-        function playTriangleSound(volume = 1.0, isShort = false) {
+        function playTriangleSound(volumeScale = 1.0, isShort = false) {
             if (!audioCtx) initAudio();
 
             const t = audioCtx.currentTime;
             
-            // Randomize slightly for human feel
-            const randomDetune = (Math.random() - 0.5) * 10; 
-            const fundamental = 1200 + randomDetune; 
+            // Fetch updated options dynamically from panel variables
+            const baseFreq = audioParams.basePitch;
+            const decayFactor = audioParams.decayMult;
+            const brightness = audioParams.brightness;
+            const detuneValue = audioParams.detuneMax;
 
-            const decayMult = isShort ? 0.05 : 1.0; 
-            const brightness = isShort ? 0.3 : 1.0;
+            // Apply randomized humanizing detune
+            const randDetune = (Math.random() - 0.5) * detuneValue; 
+            const fundamental = baseFreq + randDetune; 
 
-            const partials = [
-                { ratio: 1.0,  amp: 0.6,  decay: 3.5 },
-                { ratio: 2.61, amp: 0.3 * brightness,  decay: 2.5 },
-                { ratio: 4.34, amp: 0.15 * brightness, decay: 2.0 },
-                { ratio: 7.12, amp: 0.1 * brightness,  decay: 1.5 },
-                { ratio: 9.40, amp: 0.05 * brightness, decay: 1.0 }
+            // Handle decay adjustments based on tap height zone
+            const decayModifier = isShort ? 0.045 : 1.0; 
+            const dynamicBrightness = isShort ? 0.35 : 1.0;
+
+            // Physics modeling ratio configurations of genuine percussion triangle harmonics
+            const overtones = [
+                { ratio: 1.0,   amp: 0.75,  decay: 3.5 },
+                { ratio: 1.54,  amp: 0.5 * brightness * dynamicBrightness,  decay: 2.2 },
+                { ratio: 2.21,  amp: 0.3 * brightness * dynamicBrightness,  decay: 1.8 },
+                { ratio: 3.61,  amp: 0.25 * brightness * dynamicBrightness, decay: 1.3 },
+                { ratio: 5.12,  amp: 0.15 * brightness * dynamicBrightness, decay: 0.8 },
+                { ratio: 7.42,  amp: 0.12 * brightness * dynamicBrightness, decay: 0.5 },
+                { ratio: 10.15, amp: 0.08 * brightness * dynamicBrightness, decay: 0.3 }
             ];
 
-            partials.forEach(p => {
+            overtones.forEach(p => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
 
                 osc.type = 'sine'; 
                 osc.frequency.setValueAtTime(fundamental * p.ratio, t);
                 
-                const effectiveDecay = p.decay * decayMult;
+                const effectiveDecay = p.decay * decayFactor * decayModifier;
 
-                // Envelope
+                // Envelope attack / decay profiles
                 gain.gain.setValueAtTime(0, t);
-                gain.gain.linearRampToValueAtTime(p.amp * volume, t + 0.005); 
-                gain.gain.exponentialRampToValueAtTime(0.001, t + effectiveDecay);
+                gain.gain.linearRampToValueAtTime(p.amp * audioParams.volume * volumeScale, t + 0.003); 
+                gain.gain.exponentialRampToValueAtTime(0.0008, t + effectiveDecay);
 
+                // Connect node directly to primary mixing bus
                 osc.connect(gain);
-                
-                // CRITICAL CHANGE: Connect to mainBus instead of destination
-                // This routes audio to both speakers and recorder
                 gain.connect(mainBus); 
 
                 osc.start(t);
-                osc.stop(t + effectiveDecay + 0.1);
+                osc.stop(t + effectiveDecay + 0.15);
 
                 activeNodes.push({ osc, gain });
             });
 
+            // Prevent memory leaks / remove node structures when they fall below operational volumes
             setTimeout(() => {
-                activeNodes = activeNodes.filter(n => n.gain.gain.value > 0.01);
-            }, 4000);
+                activeNodes = activeNodes.filter(node => {
+                    try {
+                        return node.gain.gain.value > 0.005;
+                    } catch(e) {
+                        return false;
+                    }
+                });
+            }, 4500);
         }
 
+        /**
+         * Simulates structural metal dampening (physically grasping or pressing felt onto metal)
+         */
         function dampSound() {
             if (!audioCtx) return;
             const t = audioCtx.currentTime;
             activeNodes.forEach(node => {
                 try {
                     node.gain.gain.cancelScheduledValues(t);
-                    node.gain.gain.setTargetAtTime(0, t, 0.05);
+                    node.gain.gain.setTargetAtTime(0, t, 0.04); // Fast fade
                 } catch(e) {}
             });
             activeNodes = [];
         }
 
-
-        // --- UI & INTERACTION ---
+        // --- STREAMING_CHUNK: User Interface Interaction Drivers ---
         const triangleSvg = document.getElementById('triangle-svg');
         const touchZone = document.getElementById('touch-zone');
-        const muteBtn = document.getElementById('mute-btn');
         const recordBtn = document.getElementById('record-btn');
         const recText = document.getElementById('rec-text');
+        const recDot = document.getElementById('rec-dot');
+        const settingsPanel = document.getElementById('settings-panel');
+        const toggleSettingsBtn = document.getElementById('toggle-settings-btn');
+        const lyricBubble = document.getElementById('lyric-bubble');
+        const lyricText = document.getElementById('lyric-text');
 
+        // Dynamic Settings Slider Selectors
+        const sldVolume = document.getElementById('sld-volume');
+        const sldPitch = document.getElementById('sld-pitch');
+        const sldDecay = document.getElementById('sld-decay');
+        const sldBrightness = document.getElementById('sld-brightness');
+        const sldReverb = document.getElementById('sld-reverb');
+        const sldDetune = document.getElementById('sld-detune');
+
+        const valVolume = document.getElementById('val-volume');
+        const valPitch = document.getElementById('val-pitch');
+        const valDecay = document.getElementById('val-decay');
+        const valBrightness = document.getElementById('val-brightness');
+        const valReverb = document.getElementById('val-reverb');
+        const valDetune = document.getElementById('val-detune');
+
+        // Toggle Expandable Tuning Panel View
+        toggleSettingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+            if (!settingsPanel.classList.contains('hidden')) {
+                settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+
+        // Live Dynamic State Sync & Panel Updates
+        sldVolume.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            audioParams.volume = val;
+            valVolume.textContent = `${Math.round(val * 100)}%`;
+            if (mainBus) mainBus.gain.setValueAtTime(val, audioCtx.currentTime);
+        });
+
+        sldPitch.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            audioParams.basePitch = val;
+            valPitch.textContent = `${val} Hz`;
+        });
+
+        sldDecay.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            audioParams.decayMult = val;
+            valDecay.textContent = `${val.toFixed(1)}x`;
+        });
+
+        sldBrightness.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            audioParams.brightness = val;
+            valBrightness.textContent = `${val.toFixed(1)}x`;
+        });
+
+        sldReverb.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            audioParams.reverbVolume = val;
+            valReverb.textContent = `${Math.round(val * 100)}%`;
+            if (feedbackGain) feedbackGain.gain.setValueAtTime(val, audioCtx.currentTime);
+        });
+
+        sldDetune.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            audioParams.detuneMax = val;
+            valDetune.textContent = `${val} Cents`;
+        });
+
+        // Reset Advanced Control Panels
+        document.getElementById('reset-settings-btn').addEventListener('click', () => {
+            sldVolume.value = 1.0;
+            sldPitch.value = 1200;
+            sldDecay.value = 1.0;
+            sldBrightness.value = 1.0;
+            sldReverb.value = 0.3;
+            sldDetune.value = 10;
+
+            audioParams.volume = 1.0;
+            audioParams.basePitch = 1200;
+            audioParams.decayMult = 1.0;
+            audioParams.brightness = 1.0;
+            audioParams.reverbVolume = 0.3;
+            audioParams.detuneMax = 10;
+
+            valVolume.textContent = "100%";
+            valPitch.textContent = "1200 Hz";
+            valDecay.textContent = "1.0x";
+            valBrightness.textContent = "1.0x";
+            valReverb.textContent = "30%";
+            valDetune.textContent = "10 Cents";
+
+            if (mainBus) mainBus.gain.setValueAtTime(1.0, audioCtx.currentTime);
+            if (feedbackGain) feedbackGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        });
+
+        // Damp Event triggers
+        document.getElementById('quick-damp-btn').addEventListener('click', dampSound);
+
+        // --- STREAMING_CHUNK: Multi-touch and Floating Particle Generators ---
         function triggerHit(e) {
             e.preventDefault(); 
             initAudio(); 
@@ -415,16 +744,22 @@
                 clientY = e.clientY;
             }
 
+            // Detect relative vertical height on SVG frame to trigger correct decay lengths
             const relativeY = (clientY - rect.top) / rect.height;
-            const isShort = relativeY < 0.65;
+            const isShort = relativeY < 0.6; // Upper area yields short, lower yields long ringout
 
             playTriangleSound(1.0, isShort);
 
+            // Shake/Vibe strike animation
             triangleSvg.classList.remove('hit-anim');
-            void triangleSvg.offsetWidth;
+            void triangleSvg.offsetWidth; // Force CSS reflow
             triangleSvg.classList.add('hit-anim');
 
+            // Generate ripple feedback at precise strike point
             createRipple(clientX, clientY, isShort);
+            
+            // Spawn gorgeous floating music notes rising up from contact area
+            spawnFloatingNote(clientX, clientY);
         }
 
         function createRipple(x, y, isShort) {
@@ -432,13 +767,146 @@
             ripple.classList.add('ripple');
             if (isShort) ripple.classList.add('short');
             
+            // Adjust coordinates relatively inside document layout
             ripple.style.left = x + 'px';
             ripple.style.top = y + 'px';
             document.body.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 500);
+            
+            setTimeout(() => ripple.remove(), 600);
         }
 
-        // --- RECORDING LOGIC ---
+        // Floating Note Generator Engine
+        const musicalSymbols = ["🎵", "🎶", "✨", "🔔", "⭐", "🎼", "♪", "♫"];
+        function spawnFloatingNote(x, y) {
+            const note = document.createElement('div');
+            note.className = 'floating-note';
+            
+            // Pick random symbol
+            const randomSymbol = musicalSymbols[Math.floor(Math.random() * musicalSymbols.length)];
+            note.textContent = randomSymbol;
+
+            // Randomize trajectory layout variables
+            const spreadX = (Math.random() - 0.5) * 60; // Up to 30px left or right deviation
+            note.style.left = `${x + spreadX}px`;
+            note.style.top = `${y - 15}px`;
+
+            document.body.appendChild(note);
+            setTimeout(() => note.remove(), 1200);
+        }
+
+        // --- STREAMING_CHUNK: Demo Songs Playback Systems ---
+        /**
+         * Handles scheduling of automatic demo playback events
+         */
+        function playSong(songIndex) {
+            initAudio();
+            stopActiveSong(); // Terminate existing playing demo before starting a new one
+
+            isPlayingSong = true;
+            activeSongIndex = songIndex;
+            const song = demoSongs[songIndex];
+
+            // UI Feedback state conversions
+            document.getElementById('playback-status-row').classList.remove('hidden');
+            document.getElementById('playing-song-title').textContent = `กำลังเล่น: ${song.name}`;
+            document.getElementById('playing-song-note').textContent = "กำลังเริ่มบรรเลง...";
+
+            // Lock highlights to the active card
+            updateActiveSongCardHighlight(songIndex);
+
+            const beatDurationMs = (60 / song.tempo) * 1000;
+
+            // Setup lyrical bubble visual container
+            lyricBubble.classList.remove('opacity-0');
+            lyricBubble.classList.add('opacity-100');
+
+            song.notes.forEach((noteData) => {
+                const [beatOffset, isShort, lyricalText] = noteData;
+                const scheduleTimeMs = beatOffset * beatDurationMs;
+
+                const timeoutId = setTimeout(() => {
+                    if (!isPlayingSong) return;
+
+                    // Execute tone simulation
+                    playTriangleSound(1.0, isShort);
+
+                    // Trigger SVG strike animation
+                    triangleSvg.classList.remove('hit-anim');
+                    void triangleSvg.offsetWidth;
+                    triangleSvg.classList.add('hit-anim');
+
+                    // Calculate a virtual positioning across the SVG to spawn ripples and floating elements
+                    const rect = triangleSvg.getBoundingClientRect();
+                    const horizontalVariance = (Math.random() - 0.5) * 80;
+                    const virtualX = rect.left + (rect.width / 2) + horizontalVariance;
+                    const virtualY = isShort ? rect.top + (rect.height * 0.45) : rect.top + (rect.height * 0.75);
+
+                    createRipple(virtualX, virtualY, isShort);
+                    spawnFloatingNote(virtualX, virtualY);
+
+                    // Update Lyrics and notes indicator
+                    lyricText.textContent = `🎵 ${lyricalText}`;
+                    document.getElementById('playing-song-note').textContent = `โน้ต: ${lyricalText}`;
+
+                }, scheduleTimeMs);
+
+                activeSongTimeoutIds.push(timeoutId);
+            });
+
+            // Handle clean completion of demo songs
+            const lastNote = song.notes[song.notes.length - 1];
+            const songLengthMs = (lastNote[0] * beatDurationMs) + 1500;
+
+            const endTimeoutId = setTimeout(() => {
+                concludeDemoPlayback();
+            }, songLengthMs);
+
+            activeSongTimeoutIds.push(endTimeoutId);
+        }
+
+        function stopActiveSong() {
+            isPlayingSong = false;
+            // Clear all scheduled timeouts
+            activeSongTimeoutIds.forEach(id => clearTimeout(id));
+            activeSongTimeoutIds = [];
+            
+            // Clean active highlights
+            const cards = document.querySelectorAll('.song-card');
+            cards.forEach(card => {
+                card.classList.remove('bg-amber-500/30', 'border-amber-500/40', 'glowing-amber');
+                card.classList.add('bg-slate-800/50', 'border-white/5');
+            });
+
+            lyricBubble.classList.remove('opacity-100');
+            lyricBubble.classList.add('opacity-0');
+            document.getElementById('playback-status-row').classList.add('hidden');
+        }
+
+        function concludeDemoPlayback() {
+            stopActiveSong();
+            lyricText.textContent = "✨ จบเพลงสาธิตแล้ว! ✨";
+            lyricBubble.classList.remove('opacity-0');
+            lyricBubble.classList.add('opacity-100');
+            setTimeout(() => {
+                lyricBubble.classList.remove('opacity-100');
+                lyricBubble.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        function updateActiveSongCardHighlight(index) {
+            const cards = document.querySelectorAll('.song-card');
+            cards.forEach((card, i) => {
+                if (i === index) {
+                    card.classList.remove('bg-slate-800/50', 'border-white/5');
+                    card.classList.add('bg-amber-500/30', 'border-amber-500/40', 'glowing-amber');
+                } else {
+                    card.classList.remove('bg-amber-500/30', 'border-amber-500/40', 'glowing-amber');
+                    card.classList.add('bg-slate-800/50', 'border-white/5');
+                }
+            });
+        }
+
+        // --- STREAMING_CHUNK: Audio Recording Handlers ---
         function toggleRecording(e) {
             e.preventDefault();
             initAudio();
@@ -446,42 +914,40 @@
             if (!mediaRecorder) return;
 
             if (isRecording) {
-                // Stop Recording
+                // Terminate recording
                 mediaRecorder.stop();
                 isRecording = false;
-                recordBtn.classList.remove('recording');
-                recText.textContent = "บันทึกเสียง";
+                recordBtn.classList.remove('bg-red-500/20', 'border-red-500/50', 'glowing-amber');
+                recDot.classList.remove('animate-pulse');
+                recDot.classList.add('bg-red-500');
+                recText.textContent = "บันทึกเสียง (Rec)";
             } else {
-                // Start Recording
+                // Initiate active web capture
                 recordedChunks = [];
                 mediaRecorder.start();
                 isRecording = true;
-                recordBtn.classList.add('recording');
-                recText.textContent = "หยุดและบันทึก";
+                recordBtn.classList.add('bg-red-500/20', 'border-red-500/50', 'glowing-amber');
+                recDot.classList.add('animate-pulse');
+                recText.textContent = "หยุดบันทึก (Stop)";
             }
         }
 
-        // --- EVENT LISTENERS ---
+        // --- EVENT BINDINGS & LIFECYCLE CONTROLLERS ---
+        // Mouse and Mobile Touch bindings on strike zones
+        touchZone.addEventListener('touchstart', triggerHit, { passive: false });
+        touchZone.addEventListener('mousedown', triggerHit);
 
-        triangleSvg.addEventListener('touchstart', triggerHit, { passive: false });
-        triangleSvg.addEventListener('mousedown', triggerHit);
+        // Core Actions Recording Trigger Bindings
+        recordBtn.addEventListener('click', toggleRecording);
 
-        // Mute Button
-        const handleMute = (e) => {
-            e.preventDefault();
-            dampSound();
-            muteBtn.style.transform = "scale(0.95)";
-            setTimeout(() => muteBtn.style.transform = "scale(1)", 100);
-        };
-        muteBtn.addEventListener('touchstart', handleMute, { passive: false });
-        muteBtn.addEventListener('mousedown', handleMute);
-
-        // Record Button
-        recordBtn.addEventListener('touchstart', toggleRecording, { passive: false });
-        recordBtn.addEventListener('mousedown', toggleRecording);
-
+        // Prevent layout right-click contexts menus across dynamic game boards
         document.addEventListener('contextmenu', event => event.preventDefault());
 
+        // Initial launch routines
+        window.onload = function() {
+            // Setup responsive canvas layouts if resizing is triggered
+            console.log("Triangle Percussion Synth Engine successfully initialized.");
+        };
     </script>
 </body>
 </html>
