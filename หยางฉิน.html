@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtual Yangqin - เครื่องดนตรีจีนจำลอง</title>
+    <title>Virtual Yangqin - เครื่องดนตรีจีนจำลองระดับสูง</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap');
-
         :root {
             --wood-dark: #3e2723;
             --wood-light: #5d4037;
             --bridge-color: #d7ccc8;
-            --string-color: #fff9c4; /* Golden white */
+            --string-color: #fff9c4;
             --string-shadow: rgba(0,0,0,0.5);
             --nut-color: #fff;
+            --ui-bg: #2c1e19;
         }
 
         * {
             box-sizing: border-box;
-            touch-action: none; /* Prevent zooming/scrolling */
             -webkit-user-select: none;
             user-select: none;
         }
@@ -26,572 +27,637 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #1a1a1a;
+            background-color: #121212;
             font-family: 'Sarabun', sans-serif;
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             color: white;
+            overscroll-behavior: none; /* ป้องกันการดึงหน้าจอ (Pull-to-refresh) บนมือถือ */
         }
 
-        /* --- Header & Controls --- */
         header {
-            background: linear-gradient(to bottom, #2c1e19, #3e2723);
+            background: linear-gradient(to bottom, var(--ui-bg), var(--wood-dark));
             padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             z-index: 100;
+            flex-shrink: 0;
         }
 
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #ffcc80;
-            text-shadow: 1px 1px 2px black;
-        }
-
-        .controls {
+        .controls-scroll {
             display: flex;
-            gap: 8px;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .controls-scroll::-webkit-scrollbar {
+            display: none; /* Chrome */
         }
 
-        .btn {
+        .btn-custom {
             border: none;
-            padding: 8px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-family: 'Sarabun', sans-serif;
             font-weight: bold;
             cursor: pointer;
+            white-space: nowrap;
             transition: all 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
             gap: 5px;
         }
+        .btn-custom:active { transform: scale(0.95); }
+        .btn-custom:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-toggle { background: #8d6e63; color: white; }
-        .btn-record { background: #e53935; color: white; }
-        .btn-record.recording { animation: pulse 1.5s infinite; background: #b71c1c; }
-        .btn-play { background: #43a047; color: white; }
-        .btn-download { background: #1e88e5; color: white; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; background: #555; }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .yangqin-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: radial-gradient(circle at center, #4e342e, #261714);
+            perspective: 1000px;
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* --- Instrument Body --- */
         .yangqin-container {
-            flex: 1;
-            position: relative;
-            background: 
-                radial-gradient(circle at center, rgba(93, 64, 55, 0.9), rgba(62, 39, 35, 1)),
-                url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjM2UyNzIzIiAvPgo8cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjNGUzNDJlIiAvPjwvc3ZnPg=='); /* Simple wood grain pattern */
-            perspective: 1000px;
-            overflow-y: auto;
-            padding: 20px 10px;
+            height: 100%; /* เปลี่ยนจาก min-height เป็น 100% เพื่อให้พอดีกรอบ */
+            padding: 10px 5px 15px 5px; /* ลด Padding ลงเพื่อเพิ่มพื้นที่ให้สาย */
             display: flex;
             justify-content: center;
+            align-items: center; /* จัดให้อยู่กึ่งกลางแนวตั้ง */
         }
 
         .soundboard {
             width: 100%;
+            height: 100%; /* ขยายบอร์ดให้เต็มความสูงที่เหลือ */
             max-width: 800px;
             background: linear-gradient(135deg, #6d4c41 0%, #4e342e 100%);
-            border-radius: 10px 10px 40px 40px;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 10px 10px 30px 30px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.8);
             position: relative;
-            padding: 15px;
+            padding: 10px; /* ลดขนาดขอบบอร์ด */
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Left Bridge, Right Bridge */
-            gap: 20px;
-            border: 8px solid #3e2723;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px; /* ลดช่องว่างระหว่าง Bridge ซ้าย-ขวา */
+            border: 6px solid var(--wood-dark);
         }
 
-        /* --- Bridges --- */
-        .bridge-section {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            position: relative;
-        }
-
-        .bridge-column {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* The physical bridge visually */
-        .bridge-wood {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 20px;
-            background: linear-gradient(to right, #8d6e63, #d7ccc8, #8d6e63);
-            border-radius: 10px;
-            z-index: 1;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+        .bridge-section { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 2px; /* ลดช่องว่างระหว่างสาย */
+            position: relative; 
+            height: 100%; /* บังคับให้ Bridge เต็มความสูง */
         }
         
-        .bridge-left .bridge-wood { left: 50%; transform: translateX(-50%); }
-        .bridge-right .bridge-wood { left: 50%; transform: translateX(-50%); }
+        .bridge-wood {
+            position: absolute; top: 0; bottom: 0; width: 14px; /* ลดความกว้างหย่องลงเล็กน้อย */
+            background: linear-gradient(to right, #8d6e63, #d7ccc8, #8d6e63);
+            border-radius: 8px; z-index: 1; box-shadow: 2px 0 5px rgba(0,0,0,0.4);
+            left: 50%; transform: translateX(-50%);
+        }
 
-        /* --- Strings (Clickable Areas) --- */
         .string-group {
-            position: relative;
-            width: 100%;
-            height: 45px; /* Touch target size */
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            position: relative; 
+            width: 100%; 
+            flex: 1; /* ให้ความสูงของสายหารแบ่งเฉลี่ยพอดีกับหน้าจออัตโนมัติ */
+            min-height: 25px; /* กำหนดความสูงขั้นต่ำป้องกันสายเล็กเกินไป */
+            z-index: 2; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; touch-action: none;
         }
 
         .string-lines {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 3px;
+            position: absolute; left: 0; right: 0; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column;
+            justify-content: center; gap: 3px;
         }
 
         .string {
-            width: 100%;
-            height: 1px;
+            width: 100%; height: 1px;
             background: linear-gradient(to right, rgba(255,255,255,0.1), var(--string-color) 20%, var(--string-color) 80%, rgba(255,255,255,0.1));
             box-shadow: 0 1px 2px var(--string-shadow);
         }
 
-        /* The "Nut" on the bridge */
         .string-nut {
-            width: 12px;
-            height: 12px;
-            background: #fff;
-            border-radius: 50%;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-            z-index: 3;
-            background: radial-gradient(circle at 30% 30%, #fff, #bdbdbd);
+            width: 14px; height: 14px; background: #fff; border-radius: 50%;
+            position: absolute; left: 50%; transform: translateX(-50%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.6); z-index: 3;
+            background: radial-gradient(circle at 30% 30%, #fff, #9e9e9e);
         }
 
-        /* Note Labels */
         .note-label {
-            position: absolute;
-            color: #fff;
-            font-size: 0.75rem;
-            font-weight: bold;
-            text-shadow: 0 0 3px #000;
-            opacity: 0; /* Hidden by default */
-            transition: opacity 0.3s;
-            background: rgba(0,0,0,0.4);
-            padding: 2px 6px;
-            border-radius: 4px;
-            pointer-events: none;
+            position: absolute; color: #fff; font-size: 0.75rem; font-weight: bold;
+            text-shadow: 0 0 3px #000; background: rgba(0,0,0,0.6);
+            padding: 2px 4px; border-radius: 4px; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s;
+            white-space: nowrap; /* ป้องกันตัวอักษรตกบรรทัดในจอมือถือเล็กๆ */
+        }
+        .show-notes .note-label { opacity: 1; }
+        .bridge-left .string-group .note-label { right: 55%; } /* ปรับตำแหน่งป้ายให้ชิดขึ้น */
+        .bridge-right .string-group .note-label { left: 55%; }
+
+        .string-group:active .string, .string-group.active .string {
+            background: #ffeb3b; box-shadow: 0 0 10px #ffeb3b, 0 0 20px #ff9800;
+        }
+        .string-group:active .string-nut, .string-group.active .string-nut {
+            transform: translateX(-50%) scale(0.8);
         }
 
-        .show-notes .note-label {
-            opacity: 1;
-        }
-
-        /* Label positions relative to the bridge */
-        .bridge-left .string-group .note-label { right: 60%; } /* Left bridge notes usually played on right side */
-        .bridge-right .string-group .note-label { left: 60%; }
-
-        /* Active State (Hit) */
-        .string-group:active .string, 
-        .string-group.active .string {
-            background: #ffeb3b;
-            box-shadow: 0 0 8px #ffeb3b, 0 0 15px #ff9800;
-        }
-
-        .string-group:active .string-nut,
-        .string-group.active .string-nut {
-            transform: translateX(-50%) scale(0.9);
-        }
-
-        /* Decorative Elements */
         .decorative-hole {
+            position: absolute; width: 45px; height: 45px; background: #1a100e; /* ย่อขนาดรูประดับลง */
+            border-radius: 50%; border: 3px solid #ffcc80; top: 15px; left: 50%;
+            transform: translateX(-50%); z-index: 0; box-shadow: inset 0 0 15px #000;
+        }
+        .bottom-decor { top: auto; bottom: 15px; }
+
+        /* Media Query สำหรับจอมือถือขนาดเล็กมาก เพื่อบีบปุ่มและลดขนาดขอบ */
+        @media (max-width: 480px) {
+            .soundboard { padding: 6px; border-width: 4px; gap: 6px; }
+            header { padding: 8px; }
+            h1 { font-size: 1.1rem; }
+            .btn-custom { padding: 6px 12px; font-size: 0.8rem; }
+        }
+
+        /* Floating Note Animation */
+        .floating-note {
             position: absolute;
-            width: 60px;
-            height: 60px;
-            background: #281815;
-            border-radius: 50%;
-            border: 3px solid #ffcc80;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 0;
-            box-shadow: inset 0 0 10px #000;
-            background-image: radial-gradient(#281815 40%, #000);
-        }
-
-        .bottom-decor {
-            top: auto;
-            bottom: 20px;
-        }
-
-        /* Status Bar */
-        #status-msg {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            color: #ffeb3b;
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-shadow: 0 0 5px black;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s;
-            z-index: 200;
+            z-index: 50;
+            animation: floatUp 1s ease-out forwards;
         }
 
-        /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #3e2723; }
-        ::-webkit-scrollbar-thumb { background: #8d6e63; border-radius: 3px; }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
 
+        /* Modal Overlays */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: #2c1e19; border: 2px solid #5d4037; border-radius: 12px;
+            padding: 20px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto;
+            color: white; box-shadow: 0 10px 30px rgba(0,0,0,1);
+        }
+
+        /* Custom Toast */
+        #toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 152, 0, 0.9); color: white; padding: 10px 20px;
+            border-radius: 20px; font-weight: bold; z-index: 300;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>หยางฉิน (Yangqin)</h1>
-        <div class="controls">
-            <button class="btn btn-toggle" id="btnToggleNotes" onclick="toggleNotes()">
-                <span>🎵 โน้ต</span>
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="m-0 text-xl text-orange-300 drop-shadow-md">Virtual Yangqin Pro</h1>
+            <button class="btn-custom bg-gray-700 text-white" onclick="toggleNotes()">
+                🎵 แสดงโน้ต
             </button>
-            <button class="btn btn-record" id="btnRecord" onclick="toggleRecording()">
-                <span>🔴 อัด</span>
-            </button>
-            <button class="btn btn-play" id="btnPlay" disabled onclick="playRecording()">
-                <span>▶ เล่น</span>
-            </button>
-            <button class="btn btn-download" id="btnDownload" disabled onclick="downloadRecording()">
-                <span>⬇</span>
-            </button>
+        </div>
+        <div class="controls-scroll">
+            <button class="btn-custom bg-blue-600" onclick="openModal('modal-settings')">🎛️ ปรับเสียง</button>
+            <button class="btn-custom bg-purple-600" onclick="openModal('modal-demos')">🎼 เพลงสาธิต</button>
+            <button class="btn-custom bg-green-600" onclick="openModal('modal-composer')">✍️ แต่งเพลง</button>
+            <button class="btn-custom bg-red-600" id="btnRecord" onclick="toggleRecording()">🔴 อัดเสียง</button>
+            <button class="btn-custom bg-teal-600" id="btnPlayRec" disabled onclick="playRecording()">▶ เล่นอัด</button>
         </div>
     </header>
 
-    <div class="yangqin-container">
-        <div class="soundboard">
-            <!-- Sound holes decoration -->
-            <div class="decorative-hole"></div>
-            <div class="decorative-hole bottom-decor"></div>
+    <div class="yangqin-wrapper" id="scroll-wrapper">
+        <div class="yangqin-container">
+            <div class="soundboard" id="board">
+                <div class="decorative-hole"></div>
+                <div class="decorative-hole bottom-decor"></div>
 
-            <!-- Left Bridge (High Notes) -->
-            <div class="bridge-section bridge-left">
-                <div class="bridge-wood"></div>
-                <!-- Generated by JS -->
-            </div>
+                <!-- Left Bridge -->
+                <div class="bridge-section bridge-left" id="bridge-left">
+                    <div class="bridge-wood"></div>
+                </div>
 
-            <!-- Right Bridge (Mid/Low Notes) -->
-            <div class="bridge-section bridge-right">
-                <div class="bridge-wood"></div>
-                <!-- Generated by JS -->
+                <!-- Right Bridge -->
+                <div class="bridge-section bridge-right" id="bridge-right">
+                    <div class="bridge-wood"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="status-msg"></div>
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4 text-orange-300 border-b border-gray-600 pb-2">🎛️ ตั้งค่าเสียงขั้นสูง</h2>
+            
+            <label class="block mb-2">Master Volume</label>
+            <input type="range" id="set-vol" min="0" max="1" step="0.1" value="0.8" class="w-full mb-4 accent-orange-500">
+            
+            <label class="block mb-2">ความกังวาน (Reverb)</label>
+            <input type="range" id="set-reverb" min="0" max="1" step="0.1" value="0.5" class="w-full mb-4 accent-orange-500">
+            
+            <label class="block mb-2">หางเสียง (Sustain Time)</label>
+            <input type="range" id="set-sustain" min="0.5" max="3" step="0.1" value="1.5" class="w-full mb-6 accent-orange-500">
+            
+            <button class="btn-custom bg-gray-600 w-full justify-center" onclick="closeModals()">ปิด</button>
+        </div>
+    </div>
+
+    <!-- Demos Modal -->
+    <div id="modal-demos" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4 text-orange-300 border-b border-gray-600 pb-2">🎼 เพลงสาธิต</h2>
+            <div class="flex flex-col gap-3 mb-6">
+                <button class="btn-custom bg-indigo-600 justify-center" onclick="playDemoSong(0)">🌸 ดอกมะลิ (Mo Li Hua)</button>
+                <button class="btn-custom bg-indigo-600 justify-center" onclick="playDemoSong(1)">🐉 จรดล (Pentatonic Scale)</button>
+                <button class="btn-custom bg-indigo-600 justify-center" onclick="playDemoSong(2)">🏔️ ลมหนาว (Arpeggio)</button>
+                <button class="btn-custom bg-red-800 justify-center mt-2" onclick="stopDemo()">⏹ หยุดเล่น</button>
+            </div>
+            <button class="btn-custom bg-gray-600 w-full justify-center" onclick="closeModals()">ปิด</button>
+        </div>
+    </div>
+
+    <!-- Composer Modal -->
+    <div id="modal-composer" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4 text-orange-300 border-b border-gray-600 pb-2">✍️ ระบบแต่งเพลง</h2>
+            <p class="text-sm text-gray-300 mb-2">พิมพ์ชื่อโน้ตเว้นวรรค (เช่น C4 D4 E4 - - F4) ขีด (-) คือการพักจังหวะ</p>
+            <textarea id="compose-text" class="w-full h-24 bg-gray-800 text-white p-2 rounded mb-4 font-mono text-sm border border-gray-600" placeholder="ตัวอย่าง: C4 D4 E4 G4 A4"></textarea>
+            
+            <div class="flex gap-2 mb-6">
+                <button class="btn-custom bg-green-600 flex-1 justify-center" onclick="playComposed()">▶ เล่นโน้ต</button>
+                <button class="btn-custom bg-red-800 flex-1 justify-center" onclick="stopDemo()">⏹ หยุด</button>
+            </div>
+            <button class="btn-custom bg-gray-600 w-full justify-center" onclick="closeModals()">ปิด</button>
+        </div>
+    </div>
+
+    <div id="toast"></div>
 
     <script>
-        // --- Audio Context & Engine ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
-        let masterGain;
-        let compressor;
+        let masterGain, convolver, reverbGain, compressor;
         
-        // Recording variables
-        let mediaRecorder;
-        let audioChunks = [];
-        let destStream;
-        let recordedBlob;
-        let isRecording = false;
-        let recordingAudioElement = new Audio();
+        // Sound Parameters
+        let settings = { vol: 0.8, reverb: 0.5, sustain: 1.5 };
+        let activeSynths = []; // For garbage collection
 
-        // Note Frequencies (Simplified Yangqin Scale - Chromatic/G Major mix for playability)
-        // Notation: Octave number 3, 4, 5, 6
-        const notesLeftBridge = [
-            { note: "D6", freq: 1174.66 },
-            { note: "C6", freq: 1046.50 },
-            { note: "B5", freq: 987.77 },
-            { note: "A5", freq: 880.00 },
-            { note: "G5", freq: 783.99 },
-            { note: "F#5", freq: 739.99 },
-            { note: "E5", freq: 659.25 },
-            { note: "D5", freq: 587.33 },
-            { note: "C5", freq: 523.25 },
-            { note: "B4", freq: 493.88 },
-            { note: "A4", freq: 440.00 },
-            { note: "G4", freq: 392.00 }
+        // Notes definition (Merged standard Yangqin tuning)
+        const notesLeft = [
+            { n: "D6", f: 1174.66 }, { n: "C6", f: 1046.50 }, { n: "B5", f: 987.77 }, { n: "A5", f: 880.00 },
+            { n: "G5", f: 783.99 }, { n: "F#5", f: 739.99 }, { n: "E5", f: 659.25 }, { n: "D5", f: 587.33 },
+            { n: "C5", f: 523.25 }, { n: "B4", f: 493.88 }, { n: "A4", f: 440.00 }, { n: "G4", f: 392.00 }
         ];
 
-        const notesRightBridge = [
-            { note: "F#4", freq: 369.99 },
-            { note: "E4", freq: 329.63 },
-            { note: "D4", freq: 293.66 },
-            { note: "C4", freq: 261.63 },
-            { note: "B3", freq: 246.94 },
-            { note: "A3", freq: 220.00 },
-            { note: "G3", freq: 196.00 },
-            { note: "F#3", freq: 185.00 },
-            { note: "E3", freq: 164.81 },
-            { note: "D3", freq: 146.83 },
-            { note: "C3", freq: 130.81 },
-            { note: "A2", freq: 110.00 }
+        const notesRight = [
+            { n: "F#4", f: 369.99 }, { n: "E4", f: 329.63 }, { n: "D4", f: 293.66 }, { n: "C4", f: 261.63 },
+            { n: "B3", f: 246.94 }, { n: "A3", f: 220.00 }, { n: "G3", f: 196.00 }, { n: "F#3", f: 185.00 },
+            { n: "E3", f: 164.81 }, { n: "D3", f: 146.83 }, { n: "C3", f: 130.81 }, { n: "A2", f: 110.00 }
         ];
+
+        // Combine for easy lookup
+        const noteMap = {};
+        [...notesLeft, ...notesRight].forEach(item => { noteMap[item.n] = item.f; });
+
+        function createReverb() {
+            let length = audioCtx.sampleRate * 2.0; // 2 seconds reverb
+            let impulse = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+            let left = impulse.getChannelData(0);
+            let right = impulse.getChannelData(1);
+            for (let i = 0; i < length; i++) {
+                let decay = Math.exp(-i / (audioCtx.sampleRate * 0.5));
+                left[i] = (Math.random() * 2 - 1) * decay;
+                right[i] = (Math.random() * 2 - 1) * decay;
+            }
+            return impulse;
+        }
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new AudioContext();
-                
-                // Master Volume
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.8;
+            if (audioCtx) return;
+            audioCtx = new AudioContext();
+            
+            masterGain = audioCtx.createGain();
+            reverbGain = audioCtx.createGain();
+            convolver = audioCtx.createConvolver();
+            compressor = audioCtx.createDynamicsCompressor();
 
-                // Dynamics Compressor (keeps volume steady when playing many notes)
-                compressor = audioCtx.createDynamicsCompressor();
-                compressor.threshold.value = -10;
-                compressor.knee.value = 40;
-                compressor.ratio.value = 12;
-                compressor.attack.value = 0;
-                compressor.release.value = 0.25;
+            // Setup Convolver (Reverb)
+            convolver.buffer = createReverb();
+            
+            // Compressor settings for stability
+            compressor.threshold.value = -12;
+            compressor.ratio.value = 8;
+            compressor.attack.value = 0.005;
+            compressor.release.value = 0.1;
 
-                // Connect graph: Strings -> Master -> Compressor -> Destination
-                masterGain.connect(compressor);
-                compressor.connect(audioCtx.destination);
+            // Routing: Nodes -> Master -> Compressor -> Destination
+            //          Nodes -> Reverb -> Convolver -> Compressor
+            masterGain.connect(compressor);
+            reverbGain.connect(convolver);
+            convolver.connect(compressor);
+            compressor.connect(audioCtx.destination);
 
-                // Setup Recording Stream
-                destStream = audioCtx.createMediaStreamDestination();
-                compressor.connect(destStream);
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            updateSettings();
         }
 
-        // --- Sound Synthesis (Yangqin Physics) ---
-        function playNote(freq) {
+        function updateSettings() {
+            if(!audioCtx) return;
+            masterGain.gain.value = settings.vol;
+            reverbGain.gain.value = settings.reverb * 0.8; // Mix level
+        }
+
+        function playNoteFreq(freq, elementId = null, noteName = "") {
             initAudio();
-
-            // 1. Create Nodes
-            const oscMain = audioCtx.createOscillator();
-            const oscHarmonic = audioCtx.createOscillator(); // Detuned slightly for "shimmer"
-            const oscImpact = audioCtx.createOscillator(); // Attack transient
-
-            const gainMain = audioCtx.createGain();
-            const gainHarmonic = audioCtx.createGain();
-            const gainImpact = audioCtx.createGain();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const now = audioCtx.currentTime;
+            const sustain = settings.sustain;
 
-            // 2. Configure Oscillators
-            // Main body tone (Triangle/Sine hybrid)
-            oscMain.type = 'triangle'; 
-            oscMain.frequency.setValueAtTime(freq, now);
-
-            // Harmonic/String shimmer (Sawtooth for brightness, detuned)
-            oscHarmonic.type = 'sawtooth';
-            oscHarmonic.frequency.setValueAtTime(freq, now);
-            oscHarmonic.detune.setValueAtTime(8, now); // +8 cents detune for chorus effect
-
-            // Impact (High click)
-            oscImpact.type = 'sine';
-            oscImpact.frequency.setValueAtTime(freq * 3, now); // Higher harmonic for strike
-
-            // 3. Envelopes (ADSR)
-            // Yangqin has sharp attack and long decay
+            // Synthesis Nodes
+            const oscMain = audioCtx.createOscillator();
+            const oscChorus = audioCtx.createOscillator(); // Simulates double strings
+            const noise = audioCtx.createBufferSource(); // Hammer strike
             
-            // Main Tone Envelope
-            gainMain.gain.setValueAtTime(0, now);
-            gainMain.gain.linearRampToValueAtTime(0.5, now + 0.005); // Fast attack
-            gainMain.gain.exponentialRampToValueAtTime(0.001, now + 3.0); // Long decay
+            const nodeGain = audioCtx.createGain();
+            const noiseGain = audioCtx.createGain();
+            const filterNoise = audioCtx.createBiquadFilter();
 
-            // Harmonic Envelope (Dies out faster than main body)
-            gainHarmonic.gain.setValueAtTime(0, now);
-            gainHarmonic.gain.linearRampToValueAtTime(0.15, now + 0.005);
-            gainHarmonic.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+            // 1. Hammer Strike (Noise Burst)
+            const bufferSize = audioCtx.sampleRate * 0.05; // 50ms
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            noise.buffer = buffer;
+            
+            filterNoise.type = 'bandpass';
+            filterNoise.frequency.value = Math.min(freq * 4, 10000); // Sharp strike
+            filterNoise.Q.value = 1.5;
 
-            // Impact Envelope (Very short)
-            gainImpact.gain.setValueAtTime(0, now);
-            gainImpact.gain.linearRampToValueAtTime(0.3, now + 0.002);
-            gainImpact.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            noiseGain.gain.setValueAtTime(0.5, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
 
-            // 4. Connect and Start
-            oscMain.connect(gainMain);
-            oscHarmonic.connect(gainHarmonic);
-            oscImpact.connect(gainImpact);
+            // 2. Tonal Body (Main & Chorus)
+            oscMain.type = 'triangle';
+            oscMain.frequency.value = freq;
+            
+            oscChorus.type = 'sine';
+            oscChorus.frequency.value = freq;
+            oscChorus.detune.value = 6; // 6 cents detune for rich metallic sound
 
-            gainMain.connect(masterGain);
-            gainHarmonic.connect(masterGain);
-            gainImpact.connect(masterGain);
+            // Envelope (ADSR)
+            nodeGain.gain.setValueAtTime(0, now);
+            nodeGain.gain.linearRampToValueAtTime(0.6, now + 0.01); // Fast attack
+            nodeGain.gain.exponentialRampToValueAtTime(0.001, now + sustain); // Decay based on setting
 
+            // Routing
+            oscMain.connect(nodeGain);
+            oscChorus.connect(nodeGain);
+            noise.connect(filterNoise).connect(noiseGain).connect(nodeGain);
+
+            nodeGain.connect(masterGain);
+            nodeGain.connect(reverbGain); // Send to reverb
+
+            // Start
             oscMain.start(now);
-            oscHarmonic.start(now);
-            oscImpact.start(now);
+            oscChorus.start(now);
+            noise.start(now);
 
-            // Garbage collection
-            oscMain.stop(now + 3.5);
-            oscHarmonic.stop(now + 3.5);
-            oscImpact.stop(now + 3.5);
+            // Stop & Cleanup to prevent memory leaks/stuck sounds
+            oscMain.stop(now + sustain + 0.1);
+            oscChorus.stop(now + sustain + 0.1);
             
-            // Cleanup nodes after playing
             setTimeout(() => {
-                gainMain.disconnect();
-                gainHarmonic.disconnect();
-                gainImpact.disconnect();
-            }, 3500);
+                nodeGain.disconnect();
+                oscMain.disconnect();
+                oscChorus.disconnect();
+            }, (sustain + 0.2) * 1000);
+
+            // Visuals
+            if (elementId) {
+                const el = document.getElementById(elementId);
+                if (el) {
+                    el.classList.add('active');
+                    setTimeout(() => el.classList.remove('active'), 150);
+                    spawnFloatingNote(el, noteName);
+                }
+            }
         }
 
-        // --- DOM Generation ---
-        function createStrings(containerClass, notesArray) {
-            const container = document.querySelector(containerClass);
-            
-            notesArray.forEach((n, index) => {
+        function createStringsUI(containerId, notesList, prefix) {
+            const container = document.getElementById(containerId);
+            notesList.forEach((n, i) => {
+                const id = `str-${prefix}-${i}`;
                 const group = document.createElement('div');
                 group.className = 'string-group';
-                group.dataset.freq = n.freq;
+                group.id = id;
                 
-                // Add click/touch listener
-                const handleHit = (e) => {
-                    e.preventDefault(); // Prevent ghost clicks
-                    playNote(n.freq);
-                    
-                    // Visual feedback
-                    group.classList.add('active');
-                    setTimeout(() => group.classList.remove('active'), 150);
+                const handlePlay = (e) => {
+                    e.preventDefault();
+                    playNoteFreq(n.f, id, n.n);
                 };
 
-                // Use touchstart for faster reaction on mobile, mousedown for PC
-                group.addEventListener('touchstart', handleHit, {passive: false});
-                group.addEventListener('mousedown', handleHit);
+                // Pointer events for better mobile/desktop handling
+                group.addEventListener('pointerdown', handlePlay);
 
-                const lines = document.createElement('div');
-                lines.className = 'string-lines';
-                // Double strings for authenticity
-                lines.appendChild(document.createElement('div')).className = 'string';
-                lines.appendChild(document.createElement('div')).className = 'string';
-
-                const nut = document.createElement('div');
-                nut.className = 'string-nut';
-
-                const label = document.createElement('div');
-                label.className = 'note-label';
-                label.innerText = n.note;
-
-                group.appendChild(lines);
-                group.appendChild(nut);
-                group.appendChild(label);
+                group.innerHTML = `
+                    <div class="string-lines"><div class="string"></div><div class="string"></div></div>
+                    <div class="string-nut"></div>
+                    <div class="note-label">${n.n}</div>
+                `;
                 container.appendChild(group);
             });
         }
 
-        // Initialize Layout
         window.onload = () => {
-            createStrings('.bridge-left', notesLeftBridge);
-            createStrings('.bridge-right', notesRightBridge);
+            createStringsUI('bridge-left', notesLeft, 'L');
+            createStringsUI('bridge-right', notesRight, 'R');
+            
+            // Settings Listeners
+            document.getElementById('set-vol').oninput = (e) => { settings.vol = parseFloat(e.target.value); updateSettings(); };
+            document.getElementById('set-reverb').oninput = (e) => { settings.reverb = parseFloat(e.target.value); updateSettings(); };
+            document.getElementById('set-sustain').oninput = (e) => { settings.sustain = parseFloat(e.target.value); };
         };
-
-        // --- UI Functions ---
 
         function toggleNotes() {
             document.body.classList.toggle('show-notes');
-            const btn = document.getElementById('btnToggleNotes');
-            btn.style.background = document.body.classList.contains('show-notes') ? '#a1887f' : '#8d6e63';
         }
 
-        function showStatus(msg) {
-            const el = document.getElementById('status-msg');
-            el.innerText = msg;
-            el.style.opacity = 1;
-            setTimeout(() => { el.style.opacity = 0; }, 3000);
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = 1;
+            setTimeout(() => t.style.opacity = 0, 2500);
         }
 
-        // --- Recorder Logic ---
+        function spawnFloatingNote(stringElement, noteText) {
+            const board = document.getElementById('board');
+            const rectStr = stringElement.getBoundingClientRect();
+            const rectBoard = board.getBoundingClientRect();
+            
+            const floatEl = document.createElement('div');
+            floatEl.className = 'floating-note';
+            floatEl.innerText = noteText;
+            
+            // Calculate relative position to board
+            const top = rectStr.top - rectBoard.top;
+            const left = rectStr.left - rectBoard.left + (rectStr.width / 2) - 10;
+            
+            floatEl.style.top = `${top}px`;
+            floatEl.style.left = `${left}px`;
+            
+            board.appendChild(floatEl);
+            
+            // Remove after animation (1s)
+            setTimeout(() => { floatEl.remove(); }, 1000);
+        }
+
+        function openModal(id) {
+            initAudio(); // Initialize audio on user interaction
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModals() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+        }
+
+        let playbackTimeouts = [];
+
+        function stopDemo() {
+            playbackTimeouts.forEach(clearTimeout);
+            playbackTimeouts = [];
+            showToast("หยุดเล่นแล้ว");
+        }
+
+        function findElementIdByNote(noteName) {
+            // Search in UI arrays
+            let idx = notesLeft.findIndex(n => n.n === noteName);
+            if(idx !== -1) return `str-L-${idx}`;
+            idx = notesRight.findIndex(n => n.n === noteName);
+            if(idx !== -1) return `str-R-${idx}`;
+            return null;
+        }
+
+        function playSequence(notesArray, tempoMs = 400) {
+            stopDemo(); // Clear existing
+            closeModals();
+            
+            let timeAccumulator = 0;
+            notesArray.forEach((noteStr, index) => {
+                if(noteStr === "-" || noteStr === "") {
+                    timeAccumulator += tempoMs;
+                    return;
+                }
+                
+                const freq = noteMap[noteStr];
+                if (freq) {
+                    const elId = findElementIdByNote(noteStr);
+                    const t = setTimeout(() => {
+                        playNoteFreq(freq, elId, noteStr);
+                        // ปิดการเลื่อนจออัตโนมัติ (scrollIntoView) เนื่องจากเราทำ UI พอดีจอแล้ว 
+                        // เพื่อป้องกันหน้าจอกระตุกบนมือถือ
+                        /* if(elId) {
+                            const el = document.getElementById(elId);
+                            el.scrollIntoView({ behavior: "smooth", block: "center" });
+                        } */
+                    }, timeAccumulator);
+                    playbackTimeouts.push(t);
+                    timeAccumulator += tempoMs;
+                }
+            });
+
+            // End of song toast
+            const endT = setTimeout(() => {
+                showToast("จบเพลง");
+            }, timeAccumulator + 500);
+            playbackTimeouts.push(endT);
+        }
+
+        // Demos Definition
+        const demos = [
+            // Mo Li Hua (Jasmine Flower)
+            ["E4", "E4", "G4", "A4", "C5", "C5", "A4", "G4", "-", "G4", "A4", "G4", "A4", "E4", "D4", "C4"],
+            // Pentatonic Climb
+            ["C3", "D3", "E3", "G3", "A3", "C4", "D4", "E4", "G4", "A4", "C5", "-", "A4", "G4", "E4", "D4", "C4"],
+            // Arpeggio
+            ["A2", "E3", "A3", "C4", "E4", "A4", "C5", "E5", "-", "E5", "C5", "A4", "E4", "C4", "A3", "E3", "A2"]
+        ];
+
+        function playDemoSong(index) {
+            showToast("กำลังเริ่มเพลงสาธิต...");
+            playSequence(demos[index], 350);
+        }
+
+        function playComposed() {
+            const text = document.getElementById('compose-text').value;
+            const sequence = text.split(/[\s,]+/); // Split by space or comma
+            if(sequence.length === 0 || sequence[0] === "") {
+                showToast("กรุณาพิมพ์โน้ตก่อนเล่น");
+                return;
+            }
+            showToast("กำลังเล่นโน้ตที่แต่ง...");
+            playSequence(sequence, 400);
+        }
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedBlob, destStream;
+        let isRecording = false;
+        let audioPlayer = new Audio();
 
         function toggleRecording() {
-            initAudio(); // Ensure context is running
+            initAudio();
             const btn = document.getElementById('btnRecord');
-            const btnPlay = document.getElementById('btnPlay');
-            const btnDown = document.getElementById('btnDownload');
+            const btnPlay = document.getElementById('btnPlayRec');
 
             if (!isRecording) {
-                // Start Recording
+                if(!destStream) {
+                    destStream = audioCtx.createMediaStreamDestination();
+                    compressor.connect(destStream); // Connect output to recorder
+                }
                 audioChunks = [];
                 mediaRecorder = new MediaRecorder(destStream.stream);
-
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) audioChunks.push(e.data);
-                };
-
+                
+                mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
                 mediaRecorder.onstop = () => {
                     recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioURL = URL.createObjectURL(recordedBlob);
-                    recordingAudioElement.src = audioURL;
-                    
-                    // Enable Play and Download
+                    audioPlayer.src = URL.createObjectURL(recordedBlob);
                     btnPlay.disabled = false;
-                    btnDown.disabled = false;
-                    showStatus("บันทึกเสร็จสิ้น");
+                    showToast("บันทึกเสร็จสิ้น สามารถกดเล่นได้");
                 };
 
                 mediaRecorder.start();
                 isRecording = true;
-                btn.innerHTML = "<span>⏹ หยุด</span>";
-                btn.classList.add('recording');
+                btn.innerHTML = "⏹ หยุดอัด";
+                btn.classList.replace('bg-red-600', 'bg-red-800');
                 btnPlay.disabled = true;
-                btnDown.disabled = true;
-                showStatus("กำลังบันทึก...");
-
+                showToast("🔴 กำลังบันทึกเสียง...");
             } else {
-                // Stop Recording
                 mediaRecorder.stop();
                 isRecording = false;
-                btn.innerHTML = "<span>🔴 อัด</span>";
-                btn.classList.remove('recording');
+                btn.innerHTML = "🔴 อัดเสียง";
+                btn.classList.replace('bg-red-800', 'bg-red-600');
             }
         }
 
         function playRecording() {
-            if (recordedBlob) {
-                recordingAudioElement.play();
-                showStatus("กำลังเล่นเสียงที่บันทึก...");
+            if(recordedBlob) {
+                audioPlayer.play();
+                showToast("▶ กำลังเล่นเสียงที่บันทึก...");
             }
         }
-
-        function downloadRecording() {
-            if (recordedBlob) {
-                const url = URL.createObjectURL(recordedBlob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = 'my-yangqin-song.webm';
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                }, 100);
-                showStatus("กำลังดาวน์โหลด...");
-            }
-        }
-
     </script>
 </body>
 </html>
