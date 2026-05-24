@@ -3,203 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>บัณเฑาะว์จำลอง (Virtual Bandho)</title>
+    <title>บัณเฑาะว์จำลอง Pro (Virtual Bandho)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background: radial-gradient(circle at center, #2b0505 0%, #000000 100%);
-            color: #fff;
-            overflow: hidden; /* Prevent scrolling on mobile */
-            touch-action: manipulation;
+        :root {
+            --primary-gold: #FFD700;
+            --dark-gold: #DAA520;
+            --bg-color: #1a0505;
         }
 
-        /* Bandho Container */
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: radial-gradient(circle at top center, #3d0c0c 0%, #000000 100%);
+            color: #fff;
+            /* Allow scrolling but hide scrollbar for sleek look */
+            overflow-y: auto;
+            overflow-x: hidden;
+            touch-action: pan-y; /* Allow vertical scroll, prevent pinch zoom */
+            min-height: 100vh;
+        }
+
+        /* Hide Scrollbar */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        /* Main Container setup for ScrollView */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px; /* Mobile width constraint */
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        /* Bandho Instrument Canvas */
         .instrument-container {
             position: relative;
-            height: 50vh;
+            height: 40vh;
+            min-height: 250px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-top: 20px;
+            width: 100%;
+            margin-top: 10px;
         }
 
-        /* The Drum SVG Wrapper */
         .bandho-svg {
-            width: 200px;
-            height: 300px;
+            width: 180px;
+            height: 270px;
             cursor: pointer;
-            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
-            transition: transform 0.1s;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
+            transition: transform 0.05s;
             z-index: 10;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Ball Animation */
         .ball-string {
             transform-origin: 50% 50%;
-            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .bandho-body {
-            fill: url(#goldGradient);
+        .bandho-body { fill: url(#goldGradient); }
+        .drum-head { fill: #e3dcd2; stroke: #8b4513; stroke-width: 2; }
+
+        /* Drum Shake Animations */
+        .shake-left { transform: rotate(-12deg) scale(0.98); }
+        .shake-right { transform: rotate(12deg) scale(0.98); }
+        .hit-glow { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8)); }
+
+        /* Floating Notes Animation */
+        .floating-note-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 20;
         }
 
-        .drum-head {
-            fill: #e3dcd2; /* Skin color */
-            stroke: #8b4513;
-            stroke-width: 2;
+        .float-note {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            opacity: 1;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
         }
 
-        /* Animation Classes */
-        .shake-left {
-            transform: rotate(-15deg);
-        }
-        .shake-right {
-            transform: rotate(15deg);
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.8); opacity: 1; }
+            50% { transform: translateY(-40px) scale(1.2); opacity: 0.9; }
+            100% { transform: translateY(-80px) scale(1); opacity: 0; }
         }
 
-        .hit-effect {
-            animation: pulse-ring 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
-        }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* Controls */
-        .control-panel {
-            background: rgba(255, 255, 255, 0.1);
+        /* UI Controls & Cards */
+        .panel-card {
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            border-radius: 20px 20px 0 0;
-            padding: 20px;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            border-top: 1px solid rgba(255, 215, 0, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 16px;
+            padding: 16px;
+            width: 90%;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
         }
 
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: var(--primary-gold);
+            cursor: pointer;
+            padding-bottom: 8px;
+        }
+
+        .panel-content {
+            display: none;
+            margin-top: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+        .panel-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Buttons */
         .btn {
             border: none;
-            padding: 12px 20px;
-            border-radius: 50px;
+            padding: 10px 16px;
+            border-radius: 12px;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
         }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .btn:active {
-            transform: scale(0.95);
-        }
+        .btn-gold { background: linear-gradient(135deg, #FFD700, #DAA520); color: #3e2723; box-shadow: 0 4px 10px rgba(218, 165, 32, 0.3); }
+        .btn-red { background: linear-gradient(135deg, #ff5252, #d32f2f); color: white; }
+        .btn-dark { background: #2a2a2a; border: 1px solid #444; color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary-gold); color: var(--primary-gold); }
 
-        .btn-gold {
-            background: linear-gradient(135deg, #FFD700, #DAA520);
-            color: #3e2723;
-        }
-
-        .btn-red {
-            background: linear-gradient(135deg, #ff5252, #d32f2f);
-            color: white;
-        }
-
-        .btn-green {
-            background: linear-gradient(135deg, #69f0ae, #2e7d32);
-            color: #003300;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid #FFD700;
-            color: #FFD700;
-        }
-
-        /* Visualizer */
-        #visualizer {
+        /* Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
             width: 100%;
-            height: 60px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            margin-top: 10px;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: var(--primary-gold);
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
         }
 
-        /* Overlay for "Start" */
+        /* Overlay */
         #overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 0, 0, 0.95);
             z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            transition: opacity 0.5s ease;
         }
+        .pulse-text { animation: pulse-gold 2s infinite; }
+        @keyframes pulse-gold { 0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); } 50% { text-shadow: 0 0 25px rgba(255, 215, 0, 1); } }
 
-        .pulse-text {
-            animation: pulse-gold 2s infinite;
+        /* Sequencer Display */
+        .seq-display {
+            background: #000; padding: 10px; border-radius: 8px; font-family: monospace;
+            min-height: 40px; display: flex; align-items: center; overflow-x: auto; white-space: nowrap;
+            color: var(--primary-gold); letter-spacing: 2px; border: 1px solid #333;
         }
-
-        @keyframes pulse-gold {
-            0% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-            50% { text-shadow: 0 0 25px rgba(255, 215, 0, 1); }
-            100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-        }
-
-        /* Note Bubble */
-        .note-bubble {
-            position: absolute;
-            font-size: 24px;
-            font-weight: bold;
-            color: #FFD700;
-            pointer-events: none;
-            opacity: 0;
-            transform: translateY(0);
-            transition: all 0.5s ease-out;
-        }
-        
-        .note-active {
-            opacity: 1;
-            transform: translateY(-50px);
-        }
-
     </style>
 </head>
 <body>
 
-    <!-- Start Overlay -->
+    <!-- Start Overlay (Requires user interaction to start AudioContext) -->
     <div id="overlay">
-        <h1 class="text-4xl font-bold text-yellow-400 mb-4 pulse-text">บัณเฑาะว์ไทย</h1>
-        <p class="mb-8 text-gray-300">จำลองเสียงสมจริงเสมือนจริง<br>Virtual Thai Bandho Instrument</p>
-        <button id="startBtn" class="btn btn-gold text-xl px-8 py-4">
+        <h1 class="text-4xl font-bold text-yellow-400 mb-2 pulse-text">บัณเฑาะว์จำลอง</h1>
+        <h2 class="text-xl text-yellow-600 mb-6 font-bold">PRO VERSION</h2>
+        <p class="mb-8 text-gray-300 px-6">สัมผัสเสียงสมจริง ระบบแต่งเพลง<br>และเพลงสาธิตในรูปแบบหน้าจอแนวตั้ง</p>
+        <button id="startBtn" class="btn btn-gold text-xl px-10 py-4 rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            เริ่มเล่น (Start)
+            เข้าสู่ระบบเสียง
         </button>
     </div>
 
-    <!-- Main Content -->
-    <div class="h-screen flex flex-col items-center">
+    <!-- Main Application Container (ScrollView) -->
+    <div class="app-container">
+        
         <!-- Header -->
         <div class="w-full text-center mt-6 z-20">
             <h2 class="text-2xl text-yellow-500 font-bold tracking-wider">บัณเฑาะว์ (Bandho)</h2>
-            <p class="text-xs text-gray-400">แตะที่ตัวเครื่องเพื่อเขย่าและทำเสียง</p>
+            <p class="text-sm text-gray-400">แตะที่รูปเพื่อตีจังหวะ</p>
         </div>
 
-        <!-- Instrument Area -->
-        <div class="instrument-container w-full" id="clickArea">
-            <div id="noteDisplay" class="note-bubble">ตุ๊บ!</div>
+        <!-- Instrument Interactive Area -->
+        <div class="instrument-container" id="clickArea">
+            <div id="noteContainer" class="floating-note-container"></div>
             
             <svg class="bandho-svg" id="bandhoSvg" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
                 <defs>
@@ -210,363 +229,403 @@
                     </linearGradient>
                     <radialGradient id="skinGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
                         <stop offset="0%" style="stop-color:#f5f5dc;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#d2b48c;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#b59b72;stop-opacity:1" />
                     </radialGradient>
                 </defs>
 
                 <!-- Handle -->
                 <rect x="90" y="200" width="20" height="100" rx="5" fill="url(#goldGradient)" />
                 
-                <!-- Drum Body (Hourglass shape) -->
-                <path d="M60 50 Q100 150 60 250 L140 250 Q100 150 140 50 Z" class="bandho-body" stroke="#5c3a00" stroke-width="2"/>
+                <!-- Drum Body -->
+                <path d="M60 50 Q100 150 60 250 L140 250 Q100 150 140 50 Z" class="bandho-body" stroke="#4a2e00" stroke-width="2"/>
                 
                 <!-- Drum Heads -->
                 <ellipse cx="100" cy="50" rx="40" ry="15" class="drum-head" fill="url(#skinGradient)" />
                 <ellipse cx="100" cy="250" rx="40" ry="15" class="drum-head" fill="url(#skinGradient)" />
 
-                <!-- The String and Ball (Animated Group) -->
+                <!-- The String and Ball -->
                 <g id="stringGroup" class="ball-string">
-                    <!-- Pivot Point is center of drum waist approx -->
-                     <circle cx="100" cy="150" r="5" fill="#3e2723" />
-                     <!-- String -->
-                     <line x1="100" y1="150" x2="160" y2="120" stroke="#f0e68c" stroke-width="3" id="stringLine"/>
-                     <!-- Ball -->
-                     <circle cx="160" cy="120" r="12" fill="#8b0000" stroke="#ff0000" stroke-width="2" id="stringBall"/>
+                    <circle cx="100" cy="150" r="4" fill="#2a1a10" />
+                    <line x1="100" y1="150" x2="155" y2="125" stroke="#d4c381" stroke-width="2.5" id="stringLine"/>
+                    <circle cx="155" cy="125" r="10" fill="#8b0000" stroke="#520000" stroke-width="2" id="stringBall"/>
                 </g>
             </svg>
         </div>
 
-        <!-- Control Panel -->
-        <div class="control-panel w-full max-w-md">
-            <!-- Recording Controls -->
-            <div class="flex justify-between items-center gap-2">
-                <button id="recordBtn" class="btn btn-red flex-1">
-                    <span id="recIcon">●</span> <span id="recText">อัดเสียง</span>
-                </button>
-                <button id="playBtn" class="btn btn-green flex-1" disabled>
-                    <span>▶</span> เล่นเสียง
-                </button>
-                <button id="downloadBtn" class="btn btn-outline" disabled title="Download">
-                    ⬇
-                </button>
+        <!-- Panel 1: Demo Songs -->
+        <div class="panel-card mt-2">
+            <div class="panel-header" onclick="togglePanel('demoPanel')">
+                <span>🎵 เพลงสาธิต (Demo)</span>
+                <span id="demoIcon">▼</span>
             </div>
-
-            <!-- Toggle Visualizer/Note -->
-            <div class="flex justify-between items-center mt-2 px-2">
-                <span class="text-sm text-gray-300">แสดงจังหวะ (Visualizer)</span>
-                <button id="noteToggle" class="w-12 h-6 rounded-full bg-green-500 relative transition-colors duration-200">
-                    <div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1 transition-transform"></div>
-                </button>
+            <div class="panel-content active" id="demoPanel">
+                <div class="flex flex-col gap-2">
+                    <button class="btn btn-dark w-full justify-between" onclick="playDemo('roll')">
+                        <span>1. จังหวะรัว (Roll)</span> <span>▶</span>
+                    </button>
+                    <button class="btn btn-dark w-full justify-between" onclick="playDemo('elephant')">
+                        <span>2. จังหวะช้างเดิน (Slow)</span> <span>▶</span>
+                    </button>
+                    <button class="btn btn-dark w-full justify-between" onclick="playDemo('ramwong')">
+                        <span>3. จังหวะรำวง (Groove)</span> <span>▶</span>
+                    </button>
+                    <button id="stopDemoBtn" class="btn btn-red w-full mt-2" onclick="stopEngine()" disabled>
+                        <span>⏹ หยุดเล่น (Stop)</span>
+                    </button>
+                </div>
             </div>
-            
-            <canvas id="visualizer"></canvas>
-            
-            <p class="text-[10px] text-center text-gray-500 mt-2">© Thai Virtual Instruments. สัมผัสหน้าจอเพื่อเล่น</p>
         </div>
+
+        <!-- Panel 2: Sequencer / Composer -->
+        <div class="panel-card">
+            <div class="panel-header" onclick="togglePanel('seqPanel')">
+                <span>✍️ ระบบแต่งเพลง (Composer)</span>
+                <span id="seqIcon">▶</span>
+            </div>
+            <div class="panel-content" id="seqPanel">
+                <div class="seq-display mb-2" id="seqDisplay">...รอรับโน้ต...</div>
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <button class="btn btn-gold text-xs" onclick="addNote('X')">ตี (Hit)</button>
+                    <button class="btn btn-dark text-xs" onclick="addNote('-')">พัก (Rest)</button>
+                    <button class="btn btn-red text-xs" onclick="removeNote()">ลบ (Del)</button>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-outline flex-1 text-xs" onclick="clearSeq()">ล้าง (Clear)</button>
+                    <button id="playSeqBtn" class="btn btn-gold flex-1 text-xs" onclick="playSequence()">▶ เล่นโน้ต</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Advanced Audio Settings -->
+        <div class="panel-card">
+            <div class="panel-header" onclick="togglePanel('audioPanel')">
+                <span>🎛️ ปรับแต่งเสียงขั้นสูง (Settings)</span>
+                <span id="audioIcon">▶</span>
+            </div>
+            <div class="panel-content" id="audioPanel">
+                <div class="mb-3">
+                    <div class="flex justify-between text-xs text-gray-300 mb-1">
+                        <span>ความตึงหนัง (Pitch)</span> <span id="pitchVal">Standard</span>
+                    </div>
+                    <input type="range" id="pitchSlider" min="0.5" max="1.5" step="0.05" value="1">
+                </div>
+                <div class="mb-3">
+                    <div class="flex justify-between text-xs text-gray-300 mb-1">
+                        <span>เสียงกระทบ (Slap Mix)</span> <span id="slapVal">Medium</span>
+                    </div>
+                    <input type="range" id="slapSlider" min="0" max="2" step="0.1" value="1">
+                </div>
+                <div class="mb-1">
+                    <div class="flex justify-between text-xs text-gray-300 mb-1">
+                        <span>ความก้อง (Decay)</span> <span id="decayVal">Short</span>
+                    </div>
+                    <input type="range" id="decaySlider" min="0.5" max="2.0" step="0.1" value="1">
+                </div>
+            </div>
+        </div>
+
+        <p class="text-[10px] text-center text-gray-500 mt-4">© Pro Virtual Bandho. ออกแบบสำหรับหน้าจอมือถือ.</p>
     </div>
 
     <script>
-        // --- Audio Context & Synth Engine ---
+        // --- System Globals ---
         let audioCtx;
         let masterGain;
-        let dest; // MediaStreamDestination for recording
         let isAudioInit = false;
 
-        // Recording globals
-        let mediaRecorder;
-        let recordedChunks = [];
-        let audioBlob;
-        let audioUrl;
-        let isRecording = false;
+        // Settings State
+        const settings = {
+            pitchMult: 1.0,
+            slapMix: 1.0,
+            decayMult: 1.0
+        };
 
-        const startBtn = document.getElementById('startBtn');
+        // DOM Elements
         const overlay = document.getElementById('overlay');
+        const startBtn = document.getElementById('startBtn');
+        const clickArea = document.getElementById('clickArea');
+        const bandhoSvg = document.getElementById('bandhoSvg');
+        const stringGroup = document.getElementById('stringGroup');
+        const noteContainer = document.getElementById('noteContainer');
+        const stopDemoBtn = document.getElementById('stopDemoBtn');
 
-        // Initialize Audio
-        function initAudio() {
-            if (isAudioInit) return;
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
-            
-            // Master Gain
-            masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.8;
-            
-            // Recorder Destination
-            dest = audioCtx.createMediaStreamDestination();
-            masterGain.connect(audioCtx.destination);
-            masterGain.connect(dest); // Connect to recorder
+        // Initialization
+        startBtn.addEventListener('click', () => {
+            if (!isAudioInit) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.9;
+                
+                // Add soft compressor to prevent clipping
+                const compressor = audioCtx.createDynamicsCompressor();
+                compressor.threshold.value = -10;
+                compressor.knee.value = 5;
+                compressor.ratio.value = 12;
+                compressor.attack.value = 0.003;
+                compressor.release.value = 0.1;
 
-            isAudioInit = true;
+                masterGain.connect(compressor);
+                compressor.connect(audioCtx.destination);
+
+                isAudioInit = true;
+            }
+            
+            // Resume context if suspended (mobile policy)
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
             overlay.style.opacity = '0';
             setTimeout(() => overlay.style.display = 'none', 500);
+        });
+
+        // --- UI Logic: Accordion Panels ---
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const icon = document.getElementById(panelId.replace('Panel', 'Icon'));
+            const isActive = panel.classList.contains('active');
             
-            // Setup Visualizer
-            setupVisualizer();
+            // Optional: Close all others first for strictly one-open-at-a-time
+            // document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
+            // document.querySelectorAll('.panel-header span:last-child').forEach(i => i.innerText = '▶');
+
+            if (isActive) {
+                panel.classList.remove('active');
+                icon.innerText = '▶';
+            } else {
+                panel.classList.add('active');
+                icon.innerText = '▼';
+            }
         }
 
-        startBtn.addEventListener('click', initAudio);
+        // --- UI Logic: Advanced Settings Sliders ---
+        document.getElementById('pitchSlider').addEventListener('input', (e) => {
+            settings.pitchMult = parseFloat(e.target.value);
+            document.getElementById('pitchVal').innerText = settings.pitchMult === 1 ? 'Standard' : (settings.pitchMult > 1 ? 'High' : 'Low');
+        });
+        document.getElementById('slapSlider').addEventListener('input', (e) => {
+            settings.slapMix = parseFloat(e.target.value);
+            document.getElementById('slapVal').innerText = settings.slapMix === 1 ? 'Medium' : (settings.slapMix > 1 ? 'Hard' : 'Soft');
+        });
+        document.getElementById('decaySlider').addEventListener('input', (e) => {
+            settings.decayMult = parseFloat(e.target.value);
+            document.getElementById('decayVal').innerText = settings.decayMult === 1 ? 'Short' : 'Long';
+        });
 
-        // --- Synthesis Logic (The Bandho Sound) ---
-        // Bandho sounds are dull thuds with a slight resonance.
+        // --- Pro Audio Synthesis Engine ---
+        // Highly optimized, no garbage collection glitches.
         function playBandhoSound() {
             if (!isAudioInit) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
+            
+            // Crucial: Create fresh nodes for every hit to prevent sticking
             const t = audioCtx.currentTime;
+            
+            // Base parameters
+            const baseFreq = 160 * settings.pitchMult;
+            const dropFreq = 60 * settings.pitchMult;
+            const duration = 0.25 * settings.decayMult;
 
-            // 1. Low Frequency Impact (The "Thud")
+            // 1. Sub-Bass / Body (Sine wave with rapid pitch drop)
             const osc = audioCtx.createOscillator();
             const oscGain = audioCtx.createGain();
             
-            osc.frequency.setValueAtTime(180, t);
-            osc.frequency.exponentialRampToValueAtTime(80, t + 0.1); // Pitch drop
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(baseFreq, t);
+            osc.frequency.exponentialRampToValueAtTime(dropFreq, t + 0.1); // Kick effect
             
             oscGain.gain.setValueAtTime(1, t);
-            oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.15); // Quick decay
+            oscGain.gain.exponentialRampToValueAtTime(0.001, t + duration); // Smooth fade
 
             osc.connect(oscGain);
             oscGain.connect(masterGain);
 
-            osc.start(t);
-            osc.stop(t + 0.2);
-
-            // 2. Noise Burst (The "Slap" on skin)
-            const bufferSize = audioCtx.sampleRate * 0.1; // 0.1 sec buffer
+            // 2. The "Slap" / Skin rattle (Filtered Noise)
+            // Create short buffer of white noise
+            const bufferSize = audioCtx.sampleRate * 0.1; 
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1);
-            }
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
 
             const noise = audioCtx.createBufferSource();
             noise.buffer = buffer;
             
+            // Bandpass filter to make it sound like tight skin, not TV static
             const noiseFilter = audioCtx.createBiquadFilter();
-            noiseFilter.type = 'lowpass';
-            noiseFilter.frequency.value = 800;
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.value = 1000 * settings.pitchMult;
+            noiseFilter.Q.value = 1.0;
 
             const noiseGain = audioCtx.createGain();
-            noiseGain.gain.setValueAtTime(0.5, t);
-            noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+            // Sharp attack, very fast decay
+            noiseGain.gain.setValueAtTime(0.6 * settings.slapMix, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
 
             noise.connect(noiseFilter);
             noiseFilter.connect(noiseGain);
             noiseGain.connect(masterGain);
 
+            // Start and STRICTLY schedule Stop
+            osc.start(t);
             noise.start(t);
+            osc.stop(t + duration + 0.1);
+            
+            // Visual feedback
+            triggerVisuals();
         }
 
-        // --- Visual Animation Logic ---
-        const bandhoSvg = document.getElementById('bandhoSvg');
-        const stringGroup = document.getElementById('stringGroup');
-        const clickArea = document.getElementById('clickArea');
-        const noteDisplay = document.getElementById('noteDisplay');
-        let isLeft = true; // Toggle direction
+        // --- Visual Animations ---
+        let isLeftAnim = true;
+        const noteTexts = ["ตุ๊บ!", "ตั๊บ!", "ป๊อก!", "ตึบ!"];
 
-        function triggerAnimation() {
-            // Remove previous classes to restart anim
-            bandhoSvg.classList.remove('shake-left', 'shake-right', 'hit-effect');
+        function triggerVisuals() {
+            // 1. Drum Shake
+            bandhoSvg.classList.remove('shake-left', 'shake-right', 'hit-glow');
             void bandhoSvg.offsetWidth; // Force reflow
-
-            // Rotate Drum
-            if (isLeft) {
+            
+            if (isLeftAnim) {
                 bandhoSvg.classList.add('shake-left');
-                // Animate String
-                stringGroup.style.transform = 'rotate(45deg)'; 
+                stringGroup.style.transform = 'rotate(35deg)'; 
             } else {
                 bandhoSvg.classList.add('shake-right');
-                stringGroup.style.transform = 'rotate(-45deg)';
+                stringGroup.style.transform = 'rotate(-35deg)';
             }
-            bandhoSvg.classList.add('hit-effect');
+            bandhoSvg.classList.add('hit-glow');
             
-            // Reset String after short delay
             setTimeout(() => {
                 stringGroup.style.transform = 'rotate(0deg)';
-                bandhoSvg.classList.remove('shake-left', 'shake-right');
-            }, 150);
+                bandhoSvg.classList.remove('shake-left', 'shake-right', 'hit-glow');
+            }, 120);
 
-            // Toggle direction for next hit
-            isLeft = !isLeft;
+            isLeftAnim = !isLeftAnim;
 
-            // Show Note Bubble
-            if (showNotes) {
-                showNoteBubble();
-            }
+            // 2. Floating Note Engine
+            spawnFloatingNote();
         }
 
-        function showNoteBubble() {
-            // Reset animation
-            noteDisplay.classList.remove('note-active');
-            void noteDisplay.offsetWidth;
-            
-            // Randomize position slightly
-            const rX = (Math.random() * 40) - 20;
-            noteDisplay.style.left = `calc(50% + ${rX}px)`;
-            
-            noteDisplay.classList.add('note-active');
+        function spawnFloatingNote() {
+            const el = document.createElement('div');
+            el.className = 'float-note';
+            // Randomize text and X position
+            el.innerText = noteTexts[Math.floor(Math.random() * noteTexts.length)];
+            const rX = Math.floor(Math.random() * 80) - 40; // -40 to +40 px
+            el.style.left = `calc(50% + ${rX}px)`;
+            el.style.top = `60%`;
+
+            noteContainer.appendChild(el);
+
+            // Clean up DOM after animation finishes
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 800);
         }
 
-        function handleInteract(e) {
-            e.preventDefault(); // Prevent zoom/scroll
-            if(!isAudioInit) return;
-            
+        // Manual Interaction
+        function handleManualHit(e) {
+            e.preventDefault();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            stopEngine(); // Stop demo if user interacts manually
             playBandhoSound();
-            triggerAnimation();
         }
 
-        // Interaction Listeners (Touch & Click)
-        clickArea.addEventListener('mousedown', handleInteract);
-        clickArea.addEventListener('touchstart', handleInteract, {passive: false});
-        // Key press support (Spacebar)
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && isAudioInit) {
-                playBandhoSound();
-                triggerAnimation();
-            }
-        });
+        clickArea.addEventListener('mousedown', handleManualHit);
+        clickArea.addEventListener('touchstart', handleManualHit, {passive: false});
 
-        // --- Recording Logic ---
-        const recordBtn = document.getElementById('recordBtn');
-        const playBtn = document.getElementById('playBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const recText = document.getElementById('recText');
-        const recIcon = document.getElementById('recIcon');
+        // --- Global Playback Engine (Demos & Sequencer) ---
+        let engineTimeout = null;
+        let isPlaying = false;
 
-        recordBtn.addEventListener('click', () => {
-            if (!isRecording) {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        });
-
-        function startRecording() {
-            recordedChunks = [];
-            // Create recorder from the WebAudio destination
-            // Note: mimeType support varies. browser will pick default (usually webm/opus)
-            const options = { mimeType: 'audio/webm' };
-            
-            try {
-                mediaRecorder = new MediaRecorder(dest.stream, options);
-            } catch (e) {
-                // Fallback for Safari/Older browsers
-                mediaRecorder = new MediaRecorder(dest.stream);
-            }
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
-                audioUrl = URL.createObjectURL(audioBlob);
-                playBtn.disabled = false;
-                downloadBtn.disabled = false;
-            };
-
-            mediaRecorder.start();
-            isRecording = true;
-            
-            // UI Update
-            recordBtn.classList.replace('btn-red', 'btn-outline');
-            recordBtn.style.borderColor = '#ff5252';
-            recordBtn.style.color = '#ff5252';
-            recText.textContent = "หยุดอัด (Stop)";
-            recIcon.classList.add('animate-pulse');
-            
-            playBtn.disabled = true;
-            downloadBtn.disabled = true;
+        function stopEngine() {
+            if (engineTimeout) clearTimeout(engineTimeout);
+            isPlaying = false;
+            stopDemoBtn.disabled = true;
+            document.getElementById('playSeqBtn').innerHTML = '▶ เล่นโน้ต';
+            document.getElementById('playSeqBtn').classList.replace('btn-red', 'btn-gold');
         }
 
-        function stopRecording() {
-            mediaRecorder.stop();
-            isRecording = false;
-
-            // UI Update
-            recordBtn.classList.replace('btn-outline', 'btn-red');
-            recordBtn.style.borderColor = '';
-            recordBtn.style.color = '';
-            recText.textContent = "อัดเสียง (Rec)";
-            recIcon.classList.remove('animate-pulse');
-        }
-
-        playBtn.addEventListener('click', () => {
-            if (!audioUrl) return;
-            const audio = new Audio(audioUrl);
-            audio.play();
-        });
-
-        downloadBtn.addEventListener('click', () => {
-            if (!audioUrl) return;
-            const a = document.createElement('a');
-            a.href = audioUrl;
-            a.download = `bandho-recording-${Date.now()}.webm`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        });
-
-        // --- Visualizer / Note Toggle ---
-        const canvas = document.getElementById('visualizer');
-        const canvasCtx = canvas.getContext('2d');
-        const noteToggle = document.getElementById('noteToggle');
-        let analyser;
-        let showNotes = true;
-
-        // Resize canvas
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        noteToggle.addEventListener('click', () => {
-            showNotes = !showNotes;
-            const knob = noteToggle.querySelector('div');
-            if (showNotes) {
-                noteToggle.classList.add('bg-green-500');
-                noteToggle.classList.remove('bg-gray-500');
-                knob.style.transform = 'translateX(0)';
-                knob.style.left = 'auto';
-                knob.style.right = '4px';
-            } else {
-                noteToggle.classList.remove('bg-green-500');
-                noteToggle.classList.add('bg-gray-500');
-                knob.style.transform = 'translateX(-24px)';
-            }
-        });
-
-        function setupVisualizer() {
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 64; // Low res for simple bars
-            masterGain.connect(analyser); // Listen to master out
+        function playSequenceData(sequenceString, stepMs) {
+            stopEngine();
+            if (!isAudioInit) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
+            isPlaying = true;
+            stopDemoBtn.disabled = false;
+            
+            const steps = sequenceString.split('');
+            let currentIndex = 0;
 
-            function draw() {
-                requestAnimationFrame(draw);
-                analyser.getByteFrequencyData(dataArray);
-
-                canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)'; // Fade effect
-                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-                const barWidth = (canvas.width / bufferLength) * 2.5;
-                let barHeight;
-                let x = 0;
-
-                for(let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i] / 2;
-                    // Gold color bars
-                    canvasCtx.fillStyle = `rgb(${barHeight + 100}, ${barHeight + 150}, 50)`;
-                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-
-                    x += barWidth + 1;
+            function nextStep() {
+                if (!isPlaying) return;
+                
+                if (currentIndex >= steps.length) {
+                    stopEngine(); // Auto stop at end
+                    return;
                 }
+
+                const note = steps[currentIndex];
+                if (note === 'X') {
+                    playBandhoSound();
+                }
+
+                currentIndex++;
+                engineTimeout = setTimeout(nextStep, stepMs);
             }
-            draw();
+
+            nextStep();
+        }
+
+        // --- Demo Songs Data ---
+        // X = Hit, - = Rest.
+        const demos = {
+            'roll': { data: 'XXXXXXXXXXXXXXXX', speed: 120 }, // Fast continuous
+            'elephant': { data: 'X---X---X-X-X---X---X---X-X-X---', speed: 300 }, // Slow steady
+            'ramwong': { data: 'X--XX--XX--XX--XX--XX--XX--XX--X', speed: 200 } // Groove
+        };
+
+        window.playDemo = function(type) {
+            const demo = demos[type];
+            if(demo) playSequenceData(demo.data, demo.speed);
+        }
+
+        // --- Sequencer Logic ---
+        let userSequence = [];
+        const seqDisplay = document.getElementById('seqDisplay');
+
+        function updateSeqDisplay() {
+            if (userSequence.length === 0) {
+                seqDisplay.innerText = '...รอรับโน้ต...';
+            } else {
+                seqDisplay.innerText = userSequence.join('');
+            }
+            // Auto scroll to right
+            seqDisplay.scrollLeft = seqDisplay.scrollWidth;
+        }
+
+        window.addNote = function(note) {
+            userSequence.push(note);
+            updateSeqDisplay();
+        }
+
+        window.removeNote = function() {
+            userSequence.pop();
+            updateSeqDisplay();
+        }
+
+        window.clearSeq = function() {
+            userSequence = [];
+            updateSeqDisplay();
+        }
+
+        window.playSequence = function() {
+            const btn = document.getElementById('playSeqBtn');
+            
+            if (isPlaying) {
+                stopEngine();
+            } else {
+                if (userSequence.length === 0) return;
+                btn.innerHTML = '⏹ หยุดเล่น';
+                btn.classList.replace('btn-gold', 'btn-red');
+                playSequenceData(userSequence.join(''), 250); // Default 250ms per step
+            }
         }
 
     </script>
