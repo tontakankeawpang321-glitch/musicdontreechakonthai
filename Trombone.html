@@ -3,273 +3,555 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Bass Trombone</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --gold:#e8c84a;--gold-dark:#9a7a1a;
-  --bg:#0a0a0c;--surface:#141418;--surface2:#1e1e26;
-  --red:#e85555;--blue:#4a90e8;--text:#e0e0e0;--dim:#555;
-}
-html,body{
-  height:100%;width:100%;overflow:hidden;
-  background:var(--bg);color:var(--text);
-  font-family:'Oswald',sans-serif;
-  touch-action:none;user-select:none;
-  -webkit-user-select:none;overscroll-behavior:none;
-}
-#app{display:flex;flex-direction:column;height:100dvh;width:100vw}
-#topbar{
-  flex:none;background:var(--surface);
-  border-bottom:1px solid #1e1e26;
-  padding:10px 14px 8px;
-  display:flex;flex-direction:column;gap:8px;
-}
-.top-row{display:flex;align-items:center;gap:10px}
-.brand{font-size:1rem;font-weight:700;letter-spacing:2px;color:var(--gold);flex:none}
-#note-display{
-  flex:1;text-align:center;font-family:'Share Tech Mono',monospace;font-size:1.6rem;
-  color:var(--gold);background:var(--surface2);border:1px solid var(--gold-dark);
-  border-radius:8px;padding:4px 0;transition:all .12s;letter-spacing:2px;
-}
-#note-display.on{background:var(--gold-dark);color:#fff;box-shadow:0 0 16px rgba(232,200,74,.4)}
-.btn-row{display:flex;gap:8px}
-.big-btn{
-  flex:1;height:48px;border-radius:10px;border:2px solid transparent;
-  font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;transition:transform .1s;
-  display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;
-}
-.big-btn:active{transform:scale(.95)}
-.btn-rec{border-color:var(--red);color:var(--red)}
-.btn-rec.on{background:var(--red);color:#fff}
-.btn-stop{border-color:#777;color:#aaa}
-.btn-dl{border-color:var(--blue);color:var(--blue)}
-.btn-dl:disabled{opacity:.3}
-.rdot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
-.btn-rec.on .rdot{animation:rb 1s infinite}
-@keyframes rb{0%,100%{opacity:1}50%{opacity:.2}}
-.oct-fx-row{display:flex;gap:8px}
-.seg-group{display:flex;border-radius:8px;overflow:hidden;border:1px solid #2a2a2a;flex:1}
-.seg-btn{
-  flex:1;height:42px;background:var(--surface2);border:none;border-right:1px solid #2a2a2a;
-  color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.72rem;font-weight:700;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;letter-spacing:1px;
-}
-.seg-btn:last-child{border-right:none}
-.seg-btn.on{background:rgba(232,200,74,.15);color:var(--gold)}
-.fx-group{display:flex;border-radius:8px;overflow:hidden;border:1px solid #2a2a2a}
-.fx-btn{
-  width:56px;height:42px;background:var(--surface2);border:none;border-right:1px solid #2a2a2a;
-  color:var(--dim);font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:700;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;
-  letter-spacing:1px;text-transform:uppercase;
-}
-.fx-btn:last-child{border-right:none}
-.fx-btn.on{background:rgba(232,200,74,.13);color:var(--gold)}
+<title>Bass Trombone Premium Synthesizer</title>
+<!-- Tailwind CSS for modern responsive layout styling -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Typography and FontAwesome for quality icons -->
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-#play-area{
-  flex:1;position:relative;overflow:hidden;
-  background:linear-gradient(to bottom,#090909 0%,#111116 50%,#090909 100%);
-}
-.zone{position:absolute;left:0;right:0;display:flex;align-items:center;cursor:pointer}
-.zone-line{flex:1;height:1px;background:rgba(232,200,74,.08);transition:background .1s,box-shadow .1s}
-.zone.active .zone-line{background:var(--gold);box-shadow:0 0 12px rgba(232,200,74,.45)}
-.zone-label{
-  position:absolute;right:16px;font-family:'Share Tech Mono',monospace;font-size:.72rem;
-  color:rgba(232,200,74,.3);pointer-events:none;white-space:nowrap;transition:color .1s;
-  transform:translateY(-50%);top:50%;
-}
-.zone.active .zone-label{color:var(--gold)}
-.zone-pos{
-  position:absolute;left:16px;font-family:'Share Tech Mono',monospace;font-size:.65rem;
-  color:rgba(232,200,74,.18);pointer-events:none;transform:translateY(-50%);top:50%;transition:color .1s;
-}
-.zone.active .zone-pos{color:rgba(232,200,74,.6)}
-#thumb{
-  position:absolute;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;
-  background:radial-gradient(circle at 38% 35%,#fff8dc,#e8c84a,#9a7a1a);border:3px solid #b5891e;
-  box-shadow:0 4px 22px rgba(0,0,0,.7),0 0 0 8px rgba(232,200,74,.06);
-  pointer-events:none;opacity:0;transition:opacity .18s;will-change:transform;top:50%;z-index:10;
-}
-#thumb.show{opacity:1}
-#thumb::after{
-  content:'';position:absolute;inset:10px;border-radius:50%;
-  background:radial-gradient(circle at 38% 38%,rgba(255,255,220,.35),transparent);
-}
-#glow{
-  position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse at 50% 35%,rgba(180,140,30,.08),transparent 65%);
-  opacity:0;transition:opacity .2s;
-}
-#glow.on{opacity:1}
-#big-pos{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  font-family:'Share Tech Mono',monospace;font-size:7rem;font-weight:700;
-  color:rgba(232,200,74,.03);pointer-events:none;line-height:1;transition:color .1s;
-}
-#big-pos.lit{color:rgba(232,200,74,.09)}
-#hint{
-  position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
-  font-size:.62rem;letter-spacing:2px;color:rgba(255,255,255,.15);
-  pointer-events:none;text-align:center;line-height:2;
-}
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  :root {
+    --gold: #e8c84a;
+    --gold-dark: #9a7a1a;
+    --bg: #0d0d11;
+    --surface: #161620;
+    --surface2: #222230;
+    --red: #f05252;
+    --blue: #3b82f6;
+    --text: #f3f4f6;
+  }
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Oswald', sans-serif;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+  }
+  /* Customized Scrollbar for safe scroll container on short screens */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+  }
+  
+  /* Slide zones and slider styles */
+  .zone {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .zone-line {
+    flex: 1;
+    height: 1.5px;
+    background: rgba(232, 200, 74, 0.08);
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .zone.active .zone-line {
+    background: var(--gold);
+    box-shadow: 0 0 15px rgba(232, 200, 74, 0.6);
+  }
+  .zone-label {
+    position: absolute;
+    right: 18px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: rgba(232, 200, 74, 0.3);
+    pointer-events: none;
+    transform: translateY(-50%);
+    top: 50%;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .zone.active .zone-label {
+    color: var(--gold);
+    transform: translateY(-50%) scale(1.15);
+  }
+  .zone-pos {
+    position: absolute;
+    left: 18px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(232, 200, 74, 0.18);
+    pointer-events: none;
+    transform: translateY(-50%);
+    top: 50%;
+    transition: color 0.15s;
+  }
+  .zone.active .zone-pos {
+    color: rgba(232, 200, 74, 0.75);
+  }
+
+  /* Handle/Slide Controller thumb */
+  #thumb {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fffdf0, #e8c84a 50%, #9a7a1a 90%);
+    border: 3.5px solid #b5891e;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.8), 0 0 0 8px rgba(232, 200, 74, 0.1);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    will-change: transform, top;
+    z-index: 10;
+  }
+  #thumb.show {
+    opacity: 1;
+  }
+  #thumb::after {
+    content: '';
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.45), transparent 75%);
+  }
+
+  /* Audio spectrum and ambient glow glow */
+  #glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 40%, rgba(232, 200, 74, 0.08), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  #glow.on {
+    opacity: 1;
+  }
+
+  /* Floating Notes animations */
+  .floating-note {
+    position: absolute;
+    font-size: 1.4rem;
+    color: var(--gold);
+    pointer-events: none;
+    animation: floatUp 1.8s forwards ease-out;
+    z-index: 50;
+    text-shadow: 0 0 8px rgba(232, 200, 74, 0.6);
+  }
+  @keyframes floatUp {
+    0% {
+      transform: translate(-50%, -50%) translateY(0) scale(0.6) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) translateY(-180px) scale(1.3) rotate(20deg);
+      opacity: 0;
+    }
+  }
+
+  /* Pulse red dot for record */
+  .pulse-rec {
+    animation: pulse 1s infinite alternate;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0.3; }
+  }
+  
+  /* Range Sliders Premium Styling */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #111;
+    border-radius: 8px;
+    height: 6px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    border: 2px solid #000;
+  }
 </style>
 </head>
-<body>
-<div id="app">
-  <div id="topbar">
-    <div class="top-row">
-      <div class="brand">🎺 BASS TROMBONE</div>
-      <div id="note-display">——</div>
-    </div>
-    <div class="btn-row">
-      <button class="big-btn btn-rec" id="btn-rec"><div class="rdot"></div>REC</button>
-      <button class="big-btn btn-stop" id="btn-stop" style="display:none">⏹ STOP</button>
-      <button class="big-btn btn-dl" id="btn-dl" disabled>⬇ SAVE</button>
-    </div>
-    <div class="oct-fx-row">
-      <div class="seg-group" id="oct-group">
-        <button class="seg-btn" data-r="high">HIGH</button>
-        <button class="seg-btn on" data-r="mid">MID</button>
-        <button class="seg-btn" data-r="low">LOW</button>
+
+<body class="bg-[#0d0d11] text-gray-200">
+<div id="app" class="flex flex-col h-[100dvh] w-screen overflow-hidden">
+  
+  <!-- TOP CONTROL SECTION -->
+  <div id="topbar" class="flex-none bg-[#14141e] border-b border-[#1f1f2e] p-3 flex flex-col gap-2 z-20">
+    
+    <!-- Top Row: Brand & Active Note -->
+    <div class="flex items-center justify-between gap-3">
+      <div class="brand flex items-center gap-1.5 font-bold tracking-wider text-sm sm:text-base text-[#e8c84a]">
+        <i class="fa-solid fa-music text-lg"></i>
+        <span>BASS TROMBONE PRO</span>
       </div>
-      <div class="fx-group">
-        <button class="fx-btn on" id="btn-vib">VIB</button>
-        <button class="fx-btn" id="btn-mute">MUTE</button>
+      <div id="note-display" class="w-24 text-center font-mono text-xl sm:text-2xl font-bold text-[#e8c84a] bg-[#1e1e2c] border border-[#9a7a1a] rounded-lg py-1 px-3 transition-all duration-150 shadow-inner">
+        ——
       </div>
     </div>
+
+    <!-- Recorder & Main Options Area -->
+    <div class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+      <div class="flex gap-2 flex-1 w-full sm:w-auto">
+        <button id="btn-rec" class="flex-1 h-11 bg-red-950 border border-red-500/50 hover:bg-red-900 rounded-lg text-red-500 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 transition active:scale-95">
+          <span class="w-3 h-3 bg-red-500 rounded-full pulse-rec"></span>REC
+        </button>
+        <button id="btn-stop" class="hidden flex-1 h-11 bg-gray-800 border border-gray-600 rounded-lg text-gray-300 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 transition active:scale-95">
+          <i class="fa-solid fa-square"></i>STOP
+        </button>
+        <button id="btn-dl" disabled class="flex-1 h-11 bg-[#1e1e2c] border border-blue-500/30 text-blue-400 hover:border-blue-400 disabled:opacity-30 rounded-lg font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-1.5 transition active:scale-95">
+          <i class="fa-solid fa-download"></i>SAVE
+        </button>
+      </div>
+
+      <!-- Quick FX toggles -->
+      <div class="flex gap-2 w-full sm:w-auto">
+        <button id="btn-vib" class="flex-1 sm:w-16 h-11 bg-[#222230] border border-[#2a2a3e] rounded-lg text-xs font-bold text-gray-400 active:scale-95 transition">VIB</button>
+        <button id="btn-mute" class="flex-1 sm:w-16 h-11 bg-[#222230] border border-[#2a2a3e] rounded-lg text-xs font-bold text-gray-400 active:scale-95 transition">MUTE</button>
+      </div>
+    </div>
+
+    <!-- Lower Topbar Panel: Harmonics, Advanced Button, Demo Selector -->
+    <div class="flex flex-col gap-2 border-t border-[#1f1f2e] pt-2">
+      <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
+        
+        <!-- Octave / Register Slider Group -->
+        <div class="flex items-center gap-2 flex-1">
+          <span class="text-[10px] sm:text-xs text-gray-400 font-semibold tracking-wider">REGISTER</span>
+          <div class="flex rounded-lg overflow-hidden border border-[#2e2e42] flex-1 bg-[#181824]">
+            <button class="register-btn flex-1 py-1.5 text-xs font-mono text-gray-500" data-reg="high">HIGH</button>
+            <button class="register-btn flex-1 py-1.5 text-xs font-mono text-gray-500 border-l border-r border-[#2e2e42]" data-reg="mid">MID</button>
+            <button class="register-btn flex-1 py-1.5 text-xs font-mono text-gray-500" data-reg="low">LOW</button>
+          </div>
+        </div>
+
+        <!-- Right action buttons -->
+        <div class="flex items-center gap-2">
+          <!-- Advanced Settings Drawer Toggle -->
+          <button id="btn-adv" class="flex-1 sm:flex-initial h-9 px-3 bg-[#1e1e2a] hover:bg-[#28283a] text-[#e8c84a] text-xs font-bold rounded-lg flex items-center justify-center gap-2 border border-[#e8c84a]/20 transition active:scale-95">
+            <i class="fa-solid fa-sliders"></i>
+            <span>ADVANCED SOUNDS</span>
+          </button>
+          
+          <!-- Stop Song (appears only when demo is playing) -->
+          <button id="btn-stop-song" class="hidden h-9 px-3 bg-red-600 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 animate-bounce shadow-lg">
+            <i class="fa-solid fa-stop-circle"></i> STOP DEMO
+          </button>
+        </div>
+      </div>
+
+      <!-- Demo Songs Selector Row -->
+      <div class="flex items-center gap-2 bg-[#181822] p-1.5 rounded-lg border border-[#252535] overflow-x-auto custom-scrollbar">
+        <span class="text-[10px] text-[#e8c84a] font-bold tracking-wider shrink-0 mr-1">DEMO SONGS:</span>
+        <button class="song-btn px-2.5 py-1 text-xs bg-[#222232] rounded hover:bg-[#303045] text-gray-300 border border-transparent whitespace-nowrap transition" data-song="valkyries">⚔️ Valkyries</button>
+        <button class="song-btn px-2.5 py-1 text-xs bg-[#222232] rounded hover:bg-[#303045] text-gray-300 border border-transparent whitespace-nowrap transition" data-song="imperial">🌌 Star Wars</button>
+        <button class="song-btn px-2.5 py-1 text-xs bg-[#222232] rounded hover:bg-[#303045] text-gray-300 border border-transparent whitespace-nowrap transition" data-song="danny">🍀 Danny Boy</button>
+      </div>
+    </div>
+
+    <!-- COLLAPSED ADVANCED PANEL (Accordion Mode) -->
+    <div id="adv-panel" class="hidden flex-col gap-3 bg-[#111118] border border-[#2a2a3e] p-3 rounded-lg mt-1 max-h-[160px] overflow-y-auto custom-scrollbar">
+      <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+        <!-- Brass Bite / Waveshaping Saturation -->
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-[11px] text-gray-400">
+            <span>BRASS BITE (DRIVE)</span>
+            <span id="lbl-bite" class="text-[#e8c84a] font-mono">2.5</span>
+          </div>
+          <input type="range" id="param-bite" min="0.1" max="10" step="0.1" value="2.5">
+        </div>
+
+        <!-- Lowpass Filter Cutoff -->
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-[11px] text-gray-400">
+            <span>FILTER CUTOFF</span>
+            <span id="lbl-cutoff" class="text-[#e8c84a] font-mono">3500Hz</span>
+          </div>
+          <input type="range" id="param-cutoff" min="400" max="8000" step="100" value="3500">
+        </div>
+
+        <!-- Vibrato LFO Speed -->
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-[11px] text-gray-400">
+            <span>VIBRATO LFO RATE</span>
+            <span id="lbl-lfo" class="text-[#e8c84a] font-mono">4.8 Hz</span>
+          </div>
+          <input type="range" id="param-lfo" min="1.5" max="12" step="0.1" value="4.8">
+        </div>
+
+        <!-- Reverb Spatial Depth -->
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-[11px] text-gray-400">
+            <span>REVERB DEPTH (WET)</span>
+            <span id="lbl-reverb" class="text-[#e8c84a] font-mono">15%</span>
+          </div>
+          <input type="range" id="param-reverb" min="0" max="80" step="5" value="15">
+        </div>
+
+        <!-- Attack Time -->
+        <div class="flex flex-col gap-1 col-span-2 sm:col-span-1">
+          <div class="flex justify-between text-[11px] text-gray-400">
+            <span>SLIDE ATTACK TIME</span>
+            <span id="lbl-attack" class="text-[#e8c84a] font-mono">0.05s</span>
+          </div>
+          <input type="range" id="param-attack" min="0.01" max="0.5" step="0.01" value="0.05">
+        </div>
+      </div>
+    </div>
+
   </div>
-  <div id="play-area">
+
+  <!-- PLAY AREA / INTERACTIVE TROMBONE SLIDE -->
+  <div id="play-area" class="flex-1 relative overflow-hidden bg-gradient-to-b from-[#060608] via-[#101016] to-[#060608]">
     <div id="glow"></div>
-    <div id="big-pos">—</div>
+    <div id="big-pos" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-8xl font-black text-gray-400/5 select-none transition-colors duration-100 uppercase">
+      —
+    </div>
+    
+    <!-- Trombone Gold Handle Indicator/Visual Slide -->
     <div id="thumb"></div>
-    <div id="hint">TOUCH &amp; DRAG<br>▲ HIGH · LOW ▼</div>
+    
+    <!-- UI Visual Instructions Guide Overlay -->
+    <div id="hint" class="absolute bottom-5 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs tracking-[3px] text-white/20 pointer-events-none text-center leading-relaxed">
+      TOUCH &amp; DRAG SLIDE VERTICALLY<br>
+      ▲ UP FOR HIGHER NOTES · DOWN FOR LOW POSITIONS ▼
+    </div>
   </div>
+
 </div>
+
 <script>
-// ── NOTE TABLES ──────────────────────────────────────────────────────────
+// ── REGISTER / HARMONIC NOTE CONFIGURATIONS ───────────────────────────
+// Standard trombone positions are modeled across three main ranges
 const HARMONICS = {
   low: [
-    {pos:1,note:"Bb1",freq:58.27},{pos:2,note:"A1",freq:55.00},
-    {pos:3,note:"Ab1",freq:51.91},{pos:4,note:"G1",freq:49.00},
-    {pos:5,note:"Gb1",freq:46.25},{pos:6,note:"F1",freq:43.65},
-    {pos:7,note:"E1", freq:41.20}
+    {pos:1, note:"Bb1", freq:58.27}, {pos:2, note:"A1", freq:55.00},
+    {pos:3, note:"Ab1", freq:51.91}, {pos:4, note:"G1", freq:49.00},
+    {pos:5, note:"Gb1", freq:46.25}, {pos:6, note:"F1", freq:43.65},
+    {pos:7, note:"E1",  freq:41.20}
   ],
   mid: [
-    {pos:1,note:"Bb2",freq:116.54},{pos:2,note:"A2",freq:110.00},
-    {pos:3,note:"Ab2",freq:103.83},{pos:4,note:"G2",freq:98.00},
-    {pos:5,note:"Gb2",freq:92.50}, {pos:6,note:"F2",freq:87.31},
-    {pos:7,note:"E2", freq:82.41}
+    {pos:1, note:"Bb2", freq:116.54}, {pos:2, note:"A2", freq:110.00},
+    {pos:3, note:"Ab2", freq:103.83}, {pos:4, note:"G2", freq:98.00},
+    {pos:5, note:"Gb2", freq:92.50},  {pos:6, note:"F2", freq:87.31},
+    {pos:7, note:"E2",  freq:82.41}
   ],
   high: [
-    {pos:1,note:"Bb3",freq:233.08},{pos:2,note:"A3",freq:220.00},
-    {pos:3,note:"Ab3",freq:207.65},{pos:4,note:"G3",freq:196.00},
-    {pos:5,note:"Gb3",freq:185.00},{pos:6,note:"F3",freq:174.61},
-    {pos:7,note:"E3", freq:164.81}
+    {pos:1, note:"Bb3", freq:233.08}, {pos:2, note:"A3", freq:220.00},
+    {pos:3, note:"Ab3", freq:207.65}, {pos:4, note:"G3", freq:196.00},
+    {pos:5, note:"Gb3", freq:185.00}, {pos:6, note:"F3", freq:174.61},
+    {pos:7, note:"E3",  freq:164.81}
   ]
 };
-let reg = 'mid';
+let reg = 'mid'; // Selected playing register
 
-// ── AUDIO ─────────────────────────────────────────────────────────────────
-// Strategy: OscillatorNode additive synthesis
-// Bass trombone tone = mostly odd harmonics + warm filter
-// NO ScriptProcessor, NO Worklet — pure Web Audio graph
+// ── THREE CLASSICAL DEMO SONGS SEQUENCES ──────────────────────────────
+const DEMO_SONGS = {
+  valkyries: [
+    { reg: "low", note: "B1", dur: 320, slide: 7 },
+    { reg: "mid", note: "E2", dur: 160, slide: 7 },
+    { reg: "mid", note: "G2", dur: 160, slide: 4 },
+    { reg: "mid", note: "B2", dur: 480, slide: 1 },
+    { reg: "high", note: "E3", dur: 800, slide: 7 },
+    { reg: "high", note: "E3", dur: 200, slide: 7 },
+    { reg: "high", note: "G3", dur: 180, slide: 4 },
+    { reg: "high", note: "B3", dur: 400, slide: 1 },
+    { reg: "high", note: "E3", dur: 900, slide: 7 }
+  ],
+  imperial: [
+    { reg: "mid", note: "G2", dur: 450, slide: 4 },
+    { reg: "mid", note: "G2", dur: 450, slide: 4 },
+    { reg: "mid", note: "G2", dur: 450, slide: 4 },
+    { reg: "mid", note: "Eb2", dur: 320, slide: 7 },
+    { reg: "mid", note: "Bb2", dur: 140, slide: 1 },
+    { reg: "mid", note: "G2", dur: 450, slide: 4 },
+    { reg: "mid", note: "Eb2", dur: 320, slide: 7 },
+    { reg: "mid", note: "Bb2", dur: 140, slide: 1 },
+    { reg: "mid", note: "G2", dur: 800, slide: 4 },
+    { reg: "high", note: "D3", dur: 450, slide: 7 },
+    { reg: "high", note: "D3", dur: 450, slide: 7 },
+    { reg: "high", note: "D3", dur: 450, slide: 7 },
+    { reg: "high", note: "Eb3", dur: 320, slide: 5 },
+    { reg: "mid", note: "Bb2", dur: 140, slide: 1 },
+    { reg: "mid", note: "Gb2", dur: 450, slide: 5 },
+    { reg: "mid", note: "Eb2", dur: 320, slide: 7 },
+    { reg: "mid", note: "Bb2", dur: 140, slide: 1 },
+    { reg: "mid", note: "G2", dur: 800, slide: 4 }
+  ],
+  danny: [
+    { reg: "mid", note: "E2", dur: 250, slide: 7 },
+    { reg: "mid", note: "F2", dur: 250, slide: 6 },
+    { reg: "mid", note: "G2", dur: 500, slide: 4 },
+    { reg: "mid", note: "F2", dur: 250, slide: 6 },
+    { reg: "mid", note: "E2", dur: 250, slide: 7 },
+    { reg: "mid", note: "F2", dur: 500, slide: 6 },
+    { reg: "mid", note: "A2", dur: 250, slide: 2 },
+    { reg: "mid", note: "G2", dur: 250, slide: 4 },
+    { reg: "mid", note: "E2", dur: 500, slide: 7 },
+    { reg: "mid", note: "A2", dur: 250, slide: 2 },
+    { reg: "mid", note: "F2", dur: 250, slide: 6 },
+    { reg: "mid", note: "Bb2", dur: 1000, slide: 1 }
+  ]
+};
+
+// ── AUDIO ROUTING & SYNTHESIS GRAPHS ──────────────────────────────────
 const AC = window.AudioContext || window.webkitAudioContext;
 let ctx = null, masterOut, recDest;
-let oscNodes = [];   // active oscillators
-let envNode  = null; // master gain envelope
-let lfoOsc   = null, lfoGain = null;
-let isOn = false, vibon = true, muteon = false;
+let oscNodes = [];
+let envNode = null;
+let lfoOsc = null, lfoGain = null;
+let shaperNode = null;
+let eq3Node = null;
+let delayWetNode = null;
+
+let isOn = false;
+let vibon = true;
+let muteon = false;
 let currentFreq = 110;
 let mrec, mchunks = [], murl;
 
-// Bass trombone harmonic amplitudes (spectral profile)
-// Strong fundamental + 2nd, rolling off — warm/dark character
-const H_AMPS = [1.00, 0.75, 0.50, 0.28, 0.15, 0.08, 0.04, 0.02];
-//               f1    f2    f3    f4    f5    f6    f7    f8
+// Synthesis parameters configurable via Advanced panel
+let config = {
+  bite: 2.5,
+  cutoff: 3500,
+  lfoRate: 4.8,
+  reverb: 0.15,
+  attack: 0.05
+};
+
+// Trombone physical spectrum amplitudes: heavy f1 & f2, rapid rollout of higher harmonics
+const H_AMPS = [1.00, 0.78, 0.48, 0.28, 0.16, 0.09, 0.04, 0.01];
 
 function buildGraph() {
-  // Build once, reuse
   if (ctx) return;
   ctx = new AC();
 
-  // Master envelope gain (controls on/off + volume)
+  // Primary VCA Envelope Node
   envNode = ctx.createGain();
   envNode.gain.value = 0;
 
-  // Waveshaper: soft-clip for brass "bite"
-  // tanh curve — adds harmonics naturally like a brass mouthpiece
-  const shaper = ctx.createWaveShaper();
-  const n = 512, curve = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const x = (i * 2 / n) - 1;
-    curve[i] = Math.tanh(2.5 * x) / Math.tanh(2.5);
-  }
-  shaper.curve = curve;
-  shaper.oversample = '2x';
+  // Brass saturation using a Chebyshev wave shaper
+  shaperNode = ctx.createWaveShaper();
+  applyShaperCurve(config.bite);
+  shaperNode.oversample = '2x';
 
-  // HP filter — remove sub-bass mud
+  // Subharmonic hum cut highpass
   const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass'; hp.frequency.value = 40; hp.Q.value = 0.7;
+  hp.type = 'highpass'; 
+  hp.frequency.value = 40; 
+  hp.Q.value = 0.7;
 
-  // EQ1: Bass body boost ~150 Hz
+  // Heavy fundamental/body peaking equalizer at 150Hz
   const eq1 = ctx.createBiquadFilter();
-  eq1.type = 'peaking'; eq1.frequency.value = 150; eq1.Q.value = 0.9; eq1.gain.value = 6;
+  eq1.type = 'peaking'; 
+  eq1.frequency.value = 150; 
+  eq1.Q.value = 0.9; 
+  eq1.gain.value = 7;
 
-  // EQ2: Presence ~600 Hz
+  // Medium brass presence peaking EQ at 600Hz
   const eq2 = ctx.createBiquadFilter();
-  eq2.type = 'peaking'; eq2.frequency.value = 600; eq2.Q.value = 2.0; eq2.gain.value = 3;
+  eq2.type = 'peaking'; 
+  eq2.frequency.value = 600; 
+  eq2.Q.value = 2.0; 
+  eq2.gain.value = 4;
 
-  // EQ3: Cut harshness — bass trombone is dark
-  const eq3 = ctx.createBiquadFilter();
-  eq3.type = 'lowpass'; eq3.frequency.value = 3500; eq3.Q.value = 0.5;
+  // Instrument lowpass filter (representing mouthpiece & body acoustics)
+  eq3Node = ctx.createBiquadFilter();
+  eq3Node.type = 'lowpass'; 
+  eq3Node.frequency.value = config.cutoff; 
+  eq3Node.Q.value = 0.55;
 
-  // Compressor
+  // Compression limiter block
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -16; comp.ratio.value = 3;
-  comp.attack.value = 0.004; comp.release.value = 0.22;
+  comp.threshold.value = -14; 
+  comp.ratio.value = 4;
+  comp.attack.value = 0.003; 
+  comp.release.value = 0.25;
 
-  // Short room reverb (2 delay taps)
-  const dly1 = ctx.createDelay(0.1); dly1.delayTime.value = 0.018;
-  const dly2 = ctx.createDelay(0.15); dly2.delayTime.value = 0.040;
-  const fb1 = ctx.createGain(); fb1.gain.value = 0.14;
-  const fb2 = ctx.createGain(); fb2.gain.value = 0.10;
-  const wet = ctx.createGain(); wet.gain.value = 0.10;
-  const dry = ctx.createGain(); dry.gain.value = 1.0;
+  // Ambient delay reflections (stereo depth simulation)
+  const dly1 = ctx.createDelay(0.12); 
+  dly1.delayTime.value = 0.022;
+  const dly2 = ctx.createDelay(0.18); 
+  dly2.delayTime.value = 0.045;
+  const fb1 = ctx.createGain(); fb1.gain.value = 0.16;
+  const fb2 = ctx.createGain(); fb2.gain.value = 0.12;
+  
+  delayWetNode = ctx.createGain(); 
+  delayWetNode.gain.value = config.reverb;
+  const dry = ctx.createGain(); 
+  dry.gain.value = 1.0;
 
-  masterOut = ctx.createGain(); masterOut.gain.value = 0.88;
+  masterOut = ctx.createGain(); 
+  masterOut.gain.value = 0.90;
 
-  // Wire: envNode → shaper → hp → eq1 → eq2 → eq3 → dry+reverb → comp → masterOut → dest
-  envNode.connect(shaper);
-  shaper.connect(hp); hp.connect(eq1); eq1.connect(eq2); eq2.connect(eq3);
-  eq3.connect(dry);  dry.connect(comp);
-  eq3.connect(dly1); dly1.connect(fb1); fb1.connect(dly1); dly1.connect(wet);
-  eq3.connect(dly2); dly2.connect(fb2); fb2.connect(dly2); dly2.connect(wet);
-  wet.connect(comp);
+  // Routing Graph configuration
+  envNode.connect(shaperNode);
+  shaperNode.connect(hp); 
+  hp.connect(eq1); 
+  eq1.connect(eq2); 
+  eq2.connect(eq3Node);
+  
+  eq3Node.connect(dry);  
+  dry.connect(comp);
+  
+  eq3Node.connect(dly1); 
+  dly1.connect(fb1); 
+  fb1.connect(dly1); 
+  dly1.connect(delayWetNode);
+  
+  eq3Node.connect(dly2); 
+  dly2.connect(fb2); 
+  fb2.connect(dly2); 
+  dly2.connect(delayWetNode);
+  
+  delayWetNode.connect(comp);
   comp.connect(masterOut);
   masterOut.connect(ctx.destination);
 
+  // Connection nodes for Recorder module
   recDest = ctx.createMediaStreamDestination();
   masterOut.connect(recDest);
 
-  // LFO for vibrato
-  lfoOsc  = ctx.createOscillator();
-  lfoOsc.type = 'sine'; lfoOsc.frequency.value = 4.8;
-  lfoGain = ctx.createGain(); lfoGain.gain.value = 0;
-  lfoOsc.connect(lfoGain); lfoOsc.start();
+  // Low Frequency Oscillator (LFO) for warm vibrato
+  lfoOsc = ctx.createOscillator();
+  lfoOsc.type = 'sine'; 
+  lfoOsc.frequency.value = config.lfoRate;
+  
+  lfoGain = ctx.createGain(); 
+  lfoGain.gain.value = 0;
+  lfoOsc.connect(lfoGain); 
+  lfoOsc.start();
 
-  // Create oscillators for each harmonic (persistent, always running at ~0 gain)
+  // Array of harmonic oscillators forming rich synthesizer voice
   oscNodes = H_AMPS.map((amp, i) => {
     const h = i + 1;
     const osc = ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = currentFreq * h;
     const g = ctx.createGain();
-    g.gain.value = 0; // start silent
-    lfoGain.connect(osc.frequency); // vibrato modulates all oscs
+    g.gain.value = 0;
+    lfoGain.connect(osc.frequency);
     osc.connect(g);
     g.connect(envNode);
     osc.start();
@@ -277,6 +559,18 @@ function buildGraph() {
   });
 }
 
+// Applies responsive soft saturation/tanh curve to the synthesizer output
+function applyShaperCurve(biteAmount) {
+  if (!shaperNode) return;
+  const n = 512, curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2 / n) - 1;
+    curve[i] = Math.tanh(biteAmount * x) / Math.tanh(biteAmount);
+  }
+  shaperNode.curve = curve;
+}
+
+// Dynamic frequency modification matching slide slide interactions
 function setOscFreqs(freq, tau) {
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -286,50 +580,55 @@ function setOscFreqs(freq, tau) {
   });
 }
 
+// Adjust oscillator volume on/off sweeps
 function setOscGains(on) {
   if (!ctx) return;
   const t = ctx.currentTime;
-  const vol = muteon ? 0.45 : 0.80;
+  const vol = muteon ? 0.35 : 0.85;
   oscNodes.forEach(({ gain, baseAmp }) => {
     gain.gain.setTargetAtTime(on ? baseAmp * vol * 0.18 : 0, t, 0.02);
   });
 }
 
+// Synthesizer trigger on function
 function play(freq) {
   buildGraph();
   if (ctx.state === 'suspended') ctx.resume();
   currentFreq = freq;
-  setOscFreqs(freq, 0.04);
+  setOscFreqs(freq, config.attack);
 
   if (!isOn) {
     setOscGains(true);
-    // Envelope: attack
     const t = ctx.currentTime;
     envNode.gain.cancelScheduledValues(t);
     envNode.gain.setValueAtTime(0, t);
-    envNode.gain.linearRampToValueAtTime(1.1, t + 0.05);
-    envNode.gain.setTargetAtTime(1.0, t + 0.05, 0.06);
+    envNode.gain.linearRampToValueAtTime(1.1, t + config.attack);
+    envNode.gain.setTargetAtTime(1.0, t + config.attack, 0.06);
 
-    // Vibrato: delayed onset
+    // Warm delay start for vibrato to settle on hold notes
     if (vibon) {
       lfoGain.gain.setValueAtTime(0, t);
-      lfoGain.gain.setTargetAtTime(freq * 0.005, t + 0.28, 0.10);
+      lfoGain.gain.setTargetAtTime(freq * 0.005, t + 0.28, 0.12);
     }
 
     isOn = true;
     document.getElementById('glow').classList.add('on');
     document.getElementById('note-display').classList.add('on');
-    document.getElementById('hint').style.opacity = '0';
+    document.getElementById('hint').style.opacity = '0.04';
   }
 }
 
+// Slides frequency transition (smooth legato glide)
 function pitch(freq) {
   if (!isOn) return;
   currentFreq = freq;
-  setOscFreqs(freq, 0.03);
-  if (vibon) lfoGain.gain.setTargetAtTime(freq * 0.005, ctx.currentTime, 0.05);
+  setOscFreqs(freq, 0.035);
+  if (vibon) {
+    lfoGain.gain.setTargetAtTime(freq * 0.005, ctx.currentTime, 0.06);
+  }
 }
 
+// Synthesizer release trigger
 function stop() {
   if (!isOn) return;
   const t = ctx.currentTime;
@@ -337,47 +636,113 @@ function stop() {
   envNode.gain.setValueAtTime(envNode.gain.value, t);
   envNode.gain.linearRampToValueAtTime(0, t + 0.28);
   lfoGain.gain.setTargetAtTime(0, t, 0.03);
-  // Fade individual osc gains too
+  
   setOscGains(false);
   isOn = false;
   document.getElementById('glow').classList.remove('on');
   document.getElementById('note-display').classList.remove('on');
   document.getElementById('note-display').textContent = '——';
   document.getElementById('big-pos').textContent = '—';
-  document.getElementById('big-pos').classList.remove('lit');
+  document.getElementById('big-pos').classList.remove('text-[#e8c84a]/20');
   clearZones();
 }
 
-// ── ZONES ─────────────────────────────────────────────────────────────────
+// ── INTERACTIVE SLIDE ZONES CALCULATION ──────────────────────────────────
 let zones = [];
 function buildZones() {
   const area = document.getElementById('play-area');
+  
+  // Clean past zones elements
   area.querySelectorAll('.zone').forEach(z => z.remove());
-  const H = area.clientHeight, pos = HARMONICS[reg], n = pos.length;
+  
+  const H = area.clientHeight;
+  const pos = HARMONICS[reg];
+  const n = pos.length;
   zones = [];
+  
   pos.forEach((p, i) => {
-    const yPct = 6 + (i / (n-1)) * 86;
+    const yPct = 8 + (i / (n-1)) * 82; // Calculate height boundaries with margins
     const yPx  = H * yPct / 100;
-    const half = H * (86 / (n-1)) / 100 / 2;
-    const z = document.createElement('div'); z.className = 'zone';
-    z.style.top = (yPx - half) + 'px'; z.style.height = (half * 2) + 'px';
-    const line = document.createElement('div'); line.className = 'zone-line';
-    const lbl  = document.createElement('div'); lbl.className  = 'zone-label'; lbl.textContent = p.note;
-    const num  = document.createElement('div'); num.className  = 'zone-pos';   num.textContent = p.pos;
-    z.appendChild(line); z.appendChild(lbl); z.appendChild(num);
+    const half = H * (82 / (n-1)) / 100 / 2;
+    
+    const z = document.createElement('div'); 
+    z.className = 'zone';
+    z.style.top = (yPx - half) + 'px'; 
+    z.style.height = (half * 2) + 'px';
+    
+    const line = document.createElement('div'); 
+    line.className = 'zone-line';
+    
+    const lbl  = document.createElement('div'); 
+    lbl.className  = 'zone-label'; 
+    lbl.textContent = p.note;
+    
+    const num  = document.createElement('div'); 
+    num.className  = 'zone-pos';   
+    num.textContent = p.pos;
+    
+    z.appendChild(line); 
+    z.appendChild(lbl); 
+    z.appendChild(num);
+    
     area.insertBefore(z, document.getElementById('thumb'));
     zones.push({ el: z, y: yPx, ...p });
   });
 }
-function clearZones() { zones.forEach(z => z.el.classList.remove('active')); }
 
-// ── TOUCH ─────────────────────────────────────────────────────────────────
+function clearZones() { 
+  zones.forEach(z => z.el.classList.remove('active')); 
+}
+
+// Spawns floating interactive music notes symbols matching play heights
+function spawnFloatingNote(yPos) {
+  if (!isOn) return;
+  const area = document.getElementById('play-area');
+  const symbols = ['♩', '♪', '♫', '♬'];
+  const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+  
+  const noteEl = document.createElement('div');
+  noteEl.className = 'floating-note font-mono';
+  noteEl.textContent = symbol;
+  
+  // Position notes right at the virtual slide column
+  noteEl.style.top = `${yPos}px`;
+  noteEl.style.left = `${50 + (Math.random() * 20 - 10)}%`;
+  
+  area.appendChild(noteEl);
+  
+  // Garbage collection
+  setTimeout(() => {
+    noteEl.remove();
+  }, 1800);
+}
+
+// Particle emitter loop
+let particlesInterval = null;
+function startNotesParticles(clientY) {
+  if (particlesInterval) clearInterval(particlesInterval);
+  particlesInterval = setInterval(() => {
+    const rect = playArea.getBoundingClientRect();
+    const clampY = Math.max(0, Math.min(rect.height, clientY - rect.top));
+    spawnFloatingNote(clampY);
+  }, 300);
+}
+function stopNotesParticles() {
+  if (particlesInterval) {
+    clearInterval(particlesInterval);
+    particlesInterval = null;
+  }
+}
+
+// ── INTERACTIVE TOUCH & SLIDE DETECTORS ──────────────────────────────────
 const playArea = document.getElementById('play-area');
 const thumb    = document.getElementById('thumb');
 let touching = false;
 
 function handle(e, isStart) {
   e.preventDefault();
+  if (isDemoPlaying) return; // Prevent user input from interrupting active demo song
+  
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   const rect    = playArea.getBoundingClientRect();
   const H       = rect.height;
@@ -386,13 +751,20 @@ function handle(e, isStart) {
   thumb.style.top = clampY + 'px';
   thumb.classList.add('show');
 
+  // Binary locate optimal snapping line zone
   let best = null, bestD = Infinity;
-  zones.forEach(z => { const d = Math.abs(clampY - z.y); if (d < bestD) { bestD = d; best = z; } });
+  zones.forEach(z => { 
+    const d = Math.abs(clampY - z.y); 
+    if (d < bestD) { 
+      bestD = d; 
+      best = z; 
+    } 
+  });
 
   const pos  = HARMONICS[reg];
   const lnH  = Math.log(pos[0].freq);
   const lnL  = Math.log(pos[pos.length-1].freq);
-  const minY = H * 0.06, maxY = H * 0.92;
+  const minY = H * 0.08, maxY = H * 0.90;
   const ratio = (clampY - minY) / (maxY - minY);
   const freq  = Math.exp(lnH - Math.max(0, Math.min(1, ratio)) * (lnH - lnL));
 
@@ -400,41 +772,108 @@ function handle(e, isStart) {
   if (best) {
     best.el.classList.add('active');
     document.getElementById('note-display').textContent = best.note;
-    document.getElementById('big-pos').textContent = best.pos;
-    document.getElementById('big-pos').classList.add('lit');
+    
+    const bigPos = document.getElementById('big-pos');
+    bigPos.textContent = best.pos;
+    bigPos.classList.add('text-[#e8c84a]/20');
   }
-  if (isStart) play(freq); else pitch(freq);
+  
+  if (isStart) {
+    play(freq); 
+    startNotesParticles(clientY);
+  } else {
+    pitch(freq);
+  }
 }
 
+// Touch listeners
 playArea.addEventListener('touchstart',  e => { touching = true; buildZones(); handle(e, true);  }, {passive:false});
 playArea.addEventListener('touchmove',   e => { if (touching) handle(e, false); },                  {passive:false});
-playArea.addEventListener('touchend',    e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, {passive:false});
-playArea.addEventListener('touchcancel', e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); }, {passive:false});
+playArea.addEventListener('touchend',    e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); stopNotesParticles(); }, {passive:false});
+playArea.addEventListener('touchcancel', e => { e.preventDefault(); touching = false; thumb.classList.remove('show'); stop(); stopNotesParticles(); }, {passive:false});
+
+// Mouse fallback listeners
 playArea.addEventListener('mousedown',   e => { touching = true; buildZones(); handle(e, true); });
 document.addEventListener('mousemove',   e => { if (touching) handle(e, false); });
-document.addEventListener('mouseup',     e => { if (touching) { touching = false; thumb.classList.remove('show'); stop(); } });
+document.addEventListener('mouseup',     e => { if (touching) { touching = false; thumb.classList.remove('show'); stop(); stopNotesParticles(); } });
 
-// ── OCTAVE ─────────────────────────────────────────────────────────────────
-document.getElementById('oct-group').addEventListener('click', e => {
-  const btn = e.target.closest('.seg-btn'); if (!btn) return;
-  reg = btn.dataset.r;
-  document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('on', b === btn));
-  buildZones();
+// ── REGISTER/OCTAVE SELECTION TRIGGERS ─────────────────────────────────
+function updateRegisterActiveUI() {
+  document.querySelectorAll('.register-btn').forEach(b => {
+    if (b.dataset.reg === reg) {
+      b.classList.add('bg-[#e8c84a]/15', 'text-[#e8c84a]', 'font-bold');
+      b.classList.remove('text-gray-500');
+    } else {
+      b.classList.remove('bg-[#e8c84a]/15', 'text-[#e8c84a]', 'font-bold');
+      b.classList.add('text-gray-500');
+    }
+  });
+}
+
+document.querySelectorAll('.register-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    reg = btn.dataset.reg;
+    updateRegisterActiveUI();
+    buildZones();
+  });
 });
 
-// ── FX ─────────────────────────────────────────────────────────────────────
+// Quick FX selectors
 document.getElementById('btn-vib').addEventListener('click', () => {
   vibon = !vibon;
-  document.getElementById('btn-vib').classList.toggle('on', vibon);
-  if (ctx && lfoGain) lfoGain.gain.setTargetAtTime((isOn && vibon) ? currentFreq * 0.005 : 0, ctx.currentTime, 0.1);
+  document.getElementById('btn-vib').classList.toggle('bg-[#e8c84a]/15', vibon);
+  document.getElementById('btn-vib').classList.toggle('text-[#e8c84a]', vibon);
+  if (ctx && lfoGain) {
+    lfoGain.gain.setTargetAtTime((isOn && vibon) ? currentFreq * 0.005 : 0, ctx.currentTime, 0.1);
+  }
 });
+
 document.getElementById('btn-mute').addEventListener('click', () => {
   muteon = !muteon;
-  document.getElementById('btn-mute').classList.toggle('on', muteon);
+  document.getElementById('btn-mute').classList.toggle('bg-[#e8c84a]/15', muteon);
+  document.getElementById('btn-mute').classList.toggle('text-[#e8c84a]', muteon);
   if (isOn) setOscGains(true);
 });
 
-// ── RECORDING ──────────────────────────────────────────────────────────────
+// Advanced synth panels accordion expander
+document.getElementById('btn-adv').addEventListener('click', () => {
+  const panel = document.getElementById('adv-panel');
+  panel.classList.toggle('hidden');
+  panel.classList.toggle('flex');
+});
+
+// Synchronize real-time updates from panel sliders to internal synth values
+document.getElementById('param-bite').addEventListener('input', (e) => {
+  config.bite = parseFloat(e.target.value);
+  document.getElementById('lbl-bite').textContent = config.bite.toFixed(1);
+  if (shaperNode) applyShaperCurve(config.bite);
+});
+
+document.getElementById('param-cutoff').addEventListener('input', (e) => {
+  config.cutoff = parseInt(e.target.value);
+  document.getElementById('lbl-cutoff').textContent = config.cutoff + "Hz";
+  if (eq3Node) eq3Node.frequency.setTargetAtTime(config.cutoff, ctx?.currentTime || 0, 0.05);
+});
+
+document.getElementById('param-lfo').addEventListener('input', (e) => {
+  config.lfoRate = parseFloat(e.target.value);
+  document.getElementById('lbl-lfo').textContent = config.lfoRate.toFixed(1) + " Hz";
+  if (lfoOsc) lfoOsc.frequency.setTargetAtTime(config.lfoRate, ctx?.currentTime || 0, 0.05);
+});
+
+document.getElementById('param-reverb').addEventListener('input', (e) => {
+  const pct = parseInt(e.target.value);
+  config.reverb = pct / 100;
+  document.getElementById('lbl-reverb').textContent = pct + "%";
+  if (delayWetNode) delayWetNode.gain.setTargetAtTime(config.reverb, ctx?.currentTime || 0, 0.05);
+});
+
+document.getElementById('param-attack').addEventListener('input', (e) => {
+  config.attack = parseFloat(e.target.value);
+  document.getElementById('lbl-attack').textContent = config.attack.toFixed(2) + "s";
+});
+
+// ── RECORDER & EXPORT AGENT ──────────────────────────────────────────
 const bRec  = document.getElementById('btn-rec');
 const bStop = document.getElementById('btn-stop');
 const bDl   = document.getElementById('btn-dl');
@@ -445,26 +884,158 @@ bRec.addEventListener('click', () => {
   mchunks = [];
   mrec = new MediaRecorder(recDest.stream);
   mrec.ondataavailable = e => mchunks.push(e.data);
-  mrec.onstop = () => { murl = URL.createObjectURL(new Blob(mchunks, {type:'audio/ogg; codecs=opus'})); bDl.disabled = false; };
+  mrec.onstop = () => {
+    murl = URL.createObjectURL(new Blob(mchunks, {type: 'audio/ogg; codecs=opus'}));
+    bDl.disabled = false;
+  };
   mrec.start();
-  bRec.classList.add('on'); bRec.style.display = 'none'; bStop.style.display = '';
+  bRec.classList.add('hidden');
+  bStop.classList.remove('hidden');
 });
+
 bStop.addEventListener('click', () => {
   if (mrec && mrec.state === 'recording') mrec.stop();
-  bStop.style.display = 'none'; bRec.style.display = ''; bRec.classList.remove('on');
+  bStop.classList.add('hidden');
+  bRec.classList.remove('hidden');
 });
+
 bDl.addEventListener('click', () => {
   if (!murl) return;
-  const a = document.createElement('a'); a.href = murl;
-  a.download = 'bass_trombone_' + Date.now() + '.ogg';
-  document.body.appendChild(a); a.click();
+  const a = document.createElement('a'); 
+  a.href = murl;
+  a.download = 'bass_trombone_performance_' + Date.now() + '.ogg';
+  document.body.appendChild(a); 
+  a.click();
   setTimeout(() => document.body.removeChild(a), 100);
 });
 
-// ── INIT ───────────────────────────────────────────────────────────────────
-window.addEventListener('load', buildZones);
+// ── DEMO AUTO-PLAYER ENGINE ──────────────────────────────────────────
+let isDemoPlaying = false;
+let activeTimers = [];
+
+function triggerStopSong() {
+  if (!isDemoPlaying) return;
+  
+  // Clear any scheduled future notes
+  activeTimers.forEach(clearTimeout);
+  activeTimers = [];
+  
+  // Stop sounds and particles
+  stop();
+  stopNotesParticles();
+  
+  // Hide visual elements
+  thumb.classList.remove('show');
+  document.getElementById('btn-stop-song').classList.add('hidden');
+  
+  isDemoPlaying = false;
+  
+  // Re-enable song select buttons styling
+  document.querySelectorAll('.song-btn').forEach(b => {
+    b.classList.remove('border-yellow-500', 'bg-[#e8c84a]/20', 'text-yellow-300');
+  });
+}
+
+document.getElementById('btn-stop-song').addEventListener('click', triggerStopSong);
+
+function playDemoSong(songKey) {
+  // If a song is already playing, clear it first
+  triggerStopSong();
+  
+  buildGraph();
+  buildZones();
+  
+  const notes = DEMO_SONGS[songKey];
+  if (!notes) return;
+  
+  isDemoPlaying = true;
+  document.getElementById('btn-stop-song').classList.remove('hidden');
+  
+  // Highlight active song button visually
+  const clickedBtn = document.querySelector(`[data-song="${songKey}"]`);
+  if (clickedBtn) {
+    clickedBtn.classList.add('border-yellow-500', 'bg-[#e8c84a]/20', 'text-yellow-300');
+  }
+
+  let accumTime = 0;
+  
+  notes.forEach((n, idx) => {
+    // Timer to prepare the pitch trigger
+    const playTimer = setTimeout(() => {
+      if (!isDemoPlaying) return;
+      
+      // Select appropriate register on the fly
+      reg = n.reg;
+      updateRegisterActiveUI();
+      buildZones();
+      
+      // Calculate active vertical pixel slide index positions
+      const zoneIdx = n.slide - 1;
+      const targetZone = zones[zoneIdx];
+      const areaH = playArea.clientHeight;
+      
+      if (targetZone) {
+        const targetY = targetZone.y;
+        
+        // Move slide handle visually
+        thumb.style.top = targetY + 'px';
+        thumb.classList.add('show');
+        
+        // Play synthesizer note sound
+        play(targetZone.freq);
+        
+        // Highlights active zone lines
+        clearZones();
+        targetZone.el.classList.add('active');
+        document.getElementById('note-display').textContent = targetZone.note;
+        
+        const bigPos = document.getElementById('big-pos');
+        bigPos.textContent = targetZone.pos;
+        bigPos.classList.add('text-[#e8c84a]/20');
+        
+        // Float notes animation
+        spawnFloatingNote(targetY);
+      }
+    }, accumTime);
+    
+    activeTimers.push(playTimer);
+    
+    // Add gap space to play separate notes beautifully (legato/staccato gaps)
+    accumTime += n.dur;
+    
+    // Timer to release/stop sound between notes
+    const stopTimer = setTimeout(() => {
+      if (!isDemoPlaying) return;
+      stop();
+    }, accumTime - 35);
+    
+    activeTimers.push(stopTimer);
+  });
+  
+  // End of song clean up trigger
+  const endTimer = setTimeout(() => {
+    if (!isDemoPlaying) return;
+    triggerStopSong();
+  }, accumTime + 500);
+  
+  activeTimers.push(endTimer);
+}
+
+document.querySelectorAll('.song-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const songName = btn.dataset.song;
+    playDemoSong(songName);
+  });
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  updateRegisterActiveUI();
+  buildZones();
+});
 window.addEventListener('resize', buildZones);
-setTimeout(buildZones, 100);
+setTimeout(buildZones, 200);
+
 </script>
 </body>
 </html>
