@@ -3,188 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vertical Organ 61 Keys (Auto Fit)</title>
+    <title>Gothic Cathedral Pipe Organ - Pro Version</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --key-height: 20px; /* จะถูกคำนวณใหม่โดย JS */
+            --key-height: 22px; /* Recalculated on load/resize to fit exactly 36 white keys vertically */
         }
-
+        
         body {
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden;
-            background-color: #0f0f0f;
+            background-color: #050404;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .cathedral-font {
             font-family: 'Cinzel', serif;
         }
 
-        .key {
+        /* High-end luxury wood panel texture */
+        .wood-panel {
+            background: linear-gradient(135deg, #2d1a10 0%, #1a0f0a 100%);
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), 0 10px 25px rgba(0,0,0,0.8);
+            border-bottom: 3px solid #0f0906;
+        }
+
+        .brass-accent {
+            border: 1px solid #c5a059;
+            background: linear-gradient(145deg, #d4af37, #aa8010);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Keyboard layouts */
+        .white-key {
+            background: linear-gradient(to right, #ffffff 0%, #f7f5ee 85%, #e8e3d3 100%);
+            height: var(--key-height);
+            border-bottom: 1px solid #bcaba0;
+            border-right: 5px solid #dcd1c4;
+            box-shadow: inset -2px 1px 4px rgba(0,0,0,0.05), 1px 1px 2px rgba(0,0,0,0.1);
             position: relative;
             cursor: pointer;
-            box-shadow: inset -2px 0 5px rgba(0,0,0,0.2);
-            transition: background-color 0.05s;
+            transition: background-color 0.05s, transform 0.04s;
         }
 
-        .white-key {
-            background: linear-gradient(to right, #fdfbf7 0%, #e8e4d9 100%);
-            width: 100%;
-            height: var(--key-height);
-            border-bottom: 1px solid #d1c7b7;
-            border-right: 4px solid #bbb;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding-left: 5px;
-            box-sizing: border-box;
-            font-size: 8px; 
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        
-        /* ซ่อนตัวอักษรถ้าปุ่มเล็กเกินไป */
-        .white-key.micro-text {
-            color: transparent;
-            text-shadow: none;
-        }
-
-        .white-key:active, .white-key.active {
-            background: #d6d0c4;
+        .white-key.active, .white-key:active {
+            background: linear-gradient(to right, #e3dfd3 0%, #d5cfbf 100%) !important;
+            border-right: 2px solid #b8af9c;
             transform: scaleX(0.98);
-            transform-origin: left;
-            box-shadow: inset 2px 0 5px rgba(0,0,0,0.3);
+            transform-origin: left center;
         }
 
         .black-key {
-            background: linear-gradient(to right, #2a2a2a 0%, #000 100%);
-            width: 60%; /* กว้างขึ้นเล็กน้อยเพื่อให้กดง่ายขึ้นในจอเล็ก */
-            height: calc(var(--key-height) * 0.7); 
+            background: linear-gradient(to right, #2c2c2c 0%, #141414 70%, #000000 100%);
+            height: calc(var(--key-height) * 0.72);
+            width: 58%;
             position: absolute;
             right: 0;
-            z-index: 10;
-            border-top-left-radius: 2px;
-            border-bottom-left-radius: 2px;
-            box-shadow: -2px 2px 4px rgba(0,0,0,0.6);
-            border: 1px solid #1a1a1a;
+            z-index: 20;
+            border-top-left-radius: 3px;
+            border-bottom-left-radius: 3px;
+            box-shadow: -3px 3px 6px rgba(0,0,0,0.6), inset 1px 1px 2px rgba(255,255,255,0.1);
+            border: 1px solid #1c1c1c;
             border-right: none;
+            cursor: pointer;
+            transition: background-color 0.05s, transform 0.04s;
         }
 
-        .black-key:active, .black-key.active {
-            background: #111;
-            transform: scaleX(0.95);
-            transform-origin: right;
+        .black-key.active, .black-key:active {
+            background: linear-gradient(to right, #111 0%, #050505 100%) !important;
+            transform: scaleX(0.96);
+            transform-origin: right center;
             box-shadow: -1px 1px 2px rgba(0,0,0,0.4);
         }
 
-        .wood-texture {
-            background-color: #3e2723;
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 10px);
-            border-bottom: 2px solid #271c19;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        /* Floating particles */
+        .note-float {
+            position: absolute;
+            color: #d4af37;
+            text-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+            pointer-events: none;
+            animation: floatUpAndFade 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            font-size: 20px;
+            z-index: 50;
         }
 
-        .gold-text { color: #d4af37; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        @keyframes floatUpAndFade {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.6) rotate(0deg);
+            }
+            15% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1.1) rotate(10deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-160px) scale(0.8) rotate(-25deg);
+            }
+        }
 
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        /* Custom gorgeous sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #251812;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
         }
-        .recording-pulse {
-            animation: pulse-red 1.5s infinite;
-            background-color: #dc2626 !important;
-            color: white !important;
-            border-color: #b91c1c !important;
-        }
-        
-        .middle-c-marker {
-            width: 4px; height: 4px;
-            background-color: #d4af37;
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            margin-left: 2px;
+            background: #d4af37;
+            border: 2px solid #5a3a22;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Drawbar slider styling for advanced panel */
+        .drawbar-slider {
+            -webkit-appearance: slider-vertical;
+            writing-mode: bt-lr; /* IE */
+            appearance: slider-vertical;
+            width: 14px;
+            height: 100px;
+            background: #111;
+        }
+
+        /* Pulse recording animation */
+        @keyframes pulse-rec {
+            0%, 100% { background-color: #991b1b; }
+            50% { background-color: #ef4444; box-shadow: 0 0 12px #ef4444; }
+        }
+        .recording-active {
+            animation: pulse-rec 1.2s infinite;
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col bg-black overflow-hidden">
+<body class="h-screen w-screen flex flex-col bg-stone-950 text-stone-100 select-none overflow-hidden">
 
-    <!-- Header Panel -->
-    <div class="w-full flex-none wood-texture p-2 flex flex-col gap-1 z-30 relative shadow-xl" id="header-panel">
+    <!-- Header Console -->
+    <header id="header-panel" class="w-full flex-none wood-panel p-3 flex flex-col gap-2 z-30 relative border-b border-amber-900/30">
         <div class="flex justify-between items-center px-1">
-            <h1 class="text-xs font-bold gold-text tracking-widest">CHURCH 61</h1>
+            <div class="flex flex-col">
+                <h1 class="cathedral-font text-sm md:text-lg font-bold tracking-widest text-amber-500 flex items-center gap-2">
+                    <i class="fa-solid fa-place-of-worship text-amber-600"></i> CATHEDRAL PIPE ORGAN
+                </h1>
+                <span class="text-[9px] text-stone-400 tracking-wider font-semibold uppercase">61-Key Professional Synthesizer</span>
+            </div>
             
             <div class="flex gap-2 items-center">
-                 <!-- Reverb Toggle -->
-                <div class="flex items-center gap-1 cursor-pointer bg-[#2a1d1a] border border-[#5d4037] px-2 py-1 rounded" onclick="toggleReverb()">
-                    <label class="text-[9px] uppercase font-bold text-amber-500/80 cursor-pointer">Verb</label>
-                    <div id="reverb-led" class="w-2 h-2 rounded-full bg-[#111] border border-stone-600"></div>
-                </div>
+                <!-- Advanced Controls Toggle -->
+                <button onclick="toggleAdvancedPanel()" class="bg-stone-800/80 hover:bg-stone-700 border border-amber-800/40 text-[10px] px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-all active:scale-95 text-amber-400 font-semibold uppercase">
+                    <i id="settings-icon" class="fa-solid fa-sliders"></i>
+                    <span>Tuning</span>
+                </button>
 
-                <button id="record-btn" onclick="toggleRecord()" class="bg-stone-800 border border-stone-600 text-stone-300 px-3 py-1 rounded font-bold text-[9px] uppercase tracking-widest flex items-center gap-1 hover:bg-stone-700 transition-all active:scale-95">
-                    <span id="rec-dot" class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                <!-- Recording Button -->
+                <button id="record-btn" onclick="toggleRecord()" class="bg-stone-800 hover:bg-stone-700 border border-stone-600 text-stone-200 px-3 py-1.5 rounded font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-all active:scale-95">
+                    <span id="rec-dot" class="w-2 h-2 rounded-full bg-red-600"></span>
                     <span id="rec-text">REC</span>
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- Keyboard Container (No Scroll) -->
-    <div class="relative flex-grow bg-[#1a1a1a] overflow-hidden" id="keyboard-wrapper">
-        <div id="keyboard-container" class="relative w-full h-full flex flex-col-reverse">
-            <!-- Keys generated by JS -->
+        <!-- STOPS / QUICK PRESETS / DEMO BAR -->
+        <div class="grid grid-cols-12 gap-2 items-center px-1">
+            <!-- Demo Selector -->
+            <div class="col-span-7 flex items-center gap-2">
+                <label class="text-[9px] uppercase tracking-wider text-amber-600/80 font-bold hidden sm:inline">Demo:</label>
+                <div class="relative w-full">
+                    <select id="song-select" class="bg-stone-950/90 text-amber-400 text-xs py-1.5 px-2 rounded border border-amber-900/40 w-full focus:outline-none focus:border-amber-500 font-semibold appearance-none" onchange="handleSongSelect(this.value)">
+                        <option class="text-stone-400" value="">🎼 Select Masterpiece Demo...</option>
+                        <option value="toccata">Bach: Toccata & Fugue in D minor</option>
+                        <option value="grace">Amazing Grace (Cathedral Harmonies)</option>
+                        <option value="hallelujah">Handel: Hallelujah Chorus</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-amber-500">
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stop Presets -->
+            <div class="col-span-5 flex justify-end gap-1.5">
+                <button onclick="applyPreset('diapason')" class="brass-accent text-stone-950 text-[9px] font-black px-2 py-1 rounded transition-transform active:scale-95 uppercase tracking-tighter">Diapason</button>
+                <button onclick="applyPreset('flute')" class="brass-accent text-stone-950 text-[9px] font-black px-2 py-1 rounded transition-transform active:scale-95 uppercase tracking-tighter">Flutes</button>
+                <button onclick="applyPreset('tutti')" class="brass-accent text-stone-950 text-[9px] font-black px-2 py-1 rounded transition-transform active:scale-95 uppercase tracking-tighter">Tutti</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer / Advanced Settings Panel (Slide-down toggle) -->
+    <div id="advanced-panel" class="hidden w-full bg-stone-900/95 border-b border-amber-900/40 p-3.5 flex flex-col gap-3 z-20 shadow-2xl relative">
+        <h3 class="text-xs uppercase font-bold tracking-widest text-amber-500 flex items-center gap-1.5">
+            <i class="fa-solid fa-gears"></i> Pipe Chest Drawbars & Cabinet Simulation
+        </h3>
+
+        <!-- Faders Container -->
+        <div class="grid grid-cols-5 gap-2 bg-stone-950/80 p-2.5 rounded border border-stone-800">
+            <!-- Drawbar 16' -->
+            <div class="flex flex-col items-center gap-1">
+                <input type="range" id="stop-16" min="0" max="1" step="0.05" value="0.8" class="drawbar-slider" oninput="updateSynthParams()">
+                <span class="text-[9px] font-bold text-amber-500/80">16' Sub</span>
+            </div>
+            <!-- Drawbar 8' -->
+            <div class="flex flex-col items-center gap-1">
+                <input type="range" id="stop-8" min="0" max="1" step="0.05" value="1.0" class="drawbar-slider" oninput="updateSynthParams()">
+                <span class="text-[9px] font-bold text-amber-500/80">8' Principal</span>
+            </div>
+            <!-- Drawbar 4' -->
+            <div class="flex flex-col items-center gap-1">
+                <input type="range" id="stop-4" min="0" max="1" step="0.05" value="0.7" class="drawbar-slider" oninput="updateSynthParams()">
+                <span class="text-[9px] font-bold text-amber-500/80">4' Octave</span>
+            </div>
+            <!-- Drawbar 2' -->
+            <div class="flex flex-col items-center gap-1">
+                <input type="range" id="stop-2" min="0" max="1" step="0.05" value="0.4" class="drawbar-slider" oninput="updateSynthParams()">
+                <span class="text-[9px] font-bold text-amber-500/80">2' Super</span>
+            </div>
+            <!-- Drawbar Mixture -->
+            <div class="flex flex-col items-center gap-1">
+                <input type="range" id="stop-mix" min="0" max="1" step="0.05" value="0.3" class="drawbar-slider" oninput="updateSynthParams()">
+                <span class="text-[9px] font-bold text-amber-500/80">Mixture</span>
+            </div>
+        </div>
+
+        <!-- FX knobs and switches -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1.5 bg-stone-950/50 p-2 rounded border border-stone-800/50">
+                <span class="text-[9px] uppercase tracking-wider text-stone-400 font-bold">Atmosphere & Reverb</span>
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] text-stone-300">Space Decay:</span>
+                    <input type="range" id="reverb-decay" min="0.5" max="6.0" step="0.2" value="3.5" class="w-24" oninput="updateReverbBuffer()">
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] text-stone-300">Reverb Wet:</span>
+                    <input type="range" id="reverb-wet" min="0" max="1" step="0.05" value="0.65" class="w-24" oninput="updateSynthParams()">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5 bg-stone-950/50 p-2 rounded border border-stone-800/50">
+                <span class="text-[9px] uppercase tracking-wider text-stone-400 font-bold">Tremulant & Air Speed</span>
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] text-stone-300">Tremolo Rate:</span>
+                    <input type="range" id="trem-rate" min="1" max="12" step="0.1" value="5.5" class="w-24" oninput="updateSynthParams()">
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] text-stone-300">Tremolo Depth:</span>
+                    <input type="range" id="trem-depth" min="0" max="0.15" step="0.01" value="0.03" class="w-24" oninput="updateSynthParams()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Master Tone & Vol -->
+        <div class="flex items-center justify-between bg-stone-950/50 p-2 rounded border border-stone-800/50 text-[10px]">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-stone-300">Organ Vol:</span>
+                <input type="range" id="organ-vol" min="0" max="1.5" step="0.05" value="0.9" class="w-20" oninput="updateSynthParams()">
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-stone-300">Wind Chuff Noise:</span>
+                <input type="range" id="wind-noise" min="0" max="0.5" step="0.05" value="0.15" class="w-20" oninput="updateSynthParams()">
+            </div>
         </div>
     </div>
 
-    <script>
-        // --- Auto Fit Logic ---
-        function fitKeys() {
-            const header = document.getElementById('header-panel');
-            const containerHeight = window.innerHeight - header.offsetHeight;
-            
-            // Standard 61-key organ has 36 white keys (C2 to C7)
-            const whiteKeyCount = 36;
-            
-            // Calculate height per key
-            const heightPerKey = containerHeight / whiteKeyCount;
-            
-            document.documentElement.style.setProperty('--key-height', `${heightPerKey}px`);
-            
-            // Toggle text visibility based on height
-            const keys = document.querySelectorAll('.white-key');
-            keys.forEach(k => {
-                if (heightPerKey < 12) {
-                    k.classList.add('micro-text');
-                } else {
-                    k.classList.remove('micro-text');
-                }
-            });
-        }
-
-        window.addEventListener('resize', fitKeys);
-        window.addEventListener('load', fitKeys);
-
-        // --- Audio Engine ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
-        let masterGainNode;
-        let reverbNode;
-        let destRecording;
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let isReverbOn = true;
-
-        const activeOscillators = {};
+    <!-- Piano Keyboard Container -->
+    <main class="relative flex-grow bg-[#151210] overflow-hidden border-t-4 border-black" id="keyboard-wrapper">
+        <!-- Floating Visual Overlay -->
+        <div id="visual-overlay" class="absolute inset-0 pointer-events-none overflow-hidden z-40"></div>
         
-        // Generate 61 Keys (C2 to C7)
+        <!-- Key layout container (C2 bottom, C7 top - played vertically) -->
+        <div id="keyboard-container" class="relative w-full h-full flex flex-col-reverse">
+            <!-- Interactive Key Nodes will be auto-generated here -->
+        </div>
+    </main>
+
+    <script>
+        // --- System State & Configuration ---
+        const audioCtxClass = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let masterGainNode = null;
+        let reverbNode = null;
+        let reverbWetGain = null;
+        let reverbDryGain = null;
+        let recorderNode = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        // Interactive Tracking State
+        const activeOscillators = {};
         const notes = [];
         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        // Keyboard map for middle range
+
+        // Demo Playback Orchestrator
+        let currentSequenceTimers = [];
+        let isDemoPlaying = false;
+
+        // Custom parameters editable via Drawbar panel
+        const synthParams = {
+            vol16: 0.8,
+            vol8: 1.0,
+            vol4: 0.7,
+            vol2: 0.4,
+            volMix: 0.3,
+            reverbWet: 0.65,
+            tremRate: 5.5,
+            tremDepth: 0.03,
+            masterVol: 0.9,
+            windChuff: 0.15
+        };
+
+        // Keyboard mappings for interactive desktop play
         const keyboardMap = {
             'z': 48, 's': 49, 'x': 50, 'd': 51, 'c': 52, 'v': 53, 'g': 54, 'b': 55, 'h': 56, 'n': 57, 'j': 58, 'm': 59,
             'q': 60, '2': 61, 'w': 62, '3': 63, 'e': 64, 'r': 65, '5': 66, 't': 67, '6': 68, 'y': 69, '7': 70, 'u': 71, 'i': 72
         };
 
+        // Generates notes sequence for a full 61-key organ starting from C2 (MIDI 36) to C7 (MIDI 96)
         for (let i = 36; i <= 96; i++) {
             const octave = Math.floor(i / 12) - 1;
             const noteName = noteNames[i % 12];
@@ -200,228 +349,644 @@
             });
         }
 
-        function initAudio() {
+        // Initialize Audio context securely inside user interaction
+        function ensureAudioContext() {
             if (!audioCtx) {
-                audioCtx = new AudioContext();
-                masterGainNode = audioCtx.createGain();
-                masterGainNode.gain.value = 0.8;
-                reverbNode = audioCtx.createConvolver();
-                reverbNode.buffer = createReverbImpulse(2.5);
-                updateReverbState();
-                masterGainNode.connect(audioCtx.destination);
-                updateReverbUI();
+                audioCtx = new audioCtxClass();
+                setupAudioNodes();
             }
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function createReverbImpulse(duration) {
-            const rate = audioCtx.sampleRate;
-            const length = rate * duration;
-            const impulse = audioCtx.createBuffer(2, length, rate);
-            const left = impulse.getChannelData(0);
-            const right = impulse.getChannelData(1);
-            for (let i = 0; i < length; i++) {
-                const decay = Math.pow(1 - i / length, 2.5);
-                left[i] = (Math.random() * 2 - 1) * decay;
-                right[i] = (Math.random() * 2 - 1) * decay;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
             }
-            return impulse;
         }
 
-        function toggleReverb() {
-            isReverbOn = !isReverbOn;
-            updateReverbState();
-            updateReverbUI();
+        // --- Core Audio Synthesis Routing ---
+        function setupAudioNodes() {
+            // Master dry/wet processing nodes
+            masterGainNode = audioCtx.createGain();
+            masterGainNode.gain.setValueAtTime(synthParams.masterVol, audioCtx.currentTime);
+
+            reverbDryGain = audioCtx.createGain();
+            reverbDryGain.gain.setValueAtTime(1.0 - synthParams.reverbWet, audioCtx.currentTime);
+
+            reverbWetGain = audioCtx.createGain();
+            reverbWetGain.gain.setValueAtTime(synthParams.reverbWet, audioCtx.currentTime);
+
+            reverbNode = audioCtx.createConvolver();
+            updateReverbBuffer();
+
+            // Connections
+            masterGainNode.connect(reverbDryGain);
+            reverbDryGain.connect(audioCtx.destination);
+
+            masterGainNode.connect(reverbNode);
+            reverbNode.connect(reverbWetGain);
+            reverbWetGain.connect(audioCtx.destination);
+
+            // Record node setup
+            recorderNode = audioCtx.createMediaStreamDestination();
+            reverbDryGain.connect(recorderNode);
+            reverbWetGain.connect(recorderNode);
         }
 
-        function updateReverbState() {
+        // Generates an exquisite church cathedral room acoustic impulse response mathematically
+        function updateReverbBuffer() {
             if (!audioCtx) return;
-            try { masterGainNode.disconnect(reverbNode); } catch(e){}
-            try { reverbNode.disconnect(); } catch(e){}
-            if (isReverbOn) {
-                masterGainNode.connect(reverbNode);
-                reverbNode.connect(audioCtx.destination);
+            const duration = parseFloat(document.getElementById('reverb-decay').value) || 3.5;
+            const sampleRate = audioCtx.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = audioCtx.createBuffer(2, length, sampleRate);
+            
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    // Exponential decay algorithm combined with stereo-widening noise
+                    const decay = Math.pow(1 - i / length, 2.5);
+                    const reflections = (Math.random() * 2 - 1) * decay;
+                    // Add subtle warmth filter simulation to reverb decay
+                    const filterAcoustics = Math.sin(i / 15) * 0.1 * decay;
+                    channelData[i] = reflections + filterAcoustics;
+                }
+            }
+            reverbNode.buffer = impulse;
+        }
+
+        // Update synth variables immediately when drawbars or knobs are handled
+        function updateSynthParams() {
+            synthParams.vol16 = parseFloat(document.getElementById('stop-16').value);
+            synthParams.vol8 = parseFloat(document.getElementById('stop-8').value);
+            synthParams.vol4 = parseFloat(document.getElementById('stop-4').value);
+            synthParams.vol2 = parseFloat(document.getElementById('stop-2').value);
+            synthParams.volMix = parseFloat(document.getElementById('stop-mix').value);
+            synthParams.reverbWet = parseFloat(document.getElementById('reverb-wet').value);
+            synthParams.tremRate = parseFloat(document.getElementById('trem-rate').value);
+            synthParams.tremDepth = parseFloat(document.getElementById('trem-depth').value);
+            synthParams.masterVol = parseFloat(document.getElementById('organ-vol').value);
+            synthParams.windChuff = parseFloat(document.getElementById('wind-noise').value);
+
+            if (masterGainNode) {
+                masterGainNode.gain.setValueAtTime(synthParams.masterVol, audioCtx.currentTime);
+                reverbDryGain.gain.setValueAtTime(1.0 - synthParams.reverbWet, audioCtx.currentTime);
+                reverbWetGain.gain.setValueAtTime(synthParams.reverbWet, audioCtx.currentTime);
             }
         }
 
-        function updateReverbUI() {
-            const led = document.getElementById('reverb-led');
-            if (isReverbOn) {
-                led.style.backgroundColor = '#00ff00';
-                led.style.boxShadow = '0 0 6px #00ff00';
+        // Stop presets helper
+        function applyPreset(presetType) {
+            ensureAudioContext();
+            const config = {
+                diapason: { s16: 0.5, s8: 1.0, s4: 0.6, s2: 0.2, mix: 0.1, bright: 2.0 },
+                flute: { s16: 0.2, s8: 0.8, s4: 0.9, s2: 0.5, mix: 0.0, bright: 4.0 },
+                tutti: { s16: 1.0, s8: 1.0, s4: 0.9, s2: 0.8, mix: 0.7, bright: 5.5 }
+            };
+
+            const setting = config[presetType];
+            if (setting) {
+                document.getElementById('stop-16').value = setting.s16;
+                document.getElementById('stop-8').value = setting.s8;
+                document.getElementById('stop-4').value = setting.s4;
+                document.getElementById('stop-2').value = setting.s2;
+                document.getElementById('stop-mix').value = setting.mix;
+                document.getElementById('trem-rate').value = setting.bright;
+                updateSynthParams();
+            }
+        }
+
+        function toggleAdvancedPanel() {
+            const panel = document.getElementById('advanced-panel');
+            const icon = document.getElementById('settings-icon');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                icon.className = "fa-solid fa-circle-xmark";
             } else {
-                led.style.backgroundColor = '#111';
-                led.style.boxShadow = 'none';
+                panel.classList.add('hidden');
+                icon.className = "fa-solid fa-sliders";
             }
+            fitKeys();
         }
 
+        // --- STREAMING_CHUNK: Implementing the Real-Time Pipe Organ Audio Voice Class... ---
+        // Play an individual note
+        function playNote(freq, id) {
+            ensureAudioContext();
+            if (activeOscillators[id]) return;
+
+            // Voice Envelope Node
+            const noteGainNode = audioCtx.createGain();
+            noteGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            // Majestic slow attack characteristic of large church pipe organs
+            noteGainNode.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 0.08);
+
+            // Connect voice cluster to master organ routing
+            noteGainNode.connect(masterGainNode);
+
+            const activeVoiceNodes = [];
+
+            // Additive Drawbar Stops:
+            const drawbars = [
+                { mult: 0.5, vol: synthParams.vol16, type: 'triangle' }, // 16' Stop
+                { mult: 1.0, vol: synthParams.vol8, type: 'sawtooth' },  // 8' Stop
+                { mult: 2.0, vol: synthParams.vol4, type: 'triangle' },  // 4' Stop
+                { mult: 4.0, vol: synthParams.vol2, type: 'sine' }       // 2' Stop
+            ];
+
+            drawbars.forEach(drawbar => {
+                if (drawbar.vol > 0.02) {
+                    const osc = audioCtx.createOscillator();
+                    osc.type = drawbar.type;
+                    // Slightly de-tune each stop to achieve warm pipe air acoustic dispersion
+                    osc.frequency.setValueAtTime(freq * drawbar.mult, audioCtx.currentTime);
+                    osc.detune.setValueAtTime((Math.random() - 0.5) * 5, audioCtx.currentTime);
+
+                    const stopGain = audioCtx.createGain();
+                    stopGain.gain.setValueAtTime(drawbar.vol, audioCtx.currentTime);
+
+                    // Connect stop
+                    osc.connect(stopGain);
+                    stopGain.connect(noteGainNode);
+                    osc.start();
+                    activeVoiceNodes.push(osc);
+                }
+            });
+
+            // 5th stop: Mixture (Bright sparkling harmonic mixture block)
+            if (synthParams.volMix > 0.02) {
+                const mixHarmonics = [3.0, 5.0, 6.0];
+                mixHarmonics.forEach(ratio => {
+                    const oscMix = audioCtx.createOscillator();
+                    oscMix.type = 'sine';
+                    oscMix.frequency.setValueAtTime(freq * ratio, audioCtx.currentTime);
+                    
+                    const mixGain = audioCtx.createGain();
+                    mixGain.gain.setValueAtTime(synthParams.volMix * 0.15, audioCtx.currentTime);
+
+                    oscMix.connect(mixGain);
+                    mixGain.connect(noteGainNode);
+                    oscMix.start();
+                    activeVoiceNodes.push(oscMix);
+                });
+            }
+
+            // Wind Noise / Pipe Air Chuff Emulator
+            if (synthParams.windChuff > 0.02) {
+                // Generate short impulse sound representing wind entering a pipe
+                const bufferSize = audioCtx.sampleRate * 0.25; // 250ms burst
+                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+
+                const noiseNode = audioCtx.createBufferSource();
+                noiseNode.buffer = noiseBuffer;
+
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(freq * 1.5, audioCtx.currentTime);
+                noiseFilter.Q.setValueAtTime(4.0, audioCtx.currentTime);
+
+                const noiseGain = audioCtx.createGain();
+                // Attack transient envelope
+                noiseGain.gain.setValueAtTime(synthParams.windChuff * 0.25, audioCtx.currentTime);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+
+                noiseNode.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(noteGainNode);
+                noiseNode.start();
+            }
+
+            // Tremolo / Tremulant LFO modulation
+            let tremoloLFO = null;
+            if (synthParams.tremDepth > 0) {
+                tremoloLFO = audioCtx.createOscillator();
+                tremoloLFO.frequency.setValueAtTime(synthParams.tremRate, audioCtx.currentTime);
+
+                const tremoloGain = audioCtx.createGain();
+                tremoloGain.gain.setValueAtTime(synthParams.tremDepth, audioCtx.currentTime);
+
+                tremoloLFO.connect(tremoloGain);
+                // Modulate the main voice amplifier
+                tremoloGain.connect(noteGainNode.gain);
+                tremoloLFO.start();
+            }
+
+            // Map and store active audio nodes
+            activeOscillators[id] = {
+                oscList: activeVoiceNodes,
+                gainNode: noteGainNode,
+                lfo: tremoloLFO
+            };
+
+            // Trigger premium styling of UI
+            const keyEl = document.getElementById(`key-${id}`);
+            if (keyEl) keyEl.classList.add('active');
+
+            // Float golden musical notes on playback
+            spawnFloatingNote(id);
+        }
+
+        // Stop an individual note with a smooth cathedral decay release tail
+        function stopNote(id) {
+            if (!activeOscillators[id]) return;
+            const { oscList, gainNode, lfo } = activeOscillators[id];
+            const now = audioCtx.currentTime;
+            const release = 0.25; // Majestic church-decay release tail
+
+            gainNode.gain.cancelScheduledValues(now);
+            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + release);
+
+            // Stop all active oscillator stops safely
+            oscList.forEach(osc => {
+                try {
+                    osc.stop(now + release + 0.1);
+                } catch(e) {}
+            });
+            if (lfo) {
+                try {
+                    lfo.stop(now + release + 0.1);
+                } catch(e) {}
+            }
+
+            delete activeOscillators[id];
+
+            // Clean up interactive UI key highlight
+            const keyEl = document.getElementById(`key-${id}`);
+            if (keyEl) keyEl.classList.remove('active');
+        }
+
+        // Generates floating golden notes matching the position of the key pressed
+        function spawnFloatingNote(id) {
+            const overlay = document.getElementById('visual-overlay');
+            if (!overlay) return;
+
+            const noteEl = document.createElement('div');
+            noteEl.className = 'note-float';
+            
+            // Map position relative to key
+            const keyEl = document.getElementById(`key-${id}`);
+            if (keyEl) {
+                const rect = keyEl.getBoundingClientRect();
+                const wrapperRect = document.getElementById('keyboard-wrapper').getBoundingClientRect();
+                const topPos = rect.top - wrapperRect.top + rect.height / 2;
+                noteEl.style.top = `${topPos}px`;
+                noteEl.style.right = '65px';
+            } else {
+                noteEl.style.top = `${Math.random() * 80 + 10}%`;
+                noteEl.style.right = '65px';
+            }
+
+            const glyphs = ['♩', '♪', '♫', '♬', '♭', '♮', '♯'];
+            noteEl.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+            overlay.appendChild(noteEl);
+
+            setTimeout(() => {
+                noteEl.remove();
+            }, 1600);
+        }
+
+        // Recalculates piano keyboard to adapt perfectly inside responsive bounds
+        function fitKeys() {
+            const header = document.getElementById('header-panel') || document.querySelector('header');
+            const drawer = document.getElementById('advanced-panel');
+            
+            let offsetHeight = header ? header.offsetHeight : 70;
+            if (drawer && !drawer.classList.contains('hidden')) {
+                offsetHeight += drawer.offsetHeight;
+            }
+
+            const viewportAvailableHeight = window.innerHeight - offsetHeight;
+            const totalWhiteKeys = 36;
+            
+            const optimalKeyHeight = viewportAvailableHeight / totalWhiteKeys;
+            document.documentElement.style.setProperty('--key-height', `${optimalKeyHeight}px`);
+        }
+
+        window.addEventListener('resize', fitKeys);
+        window.addEventListener('load', fitKeys);
+
+        // Render piano keyboard with exact relative position arrays
+        function buildKeyboardUI() {
+            const container = document.getElementById('keyboard-container');
+            container.innerHTML = '';
+            let whiteIndex = 0;
+
+            notes.forEach((note) => {
+                if (note.type === 'white') {
+                    const key = document.createElement('div');
+                    key.className = 'key white-key flex items-center justify-between px-3 text-stone-500/80 font-bold transition-all';
+                    key.id = `key-${note.midi}`;
+                    
+                    // Show octaves labels cleanly on C notes
+                    if (note.note.startsWith('C')) {
+                        key.innerHTML = `<span class="text-[9px] uppercase tracking-wider cathedral-font text-amber-800/80 font-black">${note.note}</span>`;
+                        if (note.isMiddleC) {
+                            key.innerHTML += `<div class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-md mr-1.5" title="Middle C"></div>`;
+                        }
+                    }
+
+                    bindInteractionEvents(key, note.freq, note.midi);
+                    container.appendChild(key);
+                    whiteIndex++;
+                } else {
+                    const key = document.createElement('div');
+                    key.className = 'key black-key transition-all';
+                    key.id = `key-${note.midi}`;
+                    // CSS Dynamic mathematical coordinates matching perfect vertical overlaps
+                    key.style.bottom = `calc(${whiteIndex} * var(--key-height) - (var(--key-height) * 0.72 / 2))`;
+
+                    bindInteractionEvents(key, note.freq, note.midi);
+                    container.appendChild(key);
+                }
+            });
+        }
+
+        // --- STREAMING_CHUNK: Implementing Multi-Touch Drag Play (Glissando System)... ---
+        // Allows majestic swiping fingers on touchscreen devices smoothly across keys
+        let activelyTouchedMidiKeys = new Set();
+
+        function handleGloballyTrackedTouch(e) {
+            e.preventDefault();
+            ensureAudioContext();
+
+            const currentTouches = e.touches;
+            const newTouchedMidis = new Set();
+
+            for (let i = 0; i < currentTouches.length; i++) {
+                const touch = currentTouches[i];
+                const hoveredElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (hoveredElement) {
+                    const keyNode = hoveredElement.closest('.key');
+                    if (keyNode) {
+                        const midiID = parseInt(keyNode.id.replace('key-', ''), 10);
+                        if (!isNaN(midiID)) {
+                            newTouchedMidis.add(midiID);
+                        }
+                    }
+                }
+            }
+
+            // Find released notes and stop them
+            for (let activeMidi of activelyTouchedMidiKeys) {
+                if (!newTouchedMidis.has(activeMidi)) {
+                    stopNote(activeMidi);
+                }
+            }
+
+            // Find fresh touched keys and play them
+            for (let targetMidi of newTouchedMidis) {
+                if (!activelyTouchedMidiKeys.has(targetMidi)) {
+                    const targetNote = notes.find(n => n.midi === targetMidi);
+                    if (targetNote) {
+                        playNote(targetNote.freq, targetMidi);
+                    }
+                }
+            }
+
+            activelyTouchedMidiKeys = newTouchedMidis;
+        }
+
+        function handleGloballyTrackedTouchEnd(e) {
+            e.preventDefault();
+            for (let activeMidi of activelyTouchedMidiKeys) {
+                stopNote(activeMidi);
+            }
+            activelyTouchedMidiKeys.clear();
+        }
+
+        // Bind standard multi-touch listeners over the main container
+        const keyboardWrapper = document.getElementById('keyboard-wrapper');
+        keyboardWrapper.addEventListener('touchstart', handleGloballyTrackedTouch, { passive: false });
+        keyboardWrapper.addEventListener('touchmove', handleGloballyTrackedTouch, { passive: false });
+        keyboardWrapper.addEventListener('touchend', handleGloballyTrackedTouchEnd, { passive: false });
+        keyboardWrapper.addEventListener('touchcancel', handleGloballyTrackedTouchEnd, { passive: false });
+
+        // Bind standard mouse interactions for traditional desktop environments
+        function bindInteractionEvents(element, freq, id) {
+            let isHoldingMouse = false;
+
+            element.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isHoldingMouse = true;
+                playNote(freq, id);
+            });
+
+            element.addEventListener('mouseenter', (e) => {
+                // Allows dragging mouse to trigger keys smoothly
+                if (e.buttons === 1) {
+                    playNote(freq, id);
+                }
+            });
+
+            element.addEventListener('mouseleave', () => {
+                stopNote(id);
+            });
+
+            element.addEventListener('mouseup', () => {
+                isHoldingMouse = false;
+                stopNote(id);
+            });
+        }
+
+        // --- STREAMING_CHUNK: Formulating Desktop Keyboard Events... ---
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            const targetMidi = keyboardMap[e.key.toLowerCase()];
+            if (targetMidi) {
+                const targetNote = notes.find(n => n.midi === targetMidi);
+                if (targetNote) {
+                    playNote(targetNote.freq, targetMidi);
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const targetMidi = keyboardMap[e.key.toLowerCase()];
+            if (targetMidi) {
+                stopNote(targetMidi);
+            }
+        });
+
+        // Ensure safe audio context recovery during early clicks
+        document.body.addEventListener('click', ensureAudioContext, { once: true });
+        document.body.addEventListener('touchstart', ensureAudioContext, { once: true });
+
+        // --- STREAMING_CHUNK: Integrating Majestic Demo Playback Sequences... ---
+        // Clean up any ongoing demo loops safely
+        function clearAllActiveDemoSequences() {
+            currentSequenceTimers.forEach(timer => clearTimeout(timer));
+            currentSequenceTimers = [];
+            isDemoPlaying = false;
+            
+            // Clean up any lingering active synthesizers
+            Object.keys(activeOscillators).forEach(midi => {
+                stopNote(parseInt(midi, 10));
+            });
+        }
+
+        function handleSongSelect(selectedSong) {
+            clearAllActiveDemoSequences();
+            if (!selectedSong) return;
+
+            ensureAudioContext();
+            isDemoPlaying = true;
+            let noteEvents = [];
+
+            if (selectedSong === 'toccata') {
+                // JS Orchestration: Bach's Toccata in D minor BWV 565 intro
+                applyPreset('tutti');
+                noteEvents = [
+                    { time: 0, midi: 81, duration: 250 },   // A5
+                    { time: 300, midi: 80, duration: 250 },  // G#5
+                    { time: 600, midi: 81, duration: 600 },  // A5
+                    { time: 1300, midi: 80, duration: 150 }, // G#5
+                    { time: 1450, midi: 78, duration: 150 }, // F#5
+                    { time: 1600, midi: 76, duration: 150 }, // E5
+                    { time: 1750, midi: 74, duration: 150 }, // D5
+                    { time: 1900, midi: 73, duration: 150 }, // C#5
+                    { time: 2050, midi: 74, duration: 700 }, // D5
+                    
+                    { time: 3000, midi: 69, duration: 200 }, // A4
+                    { time: 3250, midi: 67, duration: 200 }, // G4
+                    { time: 3500, midi: 65, duration: 200 }, // F4
+                    { time: 3750, midi: 64, duration: 200 }, // E4
+                    { time: 4000, midi: 62, duration: 200 }, // D4
+                    { time: 4250, midi: 61, duration: 200 }, // C#4
+                    { time: 4500, midi: 62, duration: 800 }, // D4
+
+                    { time: 5500, midi: 45, duration: 200 }, // A2 lower blast
+                    { time: 5750, midi: 44, duration: 200 }, // G#2
+                    { time: 6000, midi: 45, duration: 1200 } // A2 sustain
+                ];
+            } else if (selectedSong === 'grace') {
+                // Dynamic cathedral-like slow chorale chords for Amazing Grace
+                applyPreset('diapason');
+                noteEvents = [
+                    // Arpeggiated rich chorale
+                    { time: 0, midi: 50, duration: 1000 },    // D3
+                    { time: 400, midi: 55, duration: 1000 },   // G3
+                    { time: 800, midi: 59, duration: 1200 },   // B3
+
+                    { time: 1600, midi: 62, duration: 800 },   // D4
+                    { time: 2500, midi: 59, duration: 800 },   // B3
+                    { time: 3400, midi: 62, duration: 800 },   // D4
+                    { time: 4300, midi: 64, duration: 800 },   // E4
+                    
+                    { time: 5200, midi: 62, duration: 1800 },  // D4
+                    { time: 5200, midi: 55, duration: 1800 },  // G3
+                    { time: 5200, midi: 50, duration: 1800 }   // D3
+                ];
+            } else if (selectedSong === 'hallelujah') {
+                // Handel's Hallelujah Chorus main refrain
+                applyPreset('tutti');
+                noteEvents = [
+                    { time: 0, midi: 62, duration: 300 },   // D4
+                    { time: 350, midi: 67, duration: 300 },  // G4
+                    { time: 700, midi: 69, duration: 150 },  // A4
+                    { time: 850, midi: 71, duration: 150 },  // B4
+                    { time: 1000, midi: 67, duration: 500 }, // G4
+
+                    { time: 1600, midi: 62, duration: 150 }, // D4
+                    { time: 1750, midi: 62, duration: 150 }, // D4
+                    { time: 1900, midi: 67, duration: 300 }, // G4
+                    { time: 2250, midi: 69, duration: 150 }, // A4
+                    { time: 2400, midi: 71, duration: 150 }, // B4
+                    { time: 2550, midi: 67, duration: 500 }, // G4
+                    
+                    { time: 3100, midi: 62, duration: 300 }, // D4
+                    { time: 3450, midi: 67, duration: 300 }, // G4
+                    { time: 3800, midi: 69, duration: 300 }, // A4
+                    { time: 4150, midi: 71, duration: 300 }, // B4
+                    { time: 4500, midi: 74, duration: 800 }  // D5
+                ];
+            }
+
+            // Loop to program scheduler callbacks
+            let maxEndTime = 0;
+            noteEvents.forEach(evt => {
+                const playTimer = setTimeout(() => {
+                    playNote(440 * Math.pow(2, (evt.midi - 69) / 12), evt.midi);
+                }, evt.time);
+
+                const stopTimer = setTimeout(() => {
+                    stopNote(evt.midi);
+                }, evt.time + evt.duration);
+
+                currentSequenceTimers.push(playTimer);
+                currentSequenceTimers.push(stopTimer);
+
+                const endAt = evt.time + evt.duration;
+                if (endAt > maxEndTime) maxEndTime = endAt;
+            });
+
+            // Schedule final reset callback when song finishes playing
+            const terminationTimer = setTimeout(() => {
+                clearAllActiveDemoSequences();
+                document.getElementById('song-select').value = "";
+            }, maxEndTime + 500);
+
+            currentSequenceTimers.push(terminationTimer);
+        }
+
+        // --- STREAMING_CHUNK: Setting up Media Stream Recording Logic... ---
         function toggleRecord() {
-            initAudio();
+            ensureAudioContext();
             const btn = document.getElementById('record-btn');
             const recText = document.getElementById('rec-text');
             const recDot = document.getElementById('rec-dot');
 
             if (!isRecording) {
-                audioChunks = [];
-                destRecording = audioCtx.createMediaStreamDestination();
-                masterGainNode.connect(destRecording);
-                if (isReverbOn) reverbNode.connect(destRecording);
-
+                recordedChunks = [];
                 let options = { mimeType: 'audio/webm' };
-                if (!MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/mp4' };
-                try { mediaRecorder = new MediaRecorder(destRecording.stream, options); } 
-                catch (e) { mediaRecorder = new MediaRecorder(destRecording.stream); }
+                if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                    options = { mimeType: 'audio/mp4' };
+                }
 
-                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = `organ_autofit_${Date.now()}.webm`;
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+                try {
+                    mediaRecorder = new MediaRecorder(recorderNode.stream, options);
+                } catch (e) {
+                    mediaRecorder = new MediaRecorder(recorderNode.stream);
+                }
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
                 };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    const fileUrl = URL.createObjectURL(blob);
+                    
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.style.display = 'none';
+                    downloadAnchor.href = fileUrl;
+                    downloadAnchor.download = `pipe_organ_rec_${Date.now()}.webm`;
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+
+                    setTimeout(() => {
+                        document.body.removeChild(downloadAnchor);
+                        URL.revokeObjectURL(fileUrl);
+                    }, 100);
+                };
+
                 mediaRecorder.start();
                 isRecording = true;
-                btn.classList.add('recording-pulse');
+                btn.classList.add('recording-active');
                 recText.textContent = "STOP";
-                recDot.style.backgroundColor = "white";
+                recDot.className = "w-2 h-2 rounded-full bg-white";
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
-                btn.classList.remove('recording-pulse');
+                btn.classList.remove('recording-active');
                 recText.textContent = "REC";
-                recDot.style.backgroundColor = "#dc2626";
+                recDot.className = "w-2 h-2 rounded-full bg-red-600";
             }
         }
 
-        function getWaveConfig() {
-            // ตั้งค่าคงที่เป็น Grand Organ ตามที่ต้องการ
-            return { type: 'triangle', harmonics: [1.0, 0.8, 0.6, 0.3], sub: true }; 
-        }
-
-        function playNote(freq, id) {
-            initAudio();
-            if (activeOscillators[id]) return; 
-
-            const config = getWaveConfig();
-            const noteGain = audioCtx.createGain();
-            const vol = 0.8; 
-            
-            const now = audioCtx.currentTime;
-            noteGain.gain.setValueAtTime(0, now);
-            noteGain.gain.linearRampToValueAtTime(vol * 0.4, now + 0.08); 
-
-            noteGain.connect(masterGainNode);
-
-            const oscList = [];
-            config.harmonics.forEach((hVal, index) => {
-                const osc = audioCtx.createOscillator();
-                osc.type = config.type === 'sine' && index > 0 ? 'triangle' : config.type; 
-                osc.frequency.setValueAtTime(freq * (index + 1), now);
-                if (config.detune) osc.detune.value = (Math.random() - 0.5) * config.detune;
-                const harmGain = audioCtx.createGain();
-                harmGain.gain.value = hVal;
-                osc.connect(harmGain);
-                harmGain.connect(noteGain);
-                osc.start(now);
-                oscList.push(osc);
-            });
-
-            if (config.sub) {
-                const subOsc = audioCtx.createOscillator();
-                subOsc.type = 'sine';
-                subOsc.frequency.setValueAtTime(freq * 0.5, now);
-                const subGain = audioCtx.createGain();
-                subGain.gain.value = 0.5;
-                subOsc.connect(subGain);
-                subGain.connect(noteGain);
-                subOsc.start(now);
-                oscList.push(subOsc);
-            }
-
-            activeOscillators[id] = { oscList, noteGain };
-            
-            const el = document.getElementById(`key-${id}`);
-            if (el) el.classList.add('active');
-        }
-
-        function stopNote(id) {
-            if (!activeOscillators[id]) return;
-            const { oscList, noteGain } = activeOscillators[id];
-            const now = audioCtx.currentTime;
-            const release = 0.15;
-            noteGain.gain.cancelScheduledValues(now);
-            noteGain.gain.setValueAtTime(noteGain.gain.value, now);
-            noteGain.gain.exponentialRampToValueAtTime(0.001, now + release);
-            oscList.forEach(osc => osc.stop(now + release + 0.1));
-            delete activeOscillators[id];
-            const el = document.getElementById(`key-${id}`);
-            if (el) el.classList.remove('active');
-        }
-
-        // --- Vertical UI Generation ---
-        const container = document.getElementById('keyboard-container');
-        let whiteKeyIndex = 0;
-        
-        notes.forEach((note) => {
-            if (note.type === 'white') {
-                const key = document.createElement('div');
-                key.className = 'key white-key';
-                key.id = `key-${note.midi}`;
-                if (note.note.startsWith('C')) {
-                    key.innerHTML = `<span class="text-stone-500 font-sans font-bold">${note.note}</span>`;
-                    if (note.isMiddleC) key.innerHTML += `<div class="middle-c-marker"></div>`;
-                }
-                addInteractions(key, note.freq, note.midi);
-                container.appendChild(key);
-                whiteKeyIndex++;
-            } else {
-                const key = document.createElement('div');
-                key.className = 'key black-key';
-                key.id = `key-${note.midi}`;
-                // CSS calc for dynamic positioning based on variable key height
-                key.style.bottom = `calc(${whiteKeyIndex} * var(--key-height) - (var(--key-height) * 0.7 / 2))`;
-                
-                addInteractions(key, note.freq, note.midi);
-                container.appendChild(key);
-            }
-        });
-        
-        // Initial setup
-        setTimeout(fitKeys, 100);
-
-        function addInteractions(element, freq, id) {
-            const start = (e) => { e.preventDefault(); playNote(freq, id); };
-            const end = (e) => { e.preventDefault(); stopNote(id); };
-            element.addEventListener('mousedown', start);
-            element.addEventListener('mouseup', end);
-            element.addEventListener('mouseleave', end);
-            element.addEventListener('touchstart', start, {passive: false});
-            element.addEventListener('touchend', end, {passive: false});
-            element.addEventListener('touchcancel', end, {passive: false});
-        }
-
-        window.addEventListener('keydown', (e) => {
-            if (e.repeat) return;
-            const midi = keyboardMap[e.key.toLowerCase()];
-            if (midi) {
-                const note = notes.find(n => n.midi === midi);
-                if(note) playNote(note.freq, midi);
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            const midi = keyboardMap[e.key.toLowerCase()];
-            if (midi) stopNote(midi);
-        });
-
-        document.body.addEventListener('click', initAudio, { once: true });
-        document.body.addEventListener('touchstart', initAudio, { once: true });
-
+        // Initialize Keyboard Setup
+        buildKeyboardUI();
+        setTimeout(fitKeys, 150);
     </script>
 </body>
 </html>
