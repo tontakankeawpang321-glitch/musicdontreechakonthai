@@ -3,107 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic Lute Simulator</title>
+    <title>Realistic Lute Simulator Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Cinzel:wght@500;700&display=swap');
         
         body {
             font-family: 'Sarabun', sans-serif;
-            touch-action: manipulation; /* ป้องกันการ zoom/scroll ขณะเล่น */
+            touch-action: none; /* ป้องกันการเลื่อน/ขยายหน้าจอขณะเล่น */
             user-select: none;
-            background-color: #1a1510;
+            -webkit-user-select: none;
+            background-color: #0d0805;
             overflow: hidden;
+            height: 100vh;
+            height: 100dvh; /* รองรับ Dynamic Viewport บนมือถือ */
         }
 
-        /* เอฟเฟกต์ไม้ */
-        .wood-texture {
-            background-color: #5d4037;
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 4px),
-                              linear-gradient(to bottom, #3e2723, #5d4037);
+        .historical-font {
+            font-family: 'Cinzel', serif;
         }
 
-        /* สายลูท */
+        /* พื้นผิวไม้บอดี้เครื่องดนตรี */
+        .wood-bg {
+            background-color: #2b170f;
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.4), transparent 20%, transparent 80%, rgba(0,0,0,0.4)),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 8px);
+        }
+
+        /* ไม้คอหน้าสัมผัส (Fretboard Wood) */
+        .fretboard-wood {
+            background-color: #1a0f0a;
+            background-image: linear-gradient(to right, #110906, #1f110b 15%, #2a1810 50%, #1f110b 85%, #110906);
+        }
+
+        /* แผ่นไม้หน้าท้องเครื่อง (Spruce Soundboard) */
+        .soundboard-wood {
+            background-color: #e4d5c3;
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.15), transparent 10%, transparent 90%, rgba(0,0,0,0.15)),
+                repeating-linear-gradient(90deg, rgba(139,90,43,0.08) 0px, rgba(139,90,43,0.08) 1px, transparent 1px, transparent 4px);
+        }
+
+        /* แอนิเมชันสายสั่นแบบสมจริง */
         .string {
             position: relative;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.6);
             transition: transform 0.05s ease;
         }
         
-        /* สายสั่นเมื่อถูกดีด */
         .vibrating {
-            animation: vibrate 0.2s linear infinite;
+            animation: vibrate 0.1s linear infinite;
         }
 
         @keyframes vibrate {
-            0% { transform: translateY(0); }
-            25% { transform: translateY(1px); }
-            50% { transform: translateY(0); }
-            75% { transform: translateY(-1px); }
-            100% { transform: translateY(0); }
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(1.2px, 0.4px); }
+            50% { transform: translate(0, 0); }
+            75% { transform: translate(-1.2px, -0.4px); }
+            100% { transform: translate(0, 0); }
         }
 
-        /* เฟร็ต (ช่องกด) */
+        /* ตารางช่องสัมผัสสำหรับแนวตั้ง */
         .fret-cell {
             position: relative;
             cursor: pointer;
-            border-right: 4px solid #bcaaa4; /* ก้านเฟร็ต */
+            border-bottom: 2px solid #5d4037; /* มาร์กเกอร์เอ็นรัดเฟร็ตตามประวัติศาสตร์ */
             transition: background-color 0.1s;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
+        /* สะพานรับแรงสั่นสะเทือนด้านบน (Bone Nut) */
+        .fret-nut {
+            border-bottom: 6px solid #efebe9;
+            background-image: linear-gradient(to bottom, #2d1b15, #140b07);
+        }
+
         .fret-cell:active, .fret-cell.active-touch {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(212, 163, 89, 0.25);
         }
 
         .fret-marker {
-            width: 12px;
-            height: 12px;
-            background-color: rgba(255,255,255,0.4);
+            width: 7px;
+            height: 7px;
+            background-color: rgba(245, 222, 179, 0.65);
             border-radius: 50%;
             position: absolute;
-            top: 50%; /* Adjusted logic in JS for positioning */
-            left: 50%;
-            transform: translate(-50%, -50%);
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
             pointer-events: none;
+            box-shadow: 0 0 4px rgba(0,0,0,0.8);
         }
 
-        /* ป้ายชื่อโน้ต */
         .note-label {
             position: absolute;
-            font-size: 10px;
+            font-size: 8px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 1px 4px;
-            border-radius: 4px;
+            color: #ffecb3;
+            background-color: rgba(43, 24, 16, 0.85);
+            padding: 1px 3px;
+            border-radius: 3px;
             opacity: 0;
             transition: opacity 0.2s ease;
             pointer-events: none;
             z-index: 20;
-            text-shadow: 0 1px 2px black;
+            border: 1px solid rgba(212, 163, 89, 0.3);
         }
 
-        /* คลาสสำหรับแสดงโน้ต */
         .show-notes .note-label {
             opacity: 1;
         }
 
-        /* แสงสะท้อนบนสาย */
-        .string::after {
-            content: '';
+        /* ตัวโน้ตลอยประกาย */
+        .floating-note {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
-            border-radius: 99px;
+            pointer-events: none;
+            font-size: 13px;
+            color: #ffe082;
+            z-index: 50;
+            animation: floatUp 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
-        /* Animation for recording button */
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(0) scale(0.7) rotate(0deg); }
+            20% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-70px) scale(1.1) rotate(15deg); }
+        }
+
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
@@ -112,154 +141,331 @@
         
         .recording-pulse {
             animation: pulse-red 1.5s infinite;
-            background-color: #dc2626 !important; /* red-600 */
-            border-color: #ef4444 !important;
+            background-color: #b91c1c !important;
             color: white !important;
         }
-        
-        /* Modal สำหรับเริ่มเสียง */
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            flex-direction: column;
+
+        .rose-outer {
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
         }
+
+        /* ซ่อน Scrollbar ของเลย์เอาต์ */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col text-amber-100">
+<body class="flex flex-col text-[#f5ebd7] select-none overflow-hidden bg-[#0d0805]">
 
-    <!-- ส่วนหัว -->
-    <header class="p-3 bg-[#2d1b15] shadow-lg flex justify-between items-center z-10 border-b border-[#4a3b32]">
-        <div class="flex items-center gap-2 md:gap-4">
-            <div>
-                <h1 class="text-xl md:text-2xl font-bold text-amber-500">Lute Simulator 🎵</h1>
-                <p class="text-[10px] md:text-xs text-amber-200 opacity-70">Renaissance Lute</p>
-            </div>
-            
-            <div class="flex gap-2">
-                <!-- ปุ่มบันทึกเสียง -->
-                <button id="record-btn" class="ml-2 md:ml-4 px-3 py-1 bg-[#3e2723] border border-amber-700 rounded text-xs text-amber-100 hover:bg-amber-900 transition flex items-center gap-2" disabled>
-                    <span id="record-icon">🔴</span> 
-                    <span id="record-text">บันทึก</span>
-                </button>
-
-                <!-- ปุ่มเปิด/ปิดโน้ต -->
-                <button id="toggle-notes-btn" class="hidden md:flex px-3 py-1 bg-[#3e2723] border border-amber-700 rounded text-xs text-amber-100 hover:bg-amber-900 transition items-center gap-2">
-                    <span id="note-icon">👁️</span> 
-                    <span id="note-text">แสดงโน้ต</span>
-                </button>
-            </div>
+    <!-- ส่วนหัว (Header) -->
+    <header class="h-14 bg-[#1a0f0a] border-b border-[#3e271d] px-3 flex justify-between items-center z-30 flex-shrink-0">
+        <div>
+            <h1 class="text-sm md:text-base font-bold text-amber-500 flex items-center gap-1.5 historical-font tracking-wide">
+                <span>🪕</span> LUTE PRO
+            </h1>
+            <p id="tuning-text" class="text-[9px] text-amber-200/50">Renaissance 6-Course (G)</p>
         </div>
+        
+        <div class="flex gap-1.5 items-center">
+            <!-- กลุ่มปุ่มเล่นเพลงสาธิตที่ย้ายออกมาแสดงผลด้านนอกข้างๆ ปุ่มโน้ต -->
+            <div class="flex gap-1 bg-[#110906] p-1 rounded border border-amber-900/35 items-center">
+                <button onclick="playDemo(0)" class="demo-btn px-1.5 py-1 bg-[#2b170f] hover:bg-amber-950 rounded text-[9px] md:text-[10px] text-amber-200 hover:text-white transition">
+                    <span class="hidden sm:inline">Greensleeves </span>🎵1
+                </button>
+                <button onclick="playDemo(1)" class="demo-btn px-1.5 py-1 bg-[#2b170f] hover:bg-amber-950 rounded text-[9px] md:text-[10px] text-amber-200 hover:text-white transition">
+                    <span class="hidden sm:inline">Kemp's Jig </span>🎵2
+                </button>
+                <button onclick="playDemo(2)" class="demo-btn px-1.5 py-1 bg-[#2b170f] hover:bg-amber-950 rounded text-[9px] md:text-[10px] text-amber-200 hover:text-white transition">
+                    <span class="hidden sm:inline">Fantasia </span>🎵3
+                </button>
+                <button id="stop-demo-btn" onclick="stopDemo()" class="hidden px-1.5 py-1 bg-red-950 border border-red-800 text-white rounded text-[9px] md:text-[10px] font-bold animate-pulse">
+                    🛑 <span class="hidden sm:inline">หยุด</span>
+                </button>
+            </div>
 
-        <div class="hidden md:block text-right text-xs text-gray-400">
-            <p>ใช้เมาส์คลิก หรือแตะหน้าจอ</p>
-            <p>กดคีย์บอร์ดแถว 1-6 เพื่อเล่นสายเปิด</p>
+            <button id="toggle-notes-btn" class="px-2 py-1 bg-[#2b170f] border border-amber-800/60 rounded text-[10px] text-amber-200 hover:bg-amber-900/60 transition">
+                👁️ โน้ต
+            </button>
+            <button id="record-btn" class="px-2 py-1 bg-[#2b170f] border border-red-900/60 rounded text-[10px] text-red-400 hover:bg-red-950 transition flex items-center gap-1" disabled>
+                <span id="record-icon">🔴</span><span id="record-text" class="hidden sm:inline">บันทึก</span>
+            </button>
+            <button id="menu-drawer-btn" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded text-[10px] transition flex items-center gap-1">
+                ⚙️ แผงควบคุม
+            </button>
         </div>
     </header>
 
-    <!-- พื้นที่คอลูท (Fretboard) -->
-    <main class="flex-1 wood-texture relative overflow-x-auto overflow-y-hidden flex items-center justify-center p-4">
+    <!-- พื้นที่หน้าจอหลัก (Main Vertical Layout) - ออกแบบพอดีจอมือถือโดยเฉพาะ -->
+    <main class="flex-1 wood-bg relative flex flex-col items-center justify-between p-2 min-h-0">
         
-        <!-- ตัวโครงสร้างคอ -->
-        <div id="fretboard" class="relative w-full max-w-5xl h-[300px] bg-[#2a1e18] shadow-2xl border-y-8 border-[#1a120e] flex">
+        <!-- ตัวโครงสร้างของเครื่องดนตรีแนวตั้ง (สเกลตามหน้าจอ) -->
+        <div id="lute-body" class="relative w-full max-w-sm h-full bg-[#1c110b] shadow-2xl border-x-4 border-[#2d1b13] flex flex-col rounded-t-[30px] rounded-b-[40px] overflow-hidden min-h-0">
             
-            <!-- Headstock (ส่วนหัว) -->
-            <div class="w-16 md:w-24 bg-[#1a120e] flex-shrink-0 flex flex-col justify-around py-2 border-r-4 border-[#3e2723] z-10 shadow-xl relative">
-                <div class="text-center text-[10px] text-amber-500 font-bold absolute top-1 left-0 w-full">Nut</div>
-                <!-- ลูกบิดจำลอง -->
-                <div class="w-full h-2 bg-amber-700 rounded-r shadow-inner my-1"></div>
-                <div class="w-full h-2 bg-amber-700 rounded-r shadow-inner my-1"></div>
-                <div class="w-full h-2 bg-amber-700 rounded-r shadow-inner my-1"></div>
-                <div class="w-full h-2 bg-amber-700 rounded-r shadow-inner my-1"></div>
-                <div class="w-full h-2 bg-amber-700 rounded-r shadow-inner my-1"></div>
-                <div class="w-full h-2 bg-amber-700 rounded-r shadow-inner my-1"></div>
+            <!-- ส่วนหัว Pegbox & Ivory Nut -->
+            <div class="h-8 bg-[#0f0805] flex-shrink-0 flex justify-center items-center border-b-2 border-[#2a170f] z-10 shadow-md relative">
+                <div class="text-[8px] text-amber-600/70 font-bold uppercase tracking-widest historical-font">Pegbox & Ivory Nut</div>
             </div>
 
-            <!-- สายและเฟร็ต -->
-            <div id="strings-container" class="flex-1 grid grid-cols-[repeat(12,minmax(50px,1fr))] relative">
-                <!-- Grid จะถูกสร้างโดย JS -->
+            <!-- โซนคอและเฟร็ตสัมผัสแนวตั้ง (Fretboard Neck Grid) -->
+            <div id="fretboard-neck" class="relative flex-1 min-h-0 fretboard-wood">
+                <!-- เส้นสายพาดดิ่งลงมา -->
+                <div id="strings-visual-layer" class="absolute inset-0 pointer-events-none z-10"></div>
+                <!-- ตารางช่องสี่เหลี่ยมสำหรับแตะกดเฟร็ตบนจอ -->
+                <div id="fret-cells-layer" class="absolute inset-0 grid"></div>
             </div>
 
-        </div>
-        
-        <!-- Rose (รูเสียง) ตกแต่ง -->
-        <div class="absolute right-[-100px] top-1/2 transform -translate-y-1/2 w-64 h-64 rounded-full border-4 border-[#3e2723] bg-[#1a120e] shadow-inner flex items-center justify-center opacity-50 pointer-events-none">
-            <div class="w-56 h-56 rounded-full border border-amber-900 opacity-30"></div>
+            <!-- ตัวบอดี้กล่องเสียงจำลองพร้อม Rose Soundhole & Bridge (Strum Zone) -->
+            <div id="soundboard-section" class="h-36 soundboard-wood border-t-4 border-[#1f120c] relative flex-shrink-0 flex flex-col items-center justify-between py-2 overflow-hidden">
+                <div class="absolute inset-0 bg-radial-gradient from-transparent to-black/15 pointer-events-none"></div>
+
+                <!-- Lute Rose (Soundhole) SVG แกะสลักสวยงาม -->
+                <div class="relative w-16 h-16 rounded-full bg-[#0a0604] rose-outer flex items-center justify-center border-2 border-[#3e271d] z-10 pointer-events-none">
+                    <svg class="w-12 h-12 opacity-70 text-amber-800" viewBox="0 0 100 100" fill="currentColor">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="0.8" />
+                        <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="0.5" />
+                        <path d="M 50 5 L 50 95 M 5 50 L 95 50 M 18 18 L 82 82 M 18 82 L 82 18" stroke="currentColor" stroke-width="0.5" />
+                        <polygon points="50,15 60,38 85,35 68,52 80,77 50,65 20,77 32,52 15,35 40,38" fill="none" stroke="currentColor" stroke-width="0.6"/>
+                    </svg>
+                </div>
+
+                <!-- Bridge (สะพานยึดสายจำลองแบบผูกปมไม้) -->
+                <div class="w-32 h-4 bg-[#25150e] border-y border-[#180d09] shadow-lg rounded-sm z-10 flex justify-around items-center px-3 relative">
+                    <div class="w-1 h-1 bg-[#d7ccc8] rounded-full opacity-60"></div>
+                    <div class="w-1 h-1 bg-[#d7ccc8] rounded-full opacity-60"></div>
+                    <div class="w-1 h-1 bg-[#d7ccc8] rounded-full opacity-60"></div>
+                    <div class="w-1 h-1 bg-[#d7ccc8] rounded-full opacity-60"></div>
+                    <div class="w-1 h-1 bg-[#d7ccc8] rounded-full opacity-60"></div>
+                    <div class="w-1 h-1 bg-[#d7ccc8] rounded-full opacity-60"></div>
+                    <div class="absolute bottom-[-4px] left-1 right-1 h-1 bg-black/40 blur-[1px]"></div>
+                </div>
+
+                <!-- เลเยอร์จับตำแหน่งการกวาดนิ้วสัมผัสดีดเสียง (Strumming Touch Overlay) -->
+                <div id="strum-touch-layer" class="absolute inset-0 z-20 cursor-crosshair"></div>
+            </div>
         </div>
     </main>
 
-    <!-- แผงควบคุมด้านล่าง -->
-    <footer class="bg-[#2d1b15] p-3 text-center text-sm border-t border-[#4a3b32] text-amber-200/60">
-        <button id="mobile-toggle-notes" class="md:hidden inline-block mb-2 px-3 py-1 border border-amber-700 rounded text-xs">แสดงโน้ต</button>
-        <div class="block">
-            <span class="hidden md:inline">คลิกที่ช่องเฟร็ตเพื่อเล่นเสียง | </span>
-            <span>ระบบเสียง Polyphonic Web Audio API เสถียรและสมจริง</span>
+    <!-- แผงสไลด์ลิ้นชักแผงควบคุมหลัก (Control Drawer) -->
+    <div id="control-drawer" class="fixed inset-x-0 top-14 bottom-0 bg-[#160f0c]/95 backdrop-blur-md border-t border-amber-950 z-40 transform translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto no-scrollbar p-4 flex flex-col gap-5">
+        
+        <div class="flex justify-between items-center border-b border-amber-900/40 pb-2">
+            <h2 class="text-sm font-bold text-amber-400 historical-font">⚙️ แผงควบคุมและคลังเครื่องดนตรี</h2>
+            <button id="close-drawer-btn" class="px-2 py-0.5 bg-amber-950 border border-amber-800 rounded text-[10px] text-amber-200">
+                ✕ ปิดหน้าต่าง
+            </button>
         </div>
-    </footer>
 
-    <!-- Overlay เริ่มต้น -->
-    <div id="start-overlay">
-        <div class="text-center animate-bounce">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-amber-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+        <!-- แท็บที่ 1: ตั้งสายประวัติศาสตร์ (Tunings) -->
+        <div class="bg-[#241712] p-3 rounded-lg border border-amber-900/30">
+            <h3 class="text-xs font-bold text-amber-300 mb-2">⚙️ ตั้งสายประวัติศาสตร์:</h3>
+            <div class="grid grid-cols-2 gap-1.5">
+                <button onclick="changeTuning('renaissanceG')" id="btn-tune-renaissanceG" class="tune-select-btn px-2 py-1.5 rounded text-[10px] font-semibold bg-amber-950 border border-amber-700 text-amber-100">Renaissance G</button>
+                <button onclick="changeTuning('baroqueD')" id="btn-tune-baroqueD" class="tune-select-btn px-2 py-1.5 rounded text-[10px] font-semibold bg-[#1a0f0a] border border-amber-900/40 text-amber-300/60">Baroque D minor</button>
+                <button onclick="changeTuning('italianA')" id="btn-tune-italianA" class="tune-select-btn px-2 py-1.5 rounded text-[10px] font-semibold bg-[#1a0f0a] border border-amber-900/40 text-amber-300/60">Italian Lute (A)</button>
+                <button onclick="changeTuning('guitarE')" id="btn-tune-guitarE" class="tune-select-btn px-2 py-1.5 rounded text-[10px] font-semibold bg-[#1a0f0a] border border-amber-900/40 text-amber-300/60">Modern Guitar (E)</button>
+            </div>
         </div>
-        <h2 class="text-3xl font-bold text-white mb-2">เครื่องเล่นลูท (Lute)</h2>
-        <p class="text-gray-300 mb-6">แตะเพื่อเริ่มใช้งานระบบเสียง</p>
-        <button id="start-btn" class="px-8 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-full shadow-lg transition transform hover:scale-105">
-            เริ่มเล่น
+
+        <!-- แท็บที่ 2: คอร์ดด่วนสำหรับผู้เริ่มต้น (Chord Pads) -->
+        <div class="bg-[#241712] p-3 rounded-lg border border-amber-900/30">
+            <h3 class="text-xs font-bold text-amber-300 mb-2">🎼 เล่นคอร์ดด่วนแบบลูทเนิสต์:</h3>
+            <div id="chords-container" class="grid grid-cols-3 gap-1.5">
+                <!-- สไตล์คอร์ดจะอัปเดตออโต้เมื่อกดเปลี่ยนระบบเสียง -->
+            </div>
+        </div>
+
+        <!-- แท็บที่ 3: เพลงบรรเลงสาธิต (Acoustic Demo Timelines) -->
+        <div class="bg-[#241712] p-3 rounded-lg border border-amber-900/30">
+            <h3 class="text-xs font-bold text-amber-300 mb-2">🎵 เพลงสาธิตประวัติศาสตร์:</h3>
+            <p class="text-[10px] text-amber-200/60 leading-relaxed">
+                ย้ายฟังก์ชันเลือกเพลงไปอยู่บน <span class="text-amber-400 font-semibold">แถบเมนูด้านบนสุดข้างๆ ปุ่ม "👁️ โน้ต"</span> เพื่อให้คุณสามารถกดสลับเพลงระหว่างเล่นได้อย่างสะดวกและอิสระโดยไม่ต้องเปิดแผงควบคุมนี้ค้างไว้ครับ
+            </p>
+        </div>
+
+        <!-- แท็บที่ 4: ตัวประมวลผลสัญญาณอะคูสติกส์ (Acoustic Physical DSP) -->
+        <div class="bg-[#241712] p-3 rounded-lg border border-amber-900/30 flex flex-col gap-3">
+            <h3 class="text-xs font-bold text-amber-300">🎛️ เครื่องโมเดลลิ่งปรับแต่งเสียง:</h3>
+            <div>
+                <div class="flex justify-between text-[10px] text-amber-400 font-bold mb-1">
+                    <span>ความก้องโบสถ์ (Reverb Size)</span>
+                    <span id="reverb-val">30%</span>
+                </div>
+                <input type="range" id="reverb-mix" min="0" max="0.8" step="0.05" value="0.3" class="w-full accent-amber-500 bg-[#160f0c]">
+            </div>
+            <div>
+                <div class="flex justify-between text-[10px] text-amber-400 font-bold mb-1">
+                    <span>ความสะท้อนกล่องไม้ (Wood Damping)</span>
+                    <span id="damping-val">2.8 kHz</span>
+                </div>
+                <input type="range" id="filter-freq" min="800" max="5000" step="100" value="2800" class="w-full accent-amber-500 bg-[#160f0c]">
+            </div>
+            <div>
+                <div class="flex justify-between text-[10px] text-amber-400 font-bold mb-1">
+                    <span>ความกังวานหางสาย (Decay Time)</span>
+                    <span id="decay-val">2.2s</span>
+                </div>
+                <input type="range" id="string-decay" min="0.8" max="4.0" step="0.1" value="2.2" class="w-full accent-amber-500 bg-[#160f0c]">
+            </div>
+            <div>
+                <div class="flex justify-between text-[10px] text-amber-400 font-bold mb-1">
+                    <span>ความสั่นของคู่สาย (Course Chorus Detune)</span>
+                    <span id="chorus-val">4 cents</span>
+                </div>
+                <input type="range" id="chorus-detune" min="0" max="15" step="1" value="4" class="w-full accent-amber-500 bg-[#160f0c]">
+            </div>
+        </div>
+
+        <!-- แท็บที่ 5: แฟ้มประวัติการอัดเสียงในตัว (In-App Local Playlist) -->
+        <div id="local-recordings-container" class="hidden bg-[#241712] p-3 rounded-lg border border-amber-900/30">
+            <h3 class="text-xs font-bold text-amber-300 mb-2">📁 แผ่นเสียงการบรรเลงของคุณ:</h3>
+            <div class="flex items-center gap-2">
+                <select id="recordings-dropdown" class="flex-1 bg-[#1a0f0a] border border-amber-900/50 text-amber-200 text-xs rounded p-1">
+                    <option value="">(ไม่มีประวัติบันทึก)</option>
+                </select>
+                <button id="play-local-btn" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-stone-950 rounded font-bold text-xs" disabled>▶️ ฟัง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ส่วนต้อนรับและเปิดใช้งานเว็บบราวเซอร์ออดิโอ (Safety Overlay) -->
+    <div id="start-overlay" class="p-6">
+        <div class="text-center mb-5 animate-pulse">
+            <span class="text-6xl block mb-2">🪕</span>
+        </div>
+        <h2 class="text-2xl font-bold text-amber-400 mb-2 historical-font tracking-wide text-center">LUTE SIMULATOR PRO</h2>
+        <p class="text-[11px] text-amber-200/60 max-w-xs text-center px-4 mb-6 leading-relaxed">
+            ระบบจำลองเสียงสะท้อนอะคูสติกด้วยหลักฟิสิกส์เส้นเสียงตึงสั่น (Karplus-Strong Waveguide Physics) คมชัด เสถียร และพอดีกับหน้าจอมือถือแนวตั้ง
+        </p>
+        <button id="start-btn" class="px-12 py-4 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-base rounded-full shadow-2xl transition transform active:scale-95 tracking-wider">
+            เริ่มบรรเลงดนตรี
         </button>
     </div>
 
     <script>
-        // --- การตั้งค่าระบบเสียง (Web Audio API) ---
+        // --- การตั้งค่าระบบจำลองเสียงฟิสิกส์สายดีด (Audio DSP Engine) ---
         let audioCtx;
-        let masterOutput; // ตัวรวมสัญญาณเสียงทั้งหมด (เพื่อส่งไปลำโพงและเครื่องอัด)
+        let masterGain;
+        let reverbNode;
         let mediaRecorder;
+        
         let audioChunks = [];
         let isRecording = false;
+        let localRecordingsList = [];
+        let demoTimeoutTimeline = [];
 
-        const tuning = [
-            67, // G4 (String 1 - Highest)
-            62, // D4
-            57, // A3
-            53, // F3
-            48, // C3
-            43  // G2 (String 6 - Lowest)
-        ]; // Renaissance Lute Tuning in G
+        const fxSettings = {
+            reverbMix: 0.3,
+            filterFreq: 2800,
+            chorusDetune: 4,
+            decayTime: 2.2
+        };
+
+        // ฐานข้อมูลระบบตั้งสายประวัติศาสตร์ที่นิยมใช้
+        const tuningsConfig = {
+            renaissanceG: {
+                name: "Renaissance G Tuning (มาตรฐาน)",
+                frequencies: [67, 62, 57, 53, 48, 43], // G4, D4, A3, F3, C3, G2
+                chords: [
+                    { name: "G major", frets: [0, 0, 0, 2, 0, 3] },
+                    { name: "C major", frets: [0, 2, 0, 2, 3, 0] },
+                    { name: "D major", frets: [2, 0, 2, 0, 0, 2] },
+                    { name: "F major", frets: [2, 3, 0, 0, 3, 1] },
+                    { name: "A minor", frets: [2, 0, 2, 2, 0, 0] },
+                    { name: "G minor", frets: [3, 0, 0, 1, 0, 3] }
+                ]
+            },
+            baroqueD: {
+                name: "Baroque D minor Tuning",
+                frequencies: [69, 65, 62, 57, 53, 45], // A4, F4, D4, A3, F3, A2
+                chords: [
+                    { name: "D minor", frets: [0, 0, 0, 0, 0, 0] },
+                    { name: "F major", frets: [0, 1, 0, 0, 1, 0] },
+                    { name: "A major", frets: [0, 0, 2, 2, 2, 0] },
+                    { name: "G minor", frets: [1, 1, 0, 0, 1, 1] }
+                ]
+            },
+            italianA: {
+                name: "Italian Lute Tuning (A)",
+                frequencies: [69, 64, 59, 55, 50, 45], // A4, E4, B3, G3, D3, A2
+                chords: [
+                    { name: "A major", frets: [0, 0, 0, 2, 0, 0] },
+                    { name: "D major", frets: [2, 0, 2, 0, 0, 0] },
+                    { name: "E major", frets: [0, 2, 0, 1, 2, 0] },
+                    { name: "C major", frets: [3, 2, 0, 1, 0, 2] }
+                ]
+            },
+            guitarE: {
+                name: "Modern Guitar Tuning (E)",
+                frequencies: [64, 59, 55, 50, 45, 40], // E4, B3, G3, D3, A2, E2
+                chords: [
+                    { name: "E minor", frets: [0, 0, 0, 2, 2, 0] },
+                    { name: "C major", frets: [0, 1, 0, 2, 3, 0] },
+                    { name: "G major", frets: [3, 0, 0, 0, 2, 3] },
+                    { name: "A minor", frets: [0, 1, 2, 2, 0, 0] },
+                    { name: "D major", frets: [2, 3, 2, 0, 0, 0] }
+                ]
+            }
+        };
+
+        let currentTuningKey = "renaissanceG";
+        let tuning = [...tuningsConfig[currentTuningKey].frequencies];
 
         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const NUM_FRETS = 12;
+        const NUM_STRINGS = 6;
+        
+        // เก็บสถานะช่องกดปัจจุบันเพื่อนำไปใช้ควบกระบวนการดีดผ่าน Soundhole Strum
+        let activeFrettingState = [0, 0, 0, 0, 0, 0];
 
-        // แปลง MIDI เป็นชื่อโน้ต
         function getNoteName(midi) {
-            const noteIndex = midi % 12;
-            const octave = Math.floor(midi / 12) - 1;
-            return noteNames[noteIndex] + octave;
+            return noteNames[midi % 12] + (Math.floor(midi / 12) - 1);
         }
 
         function midiToFreq(midi) {
             return 440 * Math.pow(2, (midi - 69) / 12);
         }
 
-        // เริ่มต้นระบบเสียงและเตรียมตัวอัด
+        // ตัวสร้างเสียงสะท้อนห้องโบราณจำลองความสมจริง (Impulse Reverb Buffer)
+        function createReverbImpulseResponse(duration, decay) {
+            const sampleRate = audioCtx.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = audioCtx.createBuffer(2, length, sampleRate);
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+                }
+            }
+            return impulse;
+        }
+
         function initAudioEngine() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             
-            // สร้าง Master Output Node
-            masterOutput = audioCtx.createGain();
-            masterOutput.connect(audioCtx.destination); // ต่อออกลำโพง
+            masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(0.75, audioCtx.currentTime);
 
-            // ตั้งค่า Recorder Destination
-            const dest = audioCtx.createMediaStreamDestination();
-            masterOutput.connect(dest); // ต่อเข้าตัวอัดด้วย
+            reverbNode = audioCtx.createConvolver();
+            reverbNode.buffer = createReverbImpulseResponse(2.5, 3.0);
 
-            // ตั้งค่า MediaRecorder
+            const reverbWet = audioCtx.createGain();
+            reverbWet.gain.setValueAtTime(fxSettings.reverbMix, audioCtx.currentTime);
+
+            const reverbDry = audioCtx.createGain();
+            reverbDry.gain.setValueAtTime(1.0 - fxSettings.reverbMix, audioCtx.currentTime);
+
+            masterGain.connect(reverbDry);
+            masterGain.connect(reverbNode);
+            reverbNode.connect(reverbWet);
+
+            const finalDestination = audioCtx.createGain();
+            reverbDry.connect(finalDestination);
+            reverbWet.connect(finalDestination);
+            finalDestination.connect(audioCtx.destination);
+
+            // วงจรตรวจสอบและเริ่มอัดเก็บข้อมูลการบรรเลงสด
             try {
+                const dest = audioCtx.createMediaStreamDestination();
+                finalDestination.connect(dest);
                 mediaRecorder = new MediaRecorder(dest.stream);
                 
                 mediaRecorder.ondataavailable = (e) => {
@@ -270,146 +476,171 @@
                     const blob = new Blob(audioChunks, { type: 'audio/webm' });
                     const url = URL.createObjectURL(blob);
                     
-                    // สร้างลิงก์ดาวน์โหลดอัตโนมัติ
+                    const timestamp = new Date().toLocaleTimeString();
+                    localRecordingsList.push({ time: timestamp, url: url });
+                    updateRecordingsDropdown();
+
+                    // เซฟไฟล์ดาวน์โหลดลงอุปกรณ์โดยตรงเพื่อความสะดวกเสริม
                     const a = document.createElement('a');
                     a.style.display = 'none';
                     a.href = url;
-                    const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,"-");
-                    a.download = `lute-recording-${timestamp}.webm`;
+                    a.download = `lute-play-${new Date().toISOString().slice(0,10)}.webm`;
                     document.body.appendChild(a);
                     a.click();
-                    
-                    // Cleanup
                     setTimeout(() => {
                         document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-                    }, 100);
-                    
-                    audioChunks = []; // Reset chunks
+                    }, 200);
+
+                    audioChunks = [];
                 };
 
-                // เปิดการใช้งานปุ่มอัดเมื่อระบบพร้อม
                 const recordBtn = document.getElementById('record-btn');
                 recordBtn.disabled = false;
                 recordBtn.classList.remove('opacity-50');
-
             } catch (err) {
-                console.error("MediaRecorder Error:", err);
-                document.getElementById('record-text').innerText = "อัดไม่ได้";
+                console.warn("ไม่รองรับโมดูลบันทึกเสียงบนอุปกรณ์เครื่องนี้", err);
             }
         }
 
-        // ฟังก์ชันสร้างเสียง Lute
-        function playNote(midiNote, stringIndex) {
+        // สังเคราะห์แบบจำลองเสียงเส้นด้ายพริ้วไหวด้วย Karplus-Strong Algorithm
+        function playKarplusStrong(midiNote, stringIndex, pluckVelocity = 1.0) {
             if (!audioCtx) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const freq = midiToFreq(midiNote);
             const now = audioCtx.currentTime;
-
-            // Oscillator Setup
-            const osc = audioCtx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(freq, now);
-
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(freq, now);
-            osc2.detune.value = 5; 
-
-            // Filter Setup
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(3000, now); 
-            filter.frequency.exponentialRampToValueAtTime(500, now + 0.1); 
-            filter.frequency.linearRampToValueAtTime(100, now + 2.5); 
-
-            // Gain Setup
-            const noteGain = audioCtx.createGain();
-            const volume = 0.3; 
             
-            noteGain.gain.setValueAtTime(0, now);
-            noteGain.gain.linearRampToValueAtTime(volume, now + 0.005); 
-            noteGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0); 
+            // การทำงานคลื่นจำลองในกล่องฟีดแบ็ค (Feedback loop)
+            const runWaveguide = (targetFreq) => {
+                const period = 1 / targetFreq;
+                
+                const delayNode = audioCtx.createDelay(period * 2);
+                delayNode.delayTime.setValueAtTime(period, now);
 
-            // Connections
-            osc.connect(filter);
-            osc2.connect(filter);
-            filter.connect(noteGain);
-            
-            // *** สำคัญ: ต่อเข้า masterOutput แทน destination ตรงๆ เพื่อให้อัดเสียงได้ ***
-            noteGain.connect(masterOutput);
+                const feedbackGain = audioCtx.createGain();
+                const feedbackValue = Math.pow(0.996, period * audioCtx.sampleRate * (2.8 / fxSettings.decayTime));
+                feedbackGain.gain.setValueAtTime(Math.min(0.997, feedbackValue), now);
 
-            // Play
-            osc.start(now);
-            osc2.start(now);
-            osc.stop(now + 2.5);
-            osc2.stop(now + 2.5);
+                const dampingFilter = audioCtx.createBiquadFilter();
+                dampingFilter.type = 'lowpass';
+                dampingFilter.frequency.setValueAtTime(fxSettings.filterFreq, now);
 
-            // Visual
+                delayNode.connect(dampingFilter);
+                dampingFilter.connect(feedbackGain);
+                feedbackGain.connect(delayNode);
+
+                const burstSamples = Math.max(128, Math.floor(audioCtx.sampleRate * period));
+                const noiseBuffer = audioCtx.createBuffer(1, burstSamples, audioCtx.sampleRate);
+                const noiseData = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < burstSamples; i++) {
+                    noiseData[i] = (Math.random() * 2 - 1) * (1 - i / burstSamples) * pluckVelocity;
+                }
+
+                const noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = noiseBuffer;
+                noiseSource.connect(delayNode);
+
+                const envelopeNode = audioCtx.createGain();
+                envelopeNode.gain.setValueAtTime(0.9, now);
+                envelopeNode.gain.exponentialRampToValueAtTime(0.001, now + fxSettings.decayTime);
+
+                delayNode.connect(envelopeNode);
+                envelopeNode.connect(masterGain);
+
+                noiseSource.start(now);
+
+                setTimeout(() => {
+                    try {
+                        noiseSource.stop();
+                        noiseSource.disconnect();
+                        delayNode.disconnect();
+                        dampingFilter.disconnect();
+                        feedbackGain.disconnect();
+                        envelopeNode.disconnect();
+                    } catch(e) {}
+                }, fxSettings.decayTime * 1000 + 300);
+            };
+
             animateString(stringIndex);
+            spawnNoteParticle(stringIndex, midiNote);
+
+            runWaveguide(freq);
+
+            // นำเสนอฮาร์มอนิกร่วมคลอประสานหากเลือกเพิ่มระดับคอรัสดีจูนสาย
+            if (fxSettings.chorusDetune > 0) {
+                const detunedFreq = freq * Math.pow(2, fxSettings.chorusDetune / 1200);
+                runWaveguide(detunedFreq);
+            }
         }
 
-        // --- UI Logic ---
-        const stringsContainer = document.getElementById('strings-container');
-        const NUM_FRETS = 12;
-        const NUM_STRINGS = 6;
-        let showNotes = false; 
+        // --- STREAMING_CHUNK: Rendering the touch-responsive vertical fretboard... ---
+        // วาดและติดตั้งบอร์ดเฟร็ตสัมผัสแนวตั้ง (Vertical Interface Builder)
+        const stringsVisualLayer = document.getElementById('strings-visual-layer');
+        const fretCellsLayer = document.getElementById('fret-cells-layer');
+        let showNotes = false;
 
-        function initLute() {
-            stringsContainer.innerHTML = '';
+        function initLuteInterface() {
+            stringsVisualLayer.innerHTML = '';
+            fretCellsLayer.innerHTML = '';
 
+            // 6 สายแนวตั้ง × 13 ช่องความสูงเฟร็ต (0-12)
+            fretCellsLayer.style.gridTemplateColumns = `repeat(${NUM_STRINGS}, 1fr)`;
+            fretCellsLayer.style.gridTemplateRows = `repeat(${NUM_FRETS + 1}, 1fr)`;
+
+            // สร้างเส้นสายแนวดิ่งจากบนลงล่างพาดผ่านแนวคอ
             for (let s = 0; s < NUM_STRINGS; s++) {
                 const stringLine = document.createElement('div');
-                const thickness = 1 + (s * 0.6); 
-                stringLine.className = 'string absolute w-full pointer-events-none z-10';
-                stringLine.style.height = `${thickness}px`;
-                stringLine.style.backgroundColor = s > 3 ? '#a1887f' : '#fff9c4'; 
-                stringLine.style.top = `${(s * 100 / NUM_STRINGS) + (50 / NUM_STRINGS)}%`; 
+                const thickness = 1.0 + ((NUM_STRINGS - 1 - s) * 0.45); 
+                stringLine.className = 'string absolute h-full pointer-events-none z-10';
+                stringLine.style.width = `${thickness}px`;
+                stringLine.style.backgroundColor = s < 3 ? '#ffe082' : '#d7ccc8'; 
+                
+                const percentPosition = ((s * 100 / NUM_STRINGS) + (50 / NUM_STRINGS));
+                stringLine.style.left = `${percentPosition}%`;
                 stringLine.id = `string-visual-${s}`;
-                stringsContainer.appendChild(stringLine);
+                stringsVisualLayer.appendChild(stringLine);
             }
 
-            stringsContainer.style.display = 'grid';
-            stringsContainer.style.gridTemplateRows = `repeat(${NUM_STRINGS}, 1fr)`;
-            stringsContainer.style.gridTemplateColumns = `repeat(${NUM_FRETS + 1}, 1fr)`; 
-
-            for (let s = 0; s < NUM_STRINGS; s++) {
-                for (let f = 0; f <= NUM_FRETS; f++) {
-                    const midiVal = tuning[s] + f;
+            // จัดทำช่องความถี่และเฟร็ตสัมผัสเพื่อเล่นทำนอง
+            for (let f = 0; f <= NUM_FRETS; f++) {
+                for (let s = 0; s < NUM_STRINGS; s++) {
                     const cell = document.createElement('div');
                     
                     if (f === 0) {
-                        cell.className = 'fret-cell bg-[#3e2723] border-r-8 border-amber-900'; 
+                        cell.className = 'fret-cell fret-nut';
                     } else {
-                        cell.className = 'fret-cell border-r-4 border-[#8d6e63]';
+                        cell.className = 'fret-cell';
                     }
 
+                    const midiVal = tuning[s] + f;
                     const noteText = getNoteName(midiVal);
                     const noteSpan = document.createElement('span');
                     noteSpan.className = 'note-label';
                     noteSpan.innerText = noteText;
                     cell.appendChild(noteSpan);
 
-                    if ((s === 2) && [3, 5, 7, 10, 12].includes(f)) {
-                         const marker = document.createElement('div');
-                         marker.className = 'fret-marker';
-                         marker.style.top = '100%'; 
-                         marker.style.zIndex = '0';
-                         cell.appendChild(marker);
+                    if (s === 2 && [3, 5, 7, 9, 12].includes(f)) {
+                        const marker = document.createElement('div');
+                        marker.className = 'fret-marker';
+                        cell.appendChild(marker);
                     }
 
+                    // การสัมผัสคอเฟร็ตบนมือถือแนวตั้ง (แตะที่จอแล้วดังทันทีและเก็บความทรงจำคีย์)
                     const playHandler = (e) => {
                         e.preventDefault();
-                        playNote(midiVal, s);
+                        activeFrettingState[s] = f;
+                        
+                        const currentPitch = tuning[s] + f;
+                        playKarplusStrong(currentPitch, s, 0.95);
+
                         cell.classList.add('active-touch');
-                        setTimeout(() => cell.classList.remove('active-touch'), 150);
+                        setTimeout(() => cell.classList.remove('active-touch'), 120);
                     };
 
                     cell.addEventListener('mousedown', playHandler);
-                    cell.addEventListener('touchstart', playHandler);
+                    cell.addEventListener('touchstart', playHandler, { passive: false });
 
-                    stringsContainer.appendChild(cell);
+                    fretCellsLayer.appendChild(cell);
                 }
             }
         }
@@ -420,65 +651,304 @@
                 strElement.classList.remove('vibrating');
                 void strElement.offsetWidth; 
                 strElement.classList.add('vibrating');
-                setTimeout(() => {
-                    strElement.classList.remove('vibrating');
-                }, 500);
+                setTimeout(() => strElement.classList.remove('vibrating'), 300);
             }
         }
 
-        // Toggle Notes Logic
-        function toggleNotes() {
-            showNotes = !showNotes;
-            const btn = document.getElementById('toggle-notes-btn');
-            const icon = document.getElementById('note-icon');
-            const txt = document.getElementById('note-text');
-            const mobileBtn = document.getElementById('mobile-toggle-notes');
+        function spawnNoteParticle(stringIndex, midiNote) {
+            const board = document.getElementById('fretboard-neck');
+            if (!board) return;
+            const noteEl = document.createElement('div');
+            noteEl.className = 'floating-note font-bold select-none';
+            noteEl.innerText = getNoteName(midiNote);
             
-            if (showNotes) {
-                stringsContainer.classList.add('show-notes');
-                if(btn) {
-                    icon.innerText = '🔒';
-                    txt.innerText = 'ซ่อนโน้ต';
-                    btn.classList.add('bg-amber-900', 'border-amber-500');
-                }
-                if(mobileBtn) {
-                    mobileBtn.innerText = 'ซ่อนโน้ต';
-                    mobileBtn.classList.add('bg-amber-900');
-                }
-            } else {
-                stringsContainer.classList.remove('show-notes');
-                if(btn) {
-                    icon.innerText = '👁️';
-                    txt.innerText = 'แสดงโน้ต';
-                    btn.classList.remove('bg-amber-900', 'border-amber-500');
-                }
-                if(mobileBtn) {
-                    mobileBtn.innerText = 'แสดงโน้ต';
-                    mobileBtn.classList.remove('bg-amber-900');
-                }
+            const horizontalPercent = ((stringIndex * 100 / NUM_STRINGS) + (50 / NUM_STRINGS));
+            noteEl.style.left = `calc(${horizontalPercent}% - 10px)`;
+            noteEl.style.bottom = `${20 + Math.random() * 20}%`;
+            
+            board.appendChild(noteEl);
+            setTimeout(() => noteEl.remove(), 1000);
+        }
+
+        // --- STREAMING_CHUNK: Developing the multi-touch strumming physics... ---
+        // พัฒนาระบบดีดและกรีดสายผ่านตัวแผงจำลองซาวด์บอร์ดด้านล่าง (Soundboard Slide Strum)
+        const strumTouchLayer = document.getElementById('strum-touch-layer');
+        let lastTrackedString = -1;
+
+        function handleStrumAction(clientX) {
+            const rect = strumTouchLayer.getBoundingClientRect();
+            const touchX = clientX - rect.left;
+            const width = rect.width;
+            
+            const stringIndex = Math.floor((touchX / width) * NUM_STRINGS);
+            
+            if (stringIndex >= 0 && stringIndex < NUM_STRINGS && stringIndex !== lastTrackedString) {
+                lastTrackedString = stringIndex;
+                
+                // ดึงโน้ตที่ผู้ใช้จับค้างไว้ที่คอขณะสไลด์นิ้วดีดด้านล่าง
+                const activeFret = activeFrettingState[stringIndex];
+                const finalMidiNote = tuning[stringIndex] + activeFret;
+                
+                playKarplusStrong(finalMidiNote, stringIndex, 1.25);
             }
         }
 
-        document.getElementById('toggle-notes-btn').addEventListener('click', toggleNotes);
-        document.getElementById('mobile-toggle-notes').addEventListener('click', toggleNotes);
+        strumTouchLayer.addEventListener('mousedown', (e) => {
+            lastTrackedString = -1;
+            handleStrumAction(e.clientX);
+        });
 
-        // Recording Logic
+        strumTouchLayer.addEventListener('mousemove', (e) => {
+            if (e.buttons === 1) { 
+                handleStrumAction(e.clientX);
+            }
+        });
+
+        strumTouchLayer.addEventListener('touchstart', (e) => {
+            lastTrackedString = -1;
+            const touch = e.touches[0];
+            handleStrumAction(touch.clientX);
+        }, { passive: true });
+
+        strumTouchLayer.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            handleStrumAction(touch.clientX);
+        }, { passive: true });
+
+        strumTouchLayer.addEventListener('touchend', () => {
+            lastTrackedString = -1;
+        });
+
+        // --- STREAMING_CHUNK: Programming historical melodies and autoplay logic... ---
+        // คิวตารางโน้ตบรรเลงเพลงตัวอย่างในอดีต (เมื่อบรรเลงจนจบปุ่มสีและฟิสิกส์จะปิดตัวเองทันที)
+        const demoTracks = [
+            // 1. Greensleeves
+            [
+                [0.0, 5, 0], [0.3, 3, 0], [0.6, 2, 0], [0.9, 2, 2], [1.2, 2, 3], [1.5, 2, 2], [1.8, 2, 0], [2.1, 3, 2],
+                [2.4, 4, 0], [2.7, 3, 2], [3.0, 3, 2], [3.3, 3, 0], [3.6, 3, 2], [3.9, 2, 0], [4.2, 3, 3], [4.8, 5, 0],
+                [5.2, 5, 0], [5.5, 3, 0], [5.8, 2, 0], [6.1, 2, 2], [6.4, 2, 3], [6.7, 2, 2], [7.0, 2, 0], [7.3, 3, 2],
+                [7.6, 4, 0], [7.9, 3, 2], [8.2, 3, 2], [8.5, 3, 0], [8.8, 3, 2], [9.1, 2, 0], [9.4, 3, 3], [10.0, 5, 0]
+            ],
+            // 2. Kemp's Jig
+            [
+                [0.0, 0, 0], [0.15, 1, 0], [0.3, 2, 2], [0.45, 1, 0], [0.6, 0, 0], [0.75, 0, 2], [0.9, 0, 4], [1.05, 0, 0],
+                [1.2, 1, 2], [1.35, 2, 0], [1.5, 1, 2], [1.65, 1, 0], [1.8, 2, 2], [1.95, 3, 0], [2.2, 5, 0],
+                [2.5, 0, 0], [2.65, 1, 0], [2.8, 2, 2], [2.95, 1, 0], [3.1, 0, 0], [3.25, 0, 2], [3.4, 0, 4], [3.55, 0, 0]
+            ],
+            // 3. Fantasia Arpeggio
+        [
+            [0.0, 5, 0], [0.15, 4, 2], [0.3, 3, 2], [0.45, 2, 0], [0.6, 1, 0], [0.75, 0, 0],
+            [0.9, 1, 0], [1.05, 2, 0], [1.2, 3, 2], [1.35, 4, 2], [1.5, 5, 0],
+            [1.8, 5, 3], [1.95, 4, 2], [2.1, 3, 0], [2.25, 2, 2], [2.4, 1, 0], [2.55, 0, 2],
+            [2.7, 1, 0], [2.85, 2, 2], [3.0, 3, 0], [3.15, 4, 2], [3.3, 5, 3]
+        ]
+    ];
+
+    function playDemo(trackIndex) {
+        stopDemo();
+        const track = demoTracks[trackIndex];
+            const stopBtn = document.getElementById('stop-demo-btn');
+            if (stopBtn) stopBtn.classList.remove('hidden');
+
+            const buttons = document.querySelectorAll('.demo-btn');
+            if (buttons[trackIndex]) {
+                buttons[trackIndex].classList.remove('bg-[#2b170f]', 'text-amber-200');
+                buttons[trackIndex].classList.add('bg-amber-500', 'text-stone-950', 'font-bold');
+            }
+
+            track.forEach(([delay, stringIdx, fretIdx]) => {
+                const timeoutId = setTimeout(() => {
+                    const midiVal = tuning[stringIdx] + fretIdx;
+                    
+                    const cellIndex = (fretIdx * NUM_STRINGS) + stringIdx;
+                    const cell = fretCellsLayer.children[cellIndex];
+                    if (cell) {
+                        cell.classList.add('active-touch');
+                        setTimeout(() => cell.classList.remove('active-touch'), 140);
+                    }
+                    
+                    playKarplusStrong(midiVal, stringIdx, 1.0);
+                }, delay * 1000);
+                
+                demoTimeoutTimeline.push(timeoutId);
+            });
+
+            // ตรวจหาจุดสิ้นสุดระยะเวลาของเสียงบรรเลงสุดท้ายเพื่อปิดระบบ timeline และปิดม่านสัญญลักษณ์
+            const maxDuration = Math.max(...track.map(n => n[0])) + 1.8;
+            const endTimeoutId = setTimeout(() => {
+                stopDemo();
+            }, maxDuration * 1000);
+            demoTimeoutTimeline.push(endTimeoutId);
+        }
+
+        function stopDemo() {
+            demoTimeoutTimeline.forEach(id => clearTimeout(id));
+            demoTimeoutTimeline = [];
+            
+            const stopBtn = document.getElementById('stop-demo-btn');
+            if (stopBtn) stopBtn.classList.add('hidden');
+            
+            document.querySelectorAll('.demo-btn').forEach(btn => {
+                btn.className = "demo-btn px-1.5 py-1 bg-[#2b170f] hover:bg-amber-950 rounded text-[9px] md:text-[10px] text-amber-200 hover:text-white transition";
+            });
+        }
+
+        // คืนค่าตำแหน่งคอร์ดสำหรับระบบตั้งสายปัจจุบัน
+        function renderChordsLibrary() {
+            const chordsContainer = document.getElementById('chords-container');
+            chordsContainer.innerHTML = '';
+            
+            const currentChords = tuningsConfig[currentTuningKey].chords;
+            currentChords.forEach(chord => {
+                const btn = document.createElement('button');
+                btn.className = 'py-1.5 bg-amber-950/70 border border-amber-800 rounded text-amber-100 hover:bg-amber-900 transition text-[10px] font-semibold';
+                btn.innerText = chord.name;
+                
+                btn.addEventListener('click', () => {
+                    activeFrettingState = [...chord.frets];
+                    
+                    // ดีดสะพานแบบหน่วงเหลื่อมเวลาเล็กน้อย (Arpeggiated Roll Chords)
+                    chord.frets.forEach((fret, stringIdx) => {
+                        const midiVal = tuning[stringIdx] + fret;
+                        
+                        setTimeout(() => {
+                            const cellIndex = (fret * NUM_STRINGS) + stringIdx;
+                            const cell = fretCellsLayer.children[cellIndex];
+                            if (cell) {
+                                cell.classList.add('active-touch');
+                                setTimeout(() => cell.classList.remove('active-touch'), 200);
+                            }
+                            playKarplusStrong(midiVal, stringIdx, 1.15);
+                        }, stringIdx * 45); 
+                    });
+                });
+                
+                chordsContainer.appendChild(btn);
+            });
+        }
+
+        function changeTuning(tuningKey) {
+            currentTuningKey = tuningKey;
+            tuning = [...tuningsConfig[tuningKey].frequencies];
+            
+            document.getElementById('tuning-text').innerText = tuningsConfig[tuningKey].name;
+
+            document.querySelectorAll('.tune-select-btn').forEach(btn => {
+                btn.className = "tune-select-btn px-2 py-1.5 rounded text-[10px] font-semibold bg-[#1a0f0a] border border-amber-900/40 text-amber-300/60";
+            });
+            document.getElementById(`btn-tune-${tuningKey}`).className = "tune-select-btn px-2 py-1.5 rounded text-[10px] font-semibold bg-amber-950 border border-amber-700 text-amber-100";
+
+            initLuteInterface();
+            renderChordsLibrary();
+            stopDemo();
+        }
+
+        // --- ระบบอัดไฟล์เสียงและแสดงเพลย์ลิสต์ในเครื่องภายในตัวแอป (In-App Local Recordings) ---
+        const recordingsDropdown = document.getElementById('recordings-dropdown');
+        const playLocalBtn = document.getElementById('play-local-btn');
+        let currentPlayingAudio = null;
+
+        function updateRecordingsDropdown() {
+            recordingsDropdown.innerHTML = '';
+            if (localRecordingsList.length === 0) {
+                const option = document.createElement('option');
+                option.text = "(ไม่มีประวัติบันทึก)";
+                recordingsDropdown.add(option);
+                playLocalBtn.disabled = true;
+            } else {
+                localRecordingsList.forEach((rec, idx) => {
+                    const option = document.createElement('option');
+                    option.value = idx;
+                    option.text = `บันทึกสด #${idx + 1} (${rec.time})`;
+                    recordingsDropdown.add(option);
+                });
+                playLocalBtn.disabled = false;
+                document.getElementById('local-recordings-container').classList.remove('hidden');
+            }
+        }
+
+        playLocalBtn.addEventListener('click', () => {
+            const selectedIdx = recordingsDropdown.value;
+            if (selectedIdx === "" || !localRecordingsList[selectedIdx]) return;
+
+            if (currentPlayingAudio) {
+                currentPlayingAudio.pause();
+                currentPlayingAudio = null;
+                playLocalBtn.innerText = "▶️ ฟัง";
+                return;
+            }
+
+            const rec = localRecordingsList[selectedIdx];
+            const audio = new Audio(rec.url);
+            currentPlayingAudio = audio;
+            playLocalBtn.innerText = "⏸️ หยุด";
+
+            audio.play();
+            audio.onended = () => {
+                playLocalBtn.innerText = "▶️ ฟัง";
+                currentPlayingAudio = null;
+            };
+        });
+
+        // --- ระบบสไลด์ควบคุมเมนูดึงออกมาด้านข้าง (Sliding Drawer Controls) ---
+        const controlDrawer = document.getElementById('control-drawer');
+        const menuDrawerBtn = document.getElementById('menu-drawer-btn');
+        const closeDrawerBtn = document.getElementById('close-drawer-btn');
+
+        menuDrawerBtn.addEventListener('click', () => {
+            controlDrawer.classList.toggle('translate-x-full');
+        });
+
+        closeDrawerBtn.addEventListener('click', () => {
+            controlDrawer.classList.add('translate-x-full');
+        });
+
+        // ควบคุมตัวประมวลสัญญาณเสียงอะคูสติกส์ (DSP Interface Triggers)
+        document.getElementById('reverb-mix').addEventListener('input', (e) => {
+            fxSettings.reverbMix = parseFloat(e.target.value);
+            document.getElementById('reverb-val').innerText = `${Math.round(fxSettings.reverbMix * 100)}%`;
+            if (audioCtx) initAudioEngine(); 
+        });
+
+        document.getElementById('filter-freq').addEventListener('input', (e) => {
+            fxSettings.filterFreq = parseInt(e.target.value);
+            document.getElementById('damping-val').innerText = `${(fxSettings.filterFreq / 1000).toFixed(1)} kHz`;
+        });
+
+        document.getElementById('string-decay').addEventListener('input', (e) => {
+            fxSettings.decayTime = parseFloat(e.target.value);
+            document.getElementById('decay-val').innerText = `${fxSettings.decayTime.toFixed(1)}s`;
+        });
+
+        document.getElementById('chorus-detune').addEventListener('input', (e) => {
+            fxSettings.chorusDetune = parseInt(e.target.value);
+            document.getElementById('chorus-val').innerText = `${fxSettings.chorusDetune} cents`;
+        });
+
+        document.getElementById('toggle-notes-btn').addEventListener('click', (e) => {
+            showNotes = !showNotes;
+            if (showNotes) {
+                fretCellsLayer.classList.add('show-notes');
+                e.target.classList.add('bg-amber-700');
+            } else {
+                fretCellsLayer.classList.remove('show-notes');
+                e.target.classList.remove('bg-amber-700');
+            }
+        });
+
         const recordBtn = document.getElementById('record-btn');
         const recordText = document.getElementById('record-text');
         const recordIcon = document.getElementById('record-icon');
 
         recordBtn.addEventListener('click', () => {
             if (!mediaRecorder) return;
-
             if (!isRecording) {
-                // Start Recording
                 mediaRecorder.start();
                 isRecording = true;
                 recordBtn.classList.add('recording-pulse');
-                recordText.innerText = 'หยุด (กดเพื่อเซฟ)';
+                recordText.innerText = 'หยุดบันทึก';
                 recordIcon.innerText = '⏹️';
             } else {
-                // Stop Recording
                 mediaRecorder.stop();
                 isRecording = false;
                 recordBtn.classList.remove('recording-pulse');
@@ -487,35 +957,41 @@
             }
         });
 
-        // Initialize System
+        // เปิดใช้งานเว็บบราวเซอร์เซฟตี้โมดูล
         const startBtn = document.getElementById('start-btn');
         const overlay = document.getElementById('start-overlay');
 
         startBtn.addEventListener('click', () => {
             initAudioEngine();
             overlay.style.opacity = '0';
-            setTimeout(() => overlay.remove(), 500);
-            initLute();
+            setTimeout(() => {
+                overlay.remove();
+                initLuteInterface();
+                renderChordsLibrary();
+            }, 400);
         });
 
-        // Keyboard Support
+        // รองรับแป้นพิมพ์ตัวเลขคีย์บอร์ดเดสก์ท็อป 1-6 เพื่อออกเสียงสายเปิดว่างอย่างรวดเร็ว
         window.addEventListener('keydown', (e) => {
             if (e.repeat) return;
-            const key = e.key;
             const keyMap = { '1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5 };
+            if (keyMap.hasOwnProperty(e.key)) {
+                const s = keyMap[e.key];
+                
+                const currentFret = activeFrettingState[s];
+                const activePitch = tuning[s] + currentFret;
+                
+                playKarplusStrong(activePitch, s, 1.1);
 
-            if (keyMap.hasOwnProperty(key)) {
-                const s = keyMap[key];
-                playNote(tuning[s], s);
-                const firstCellIndex = s * (NUM_FRETS + 1); 
-                const cell = stringsContainer.children[firstCellIndex];
-                if(cell) {
+                const cellIndex = (currentFret * NUM_STRINGS) + s;
+                const cell = fretCellsLayer.children[cellIndex];
+                if (cell) {
                     cell.classList.add('active-touch');
                     setTimeout(() => cell.classList.remove('active-touch'), 150);
                 }
             }
         });
-
     </script>
 </body>
 </html>
+```
