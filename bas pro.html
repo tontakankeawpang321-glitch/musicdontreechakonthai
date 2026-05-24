@@ -148,15 +148,15 @@
             <div class="grid grid-cols-3 gap-1.5">
                 <button id="btn-song-1" onclick="playDemoSong(1)" class="bg-amber-950/40 border border-amber-800/60 text-[10px] py-1 px-1 rounded-md text-amber-100 hover:bg-amber-900/60 transition active:scale-95 flex flex-col items-center gap-0.5">
                     <i class="fa-solid fa-music text-amber-400 text-xs"></i>
-                    <span class="font-bold truncate w-full text-center">Smoke Bass</span>
+                    <span class="font-bold truncate w-full text-center text-[9px]">Smoke Bass</span>
                 </button>
                 <button id="btn-song-2" onclick="playDemoSong(2)" class="bg-amber-950/40 border border-amber-800/60 text-[10px] py-1 px-1 rounded-md text-amber-100 hover:bg-amber-900/60 transition active:scale-95 flex flex-col items-center gap-0.5">
                     <i class="fa-solid fa-music text-amber-400 text-xs"></i>
-                    <span class="font-bold truncate w-full text-center">Blues in E</span>
+                    <span class="font-bold truncate w-full text-center text-[9px]">Blues in E</span>
                 </button>
                 <button id="btn-song-3" onclick="playDemoSong(3)" class="bg-amber-950/40 border border-amber-800/60 text-[10px] py-1 px-1 rounded-md text-amber-100 hover:bg-amber-900/60 transition active:scale-95 flex flex-col items-center gap-0.5">
                     <i class="fa-solid fa-music text-amber-400 text-xs"></i>
-                    <span class="font-bold truncate w-full text-center">Ode To Joy</span>
+                    <span class="font-bold truncate w-full text-center text-[9px]">Ode To Joy</span>
                 </button>
             </div>
 
@@ -165,6 +165,45 @@
                     <i class="fa-solid fa-circle-stop text-red-400"></i> หยุดเล่นเพลงสาธิต
                 </button>
             </div>
+        </section>
+
+        <!-- ส่วนเครื่องบันทึกเสียง (Audio Recorder Panel) -->
+        <section class="bg-gray-900/60 border border-red-500/20 rounded-lg p-2 flex flex-col gap-1.5 shadow">
+            <div class="flex justify-between items-center">
+                <h2 class="text-[10px] font-bold text-red-400 flex items-center gap-1">
+                    <i class="fa-solid fa-microphone text-xs animate-pulse text-red-500"></i> เครื่องบันทึกเสียง (Audio Recorder)
+                </h2>
+                <div class="text-[9px] bg-gray-850 px-1.5 py-0.5 rounded text-gray-400 font-semibold flex items-center gap-1.5">
+                    <span id="recording-dot" class="w-1.5 h-1.5 rounded-full bg-gray-500 inline-block transition-all"></span> 
+                    <span id="recording-timer" class="font-mono">00:00</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-1.5">
+                <!-- ปุ่มเริ่มบันทึก -->
+                <button id="btn-start-record" onclick="startRecording()" class="bg-red-950/50 border border-red-800/60 hover:bg-red-900/50 text-[10px] py-1 px-1 rounded-md text-red-100 transition active:scale-95 flex flex-col items-center justify-center gap-0.5 col-span-2">
+                    <i class="fa-solid fa-circle text-red-500 text-xs"></i>
+                    <span class="font-bold">เริ่มบันทึกเสียง</span>
+                </button>
+                <!-- ปุ่มหยุดบันทึก -->
+                <button id="btn-stop-record" onclick="stopRecording()" class="bg-gray-800 border border-gray-700 hover:bg-gray-700 text-[10px] py-1 px-1 rounded-md text-gray-100 transition active:scale-95 flex flex-col items-center justify-center gap-0.5 col-span-2 hidden">
+                    <i class="fa-solid fa-square text-white text-xs"></i>
+                    <span class="font-bold">หยุดบันทึก</span>
+                </button>
+                <!-- ปุ่มลองฟังที่อัด -->
+                <button id="btn-play-record" onclick="togglePlayRecording()" class="opacity-40 pointer-events-none bg-gray-950/40 border border-gray-850 text-[10px] py-1 px-1 rounded-md text-gray-300 hover:bg-gray-800 transition active:scale-95 flex flex-col items-center justify-center gap-0.5 col-span-1">
+                    <i class="fa-solid fa-play text-yellow-400 text-xs"></i>
+                    <span class="font-bold">ลองฟัง</span>
+                </button>
+                <!-- ปุ่มดาวน์โหลดเพลง -->
+                <button id="btn-download-record" class="opacity-40 pointer-events-none bg-gray-950/40 border border-gray-850 text-[10px] py-1 px-1 rounded-md text-gray-300 hover:bg-gray-800 transition active:scale-95 flex flex-col items-center justify-center gap-0.5 col-span-1">
+                    <i class="fa-solid fa-download text-green-400 text-xs"></i>
+                    <span class="font-bold">โหลดไฟล์</span>
+                </button>
+            </div>
+            
+            <!-- แท็กสำหรับเล่นออดิโอที่อัดไว้ (ซ่อนอยู่เบื้องหลัง) -->
+            <audio id="recorded-audio" class="hidden"></audio>
         </section>
 
         <!-- โซนคีย์บอร์ดปรับแต่งโน้ตได้เอง (Custom Keyboard Config & Play Area) -->
@@ -304,6 +343,14 @@
         let audioCtx = null;
         let activeNodes = []; // เก็บ Node ที่กำลังเล่นเพื่อจัดการ และเคลียร์ไม่ให้เสียงค้างคา
         
+        // ระบบบันทึกเสียง (Recording System State)
+        let mediaRecorder = null;
+        let recDestination = null;
+        let recordedChunks = [];
+        let isRecording = false;
+        let recordStartTime = 0;
+        let recordInterval = null;
+
         // เพลงสาธิตข้อมูลโน้ต (Demo songs sequences)
         // ทุกโน้ตประกอบด้วยความถี่, ระยะจังหวะเริ่ม (วินาที), โน้ตชื่อภาษาไทย, ความยาวเสียง
         const DEMO_SONGS = {
@@ -371,6 +418,9 @@
         function initAudioContext() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // สร้างสายสัญญาณบันทึกเสียง (Media Stream Destination)
+                recDestination = audioCtx.createMediaStreamDestination();
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
@@ -416,11 +466,16 @@
                 // หางเสียงลดระดับลง
                 gainNode.gain.exponentialRampToValueAtTime(0.001, now + decay);
 
-                // เชื่อมสายสัญญาน
+                // เชื่อมสายสัญญานไปยังลำโพงผู้เล่น
                 oscMain.connect(filter);
                 oscSub.connect(filter);
                 filter.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
+
+                // หากเครื่องบันทึกเสียงถูกสร้างขึ้น ส่งสัญญาณเข้าไปอัดด้วย
+                if (recDestination) {
+                    gainNode.connect(recDestination);
+                }
 
                 // เริ่มเล่นเสียง
                 oscMain.start(now);
@@ -491,6 +546,141 @@
                 }
                 return true;
             });
+        }
+
+        // เริ่มต้นการบันทึกเสียงจาก Web Audio Destination
+        function startRecording() {
+            initAudioContext();
+            recordedChunks = [];
+
+            if (!window.MediaRecorder) {
+                showNotification("เบราว์เซอร์นี้ไม่รองรับการบันทึกเสียงบนมือถือ");
+                return;
+            }
+
+            try {
+                // เลือก Format ที่เสถียรสำหรับสมาร์ตโฟน
+                let options = { mimeType: 'audio/webm;codecs=opus' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'audio/webm' };
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = {}; // ใช้ค่า Default ของอุปกรณ์นั้น ๆ (เช่น iOS Safari)
+                }
+
+                mediaRecorder = new MediaRecorder(recDestination.stream, options);
+            } catch (err) {
+                showNotification("ไม่สามารถเชื่อมต่ออุปกรณ์บันทึกเสียงได้");
+                console.error(err);
+                return;
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const audioURL = URL.createObjectURL(blob);
+                
+                const audioPlayer = document.getElementById('recorded-audio');
+                const playBtn = document.getElementById('btn-play-record');
+                const downloadBtn = document.getElementById('btn-download-record');
+                
+                audioPlayer.src = audioURL;
+                
+                // เปิดการใช้งานปุ่มหลังอัดเสร็จ
+                playBtn.classList.remove('opacity-40', 'pointer-events-none');
+                downloadBtn.classList.remove('opacity-40', 'pointer-events-none');
+                
+                // กำหนดลิ้งค์สำหรับการดาวน์โหลด
+                downloadBtn.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = audioURL;
+                    a.download = `bassify-recording-${Date.now()}.webm`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showNotification("ดาวน์โหลดไฟล์เสียงบันทึกแล้ว!");
+                };
+
+                showNotification("บันทึกเสร็จสิ้น! กดปุ่ม 'ลองฟัง' หรือ 'โหลดไฟล์'");
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            recordStartTime = Date.now();
+
+            // เปลี่ยนสถานะ UI
+            document.getElementById('btn-start-record').classList.add('hidden');
+            document.getElementById('btn-stop-record').classList.remove('hidden');
+            
+            // เล่นแอนิเมชันจุดสีแดง
+            const dot = document.getElementById('recording-dot');
+            dot.classList.remove('bg-gray-500');
+            dot.classList.add('bg-red-500', 'animate-ping');
+
+            // เริ่มนับเวลาอัดเสียง
+            updateRecordTimer();
+            recordInterval = setInterval(updateRecordTimer, 1000);
+            
+            showNotification("เริ่มบันทึกเสียงแล้ว ดีดกีตาร์เบสได้เลย!");
+        }
+
+        // สั่งหยุดบันทึกเสียง
+        function stopRecording() {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+
+            mediaRecorder.stop();
+            isRecording = false;
+            clearInterval(recordInterval);
+
+            // รีเซ็ตสไตล์ของ UI บันทึก
+            document.getElementById('btn-start-record').classList.remove('hidden');
+            document.getElementById('btn-stop-record').classList.add('hidden');
+            
+            const dot = document.getElementById('recording-dot');
+            dot.classList.remove('animate-ping', 'bg-red-500');
+            dot.classList.add('bg-gray-500');
+        }
+
+        // อัปเดตตัวนับเวลาอัดเสียงแบบเรียลไทม์
+        function updateRecordTimer() {
+            const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+            const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const secs = String(elapsed % 60).padStart(2, '0');
+            document.getElementById('recording-timer').innerText = `${mins}:${secs}`;
+        }
+
+        // เล่นหรือหยุดฟังเสียงที่ผู้ใช้อัดไว้ชั่วคราว
+        function togglePlayRecording() {
+            const audioPlayer = document.getElementById('recorded-audio');
+            const playBtn = document.getElementById('btn-play-record');
+
+            if (!audioPlayer.src) return;
+
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playBtn.innerHTML = `
+                    <i class="fa-solid fa-pause text-yellow-400 text-xs"></i>
+                    <span class="font-bold">หยุดฟัง</span>
+                `;
+            } else {
+                audioPlayer.pause();
+                playBtn.innerHTML = `
+                    <i class="fa-solid fa-play text-yellow-400 text-xs"></i>
+                    <span class="font-bold">ลองฟัง</span>
+                `;
+            }
+
+            audioPlayer.onended = () => {
+                playBtn.innerHTML = `
+                    <i class="fa-solid fa-play text-yellow-400 text-xs"></i>
+                    <span class="font-bold">ลองฟัง</span>
+                `;
+            };
         }
 
         // เริ่มต้นเล่นเพลงสาธิตพร้อมคุมการปล่อยโน้ตลอย
@@ -609,7 +799,6 @@
 
             userKeys.forEach((key, index) => {
                 const pad = document.createElement('div');
-                // ปรับเปลี่ยนคลาส: จาก p-4 -> p-2, ความสูง h-28 -> h-16, ขอบมนเล็กน้อยลง และย้ายตัวเลขกำกับคีย์
                 pad.className = `bass-pad bg-gradient-to-br ${key.color || 'from-amber-800 to-amber-950'} border border-amber-600/40 rounded-xl p-2 flex flex-col justify-center items-center shadow-md active:scale-95 transition-all duration-75 cursor-pointer text-center select-none relative h-16`;
                 pad.dataset.freq = key.freq;
                 pad.dataset.index = index;
@@ -699,7 +888,7 @@
 
             if (!noteData) return;
 
-            // ตรวจสอบความซ้ำเพื่อความเป็นระเบียบ (ให้เพิ่มซ้ำได้ แต่อาจแจ้งเตือนหรือเปลี่ยนสีกรณีจำแนกยาก)
+            // ตรวจสอบความซ้ำเพื่อความเป็นระเบียบ
             const colorPalettes = [
                 "from-teal-900 to-indigo-950",
                 "from-violet-900 to-stone-950",
@@ -784,12 +973,12 @@
         // แสดงแจ้งเตือนลอยขนาดสั้น (Toast Notification)
         function showNotification(msg) {
             const toast = document.createElement('div');
-            toast.className = "fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-black font-extrabold text-xs px-4 py-2 rounded-full shadow-2xl z-50 animate-bounce";
+            toast.className = "fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-black font-extrabold text-xs px-4 py-2 rounded-full shadow-2xl z-50 text-center whitespace-nowrap";
             toast.innerText = msg;
             document.body.appendChild(toast);
             setTimeout(() => {
                 toast.remove();
-            }, 2000);
+            }, 2500);
         }
 
         // เริ่มต้นการทำงานเมื่อโหลดหน้าจอ
@@ -822,7 +1011,7 @@
 
             // ต้อนรับสู่การดีดเบส
             setTimeout(() => {
-                showNotification("พร้อมดีดแล้ว! สัมผัสคีย์หรือลองเปิดเพลงสาธิตได้เลย");
+                showNotification("พร้อมดีดแล้ว! สัมผัสคีย์หรือบันทึกเสียงได้เลย 🎙️");
             }, 1000);
         };
     </script>
