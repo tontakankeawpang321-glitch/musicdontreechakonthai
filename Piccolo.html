@@ -6,6 +6,7 @@
     <title>Piccolo Virtual Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ป้องกันการเลือกข้อความและการแตะซ้ำบนมือถือ */
         body {
@@ -13,286 +14,816 @@
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden;
-            background-color: #1a1a1a;
+            background-color: #0c0f12;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overscroll-behavior: none;
         }
 
-        /* เอฟเฟกต์ปุ่มกดแบบโลหะ (Metallic Key) */
+        /* เอฟเฟกต์ปุ่มกดแบบโลหะเรืองแสง (Metallic & Glowing Piccolo Key) */
         .piccolo-key {
-            background: radial-gradient(circle at 30% 30%, #f0f0f0, #a0a0a0, #4a4a4a);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 -2px 5px rgba(0,0,0,0.2);
-            transition: transform 0.05s, background 0.1s;
-            border: 2px solid #2d2d2d;
+            background: radial-gradient(circle at 35% 35%, #ffffff, #b5b5b5 40%, #5a5a5a 75%, #2a2a2a 100%);
+            box-shadow: 
+                0 4px 10px rgba(0,0,0,0.6), 
+                inset 0 -3px 8px rgba(0,0,0,0.4),
+                inset 0 3px 8px rgba(255,255,255,0.8);
+            transition: transform 0.05s, background 0.1s, box-shadow 0.1s;
+            border: 2px solid #2a2c30;
             position: relative;
             aspect-ratio: 1 / 1;
-            /* สำคัญ: บังคับ Pointer Events */
             touch-action: none; 
             -webkit-tap-highlight-color: transparent;
         }
 
-        .piccolo-key:active, .piccolo-key.active {
-            transform: scale(0.92);
-            background: radial-gradient(circle at 30% 30%, #d0d0d0, #808080, #3a3a3a);
-            box-shadow: 0 2px 3px rgba(0,0,0,0.5), inset 0 2px 5px rgba(0,0,0,0.4);
-        }
-
-        /* รูกลางปุ่ม */
         .piccolo-key::after {
             content: '';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60%;
-            height: 60%;
+            width: 50%;
+            height: 50%;
             border-radius: 50%;
-            background: radial-gradient(circle, #ddd 10%, #999 90%);
-            border: 1px solid #666;
-            opacity: 0.8;
+            background: radial-gradient(circle, #333 15%, #000 85%);
+            border: 2px solid #555;
+            opacity: 0.9;
             pointer-events: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+            transition: background 0.1s;
         }
 
-        /* ตัวเครื่องปิคโคโล */
+        .piccolo-key.active {
+            transform: scale(0.90);
+            background: radial-gradient(circle at 35% 35%, #9fd5ff, #3182ce 50%, #1a365d 80%, #0f172a 100%);
+            box-shadow: 
+                0 0 15px rgba(66, 153, 225, 0.8),
+                0 2px 5px rgba(0,0,0,0.5), 
+                inset 0 2px 8px rgba(0,0,0,0.6);
+        }
+
+        .piccolo-key.active::after {
+            background: radial-gradient(circle, #00d2ff 10%, #004b77 90%);
+            border-color: #00d2ff;
+        }
+
+        /* ตัวเครื่องดนตรีทำจากไม้หรูผสมผสานโลหะ */
         .instrument-body {
-            background: linear-gradient(90deg, #111 0%, #333 40%, #555 50%, #333 60%, #111 100%);
-            box-shadow: inset 0 0 20px #000;
-            border-radius: 50px;
+            background: linear-gradient(90deg, 
+                #080808 0%, 
+                #1c1a17 15%, 
+                #2d251e 40%, 
+                #413227 50%, 
+                #2d251e 60%, 
+                #1c1a17 85%, 
+                #080808 100%);
+            box-shadow: 
+                inset 0 0 20px rgba(0,0,0,0.9),
+                10px 0 30px rgba(0,0,0,0.5),
+                -10px 0 30px rgba(0,0,0,0.5);
+            border-radius: 40px;
+            border-left: 2px solid #5a4b3d;
+            border-right: 2px solid #5a4b3d;
         }
 
-        /* ไฟแสดงสถานะอัดเสียง */
+        /* ไฟสถานะและจอ LCD สไตล์วินเทจ-ไซไฟ */
         .rec-dot {
             width: 10px;
             height: 10px;
-            background-color: #555;
+            background-color: #4a5568;
             border-radius: 50%;
             display: inline-block;
             margin-right: 5px;
+            transition: all 0.3s;
         }
         .rec-dot.recording {
-            background-color: #ff3b30;
-            box-shadow: 0 0 8px #ff3b30;
+            background-color: #f56565;
+            box-shadow: 0 0 10px #f56565;
             animation: pulse 1s infinite;
         }
 
         @keyframes pulse {
             0% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.3; }
             100% { opacity: 1; }
         }
 
-        /* หน้าจอ LCD */
         .lcd-screen {
-            background: #2b3e50;
-            color: #4db8ff;
+            background: radial-gradient(circle at center, #0f2334 0%, #08121a 100%);
+            color: #38bdf8;
             font-family: 'Courier New', Courier, monospace;
-            text-shadow: 0 0 5px rgba(77, 184, 255, 0.5);
-            border: 2px solid #555;
-            border-radius: 6px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+            border: 2px solid #1e293b;
+            border-radius: 12px;
+            box-shadow: 
+                inset 0 0 15px rgba(0,0,0,0.9),
+                0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        /* เมนูการตั้งค่าแบบสไลด์ขึ้น */
+        .drawer {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer.open {
+            transform: translateY(0);
+        }
+
+        /* โน้ตลอยแบบมีเสน่ห์ */
+        .floating-note {
+            position: absolute;
+            pointer-events: none;
+            animation: riseAndFade 2.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            font-weight: bold;
+            z-index: 50;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        @keyframes riseAndFade {
+            0% {
+                transform: translateY(0) scale(0.6) rotate(0deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+                transform: translateY(-30px) scale(1.1) rotate(-10deg);
+            }
+            100% {
+                transform: translateY(-250px) scale(0.8) rotate(15deg);
+                opacity: 0;
+            }
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-between bg-gray-900 text-white overflow-hidden">
+<body class="h-screen w-screen flex flex-col items-center justify-between text-white overflow-hidden select-none">
 
-    <!-- ส่วนหัวและแผงควบคุม -->
-    <header class="w-full px-2 pt-2 pb-1 flex flex-col items-center gap-1 shrink-0 z-20 bg-gray-900/90">
+    <!-- เอฟเฟกต์โน้ตลอยสตรีมหลัก -->
+    <div id="floatingContainer" class="absolute inset-0 pointer-events-none overflow-hidden z-40"></div>
+
+    <!-- ส่วนหัวและแผงควบคุมระดับท็อป -->
+    <header class="w-full px-4 pt-4 pb-2 flex flex-col items-center gap-2 shrink-0 z-20 bg-slate-900/90 border-b border-slate-800 shadow-lg">
         <div class="flex items-center justify-between w-full max-w-md">
-            <h1 class="text-lg font-bold text-gray-300 tracking-wider">PICCOLO <span class="text-[10px] font-normal text-gray-500">PRO</span></h1>
+            <div>
+                <h1 class="text-xl font-black text-slate-100 tracking-widest flex items-center gap-1">
+                    PICCOLO <span class="bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text text-xs px-2 py-0.5 rounded border border-cyan-500/30 font-bold">VIRTUAL PRO</span>
+                </h1>
+                <p class="text-[9px] text-slate-400 tracking-wider">PREMIUM FLUTE SYNTHESIZER</p>
+            </div>
+            
             <div class="flex gap-2">
-                <button id="btnRec" class="bg-gray-700 active:bg-gray-600 border border-gray-600 rounded px-2 py-1 text-xs flex items-center shadow-md transition-all touch-manipulation">
-                    <span class="rec-dot" id="recIndicator"></span> REC
+                <!-- ปุ่มอัดเสียง -->
+                <button id="btnRec" class="bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs flex items-center gap-1.5 shadow-md transition-all touch-manipulation font-semibold">
+                    <span class="rec-dot" id="recIndicator"></span> <span id="recText">REC</span>
                 </button>
-                <button id="btnPlay" class="bg-gray-700 active:bg-gray-600 border border-gray-600 rounded px-2 py-1 text-xs text-green-400 shadow-md transition-all disabled:opacity-50 touch-manipulation" disabled>
-                    ▶ PLAY
+                <!-- ปุ่มเล่นเสียงบันทึก -->
+                <button id="btnPlay" class="bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-emerald-400 font-semibold shadow-md transition-all disabled:opacity-30 disabled:pointer-events-none touch-manipulation" disabled>
+                    <i class="fa-solid fa-play"></i> PLAY
                 </button>
             </div>
         </div>
 
-        <div class="lcd-screen w-full max-w-md h-8 flex items-center justify-center text-lg tracking-widest relative">
-            <span id="noteDisplay">READY</span>
+        <!-- หน้าจอ LCD แสดงสถานะ -->
+        <div class="lcd-screen w-full max-w-md h-12 flex flex-col items-center justify-center relative px-4 select-none">
+            <div class="flex justify-between w-full text-[9px] text-sky-400/60 font-mono tracking-widest uppercase mb-0.5">
+                <span>STATUS</span>
+                <span id="waveTypeDisplay">WAVE: SINE</span>
+            </div>
+            <div id="noteDisplay" class="text-xl font-bold tracking-widest text-sky-400">READY</div>
+        </div>
+
+        <!-- แถบปุ่มลัดด้านล่างจอ -->
+        <div class="flex justify-between w-full max-w-md mt-1 gap-2">
+            <button id="btnToggleAdvanced" class="flex-1 bg-gradient-to-r from-slate-800 to-slate-700 border border-slate-600 rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-2 shadow transition-all active:scale-95">
+                <i class="fa-solid fa-sliders text-cyan-400"></i> ปรับแต่งเสียงขั้นสูง
+            </button>
+            <button id="btnToggleDemos" class="flex-1 bg-gradient-to-r from-slate-800 to-slate-700 border border-slate-600 rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-2 shadow transition-all active:scale-95">
+                <i class="fa-solid fa-music text-yellow-400"></i> เพลงสาธิต
+            </button>
         </div>
     </header>
 
-    <!-- ตัวเครื่องดนตรี -->
-    <main class="flex-1 w-full max-w-md relative flex justify-center items-center py-1 overflow-hidden">
-        <div class="instrument-body absolute top-0 bottom-0 w-20 md:w-28 z-0"></div>
+    <!-- ตัวเครื่องดนตรีกลางหน้าจอ (จัดพื้นที่พอดีมือถือแนวตั้ง) -->
+    <main class="flex-1 w-full max-w-md relative flex justify-center items-center py-2 overflow-hidden">
+        <!-- บอดี้ขลุ่ยอิงแนวดิ่ง -->
+        <div class="instrument-body absolute top-2 bottom-2 w-24 md:w-28 z-0"></div>
 
-        <div class="relative z-10 flex flex-col justify-evenly items-center h-full w-full py-2" id="keyContainer">
-            <!-- ปุ่มจะถูกสร้างโดย JS -->
+        <!-- ลายเส้นเงิน/คีย์กลไกสำหรับความสวยงาม -->
+        <div class="absolute top-6 bottom-6 w-1 bg-gradient-to-r from-zinc-300 via-white to-zinc-500 opacity-20 left-[calc(50%-2px)] z-10 pointer-events-none"></div>
+
+        <!-- รูเสียง/ปุ่มกด -->
+        <div class="relative z-20 flex flex-col justify-between items-center h-full w-full py-6" id="keyContainer">
+            <!-- ปุ่มกดสร้างอัตโนมัติด้วย JavaScript -->
         </div>
     </main>
 
-    <footer class="text-[10px] text-gray-600 pb-1 pt-1 shrink-0 bg-gray-900 w-full text-center">
-        Low Latency | Stable Audio | Fitscreen
+    <!-- ลิ้นชักตั้งค่าเสียงขั้นสูง (Advanced Settings Panel) -->
+    <div id="advancedDrawer" class="drawer fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900 border-t border-slate-700 rounded-t-2xl z-50 p-5 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+            <h3 class="text-sm font-bold flex items-center gap-2 text-cyan-400">
+                <i class="fa-solid fa-sliders"></i> คอนโทรลฟังก์ชันเสียงขั้นสูง
+            </h3>
+            <button id="btnCloseAdvanced" class="text-slate-400 hover:text-white py-1 px-3 bg-slate-800 rounded-lg text-xs">
+                ปิด <i class="fa-solid fa-chevron-down ml-1"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+            <!-- 1. Waveform Selection -->
+            <div>
+                <label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider block mb-2">รูปร่างคลื่นเสียง (Waveform)</label>
+                <div class="grid grid-cols-4 gap-1">
+                    <button onclick="setWaveform('sine')" id="wave-sine" class="wave-btn active bg-cyan-600 text-white border border-cyan-400 rounded-md py-1.5 text-xs font-semibold transition-all">Sine</button>
+                    <button onclick="setWaveform('triangle')" id="wave-triangle" class="wave-btn bg-slate-800 hover:bg-slate-700 rounded-md py-1.5 text-xs font-semibold transition-all">Triangle</button>
+                    <button onclick="setWaveform('square')" id="wave-square" class="wave-btn bg-slate-800 hover:bg-slate-700 rounded-md py-1.5 text-xs font-semibold transition-all">Square</button>
+                    <button onclick="setWaveform('sawtooth')" id="wave-sawtooth" class="wave-btn bg-slate-800 hover:bg-slate-700 rounded-md py-1.5 text-xs font-semibold transition-all">Saw</button>
+                </div>
+            </div>
+
+            <!-- 2. Envelope (ADSR) -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-3">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">เสียงตอบสนอง (Envelope)</span>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>เวลาเริ่มเสียง (Attack): <span id="valAttack" class="text-cyan-400">0.02s</span></span>
+                    </div>
+                    <input type="range" id="sliderAttack" min="0.01" max="1.0" step="0.01" value="0.02" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>เวลาปล่อยท้ายปุ่ม (Release): <span id="valRelease" class="text-cyan-400">0.25s</span></span>
+                    </div>
+                    <input type="range" id="sliderRelease" min="0.05" max="2.0" step="0.05" value="0.25" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                </div>
+            </div>
+
+            <!-- 3. Vibrato (LFO Modulator) -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ลูกคอสั่นระรัว (Vibrato)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleVibrato" class="sr-only peer" checked>
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                    </label>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>ความสั่น (Speed): <span id="valVibSpeed" class="text-cyan-400">6.0 Hz</span></span>
+                    </div>
+                    <input type="range" id="sliderVibSpeed" min="2" max="15" step="0.5" value="6" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>ความลึกของสั่น (Depth): <span id="valVibDepth" class="text-cyan-400">25 cents</span></span>
+                    </div>
+                    <input type="range" id="sliderVibDepth" min="5" max="80" step="1" value="25" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                </div>
+            </div>
+
+            <!-- 4. Echo Delay / Room Effect -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">เสียงก้องสะท้อน (Echo Delay)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleEcho" class="sr-only peer" checked>
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                    </label>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>จังหวะก้อง (Delay Time): <span id="valEchoTime" class="text-cyan-400">0.30s</span></span>
+                    </div>
+                    <input type="range" id="sliderEchoTime" min="0.1" max="1.0" step="0.05" value="0.30" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>ความดังสะท้อน (Feedback): <span id="valEchoFb" class="text-cyan-400">35%</span></span>
+                    </div>
+                    <input type="range" id="sliderEchoFb" min="10" max="80" step="5" value="35" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                </div>
+            </div>
+
+            <!-- 5. Lowpass Filter -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                <div class="flex justify-between text-xs mb-1">
+                    <span>ความกังวานทุ้มแหลม (Filter Cutoff): <span id="valFilter" class="text-cyan-400">4000 Hz</span></span>
+                </div>
+                <input type="range" id="sliderFilter" min="500" max="10000" step="100" value="4000" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+            </div>
+        </div>
+    </div>
+
+    <!-- ลิ้นชักเลือกเพลงสาธิต (Demo Songs Panel) -->
+    <div id="demoDrawer" class="drawer fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900 border-t border-slate-700 rounded-t-2xl z-50 p-5 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+            <h3 class="text-sm font-bold flex items-center gap-2 text-yellow-400">
+                <i class="fa-solid fa-music"></i> บรรเลงเพลงสาธิต (Demo Songs)
+            </h3>
+            <button id="btnCloseDemos" class="text-slate-400 hover:text-white py-1 px-3 bg-slate-800 rounded-lg text-xs">
+                ปิด <i class="fa-solid fa-chevron-down ml-1"></i>
+            </button>
+        </div>
+
+        <div class="space-y-2 mb-4">
+            <p class="text-[11px] text-slate-400">เลือกบรรเลงบทเพลงอัตโนมัติ โดยระบบจะแสดงปุ่มและตัวโน้ตลอยส่องสว่างขึ้นมาตามทำนอง</p>
+            
+            <button onclick="playDemoSong(0)" id="demoBtn0" class="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 p-3 rounded-lg flex items-center justify-between transition-all active:scale-98">
+                <div class="text-left">
+                    <span class="text-xs text-yellow-400 font-bold block">เพลงที่ 1: เพลงลอยกระทง 🇹🇭</span>
+                    <span class="text-[10px] text-slate-400">Loy Krathong (เพลงไทยจังหวะยอดนิยม)</span>
+                </div>
+                <i class="fa-solid fa-circle-play text-lg text-emerald-400"></i>
+            </button>
+
+            <button onclick="playDemoSong(1)" id="demoBtn1" class="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 p-3 rounded-lg flex items-center justify-between transition-all active:scale-98">
+                <div class="text-left">
+                    <span class="text-xs text-yellow-400 font-bold block">เพลงที่ 2: โอเด ทู จอย (Ode to Joy) 🇪🇺</span>
+                    <span class="text-[10px] text-slate-400">Beethoven's Symphony No. 9</span>
+                </div>
+                <i class="fa-solid fa-circle-play text-lg text-emerald-400"></i>
+            </button>
+
+            <button onclick="playDemoSong(2)" id="demoBtn2" class="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 p-3 rounded-lg flex items-center justify-between transition-all active:scale-98">
+                <div class="text-left">
+                    <span class="text-xs text-yellow-400 font-bold block">เพลงที่ 3: ดาราระยิบระยับ (Twinkle Twinkle) ⭐️</span>
+                    <span class="text-[10px] text-slate-400">Twinkle Twinkle Little Star</span>
+                </div>
+                <i class="fa-solid fa-circle-play text-lg text-emerald-400"></i>
+            </button>
+        </div>
+
+        <button id="btnStopDemo" class="w-full bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-500/30 rounded-lg py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-2" disabled>
+            <i class="fa-solid fa-circle-stop"></i> หยุดเล่นเพลงสาธิตทั้งหมด
+        </button>
+    </div>
+
+    <!-- แจ้งเตือนในแอป (แทน Alert เพื่อสุขอนามัยของ UI) -->
+    <div id="toastNotification" class="fixed top-24 max-w-xs bg-slate-800/95 border border-amber-500/40 text-amber-200 text-xs px-4 py-3 rounded-xl shadow-2xl z-50 transition-all opacity-0 pointer-events-none text-center">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i> <span id="toastMessage"></span>
+    </div>
+
+    <!-- ส่วนล่างสุด -->
+    <footer class="text-[9px] text-slate-500 pb-2 pt-1 shrink-0 bg-slate-950 w-full text-center border-t border-slate-900">
+        Low Latency | DSP Pro | Floating Particle FX | Optimized Portrait View
     </footer>
 
     <script>
-        // --- Audio Context Setup (Low Latency) ---
+        // --- Web Audio Context Engine (Low Latency) ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
-        let masterGain;
-        let recorderDest;
+        
+        // ผังการเชื่อมสายเสียง (Routing Nodes)
+        let masterVolumeNode;
+        let mainFilterNode;
+        let delayNode;
+        let delayGainNode;
+        let recorderDestination;
         let mediaRecorder;
+        
         let audioChunks = [];
         let recordedAudioUrl = null;
         let isRecording = false;
 
+        // ข้อมูลตัวโน้ต Piccolo
         const notes = [
-            { note: 'C6', freq: 1046.50, label: 'ดํ (Do)' },
-            { note: 'B5', freq: 987.77, label: 'ท (Ti)' },
-            { note: 'A5', freq: 880.00, label: 'ล (La)' },
-            { note: 'G5', freq: 783.99, label: 'ซ (Sol)' },
-            { note: 'F5', freq: 698.46, label: 'ฟ (Fa)' },
-            { note: 'E5', freq: 659.25, label: 'ม (Mi)' },
-            { note: 'D5', freq: 587.33, label: 'ร (Re)' },
-            { note: 'C5', freq: 523.25, label: 'ด (Do)' }
+            { note: 'C6', freq: 1046.50, label: 'ดํ', eng: 'Do', symbol: 'C6', color: '#ff6b6b' },
+            { note: 'B5', freq: 987.77, label: 'ท', eng: 'Ti', symbol: 'B5', color: '#f783ac' },
+            { note: 'A5', freq: 880.00, label: 'ล', eng: 'La', symbol: 'A5', color: '#da77f2' },
+            { note: 'G5', freq: 783.99, label: 'ซ', eng: 'Sol', symbol: 'G5', color: '#9775fa' },
+            { note: 'F5', freq: 698.46, label: 'ฟ', eng: 'Fa', symbol: 'F5', color: '#74c0fc' },
+            { note: 'E5', freq: 659.25, label: 'ม', eng: 'Mi', symbol: 'E5', color: '#3bc9db' },
+            { note: 'D5', freq: 587.33, label: 'ร', eng: 'Re', symbol: 'D5', color: '#38d9a9' },
+            { note: 'C5', freq: 523.25, label: 'ด', eng: 'Do', symbol: 'C5', color: '#69db7c' }
         ];
 
+        // ตัวแปรปรับแต่งเสียง
+        let configSynth = {
+            waveform: 'sine',
+            attack: 0.02,
+            release: 0.25,
+            vibratoEnabled: true,
+            vibratoSpeed: 6.0,
+            vibratoDepth: 25,
+            echoEnabled: true,
+            echoTime: 0.30,
+            echoFeedback: 0.35,
+            cutoffFreq: 4000
+        };
+
         const activeOscillators = {}; 
+        let activeKeysMap = {}; // ลิ้งค์ DOM ของปุ่ม
+
+        // ข้อมูลเพลงสาธิต (3 เพลง)
+        // note: ชื่อคีย์ตัวโน้ต, delay: ระยะรอเล่นโน้ตถัดไป (ms), dur: ระยะเวลาแช่โน้ตนั้น (ms)
+        const demoSongs = [
+            // เพลงที่ 1: ลอยกระทง (Loy Krathong Theme)
+            [
+                { note: 'A5', dur: 250, delay: 300 }, { note: 'A5', dur: 250, delay: 300 },
+                { note: 'C6', dur: 450, delay: 500 }, { note: 'A5', dur: 250, delay: 350 },
+                { note: 'G5', dur: 250, delay: 350 }, { note: 'A5', dur: 450, delay: 500 },
+                { note: 'C6', dur: 450, delay: 600 }, { note: 'A5', dur: 250, delay: 350 },
+                { note: 'G5', dur: 250, delay: 350 }, { note: 'C6', dur: 450, delay: 600 },
+                
+                { note: 'D5', dur: 250, delay: 300 }, { note: 'F5', dur: 250, delay: 300 },
+                { note: 'G5', dur: 450, delay: 500 }, { note: 'F5', dur: 250, delay: 350 },
+                { note: 'D5', dur: 250, delay: 350 }, { note: 'F5', dur: 450, delay: 500 },
+                { note: 'G5', dur: 450, delay: 600 }, { note: 'F5', dur: 250, delay: 350 },
+                { note: 'D5', dur: 250, delay: 350 }, { note: 'G5', dur: 450, delay: 600 },
+
+                { note: 'A5', dur: 250, delay: 300 }, { note: 'A5', dur: 250, delay: 300 },
+                { note: 'C6', dur: 450, delay: 500 }, { note: 'A5', dur: 250, delay: 350 },
+                { note: 'G5', dur: 250, delay: 350 }, { note: 'A5', dur: 450, delay: 500 },
+                { note: 'G5', dur: 250, delay: 300 }, { note: 'A5', dur: 250, delay: 300 },
+                { note: 'C6', dur: 250, dur: 400, delay: 450 }
+            ],
+            // เพลงที่ 2: Ode to Joy (Beethoven)
+            [
+                { note: 'E5', dur: 350, delay: 400 }, { note: 'E5', dur: 350, delay: 400 },
+                { note: 'F5', dur: 350, delay: 400 }, { note: 'G5', dur: 350, delay: 400 },
+                { note: 'G5', dur: 350, delay: 400 }, { note: 'F5', dur: 350, delay: 400 },
+                { note: 'E5', dur: 350, delay: 400 }, { note: 'D5', dur: 350, delay: 400 },
+                { note: 'C5', dur: 350, delay: 400 }, { note: 'C5', dur: 350, delay: 400 },
+                { note: 'D5', dur: 350, delay: 400 }, { note: 'E5', dur: 350, delay: 400 },
+                { note: 'E5', dur: 400, delay: 500 }, { note: 'D5', dur: 200, delay: 250 },
+                { note: 'D5', dur: 500, delay: 600 },
+
+                { note: 'E5', dur: 350, delay: 400 }, { note: 'E5', dur: 350, delay: 400 },
+                { note: 'F5', dur: 350, delay: 400 }, { note: 'G5', dur: 350, delay: 400 },
+                { note: 'G5', dur: 350, delay: 400 }, { note: 'F5', dur: 350, delay: 400 },
+                { note: 'E5', dur: 350, delay: 400 }, { note: 'D5', dur: 350, delay: 400 },
+                { note: 'C5', dur: 350, delay: 400 }, { note: 'C5', dur: 350, delay: 400 },
+                { note: 'D5', dur: 350, delay: 400 }, { note: 'E5', dur: 350, delay: 400 },
+                { note: 'D5', dur: 400, delay: 500 }, { note: 'C5', dur: 200, delay: 250 },
+                { note: 'C5', dur: 500, delay: 600 }
+            ],
+            // เพลงที่ 3: Twinkle Twinkle Little Star
+            [
+                { note: 'C5', dur: 350, delay: 400 }, { note: 'C5', dur: 350, delay: 400 },
+                { note: 'G5', dur: 350, delay: 400 }, { note: 'G5', dur: 350, delay: 400 },
+                { note: 'A5', dur: 350, delay: 400 }, { note: 'A5', dur: 350, delay: 400 },
+                { note: 'G5', dur: 600, delay: 700 },
+                
+                { note: 'F5', dur: 350, delay: 400 }, { note: 'F5', dur: 350, delay: 400 },
+                { note: 'E5', dur: 350, delay: 400 }, { note: 'E5', dur: 350, delay: 400 },
+                { note: 'D5', dur: 350, delay: 400 }, { note: 'D5', dur: 350, delay: 400 },
+                { note: 'C5', dur: 600, delay: 700 },
+
+                { note: 'G5', dur: 350, delay: 400 }, { note: 'G5', dur: 350, delay: 400 },
+                { note: 'F5', dur: 350, delay: 400 }, { note: 'F5', dur: 350, delay: 400 },
+                { note: 'E5', dur: 350, delay: 400 }, { note: 'E5', dur: 350, delay: 400 },
+                { note: 'D5', dur: 600, delay: 700 }
+            ]
+        ];
+
+        let isDemoPlaying = false;
+        let demoSequencerTimer = null;
+        let demoSequenceIds = [];
 
         // --- DOM Elements ---
         const keyContainer = document.getElementById('keyContainer');
         const noteDisplay = document.getElementById('noteDisplay');
+        const waveTypeDisplay = document.getElementById('waveTypeDisplay');
         const btnRec = document.getElementById('btnRec');
         const btnPlay = document.getElementById('btnPlay');
         const recIndicator = document.getElementById('recIndicator');
+        const recText = document.getElementById('recText');
+        const floatingContainer = document.getElementById('floatingContainer');
 
-        // --- Robust Initialization ---
-        function initAudio() {
+        const advancedDrawer = document.getElementById('advancedDrawer');
+        const demoDrawer = document.getElementById('demoDrawer');
+        const btnStopDemo = document.getElementById('btnStopDemo');
+
+        // --- Web Audio Graph Init ---
+        function initAudioEngine() {
             if (!audioCtx) {
-                // latencyHint: 'interactive' สำคัญมากสำหรับการตอบสนองที่ไวที่สุด
                 audioCtx = new AudioContext({ latencyHint: 'interactive' });
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.4;
                 
-                recorderDest = audioCtx.createMediaStreamDestination();
-                masterGain.connect(audioCtx.destination);
-                masterGain.connect(recorderDest);
+                // 1. Master Volume
+                masterVolumeNode = audioCtx.createGain();
+                masterVolumeNode.gain.value = 0.35;
+
+                // 2. Main High-cut/Low-cut Filter
+                mainFilterNode = audioCtx.createBiquadFilter();
+                mainFilterNode.type = 'lowpass';
+                mainFilterNode.frequency.value = configSynth.cutoffFreq;
+
+                // 3. Echo/Delay System
+                delayNode = audioCtx.createDelay(1.5);
+                delayGainNode = audioCtx.createGain();
+                
+                delayNode.delayTime.value = configSynth.echoTime;
+                delayGainNode.gain.value = configSynth.echoEnabled ? configSynth.echoFeedback : 0;
+
+                // เชื่อม Delay Loop back
+                delayNode.connect(delayGainNode);
+                delayGainNode.connect(delayNode);
+
+                // 4. Recorder Destination
+                recorderDestination = audioCtx.createMediaStreamDestination();
+
+                // ปลายทางเส้นทางเดินสัญญาณเสียง
+                // Main -> Filter -> Volume -> Master Destination
+                mainFilterNode.connect(masterVolumeNode);
+                masterVolumeNode.connect(audioCtx.destination);
+                masterVolumeNode.connect(recorderDestination);
+
+                // เชื่อมฟีด Delay ขนานไปกับ Master Out
+                masterVolumeNode.connect(delayNode);
+                delayNode.connect(audioCtx.destination);
+                delayNode.connect(recorderDestination);
             }
-            // ตรวจสอบและปลุก AudioContext ถ้ามันหลับอยู่ (โดยเฉพาะ iOS)
+
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // --- Sound Generation ---
-        function playTone(freq, noteName) {
-            initAudio(); // เรียกทุกครั้งเพื่อความชัวร์
+        // แสดงแจ้งเตือนบน UI แทน Alert
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.innerText = message;
+            toast.style.opacity = '1';
+            toast.style.pointerEvents = 'auto';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.pointerEvents = 'none';
+            }, 3000);
+        }
 
-            // ถ้ามีเสียงเดิมค้างอยู่ ให้หยุดทันทีก่อนเริ่มเสียงใหม่
+        // --- Synth Player logic ---
+        function playTone(freq, noteName, noteLabel, color) {
+            initAudioEngine();
+
+            // หยุดเสียงตัวเก่าหากค้างเพื่อลดการซ้อนของคลื่นแบบแปลกๆ
             if (activeOscillators[noteName]) {
                 forceStopTone(noteName);
             }
 
             const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+            const gainEnvelopeNode = audioCtx.createGain();
 
-            osc.type = 'sine'; 
+            osc.type = configSynth.waveform;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-            // ADSR: Attack เร็วมาก (0.02s) เพื่อความกระชับ
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.02);
+            // --- LFO Vibrato (ลูกคอ) ---
+            let vibratoLFO = null;
+            let vibratoGain = null;
+            if (configSynth.vibratoEnabled) {
+                vibratoLFO = audioCtx.createOscillator();
+                vibratoGain = audioCtx.createGain();
 
-            osc.connect(gainNode);
-            gainNode.connect(masterGain);
+                vibratoLFO.frequency.value = configSynth.vibratoSpeed;
+                // แปลงค่า depth (cents) เป็นสเกลความถี่ที่เหมาะสม
+                vibratoGain.gain.value = freq * (configSynth.vibratoDepth / 1200); 
+
+                vibratoLFO.connect(vibratoGain);
+                vibratoGain.connect(osc.frequency);
+                vibratoLFO.start();
+            }
+
+            // --- ADSR Envelope (Attack & Sustain) ---
+            gainEnvelopeNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            // โจมตีเสียง (Attack)
+            gainEnvelopeNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + configSynth.attack);
+
+            // เชื่อมสัญญาณ
+            osc.connect(gainEnvelopeNode);
+            gainEnvelopeNode.connect(mainFilterNode);
 
             osc.start();
-            activeOscillators[noteName] = { osc, gainNode };
 
-            noteDisplay.innerText = noteName;
-            noteDisplay.style.color = '#fff';
-            noteDisplay.style.textShadow = '0 0 10px #fff';
+            // บันทึก Node ที่เปิดใช้งานลง Map
+            activeOscillators[noteName] = { 
+                osc, 
+                gainNode: gainEnvelopeNode,
+                vibratoLFO,
+                vibratoGain
+            };
+
+            // อัปเดต LCD
+            noteDisplay.innerText = `${noteName} [ ${noteLabel} ]`;
+            noteDisplay.style.color = color || '#38bdf8';
+            noteDisplay.style.textShadow = `0 0 12px ${color || '#38bdf8'}`;
+
+            // ยิงเอฟเฟกต์ตัวโน้ตลอย
+            spawnFloatingNote(noteLabel, noteName, color);
         }
 
         function stopTone(noteName) {
             const active = activeOscillators[noteName];
             if (active) {
-                const { osc, gainNode } = active;
-                // Release: ปล่อยเสียงดับลงใน 0.1s
-                const releaseTime = 0.1;
-                
+                const { osc, gainNode, vibratoLFO, vibratoGain } = active;
+                const releaseTime = configSynth.release;
+
                 try {
+                    // กำหนดจุดเริ่มการไล่เสียงเบาลง (Release)
                     gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
                     gainNode.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
                     gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + releaseTime);
+                    
                     osc.stop(audioCtx.currentTime + releaseTime);
+                    if (vibratoLFO) {
+                        vibratoLFO.stop(audioCtx.currentTime + releaseTime);
+                    }
                 } catch (e) {
-                    console.error("Audio error during stop:", e);
+                    console.warn("Audio Context Stop Error: ", e);
                 }
-                
-                // ลบออกจากรายการทันทีที่สั่งหยุด (ไม่ต้องรอ timeout เพื่อความเสถียรของ logic)
+
+                // นำออกจากรายการ
                 delete activeOscillators[noteName];
             }
-            
-            // คืนค่าหน้าจอถ้าไม่มีปุ่มไหนกดอยู่
-            if (Object.keys(activeOscillators).length === 0) {
-                noteDisplay.style.color = '#4db8ff';
-                noteDisplay.style.textShadow = '0 0 5px rgba(77, 184, 255, 0.5)';
+
+            // คืนค่าหน้าจอถ้าไม่มีคีย์อื่นถูกกดอยู่
+            if (Object.keys(activeOscillators).length === 0 && !isDemoPlaying) {
+                noteDisplay.innerText = "READY";
+                noteDisplay.style.color = '#38bdf8';
+                noteDisplay.style.textShadow = '0 0 8px rgba(56, 189, 248, 0.7)';
             }
         }
 
-        // ฟังก์ชันหยุดทันที (ใช้กรณีแตะรัวๆ)
+        // สั่งหยุดทันที (ใช้ป้องกันเสียงบั๊กค้าง)
         function forceStopTone(noteName) {
             const active = activeOscillators[noteName];
             if (active) {
                 try {
                     active.osc.stop();
+                    if (active.vibratoLFO) active.vibratoLFO.stop();
                     active.gainNode.disconnect();
-                } catch(e) {}
+                } catch(e){}
                 delete activeOscillators[noteName];
             }
         }
 
-        // --- Stable UI Construction (Pointer Events) ---
+        // --- ปิดเสียงและตัดเสียงทั้งหมด (เช่น เมื่อเปลี่ยนเพลง/หยุดกะทันหัน) ---
+        function clearAllActiveSounds() {
+            Object.keys(activeOscillators).forEach(note => {
+                forceStopTone(note);
+            });
+            // รีเซ็ตสถานะปุ่มสีฟ้า
+            notes.forEach(n => {
+                const keyDom = activeKeysMap[n.note];
+                if (keyDom) keyDom.classList.remove('active');
+            });
+        }
+
+        // --- Particle & Floating Note Visualizer ---
+        const noteEmojis = ['♫', '♪', '♩', '♬', '𝄢', '𝄞'];
+        function spawnFloatingNote(label, keyName, color) {
+            const randomEmoji = noteEmojis[Math.floor(Math.random() * noteEmojis.length)];
+            
+            // หาจุดพิกัดตำแหน่งของปุ่มคีย์ที่ถูกกดเพื่อยิงออกจากปุ่ม
+            const keyElement = activeKeysMap[keyName];
+            let startLeft = Math.random() * window.innerWidth;
+            let startTop = window.innerHeight * 0.6; // จุดเริ่มต้นสำรอง
+
+            if (keyElement) {
+                const rect = keyElement.getBoundingClientRect();
+                startLeft = rect.left + rect.width / 2;
+                startTop = rect.top;
+            }
+
+            // สร้างตัวอักษรโน้ตดนตรีลอยขึ้น
+            const element = document.createElement('div');
+            element.className = 'floating-note flex flex-col items-center justify-center';
+            element.style.left = `${startLeft - 20}px`;
+            element.style.top = `${startTop - 30}px`;
+            element.style.color = color;
+            element.style.textShadow = `0 0 8px ${color}, 0 2px 4px rgba(0,0,0,0.8)`;
+            
+            element.innerHTML = `
+                <span class="text-2xl filter drop-shadow font-black mb-1">${randomEmoji}</span>
+                <span class="bg-black/80 px-2 py-0.5 rounded-full text-xs font-black border border-white/20 select-none">${label} (${keyName})</span>
+            `;
+
+            floatingContainer.appendChild(element);
+
+            // นำออกจาก DOM เมื่ออนิเมชั่นสิ้นสุด
+            element.addEventListener('animationend', () => {
+                element.remove();
+            });
+        }
+
+        // --- Stable Multi-touch Key Builder ---
         notes.forEach((n) => {
             const btn = document.createElement('div');
-            btn.className = 'piccolo-key w-[9vh] h-[9vh] max-w-[80px] max-h-[80px] rounded-full flex items-center justify-center cursor-pointer select-none';
-            btn.innerHTML = `<span class="text-[10px] md:text-sm font-bold text-gray-800 drop-shadow-md pointer-events-none transform translate-y-[140%] bg-white/80 px-1 rounded shadow-sm">${n.label}</span>`;
+            btn.className = 'piccolo-key w-[8vh] h-[8vh] max-w-[70px] max-h-[70px] rounded-full flex items-center justify-center cursor-pointer select-none';
+            btn.innerHTML = `<span class="text-[10px] md:text-xs font-black text-slate-900 drop-shadow-md pointer-events-none transform translate-y-[150%] bg-white px-1.5 py-0.5 rounded border border-slate-300 shadow-sm whitespace-nowrap">${n.label} (${n.note})</span>`;
             
-            // ใช้ Pointer Events แทน Mouse/Touch เพื่อความเสถียรสูงสุด
+            activeKeysMap[n.note] = btn;
+
+            // พฤติกรรมเมื่อสัมผัสหน้าจอ
             const startHandler = (e) => {
-                // e.preventDefault(); // อาจทำให้ scroll ไม่ได้ถ้าใช้ผิดที่ แต่ในปุ่มนี้จำเป็น
-                btn.setPointerCapture(e.pointerId); // จับ Pointer ไว้กับปุ่มนี้ แม้นิ้วจะเลื่อนออกนิดหน่อย
+                if (isDemoPlaying) {
+                    showToast("กรุณาปิดระบบเพลงสาธิตก่อนเป่าเอง");
+                    return;
+                }
+                btn.setPointerCapture(e.pointerId); 
                 btn.classList.add('active');
-                playTone(n.freq, n.note);
+                playTone(n.freq, n.note, n.label, n.color);
             };
 
             const endHandler = (e) => {
-                // e.preventDefault();
-                btn.releasePointerCapture(e.pointerId); // ปล่อย Pointer
+                btn.releasePointerCapture(e.pointerId); 
                 btn.classList.remove('active');
                 stopTone(n.note);
             };
 
             const leaveHandler = (e) => {
-                // กรณีลากนิ้วหลุดขอบปุ่มจริงๆ ให้หยุดเสียงด้วย
                 btn.classList.remove('active');
                 stopTone(n.note);
-            }
+            };
 
-            // Pointer Events ครอบคลุมทั้ง Mouse และ Touch
             btn.addEventListener('pointerdown', startHandler);
             btn.addEventListener('pointerup', endHandler);
-            btn.addEventListener('pointercancel', endHandler); // รับมือกรณีระบบขัดจังหวะ
-            btn.addEventListener('pointerleave', leaveHandler); // รับมือกรณีลากออก
+            btn.addEventListener('pointercancel', endHandler); 
+            btn.addEventListener('pointerleave', leaveHandler); 
 
             keyContainer.appendChild(btn);
         });
 
-        // --- Safety: Stop All Sounds on Visibility Change ---
-        // ป้องกันเสียงค้างเมื่อสลับแอป
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                Object.keys(activeOscillators).forEach(note => forceStopTone(note));
-                if (isRecording) stopRecording();
-            }
+        // --- Demo Player Sequencer ---
+        function playDemoSong(songIndex) {
+            initAudioEngine();
+            stopAllDemoSequence(); // ล้างคิวเก่าก่อน
+
+            isDemoPlaying = true;
+            btnStopDemo.disabled = false;
+            noteDisplay.innerText = "DEMO STARTING...";
+            
+            // ล็อกปุ่ม UI ดนตรีทั่วไป
+            notes.forEach(n => {
+                activeKeysMap[n.note].style.opacity = "0.8";
+            });
+
+            const playlist = demoSongs[songIndex];
+            let cumulativeTime = 200;
+
+            playlist.forEach((step, idx) => {
+                // กำหนดเวลาเริ่มเสียง
+                const timerId = setTimeout(() => {
+                    if (!isDemoPlaying) return;
+
+                    const noteInfo = notes.find(n => n.note === step.note);
+                    if (noteInfo) {
+                        // จำลองไฟสว่างบนคีย์
+                        const keyDom = activeKeysMap[step.note];
+                        if (keyDom) keyDom.classList.add('active');
+
+                        playTone(noteInfo.freq, noteInfo.note, noteInfo.label, noteInfo.color);
+
+                        // วางคิวเวลาดับเสียง
+                        const stopTimerId = setTimeout(() => {
+                            if (keyDom) keyDom.classList.remove('active');
+                            stopTone(noteInfo.note);
+                        }, step.dur);
+
+                        demoSequenceIds.push(stopTimerId);
+                    }
+                }, cumulativeTime);
+
+                demoSequenceIds.push(timerId);
+                cumulativeTime += step.delay;
+            });
+
+            // คิวเมื่อเพลงจบสมบูรณ์ (Auto shut-down)
+            const finishTimerId = setTimeout(() => {
+                finishDemoPlayback();
+                showToast("จบการสาธิตบทเพลงแสนไพเราะเรียบร้อยแล้ว");
+            }, cumulativeTime + 500);
+
+            demoSequenceIds.push(finishTimerId);
+            demoDrawer.classList.remove('open'); // ปิดลิ้นชักเพื่อให้มองเห็นคีย์กำลังเล่น
+        }
+
+        function stopAllDemoSequence() {
+            isDemoPlaying = false;
+            demoSequenceIds.forEach(id => clearTimeout(id));
+            demoSequenceIds = [];
+            clearAllActiveSounds();
+        }
+
+        function finishDemoPlayback() {
+            stopAllDemoSequence();
+            btnStopDemo.disabled = true;
+            noteDisplay.innerText = "READY";
+            noteDisplay.style.color = '#38bdf8';
+            noteDisplay.style.textShadow = '0 0 8px rgba(56, 189, 248, 0.7)';
+            
+            notes.forEach(n => {
+                activeKeysMap[n.note].style.opacity = "1";
+            });
+        }
+
+        btnStopDemo.addEventListener('click', () => {
+            finishDemoPlayback();
+            showToast("หยุดเล่นเพลงสาธิตแล้ว");
         });
 
-        // --- Recording Logic ---
+        // --- Web Audio Recording System ---
         btnRec.addEventListener('click', () => {
-            initAudio();
+            initAudioEngine();
+            if (isDemoPlaying) {
+                showToast("ไม่สามารถอัดเสียงระหว่างเปิดเพลงสาธิตได้");
+                return;
+            }
             if (!isRecording) {
                 startRecording();
             } else {
@@ -303,14 +834,14 @@
         function startRecording() {
             audioChunks = [];
             try {
-                mediaRecorder = new MediaRecorder(recorderDest.stream);
+                mediaRecorder = new MediaRecorder(recorderDestination.stream);
             } catch (err) {
-                alert("อุปกรณ์ไม่รองรับการอัดเสียง");
+                showToast("อุปกรณ์นี้ไม่รองรับการบันทึกเสียงแบบเรียลไทม์");
                 return;
             }
 
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) audioChunks.push(event.data);
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunks.push(e.data);
             };
 
             mediaRecorder.onstop = () => {
@@ -318,13 +849,14 @@
                 recordedAudioUrl = URL.createObjectURL(audioBlob);
                 btnPlay.disabled = false;
                 noteDisplay.innerText = "SAVED";
+                showToast("บันทึกเสียงฝีมือคุณเรียบร้อย!");
             };
 
             mediaRecorder.start();
             isRecording = true;
-            btnRec.classList.add('bg-red-900', 'border-red-500');
+            btnRec.classList.add('bg-red-950', 'border-red-500', 'text-red-200');
             recIndicator.classList.add('recording');
-            btnRec.innerHTML = `<span class="rec-dot recording"></span> STOP`;
+            recText.innerText = "STOP";
             btnPlay.disabled = true;
             noteDisplay.innerText = "REC...";
         }
@@ -334,9 +866,9 @@
                 mediaRecorder.stop();
             }
             isRecording = false;
-            btnRec.classList.remove('bg-red-900', 'border-red-500');
+            btnRec.classList.remove('bg-red-950', 'border-red-500', 'text-red-200');
             recIndicator.classList.remove('recording');
-            btnRec.innerHTML = `<span class="rec-dot"></span> REC`;
+            recText.innerText = "REC";
         }
 
         btnPlay.addEventListener('click', () => {
@@ -345,14 +877,129 @@
                 const audio = new Audio(recordedAudioUrl);
                 audio.play();
                 audio.onended = () => {
-                    noteDisplay.innerText = "END";
+                    noteDisplay.innerText = "READY";
                 };
             }
         });
 
-        // Global prevent default to stop scrolling/zooming
+        // --- Drawers Control & Form Logic ---
+        const toggleDrawer = (drawer, open) => {
+            if (open) {
+                // ปิดอันอื่นก่อน
+                advancedDrawer.classList.remove('open');
+                demoDrawer.classList.remove('open');
+                drawer.classList.add('open');
+            } else {
+                drawer.classList.remove('open');
+            }
+        };
+
+        document.getElementById('btnToggleAdvanced').addEventListener('click', () => toggleDrawer(advancedDrawer, !advancedDrawer.classList.contains('open')));
+        document.getElementById('btnCloseAdvanced').addEventListener('click', () => toggleDrawer(advancedDrawer, false));
+        document.getElementById('btnToggleDemos').addEventListener('click', () => toggleDrawer(demoDrawer, !demoDrawer.classList.contains('open')));
+        document.getElementById('btnCloseDemos').addEventListener('click', () => toggleDrawer(demoDrawer, false));
+
+        // --- Synth Advanced Adjustments ---
+        function setWaveform(wave) {
+            configSynth.waveform = wave;
+            document.querySelectorAll('.wave-btn').forEach(btn => btn.classList.remove('active', 'bg-cyan-600', 'border-cyan-400', 'text-white'));
+            
+            const activeBtn = document.getElementById(`wave-${wave}`);
+            activeBtn.classList.add('active', 'bg-cyan-600', 'border-cyan-400', 'text-white');
+            
+            waveTypeDisplay.innerText = `WAVE: ${wave.toUpperCase()}`;
+            showToast(`เปลี่ยนเสียงเครื่องดนตรีเป็น: ${wave.toUpperCase()}`);
+            initAudioEngine();
+        }
+
+        // ADSR Slider Listeners
+        const sliderAttack = document.getElementById('sliderAttack');
+        const valAttack = document.getElementById('valAttack');
+        sliderAttack.addEventListener('input', (e) => {
+            configSynth.attack = parseFloat(e.target.value);
+            valAttack.innerText = `${configSynth.attack.toFixed(2)}s`;
+        });
+
+        const sliderRelease = document.getElementById('sliderRelease');
+        const valRelease = document.getElementById('valRelease');
+        sliderRelease.addEventListener('input', (e) => {
+            configSynth.release = parseFloat(e.target.value);
+            valRelease.innerText = `${configSynth.release.toFixed(2)}s`;
+        });
+
+        // Vibrato Listeners
+        const toggleVibrato = document.getElementById('toggleVibrato');
+        toggleVibrato.addEventListener('change', (e) => {
+            configSynth.vibratoEnabled = e.target.checked;
+        });
+
+        const sliderVibSpeed = document.getElementById('sliderVibSpeed');
+        const valVibSpeed = document.getElementById('valVibSpeed');
+        sliderVibSpeed.addEventListener('input', (e) => {
+            configSynth.vibratoSpeed = parseFloat(e.target.value);
+            valVibSpeed.innerText = `${configSynth.vibratoSpeed.toFixed(1)} Hz`;
+        });
+
+        const sliderVibDepth = document.getElementById('sliderVibDepth');
+        const valVibDepth = document.getElementById('valVibDepth');
+        sliderVibDepth.addEventListener('input', (e) => {
+            configSynth.vibratoDepth = parseInt(e.target.value);
+            valVibDepth.innerText = `${configSynth.vibratoDepth} cents`;
+        });
+
+        // Delay / Echo Listeners
+        const toggleEcho = document.getElementById('toggleEcho');
+        toggleEcho.addEventListener('change', (e) => {
+            configSynth.echoEnabled = e.target.checked;
+            if (delayGainNode) {
+                delayGainNode.gain.setValueAtTime(e.target.checked ? configSynth.echoFeedback : 0, audioCtx.currentTime);
+            }
+        });
+
+        const sliderEchoTime = document.getElementById('sliderEchoTime');
+        const valEchoTime = document.getElementById('valEchoTime');
+        sliderEchoTime.addEventListener('input', (e) => {
+            configSynth.echoTime = parseFloat(e.target.value);
+            valEchoTime.innerText = `${configSynth.echoTime.toFixed(2)}s`;
+            if (delayNode) {
+                delayNode.delayTime.setValueAtTime(configSynth.echoTime, audioCtx.currentTime);
+            }
+        });
+
+        const sliderEchoFb = document.getElementById('sliderEchoFb');
+        const valEchoFb = document.getElementById('valEchoFb');
+        sliderEchoFb.addEventListener('input', (e) => {
+            configSynth.echoFeedback = parseFloat(e.target.value) / 100;
+            valEchoFb.innerText = `${e.target.value}%`;
+            if (delayGainNode && configSynth.echoEnabled) {
+                delayGainNode.gain.setValueAtTime(configSynth.echoFeedback, audioCtx.currentTime);
+            }
+        });
+
+        // Lowpass Filter Listener
+        const sliderFilter = document.getElementById('sliderFilter');
+        const valFilter = document.getElementById('valFilter');
+        sliderFilter.addEventListener('input', (e) => {
+            configSynth.cutoffFreq = parseInt(e.target.value);
+            valFilter.innerText = `${configSynth.cutoffFreq} Hz`;
+            if (mainFilterNode) {
+                mainFilterNode.frequency.setValueAtTime(configSynth.cutoffFreq, audioCtx.currentTime);
+            }
+        });
+
+        // --- Safety: Stop everything when switching tab/app ---
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                finishDemoPlayback();
+                if (isRecording) stopRecording();
+            }
+        });
+
+        // ล็อกระบบเลื่อนสกรีนขยับหน้าเพจบนมือถือ
         document.body.addEventListener('touchmove', function(e) {
-            e.preventDefault();
+            if (!advancedDrawer.contains(e.target) && !demoDrawer.contains(e.target)) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
     </script>
