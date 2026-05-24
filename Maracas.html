@@ -3,14 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>มาราคัสจำลอง + บันทึกเสียง (Maracas Simulator + Rec)</title>
+    <title>มาราคัสจำลอง ขั้นสูง (Maracas Pro Simulator + Visualizer)</title>
+    <!-- นำเข้า Tailwind CSS สำหรับดีไซน์แบบพรีเมียม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- นำเข้าฟอนต์ Google Fonts "Kanit" เพื่อความโมเดิร์นเข้ากับสไตล์ไทย -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- นำเข้า Font Awesome สำหรับไอคอนสัญลักษณ์ต่างๆ -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* รีเซ็ตการตั้งค่าพื้นฐาน */
         * {
             box-sizing: border-box;
-            user-select: none; /* ห้ามคลุมดำ */
+            user-select: none;
             -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent; /* ลบสีไฮไลท์เวลากดบนมือถือ */
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Kanit', sans-serif;
         }
 
         body {
@@ -18,64 +25,28 @@
             padding: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #2c3e50;
-            background-image: radial-gradient(circle at center, #34495e 0%, #2c3e50 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; /* ห้ามสกรอลล์ */
-            touch-action: none; /* ห้าม gesture ของ browser */
+            background: radial-gradient(circle at center, #1e272e 0%, #0f141c 100%);
+            overflow: hidden;
+            touch-action: none;
         }
 
-        /* ส่วนหัวข้อ */
-        header {
-            position: absolute;
-            top: 20px;
-            color: white;
-            text-align: center;
-            z-index: 10;
-            pointer-events: none;
+        /* ตกแต่งสไตล์ลูกปัดเรืองแสง */
+        .glow-title {
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.6), 0 0 20px rgba(241, 196, 15, 0.3);
         }
 
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            color: #f1c40f;
-        }
-
-        p {
-            margin: 5px 0 0;
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* พื้นที่วางมาราคัส */
-        .stage {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px; /* ระยะห่างระหว่างมาราคัส */
-            width: 100%;
-            height: 100%;
-            padding: 20px;
-            padding-bottom: 80px; /* เว้นที่ให้ปุ่มอัดเสียง */
-        }
-
-        /* ตัวมาราคัส */
+        /* มาราคัสและเอฟเฟกต์ 3D */
         .maraca-container {
             position: relative;
-            width: 40vw; /* ความกว้างสัมพันธ์กับจอ */
-            max-width: 200px;
-            height: 60vh;
-            max-height: 400px;
+            width: 38vw;
+            max-width: 160px;
+            height: 48vh;
+            max-height: 340px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.1s;
+            z-index: 10;
         }
 
         .maraca {
@@ -85,427 +56,894 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transform-origin: center bottom; /* จุดหมุนอยู่ที่ด้ามจับ */
+            transform-origin: center bottom;
+            transition: filter 0.1s;
         }
 
-        /* ส่วนหัวมาราคัส */
+        /* หัวมาราคัสทรงกลมเงา */
         .head {
             width: 100%;
             height: 65%;
-            background: radial-gradient(circle at 30% 30%, #e74c3c, #c0392b);
             border-radius: 50% 50% 45% 45%;
             position: relative;
             z-index: 2;
             box-shadow: 
-                inset -10px -10px 20px rgba(0,0,0,0.3),
-                5px 5px 15px rgba(0,0,0,0.4);
-            border: 4px solid #c0392b;
+                inset -15px -15px 30px rgba(0,0,0,0.6),
+                inset 10px 10px 20px rgba(255,255,255,0.4),
+                0 10px 25px rgba(0,0,0,0.5);
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
         }
 
-        /* ลวดลายตกแต่ง */
-        .pattern-stripe {
-            position: absolute;
-            width: 110%;
-            height: 20px;
-            background-color: #f1c40f;
-            transform: rotate(-10deg);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .pattern-stripe.top { top: 30%; }
-        .pattern-stripe.bottom { top: 60%; background-color: #2ecc71; }
-
-        /* ด้ามจับ */
+        /* ด้ามจับลายไม้พรีเมียม */
         .handle {
-            width: 25%;
+            width: 20%;
             height: 40%;
-            background: linear-gradient(90deg, #8e44ad, #9b59b6, #8e44ad);
-            margin-top: -10%; /* ให้ซ้อนเข้าไปในหัวนิดหน่อย */
+            background: linear-gradient(90deg, #5c2c16, #a0522d, #5c2c16);
+            margin-top: -6%;
             border-radius: 0 0 15px 15px;
             z-index: 1;
-            box-shadow: 2px 5px 10px rgba(0,0,0,0.5);
+            box-shadow: 
+                inset -3px 0 5px rgba(0,0,0,0.4),
+                0 6px 15px rgba(0,0,0,0.5);
             position: relative;
         }
-        /* ลายไม้ที่ด้าม */
-        .handle::after {
+
+        /* ข้อต่อประดับหัวไม้ */
+        .handle::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 4px);
-            border-radius: 0 0 15px 15px;
+            top: 0; left: -15%; width: 130%; height: 20%;
+            background: #f1c40f;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
-        /* Animation class */
-        .shaking .maraca {
-            animation: shake-anim 0.15s ease-in-out;
+        /* อะนิเมชันการเขย่ามาราคัส */
+        .shaking-left .maraca {
+            animation: shake-left-anim 0.12s ease-in-out;
+        }
+        .shaking-right .maraca {
+            animation: shake-right-anim 0.12s ease-in-out;
         }
 
-        .shaking .head {
-            filter: brightness(1.1); /* สว่างขึ้นตอนเขย่า */
+        @keyframes shake-left-anim {
+            0% { transform: rotate(0deg) scale(1); }
+            20% { transform: rotate(-18deg) translateY(-15px) translateX(-5px); }
+            50% { transform: rotate(8deg) translateY(5px); }
+            80% { transform: rotate(-5deg) translateY(-2px); }
+            100% { transform: rotate(0deg) scale(1); }
         }
 
-        @keyframes shake-anim {
-            0% { transform: rotate(0deg) translateY(0); }
-            25% { transform: rotate(-10deg) translateY(-10px); }
-            50% { transform: rotate(10deg) translateY(0); }
-            75% { transform: rotate(-5deg) translateY(-5px); }
-            100% { transform: rotate(0deg) translateY(0); }
+        @keyframes shake-right-anim {
+            0% { transform: rotate(0deg) scale(1); }
+            20% { transform: rotate(18deg) translateY(-15px) translateX(5px); }
+            50% { transform: rotate(-8deg) translateY(5px); }
+            80% { transform: rotate(5deg) translateY(-2px); }
+            100% { transform: rotate(0deg) scale(1); }
         }
 
-        /* หน้าจอเริ่ม (Overlay) */
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-            transition: opacity 0.5s;
+        /* ซ่อนสกรอลล์บาร์ของแผงคุมแบบ Pop-up */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        .btn-start {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* ส่วนควบคุมการบันทึกเสียง */
-        #recording-controls {
-            position: absolute;
-            bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            z-index: 20;
-        }
-
-        .rec-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 3px solid white;
-            background-color: rgba(0, 0, 0, 0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-
-        .rec-inner {
-            width: 25px;
-            height: 25px;
-            background-color: #e74c3c;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-
-        /* สถานะกำลังอัด */
-        .is-recording .rec-btn {
-            border-color: #e74c3c;
-            background-color: rgba(231, 76, 60, 0.1);
-        }
-        
-        .is-recording .rec-inner {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px; /* เปลี่ยนเป็นสี่เหลี่ยมเมื่อหยุด */
-            background-color: #e74c3c;
-            animation: blink 1s infinite;
-        }
-
-        .rec-status {
-            color: white;
-            font-size: 0.9rem;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 10px;
-            border-radius: 10px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .is-recording + .rec-status {
-            opacity: 1;
-        }
-
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        /* สำหรับมือถือแนวนอน */
-        @media (max-height: 500px) {
-            .maraca-container {
-                height: 70vh;
-                width: 30vw;
-            }
-            h1 { font-size: 1.2rem; }
-            .stage { padding-bottom: 20px; }
-            #recording-controls {
-                right: 20px;
-                bottom: auto;
-                top: 50%;
-                transform: translateY(-50%);
-            }
+        /* คลาสความเบลอแบบกระจกวิเศษ Glassmorphism */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col justify-between items-center text-white h-screen w-screen">
 
-    <header>
-        <h1>MARACAS</h1>
-        <p>แตะเขย่า & บันทึกเสียง</p>
+    <!-- แคนวาสเอฟเฟกต์อนุภาคและ Visualizer (วางหลังองค์ประกอบหลัก) -->
+    <canvas id="effects-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></canvas>
+
+    <!-- ส่วนหัว (Header) -->
+    <header class="w-full text-center py-4 px-4 z-10 flex flex-col items-center pointer-events-none">
+        <h1 class="text-3xl font-bold tracking-widest text-yellow-400 glow-title flex items-center gap-2">
+            <i class="fa-solid fa-music text-yellow-400 animate-bounce"></i> MARACAS PRO <i class="fa-solid fa-music text-yellow-400 animate-bounce"></i>
+        </h1>
+        <p class="text-xs text-slate-400 mt-1 tracking-wider bg-slate-900/60 px-3 py-1 rounded-full border border-slate-800/80">
+            <i class="fa-solid fa-hand-sparkles text-emerald-400 mr-1"></i> แตะหน้าจอ เขย่ามือถือ หรือกดคีย์บอร์ด [A] [D]
+        </p>
     </header>
 
-    <!-- พื้นที่แสดงผล -->
-    <div class="stage">
-        <!-- มาราคัสซ้าย -->
+    <!-- พื้นที่แสดงมาราคัสหลัก (Main Stage) -->
+    <main class="stage flex justify-center items-center gap-8 w-full flex-grow relative z-10">
+        <!-- มาราคัสสีแดงซ้าย -->
         <div class="maraca-container" id="maraca-left">
             <div class="maraca">
-                <div class="head">
-                    <div class="pattern-stripe top"></div>
-                    <div class="pattern-stripe bottom"></div>
+                <div class="head" style="background: radial-gradient(circle at 35% 35%, #ff4757, #ff6b81, #b31010); border: 4px solid #b31010;">
+                    <!-- ลวดลายคาดสีเหลืองและเขียวแบบฉบับมาราคัสเม็กซิกัน -->
+                    <div class="pattern-stripe top" style="background: #eccc68; top: 22%; transform: rotate(-12deg) scale(1.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                    <div class="pattern-stripe bottom" style="background: #2ed573; top: 54%; transform: rotate(8deg) scale(1.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none"></div>
                 </div>
                 <div class="handle"></div>
             </div>
         </div>
 
-        <!-- มาราคัสขวา -->
+        <!-- มาราคัสสีเหลืองส้มขวา -->
         <div class="maraca-container" id="maraca-right">
             <div class="maraca">
-                <div class="head" style="background: radial-gradient(circle at 30% 30%, #f1c40f, #f39c12); border-color: #f39c12;">
-                    <div class="pattern-stripe top" style="background-color: #e74c3c;"></div>
-                    <div class="pattern-stripe bottom" style="background-color: #3498db;"></div>
+                <div class="head" style="background: radial-gradient(circle at 35% 35%, #ffa502, #ff7f50, #d35400); border: 4px solid #d35400;">
+                    <!-- ลวดลายคาดสีแดงและน้ำเงินเท่ๆ -->
+                    <div class="pattern-stripe top" style="background: #ff4757; top: 22%; transform: rotate(12deg) scale(1.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                    <div class="pattern-stripe bottom" style="background: #1e90ff; top: 54%; transform: rotate(-8deg) scale(1.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none"></div>
                 </div>
                 <div class="handle"></div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- ปุ่มควบคุมการอัดเสียง -->
-    <div id="recording-controls">
-        <div id="rec-toggle-btn" class="rec-btn">
-            <div class="rec-inner"></div>
+    <!-- แผงแดชบอร์ดล่างสำหรับการใช้งานระดับพรีเมียมพอดีหน้าจอแนวตั้ง -->
+    <div class="dashboard glass-panel w-full p-4 flex flex-col gap-3 rounded-t-3xl z-30 shadow-2xl">
+        
+        <!-- ตัวแสดงผล Waveform ขนาดเล็กเหนือปุ่มกด -->
+        <div class="w-full h-8 bg-slate-950/80 rounded-lg border border-slate-800/60 overflow-hidden relative flex items-center justify-center">
+            <div class="absolute inset-0 opacity-40 flex items-center justify-between px-3 text-[9px] text-slate-500 pointer-events-none">
+                <span>LEFT</span>
+                <span>REAL-TIME ANALYZER</span>
+                <span>RIGHT</span>
+            </div>
+            <canvas id="waveform-canvas" class="w-full h-full pointer-events-none"></canvas>
         </div>
-        <div class="rec-status">กำลังบันทึก...</div>
+
+        <div class="flex justify-between items-center w-full gap-2">
+            <!-- ปุ่มดนตรีสาธิต -->
+            <button class="btn-action flex-1 bg-slate-800/80 active:bg-emerald-600 hover:bg-slate-700 border border-slate-700/60 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1 transition-all" id="btn-open-tracks">
+                <i class="fa-solid fa-drum text-emerald-400 text-lg"></i>
+                <span>เพลงสาธิต (<span id="track-status-lbl" class="text-emerald-400 font-bold">ปิดอยู่</span>)</span>
+            </button>
+            
+            <!-- ปุ่มบันทึกเสียงแบบกระตุ้นเรืองแสง -->
+            <div class="flex flex-col items-center justify-center px-2" id="rec-group">
+                <button class="w-14 h-14 rounded-full border-4 border-slate-700 bg-slate-900/90 flex items-center justify-center transition-all shadow-lg active:scale-95" id="btn-rec-toggle" title="บันทึกเสียงของคุณ">
+                    <div class="w-5 h-5 bg-red-500 rounded-full transition-all duration-300" id="rec-dot"></div>
+                </button>
+                <span class="text-[10px] text-slate-400 font-bold mt-1 tracking-wider h-3" id="rec-status-txt"></span>
+            </div>
+
+            <!-- ปุ่มเปิดหน้าตั้งค่าเสียงขั้นสูง -->
+            <button class="btn-action flex-1 bg-slate-800/80 active:bg-yellow-600 hover:bg-slate-700 border border-slate-700/60 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1 transition-all" id="btn-open-settings">
+                <i class="fa-solid fa-sliders text-yellow-400 text-lg"></i>
+                <span>แต่งเสียง / เขย่า</span>
+            </button>
+        </div>
     </div>
 
-    <!-- ปุ่มเริ่ม (เพื่อเปิด AudioContext) -->
-    <div id="start-overlay">
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🎶</div>
-            <button class="btn-start" id="start-btn">แตะเพื่อเริ่มเล่น</button>
-            <p style="margin-top: 15px; color: #aaa;">เปิดเสียงอุปกรณ์ของคุณด้วยนะครับ</p>
+    <!-- ป๊อปอัปตั้งค่าเสียงและควบคุมการสั่นจริงของโทรศัพท์ -->
+    <div class="panel-popup fixed bottom-[-100%] left-0 w-full glass-panel p-6 rounded-t-3xl shadow-2xl transition-all duration-300 z-40 text-slate-200" id="panel-settings">
+        <div class="panel-header flex justify-between items-center mb-5 pb-3 border-b border-slate-800/80">
+            <h3 class="text-base font-bold text-yellow-400 flex items-center gap-2"><i class="fa-solid fa-sliders"></i> ตั้งค่าเครื่องดนตรีขั้นสูง</h3>
+            <button class="btn-close text-slate-400 hover:text-white text-lg p-1" id="btn-close-settings">✕</button>
+        </div>
+        
+        <!-- ตัวเลือกเปิดระบบสั่นจริงด้วย Gyro -->
+        <div class="bg-slate-950/60 p-3 rounded-xl mb-4 border border-slate-800/40 flex justify-between items-center">
+            <div>
+                <span class="text-xs font-bold block text-white"><i class="fa-solid fa-mobile-screen-button text-sky-400 mr-1"></i> เขย่าโทรศัพท์เพื่อเล่นเสียง</span>
+                <span class="text-[10px] text-slate-400">ใช้เซ็นเซอร์จับความเคลื่อนไหวของอุปกรณ์จริง</span>
+            </div>
+            <button class="px-4 py-2 bg-slate-800 active:bg-sky-600 rounded-lg text-xs font-bold transition-all border border-slate-700/50" id="btn-toggle-motion">
+                เปิดระบบสั่น
+            </button>
+        </div>
+
+        <!-- รายการสไลเดอร์เสียง -->
+        <div class="space-y-4">
+            <div class="setting-item">
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                    <span class="text-slate-300">ความถี่โทนเสียง (Tone Frequency)</span>
+                    <span id="val-freq" class="text-yellow-400 font-bold">4500 Hz</span>
+                </div>
+                <input type="range" id="slider-freq" min="2000" max="8500" step="50" value="4500" class="w-full accent-yellow-400 bg-slate-900 h-2 rounded-lg appearance-none">
+            </div>
+            
+            <div class="setting-item">
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                    <span class="text-slate-300">ความแน่น / ความแหลม (Resonance Q)</span>
+                    <span id="val-q" class="text-yellow-400 font-bold">1.5</span>
+                </div>
+                <input type="range" id="slider-q" min="0.5" max="6" step="0.1" value="1.5" class="w-full accent-yellow-400 bg-slate-900 h-2 rounded-lg appearance-none">
+            </div>
+
+            <div class="setting-item">
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                    <span class="text-slate-300">ความกว้างมิติเสียงสเตอริโอ (Stereo Width)</span>
+                    <span id="val-width" class="text-yellow-400 font-bold">80%</span>
+                </div>
+                <input type="range" id="slider-width" min="0" max="100" step="5" value="80" class="w-full accent-yellow-400 bg-slate-900 h-2 rounded-lg appearance-none">
+            </div>
+        </div>
+    </div>
+
+    <!-- ป๊อปอัปเลือกดนตรีสาธิตลูปสังเคราะห์ -->
+    <div class="panel-popup fixed bottom-[-100%] left-0 w-full glass-panel p-6 rounded-t-3xl shadow-2xl transition-all duration-300 z-40 text-slate-200" id="panel-tracks">
+        <div class="panel-header flex justify-between items-center mb-4 pb-3 border-b border-slate-800/80">
+            <h3 class="text-base font-bold text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-drum"></i> เพลงสาธิตเครื่องเคาะ (สังเคราะห์เรียลไทม์)</h3>
+            <button class="btn-close text-slate-400 hover:text-white text-lg p-1" id="btn-close-tracks">✕</button>
+        </div>
+        
+        <p class="text-[10px] text-slate-400 mb-3 bg-slate-950/60 p-2 rounded border border-slate-800/40">
+            * เพลงสาธิตจะมีความยาวจำกัด และระบบจะทำการปิดเสียงลงอัตโนมัติเมื่อเล่นจนจบเพลงตามนโยบายระบบประหยัดพลังงาน
+        </p>
+
+        <!-- รายชื่อแทร็กพร้อมเวลาถอยหลังดีไซน์พิเศษ -->
+        <div class="space-y-3 no-scrollbar max-h-[30vh] overflow-y-auto">
+            <div class="track-item bg-slate-900/80 p-3 rounded-xl flex justify-between items-center border border-slate-800/50 transition-all" id="track-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-solid fa-pepper-hot"></i>
+                    </div>
+                    <div>
+                        <strong class="text-xs text-white block">1. Samba Fiesta (15 วินาที)</strong>
+                        <span class="text-[10px] text-slate-400">จังหวะแซมบ้าเร้าใจ เพิ่มเครื่องเคาะละติน</span>
+                    </div>
+                </div>
+                <button class="btn-play-track bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs px-3 py-1.5 rounded-lg font-bold transition-all" onclick="toggleDemoTrack(0)">
+                    เล่น
+                </button>
+            </div>
+
+            <div class="track-item bg-slate-900/80 p-3 rounded-xl flex justify-between items-center border border-slate-800/50 transition-all" id="track-1">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-socks"></i>
+                    </div>
+                    <div>
+                        <strong class="text-xs text-white block">2. Cha-Cha Groove (20 วินาที)</strong>
+                        <span class="text-[10px] text-slate-400">ชะชะช่าคลาสสิก คลอกระดิ่งวัว Cowbell หวานๆ</span>
+                    </div>
+                </div>
+                <button class="btn-play-track bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs px-3 py-1.5 rounded-lg font-bold transition-all" onclick="toggleDemoTrack(1)">
+                    เล่น
+                </button>
+            </div>
+
+            <div class="track-item bg-slate-900/80 p-3 rounded-xl flex justify-between items-center border border-slate-800/50 transition-all" id="track-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-compact-disc"></i>
+                    </div>
+                    <div>
+                        <strong class="text-xs text-white block">3. Acoustic Pop (25 วินาที)</strong>
+                        <span class="text-[10px] text-slate-400">จังหวะป็อปอะคูสติกฟังสบาย เหมาะเล่นคู่มาราคัส</span>
+                    </div>
+                </div>
+                <button class="btn-play-track bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs px-3 py-1.5 rounded-lg font-bold transition-all" onclick="toggleDemoTrack(2)">
+                    เล่น
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- หน้าจอเปิดใจเริ่มเล่น (Start Overlay) -->
+    <div id="start-overlay" class="fixed inset-0 bg-slate-950/95 flex flex-col justify-center items-center z-50 text-center p-6 transition-all duration-500">
+        <div class="max-w-xs flex flex-col items-center">
+            <div class="w-24 h-24 bg-gradient-to-tr from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-5xl mb-6 shadow-lg animate-pulse">
+                🪇
+            </div>
+            <h2 class="text-2xl font-bold text-yellow-400 mb-2 tracking-wide glow-title">MARACAS PRO</h2>
+            <p class="text-xs text-slate-300 mb-6 leading-relaxed">
+                ขอต้อนรับสู่แอปพลิเคชันมาราคัสเสมือนจริงแบบพรีเมียม สนุกกับเอฟเฟกต์สีสันและจังหวะกลองแบบเรียลไทม์
+            </p>
+            <button class="btn-start bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-base font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95" id="start-btn">
+                เริ่มสัมผัสความมันส์
+            </button>
+            <p class="text-[10px] text-slate-500 mt-4">
+                * กรุณาเปิดสวิตช์เปิดเสียงของอุปกรณ์มือถือของคุณด้วยนะค้าบ
+            </p>
         </div>
     </div>
 
     <script>
-        // --- ส่วนจัดการเสียง (Web Audio API) ---
+        // --- ส่วนจัดการระบบประมวลผลสัญญาณเสียง (Web Audio API Engine) ---
         let audioCtx;
-        let masterGainNode; // Node รวมเสียงทั้งหมดก่อนส่งออก
-        let destForRecording; // Node สำหรับส่งเสียงไปบันทึก
-        let mediaRecorder; // ตัวบันทึกเสียง
-        let recordedChunks = []; // เก็บข้อมูลเสียงที่บันทึก
+        let masterGainNode;
+        let analyserNode; // สำหรับวาดคลื่นเสียง (Waveform Visualizer)
+        let destForRecording;
+        let mediaRecorder;
+        let recordedChunks = [];
         let isRecording = false;
-        
-        // สร้างเสียง Noise (เสียงซ่า) ใส่ Buffer ไว้ล่วงหน้าเพื่อความเร็ว
         let noiseBuffer;
 
+        // ตัวแปรการตั้งค่าเสียงระดับสูง
+        let configFreq = 4500;
+        let configQ = 1.5;
+        let configWidth = 0.8;
+
+        // ระบบเพลงสาธิต (Acoustic Synthesizer Engine)
+        let currentPlayingTrack = null;
+        let trackTimer = null;
+        let trackAudioNodes = []; // คอยเก็บ Audio Nodes ของลูปกลองสาธิต
+        let activeIntervals = []; // จัดเก็บ interval เพื่อการเคลียร์ระบบที่สมบูรณ์แบบเมื่อจบเพลง
+
+        // ข้อมูลแทร็กสาธิต
+        const demoTracksInfo = [
+            { id: 0, name: "Samba Fiesta", bpm: 125, duration: 15 },
+            { id: 1, name: "Cha-Cha Groove", bpm: 110, duration: 20 },
+            { id: 2, name: "Acoustic Pop", bpm: 95, duration: 25 }
+        ];
+
+        // ระบบตรวจจับการเคลื่อนไหว (Gyroscope/Shake control)
+        let isMotionEnabled = false;
+        let lastX = null, lastY = null, lastZ = null;
+        const shakeThreshold = 25; // ความไวในการตอบสนองแรงสั่นเขย่า
+
+        // --- ระบบเอฟเฟกต์ Canvas Particle System ---
+        const canvas = document.getElementById('effects-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class SeedParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 5 + 3;
+                // สุ่มองศาทิศทางการกระจายตัว
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 12 + 6;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed - 3; // ดันขึ้นเล็กน้อย
+                this.gravity = 0.45;
+                this.color = color;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.015;
+            }
+
+            update() {
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // ครีเอตกลุ่มเอฟเฟกต์สปาร์คพวยพุ่งจากตัวมาราคัส
+        function spawnParticles(side) {
+            const rect = document.getElementById(`maraca-${side}`).getBoundingClientRect();
+            // หาจุดศูนย์กลางของหัวมาราคัส
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height * 0.35;
+            
+            // กำหนดสีของลูกปัดที่กระจายออกตามประเภทมาราคัสสีแดง/ส้มเหลือง
+            const colors = side === 'left' 
+                ? ['#ff4757', '#ff6b81', '#ff1f35', '#eccc68', '#2ed573'] 
+                : ['#ffa502', '#ff7f50', '#ff6348', '#ff4757', '#1e90ff'];
+
+            for (let i = 0; i < 24; i++) {
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                particles.push(new SeedParticle(x, y, randomColor));
+            }
+        }
+
+        // วงรอบการเคลื่อนไหวเอฟเฟกต์ (Animation Loop)
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // --- เริ่มต้นการทำงานระบบเสียงระดับมืออาชีพ ---
         function initAudio() {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
 
-            // 1. สร้าง Master Gain เพื่อรวมเสียงทุกอย่าง
+            // 1. สร้างมาสเตอร์เกนเพื่อความปลอดภัย
             masterGainNode = audioCtx.createGain();
-            masterGainNode.gain.value = 1.0;
+            masterGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
 
-            // 2. ต่อ Master Gain ไปที่ลำโพง (เพื่อให้เราได้ยินเสียง)
-            masterGainNode.connect(audioCtx.destination);
+            // 2. สร้างตัววิเคราะห์เสียงเพื่อส่งข้อมูลวาดคลื่นเสียงนีออน
+            analyserNode = audioCtx.createAnalyser();
+            analyserNode.fftSize = 256;
+            
+            // เชื่อมโครงข่ายเสียงหลัก
+            masterGainNode.connect(analyserNode);
+            analyserNode.connect(audioCtx.destination);
 
-            // 3. เตรียมการบันทึกเสียง (Stream Destination)
+            // 3. กำหนดปลายทางเพื่อการบันทึกเสียงคุณภาพสูง
             destForRecording = audioCtx.createMediaStreamDestination();
-            masterGainNode.connect(destForRecording); // ต่อ Master ไปที่ตัวบันทึกด้วย
+            masterGainNode.connect(destForRecording);
 
-            // 4. Setup MediaRecorder
+            // จัดเตรียมส่วนจัดเก็บและการเซฟไฟล์เสียง WebM
             try {
                 mediaRecorder = new MediaRecorder(destForRecording.stream);
-                
                 mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) {
-                        recordedChunks.push(e.data);
-                    }
+                    if (e.data.size > 0) recordedChunks.push(e.data);
                 };
-
                 mediaRecorder.onstop = () => {
-                    // สร้าง Blob ไฟล์เสียง
                     const blob = new Blob(recordedChunks, { 'type' : 'audio/webm' });
-                    recordedChunks = []; // เคลียร์ buffer
-                    
-                    // สร้าง Link ดาวน์โหลด
+                    recordedChunks = [];
                     const url = URL.createObjectURL(blob);
+                    
+                    // ออกแบบป๊อปอัปแจ้งเตือนพิเศษเมื่อเซฟไฟล์สำเร็จ
                     const a = document.createElement('a');
-                    document.body.appendChild(a);
                     a.style = 'display: none';
                     a.href = url;
-                    a.download = 'my-maracas-song.webm'; // ชื่อไฟล์
+                    a.download = 'maracas-pro-jam.webm';
+                    document.body.appendChild(a);
                     a.click();
                     
-                    // Cleanup
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
+                    
+                    const recStatusText = document.getElementById('rec-status-txt');
+                    recStatusText.innerText = "เซฟไฟล์สำเร็จ!";
+                    setTimeout(() => { recStatusText.innerText = ""; }, 3000);
                 };
             } catch (err) {
-                console.error("MediaRecorder not supported or error:", err);
-                alert("อุปกรณ์นี้อาจไม่รองรับการบันทึกเสียง");
+                console.error("MediaRecorder Error:", err);
             }
 
-            // สร้าง White Noise 2 วินาที
+            // สังเคราะห์โครงสร้าง White Noise เติมคลื่นสัญญาณจำลองล่วงหน้า
             const bufferSize = audioCtx.sampleRate * 2; 
             noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const output = noiseBuffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
                 output[i] = Math.random() * 2 - 1;
             }
+
+            // เริ่มงานวาดคลื่นเสียง (Waveform Canvas drawing)
+            drawWaveform();
         }
 
-        // ฟังก์ชันสร้างเสียงเขย่า 1 ครั้ง
+        // ฟังก์ชันสังเคราะห์เสียงมาราคัสแท้ (Double-click physics texture)
         function playShakeSound(panVal = 0) {
             if (!audioCtx) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const t = audioCtx.currentTime;
 
-            // 1. แหล่งกำเนิดเสียง (Noise)
+            // มาราคัสจริงจะกระทบกัน 2 จังหวะในมิลลิวินาทีใกล้กัน (Double bead-clatter impact)
+            // จึงสร้างเสียง 2 ลูกเหลื่อมกันเล็กน้อยเพื่อมิติสมจริง
+            createSingleImpulse(t, panVal, 1.0);
+            createSingleImpulse(t + 0.012, panVal, 0.65); // ลูกคล้อยเบาลง
+        }
+
+        function createSingleImpulse(time, panVal, volumeFactor) {
             const source = audioCtx.createBufferSource();
             source.buffer = noiseBuffer;
 
-            // 2. Filter
+            // คอนฟิก Bandpass filter ตามค่างานปรับจูน
             const filter = audioCtx.createBiquadFilter();
             filter.type = "bandpass";
-            filter.frequency.value = 4000 + (Math.random() * 1000);
-            filter.Q.value = 1;
+            filter.frequency.setValueAtTime(configFreq + (Math.random() * 600 - 300), time);
+            filter.Q.setValueAtTime(configQ, time);
 
-            // 3. Gain (Envelope)
+            // คอนฟิกความอวบอิ่มของแอมพลิจูด (Sustain/Decay envelope)
             const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(0.8 + (Math.random() * 0.2), t + 0.01);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+            gainNode.gain.setValueAtTime(0, time);
+            gainNode.gain.linearRampToValueAtTime((0.75 + (Math.random() * 0.25)) * volumeFactor, time + 0.003);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.11);
 
-            // 4. Stereo Panner
+            // มิติเสียงซ้ายขวาตามที่คอนฟิกสไลเดอร์
             const panner = audioCtx.createStereoPanner();
-            panner.pan.value = panVal;
+            panner.pan.setValueAtTime(panVal * configWidth, time);
 
-            // เชื่อมต่อกราฟเสียง: Source -> Filter -> Gain -> Panner -> MASTER GAIN
-            // (เปลี่ยนจาก connect(destination) เป็น connect(masterGainNode))
+            // เชื่อมต่อโหนดเสียง
             source.connect(filter);
             filter.connect(gainNode);
             gainNode.connect(panner);
-            panner.connect(masterGainNode); // สำคัญ! ต้องต่อเข้า Master เพื่อให้เสียงถูกบันทึก
+            panner.connect(masterGainNode);
 
-            // เล่นเสียง
-            source.start(t);
-            source.stop(t + 0.2);
+            source.start(time);
+            source.stop(time + 0.15);
         }
 
+        // --- ดนตรีลูปสังเคราะห์แบบคูลๆ ไร้ข้อจำกัดเรื่องเน็ตและเซิร์ฟเวอร์ ---
+        function startDemoDrumLoop(trackId) {
+            stopAllDemoTracks();
+            if (!audioCtx) return;
 
-        // --- ส่วนจัดการ UI และ Event Listeners ---
+            const track = demoTracksInfo[trackId];
+            const bpm = track.bpm;
+            const interval = 60 / bpm / 2; // ละเอียดถึง 8th note
+            
+            let beatStep = 0;
+
+            // สังเคราะห์จังหวะกระเดื่อง (Synthesized Kick Drum Node)
+            function playKick(time) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(masterGainNode);
+
+                osc.frequency.setValueAtTime(150, time);
+                osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.16);
+                gain.gain.setValueAtTime(1.1, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.16);
+
+                osc.start(time);
+                osc.stop(time + 0.17);
+                trackAudioNodes.push(osc);
+            }
+
+            // สังเคราะห์เสียงสแนร์/บล็อกไม้แบบโปร (Synthesized Snare / Rimshot)
+            function playSnare(time, vol = 0.5) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.connect(gain);
+                gain.connect(masterGainNode);
+
+                osc.frequency.setValueAtTime(220, time);
+                gain.gain.setValueAtTime(vol, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.09);
+
+                osc.start(time);
+                osc.stop(time + 0.10);
+                trackAudioNodes.push(osc);
+            }
+
+            // สังเคราะห์กระดิ่งวัวสไตล์ละตินสุดฮิต (Cowbell Synth Node)
+            function playCowbell(time, vol = 0.4) {
+                // โทนเสียง Cowbell แท้ต้องใช้ออสซิลเลเตอร์คู่สร้างคลื่นแบบ Harmonic
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc1.type = "square";
+                osc2.type = "square";
+                
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(masterGainNode);
+
+                // คีย์ความถี่หลักสำหรับสร้างฮาร์โมนิคส์กระดิ่ง
+                osc1.frequency.setValueAtTime(540, time);
+                osc2.frequency.setValueAtTime(800, time);
+
+                const bandpass = audioCtx.createBiquadFilter();
+                bandpass.type = "bandpass";
+                bandpass.frequency.setValueAtTime(800, time);
+                
+                gain.gain.setValueAtTime(vol, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+                osc1.start(time);
+                osc2.start(time);
+                osc1.stop(time + 0.2);
+                osc2.stop(time + 0.2);
+                
+                trackAudioNodes.push(osc1);
+                trackAudioNodes.push(osc2);
+            }
+
+            // ระบบจำลองลูปจังหวะตามแทร็ก
+            function loopEngine() {
+                const tNow = audioCtx.currentTime;
+                // ตรวจหาแบบแผนบีต 16 ห้องย่อย
+                const step = beatStep % 16;
+
+                if (trackId === 0) { // แซมบ้าเร้าใจ
+                    if (step === 0 || step === 4 || step === 8 || step === 12) playKick(tNow);
+                    if (step === 2 || step === 6 || step === 10 || step === 14) playSnare(tNow, 0.45);
+                    // เสริม Cowbell แทรกขัดจังหวะ
+                    if (step === 3 || step === 7 || step === 11 || step === 15) playCowbell(tNow, 0.25);
+                } else if (trackId === 1) { // ชะชะช่าคลาสสิก
+                    if (step === 0 || step === 8) playKick(tNow);
+                    if (step === 4 || step === 12) playSnare(tNow, 0.5);
+                    // Cowbell เป็นแกนนำจังหวะชะชะช่า
+                    if (step === 0 || step === 4 || step === 8 || step === 12 || step === 14) playCowbell(tNow, 0.45);
+                } else if (trackId === 2) { // อะคูสติกป๊อปฟังสบาย
+                    if (step === 0 || step === 6 || step === 8 || step === 10) playKick(tNow);
+                    if (step === 4 || step === 12) playSnare(tNow, 0.6);
+                    if (step === 2 || step === 14) playCowbell(tNow, 0.15); // หยอดเบาๆ
+                }
+
+                beatStep++;
+            }
+
+            // เริ่มงานบีตรูปเวลาแม่นยำสูง
+            const intervalMs = interval * 1000;
+            const intervalId = setInterval(loopEngine, intervalMs);
+            activeIntervals.push(intervalId);
+
+            currentPlayingTrack = trackId;
+            document.getElementById(`track-${trackId}`).classList.add('playing');
+            document.getElementById(`track-${trackId}`).querySelector('.btn-play-track').innerText = "หยุด";
+            document.getElementById('track-status-lbl').innerText = track.name;
+
+            // ระบบปิดอัตโนมัติอย่างปลอดภัยตามนโยบายเวลาหมด
+            trackTimer = setTimeout(() => {
+                stopAllDemoTracks();
+            }, track.duration * 1000);
+        }
+
+        function stopAllDemoTracks() {
+            if (trackTimer) {
+                clearTimeout(trackTimer);
+                trackTimer = null;
+            }
+            
+            // ล้างบ่วงรันเวลาทั้งหมด
+            activeIntervals.forEach(id => clearInterval(id));
+            activeIntervals = [];
+
+            // สั่งหยุดเสียงที่คาค้างอยู่ปัจจุบัน
+            trackAudioNodes.forEach(node => {
+                try { node.stop(); } catch(e) {}
+            });
+            trackAudioNodes = [];
+            currentPlayingTrack = null;
+
+            // คอนเฟิร์มรีเซ็ตหน้าจอ UI กลับสู่ปกติ
+            demoTracksInfo.forEach(t => {
+                const el = document.getElementById(`track-${t.id}`);
+                if(el) {
+                    el.classList.remove('playing');
+                    el.querySelector('.btn-play-track').innerText = "เล่น";
+                }
+            });
+            document.getElementById('track-status-lbl').innerText = "ปิดอยู่";
+        }
+
+        function toggleDemoTrack(trackId) {
+            if (currentPlayingTrack === trackId) {
+                stopAllDemoTracks();
+            } else {
+                startDemoDrumLoop(trackId);
+            }
+        }
+
+        // --- ส่วนวาดแคนวาสความเคลื่อนไหวทางเสียง (Real-time Visualizer) ---
+        const waveCanvas = document.getElementById('waveform-canvas');
+        const waveCtx = waveCanvas.getContext('2d');
+
+        function resizeWaveCanvas() {
+            waveCanvas.width = waveCanvas.parentElement.clientWidth;
+            waveCanvas.height = waveCanvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeWaveCanvas);
+        resizeWaveCanvas();
+
+        function drawWaveform() {
+            if (!analyserNode) return;
+            requestAnimationFrame(drawWaveform);
+
+            const bufferLength = analyserNode.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyserNode.getByteTimeDomainData(dataArray);
+
+            waveCtx.fillStyle = 'rgba(15, 23, 42, 0.8)'; // เคลียร์พื้นหลังสีสโมคแบบสโลว์โมชัน
+            waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+
+            waveCtx.lineWidth = 2.5;
+            
+            // ใช้ความไล่เฉดสีเรืองแสงแบบนีออน
+            const gradient = waveCtx.createLinearGradient(0, 0, waveCanvas.width, 0);
+            gradient.addColorStop(0, '#00d2d3');
+            gradient.addColorStop(0.5, '#f1c40f');
+            gradient.addColorStop(1, '#ff9f43');
+            
+            waveCtx.strokeStyle = gradient;
+            waveCtx.beginPath();
+
+            const sliceWidth = waveCanvas.width / bufferLength;
+            let x = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * waveCanvas.height / 2;
+
+                if (i === 0) {
+                    waveCtx.moveTo(x, y);
+                } else {
+                    waveCtx.lineTo(x, y);
+                }
+
+                x += sliceWidth;
+            }
+
+            waveCtx.lineTo(waveCanvas.width, waveCanvas.height / 2);
+            waveCtx.stroke();
+        }
+
+        // --- รองรับการสั่นจริงของอุปกรณ์เซนเซอร์ Gyroscope ---
+        const btnToggleMotion = document.getElementById('btn-toggle-motion');
+        
+        btnToggleMotion.addEventListener('click', () => {
+            if (!isMotionEnabled) {
+                // ขออนุญาตฝั่ง iOS หรือเว็บบราวเซอร์ระดับสูง
+                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                    DeviceMotionEvent.requestPermission()
+                        .then(permissionState => {
+                            if (permissionState === 'granted') {
+                                enableMotionAndSensors();
+                            } else {
+                                alert("ไม่ได้รับอนุญาตให้ใช้เซ็นเซอร์จับความเคลื่อนไหว");
+                            }
+                        })
+                        .catch(err => {
+                            console.error("DeviceMotion Permission error:", err);
+                        });
+                } else {
+                    // แอนดรอยด์หรือเว็บบราวเซอร์ทั่วไป
+                    enableMotionAndSensors();
+                }
+            } else {
+                disableMotionAndSensors();
+            }
+        });
+
+        function enableMotionAndSensors() {
+            isMotionEnabled = true;
+            window.addEventListener('devicemotion', handleMotion, true);
+            btnToggleMotion.innerText = "ปิดระบบสั่น";
+            btnToggleMotion.classList.add('bg-sky-500', 'text-slate-950');
+            btnToggleMotion.classList.remove('bg-slate-800');
+        }
+
+        function disableMotionAndSensors() {
+            isMotionEnabled = false;
+            window.removeEventListener('devicemotion', handleMotion, true);
+            btnToggleMotion.innerText = "เปิดระบบสั่น";
+            btnToggleMotion.classList.remove('bg-sky-500', 'text-slate-950');
+            btnToggleMotion.classList.add('bg-slate-800');
+        }
+
+        function handleMotion(event) {
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            if (lastX === null && lastY === null && lastZ === null) {
+                lastX = acc.x;
+                lastY = acc.y;
+                lastZ = acc.z;
+                return;
+            }
+
+            const deltaX = Math.abs(acc.x - lastX);
+            const deltaY = Math.abs(acc.y - lastY);
+            const deltaZ = Math.abs(acc.z - lastZ);
+
+            // หากเขย่าเกินขอบเขตค่าความเร่ง (Shake action triggered)
+            if ((deltaX > shakeThreshold && deltaY > shakeThreshold) || deltaZ > shakeThreshold + 10) {
+                // เขย่ามาราคัสสองตัวสลับพิกัดซ้ายขวาตามธรรมชาติความเอียง
+                if (acc.x > 0) {
+                    triggerShake('left');
+                } else {
+                    triggerShake('right');
+                }
+            }
+
+            lastX = acc.x;
+            lastY = acc.y;
+            lastZ = acc.z;
+        }
+
+        // --- ผูกระบบป๊อปอัปและสไลเดอร์เสียงต่าง ๆ ---
         const leftMaraca = document.getElementById('maraca-left');
         const rightMaraca = document.getElementById('maraca-right');
         const startOverlay = document.getElementById('start-overlay');
         const startBtn = document.getElementById('start-btn');
-        const recToggleBtn = document.getElementById('rec-toggle-btn');
-        const recordingControls = document.getElementById('recording-controls');
+        const btnRecToggle = document.getElementById('btn-rec-toggle');
+        const recGroup = document.getElementById('rec-group');
+        const recDot = document.getElementById('rec-dot');
 
-        // ฟังก์ชันเขย่า
-        function triggerShake(element, pan) {
-            // เล่นเสียง
+        const panelSettings = document.getElementById('panel-settings');
+        const panelTracks = document.getElementById('panel-tracks');
+
+        function triggerShake(side) {
+            const element = document.getElementById(`maraca-${side}`);
+            const pan = side === 'left' ? -0.8 : 0.8;
+
             playShakeSound(pan);
+            spawnParticles(side);
 
-            // เล่น Animation
-            element.classList.remove('shaking');
-            void element.offsetWidth; // Trigger reflow
-            element.classList.add('shaking');
+            const animationClass = side === 'left' ? 'shaking-left' : 'shaking-right';
+            element.classList.remove(animationClass);
+            void element.offsetWidth; // กระตุ้น Reflow เพื่อล้างอะนิเมชัน
+            element.classList.add(animationClass);
 
-            // สั่นมือถือ
-            if (navigator.vibrate) {
-                navigator.vibrate(15); 
-            }
+            // ดึงเอฟเฟกต์ตอบรับแบบสัมผัสสั่นสั้นๆ บนมือถือ
+            if (navigator.vibrate) navigator.vibrate(15);
         }
 
-        // เริ่มต้นแอป
+        // เริ่มแอปและการขออนุญาต Audio Context ทันทีเมื่อคลิกสตาร์ต
         startBtn.addEventListener('click', () => {
             initAudio();
             startOverlay.style.opacity = '0';
-            setTimeout(() => {
-                startOverlay.style.display = 'none';
-            }, 500);
+            setTimeout(() => { startOverlay.style.display = 'none'; }, 400);
         });
 
-        // ฟังก์ชันสลับการอัดเสียง
-        recToggleBtn.addEventListener('click', () => {
-            if (!audioCtx) {
-                alert("กรุณากดปุ่มเริ่มเล่นก่อนครับ");
-                return;
-            }
-
+        // เปิด-ปิดการบันทึกเสียงสด
+        btnRecToggle.addEventListener('click', () => {
+            if (!audioCtx) return;
             if (!isRecording) {
-                // เริ่มอัด
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 mediaRecorder.start();
                 isRecording = true;
-                recordingControls.classList.add('is-recording');
+                recGroup.classList.add('recording');
+                document.getElementById('rec-status-txt').innerText = "กำลังบันทึก...";
+                recDot.classList.remove('rounded-full', 'bg-red-500');
+                recDot.classList.add('rounded-sm', 'bg-red-600', 'animate-pulse');
             } else {
-                // หยุดอัด
                 mediaRecorder.stop();
                 isRecording = false;
-                recordingControls.classList.remove('is-recording');
+                recGroup.classList.remove('recording');
+                document.getElementById('rec-status-txt').innerText = "กำลังประมวลผลไฟล์...";
+                recDot.classList.add('rounded-full', 'bg-red-500');
+                recDot.classList.remove('rounded-sm', 'bg-red-600', 'animate-pulse');
             }
         });
 
-        // จัดการ Touch/Click Events
-        function addInteraction(element, pan) {
+        // เมนูเปิดปิดป๊อปอัปตั้งค่าต่าง ๆ
+        document.getElementById('btn-open-settings').addEventListener('click', () => { panelSettings.classList.add('show'); panelSettings.style.bottom = '0'; panelTracks.classList.remove('show'); panelTracks.style.bottom = '-100%'; });
+        document.getElementById('btn-close-settings').addEventListener('click', () => { panelSettings.classList.remove('show'); panelSettings.style.bottom = '-100%'; });
+        
+        document.getElementById('btn-open-tracks').addEventListener('click', () => { panelTracks.classList.add('show'); panelTracks.style.bottom = '0'; panelSettings.classList.remove('show'); panelSettings.style.bottom = '-100%'; });
+        document.getElementById('btn-close-tracks').addEventListener('click', () => { panelTracks.classList.remove('show'); panelTracks.style.bottom = '-100%'; });
+
+        // ติดตามสไลเดอร์เพื่ออัปเดตฟิลเตอร์เสียงสด
+        document.getElementById('slider-freq').addEventListener('input', (e) => {
+            configFreq = parseInt(e.target.value);
+            document.getElementById('val-freq').innerText = configFreq + " Hz";
+        });
+        document.getElementById('slider-q').addEventListener('input', (e) => {
+            configQ = parseFloat(e.target.value);
+            document.getElementById('val-q').innerText = configQ.toFixed(1);
+        });
+        document.getElementById('slider-width').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            configWidth = val / 100;
+            document.getElementById('val-width').innerText = val + "%";
+        });
+
+        // เปิดฟังรับแรงสัมผัสเขย่าแบบพรีเมียม
+        function bindTouches(element, side) {
             element.addEventListener('contextmenu', e => e.preventDefault());
             element.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
-                triggerShake(element, pan);
+                triggerShake(side);
             });
         }
+        bindTouches(leftMaraca, 'left');
+        bindTouches(rightMaraca, 'right');
 
-        addInteraction(leftMaraca, -0.8);
-        addInteraction(rightMaraca, 0.8);
-
-        // Keyboard Support
+        // คอนโทรลคีย์บอร์ดเสริมสำหรับ PC
         document.addEventListener('keydown', (e) => {
             if (e.repeat) return;
-            if (e.key === 'ArrowLeft' || e.key === 'a') {
-                triggerShake(leftMaraca, -0.8);
-            }
-            if (e.key === 'ArrowRight' || e.key === 'd') {
-                triggerShake(rightMaraca, 0.8);
-            }
+            const key = e.key.toLowerCase();
+            if (key === 'a' || e.key === 'ArrowLeft') triggerShake('left');
+            if (key === 'd' || e.key === 'ArrowRight') triggerShake('right');
         });
-
     </script>
 </body>
 </html>
