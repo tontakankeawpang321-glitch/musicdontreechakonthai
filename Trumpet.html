@@ -3,408 +3,1261 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Trumpet Pro</title>
+<title>Trumpet Pro - สัมผัสฟิสิกส์เสียงทรัมเป็ตจริง</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Mono:wght@400;500&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--gold:#ffd700;--gold2:#c8980a;--gold3:#8b5e0a;--bg:#0c0904;--dim:#7a6030;--red:#c0392b;}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation;}
-html,body{margin:0;padding:0;height:100%;background:var(--bg);color:#fff9ec;font-family:'Sarabun',sans-serif;overflow:hidden;}
-body{display:flex;flex-direction:column;height:100dvh;}
+:root {
+    --gold: #ffd700;
+    --gold2: #c8980a;
+    --gold3: #8b5e0a;
+    --bg: #0c0904;
+    --dim: #7a6030;
+    --red: #c0392b;
+    --card-bg: rgba(26, 17, 6, 0.9);
+    --border-gold: rgba(200, 152, 10, 0.25);
+}
 
-#ov{position:fixed;inset:0;z-index:999;background:radial-gradient(ellipse at 50% 40%,#1c1005,#0c0904 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}
-.ov-e{font-size:4.5rem;margin-bottom:10px;filter:drop-shadow(0 0 18px rgba(255,215,0,.5));}
-.ov-t{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold);margin:0 0 6px;}
-.ov-s{font-size:.85rem;color:var(--dim);margin:0 0 4px;}
-.ov-m{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--gold3);letter-spacing:.06em;margin:0 0 26px;}
-#start-btn{padding:14px 48px;border-radius:50px;border:1px solid rgba(255,215,0,.4);background:linear-gradient(145deg,var(--gold),var(--gold2));color:#3d2000;font-family:'Playfair Display',serif;font-size:1.1rem;cursor:pointer;min-height:52px;box-shadow:0 6px 28px rgba(200,152,10,.4),inset 0 1px 0 rgba(255,255,255,.35);animation:glow 2.5s ease-in-out infinite alternate;}
-@keyframes glow{from{box-shadow:0 6px 24px rgba(200,152,10,.35);}to{box-shadow:0 8px 40px rgba(200,152,10,.6);}}
-.ov-h{margin-top:18px;font-size:.75rem;color:#4a3015;}
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
 
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;flex-shrink:0;border-bottom:1px solid rgba(200,152,10,.12);background:#100a03;}
-.logo{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);letter-spacing:.04em;white-space:nowrap;}
-.logo em{font-style:italic;color:var(--gold2);font-size:.82rem;}
-.cr{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;}
-.sw{display:flex;align-items:center;gap:5px;}
-.sl{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);letter-spacing:.06em;}
-input[type=range]{-webkit-appearance:none;width:64px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--gold2),var(--gold3));outline:none;cursor:pointer;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff9d0,var(--gold),var(--gold2));cursor:pointer;box-shadow:0 0 6px rgba(255,215,0,.4);}
-.ibtn{width:36px;height:36px;border-radius:50%;border:1px solid rgba(200,152,10,.25);background:rgba(255,215,0,.06);color:var(--gold2);font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
-.ibtn:active{transform:scale(.92);}
-.ibtn.rec{color:var(--red);border-color:rgba(192,57,43,.35);}
-.ibtn.rec.on{background:rgba(192,57,43,.15);animation:rp 1.2s infinite;}
-.ibtn:disabled{opacity:.3;cursor:not-allowed;}
-@keyframes rp{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.4);}50%{box-shadow:0 0 0 7px rgba(192,57,43,0);}}
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--bg);
+    color: #fff9ec;
+    font-family: 'Sarabun', sans-serif;
+    overflow: hidden;
+}
 
-.stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0;}
-.glow{position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,.07) 0%,transparent 70%);pointer-events:none;opacity:0;transition:opacity .25s;}
-.glow.lit{opacity:1;animation:br 2s ease-in-out infinite;}
-@keyframes br{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
-.rings{position:absolute;right:calc(50% - 115px);top:50%;transform:translateY(-50%);pointer-events:none;}
-.ring{position:absolute;border-radius:50%;border:1.5px solid rgba(255,215,0,.45);opacity:0;left:0;top:0;transform:translate(-50%,-50%);}
-.rings.lit .ring:nth-child(1){animation:ro 1.8s ease-out 0s infinite;}
-.rings.lit .ring:nth-child(2){animation:ro 1.8s ease-out .55s infinite;}
-.rings.lit .ring:nth-child(3){animation:ro 1.8s ease-out 1.1s infinite;}
-@keyframes ro{0%{width:14px;height:14px;opacity:.8;}100%{width:190px;height:190px;opacity:0;}}
-#vu{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold3),var(--gold),#fff);transform-origin:left;transform:scaleX(0);transition:transform .04s linear;pointer-events:none;}
-.foot{position:absolute;bottom:4px;width:100%;text-align:center;font-family:'DM Mono',monospace;font-size:.55rem;color:#2a1a06;letter-spacing:.08em;pointer-events:none;}
+/* Base application wrapper allowing vertical scrolling on short screens */
+.app-viewport {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold3) var(--bg);
+}
 
-.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));width:100%;max-width:500px;flex-shrink:0;}
-.key{aspect-ratio:1;border-radius:14px;border:1px solid rgba(200,152,10,.2);background:linear-gradient(145deg,#231507,#110a02);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,215,0,.07);transition:transform .07s,box-shadow .07s;}
-.key::after{content:'';position:absolute;width:72%;height:72%;border-radius:50%;border:1px solid rgba(200,152,10,.14);pointer-events:none;}
-.kth{font-size:1.15rem;font-weight:700;color:var(--gold);position:relative;z-index:2;line-height:1;}
-.ken{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--gold3);position:relative;z-index:2;margin-top:3px;}
-.key.dn{transform:scale(.95) translateY(2px);background:linear-gradient(145deg,#3c1f06,#1b0e02);border-color:rgba(255,215,0,.38);box-shadow:0 1px 6px rgba(0,0,0,.9),0 0 16px rgba(255,215,0,.12),inset 0 3px 8px rgba(0,0,0,.65);}
-.key.dn .kth{color:#fff9d0;text-shadow:0 0 10px rgba(255,215,0,.6);}
-.key.dn::after{border-color:rgba(255,215,0,.28);}
-.ripple{position:absolute;border-radius:50%;background:rgba(255,215,0,.18);transform:scale(0);animation:rip .5s ease-out forwards;pointer-events:none;}
-@keyframes rip{to{transform:scale(4);opacity:0;}}
-@media(max-width:380px){.keys{gap:7px;padding:9px 10px calc(9px + env(safe-area-inset-bottom));}.kth{font-size:1rem;}input[type=range]{width:50px;}}
+/* Elegant Welcome Overlay */
+#ov {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: radial-gradient(ellipse at 50% 40%, #1c1005, #0c0904 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+}
+.ov-e { font-size: 4.5rem; margin-bottom: 10px; filter: drop-shadow(0 0 18px rgba(255,215,0,.5)); }
+.ov-t { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--gold); margin: 0 0 6px; }
+.ov-s { font-size: .95rem; color: var(--dim); margin: 0 0 4px; }
+.ov-m { font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--gold3); letter-spacing: .06em; margin: 0 0 26px; }
+#start-btn {
+    padding: 14px 48px;
+    border-radius: 50px;
+    border: 1px solid rgba(255,215,0,.4);
+    background: linear-gradient(145deg, var(--gold), var(--gold2));
+    color: #3d2000;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    cursor: pointer;
+    min-height: 52px;
+    box-shadow: 0 6px 28px rgba(200,152,10,.4), inset 0 1px 0 rgba(255,255,255,.35);
+    animation: glow 2.5s ease-in-out infinite alternate;
+}
+@keyframes glow {
+    from { box-shadow: 0 6px 24px rgba(200,152,10,.35); }
+    to { box-shadow: 0 8px 40px rgba(200,152,10,.6); }
+}
+.ov-h { margin-top: 18px; font-size: .75rem; color: #5a4025; }
+
+/* Header and Navigation Bar */
+.hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(200,152,10,.12);
+    background: #100a03;
+    z-index: 10;
+}
+.logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); letter-spacing: .04em; white-space: nowrap; }
+.logo em { font-style: italic; color: var(--gold2); font-size: .85rem; }
+.cr { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+.sw { display: flex; align-items: center; gap: 5px; }
+.sl { font-family: 'DM Mono', monospace; font-size: .6rem; color: var(--dim); letter-spacing: .06em; }
+
+/* Input sliders */
+input[type=range] {
+    -webkit-appearance: none;
+    width: 60px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--gold2), var(--gold3));
+    outline: none;
+    cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff9d0, var(--gold), var(--gold2));
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(255,215,0,.4);
+}
+
+/* Control buttons style */
+.ibtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border-gold);
+    background: rgba(255,215,0,.06);
+    color: var(--gold2);
+    font-size: .82rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .12s;
+}
+.ibtn:active { transform: scale(.92); }
+.ibtn.rec { color: var(--red); border-color: rgba(192,57,43,.35); }
+.ibtn.rec.on { background: rgba(192,57,43,.15); animation: rp 1.2s infinite; }
+.ibtn:disabled { opacity: .3; cursor: not-allowed; }
+@keyframes rp {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,.4); }
+    50% { box-shadow: 0 0 0 7px rgba(192,57,43,0); }
+}
+
+/* Interactive Dashboard & Sub-menus */
+.sub-toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(20, 13, 4, 0.7);
+    border-bottom: 1px solid rgba(255,215,0,.05);
+    flex-wrap: wrap;
+}
+.action-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-gold);
+    background: rgba(40, 25, 8, 0.6);
+    color: var(--gold);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Sarabun', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.action-btn:hover, .action-btn.active {
+    background: linear-gradient(135deg, var(--gold2), var(--gold3));
+    color: #100a03;
+    border-color: var(--gold);
+}
+
+/* Advanced Settings Drawer (Collapsible) */
+.settings-drawer {
+    display: none;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-gold);
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 10px;
+}
+.settings-drawer.open {
+    display: flex;
+    animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+}
+.control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.control-label {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--dim);
+    display: flex;
+    justify-content: space-between;
+}
+.control-label span.val { color: var(--gold); }
+.settings-drawer input[type=range] { width: 100%; }
+
+/* Demo Songs Player panel */
+.demo-panel {
+    display: none;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-gold);
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.demo-panel.open {
+    display: flex;
+    animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.song-selector {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    max-width: 480px;
+    justify-content: space-between;
+}
+.song-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,215,0,.15);
+    background: rgba(12, 9, 4, 0.9);
+    color: #eee;
+    font-size: 0.72rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+.song-btn.playing {
+    background: linear-gradient(135deg, #c8980a, #8b5e0a);
+    color: #fff;
+    border-color: var(--gold);
+    animation: pulseGlow 1.5s infinite alternate;
+}
+@keyframes pulseGlow {
+    from { box-shadow: 0 0 4px rgba(255, 215, 0, 0.3); }
+    to { box-shadow: 0 0 12px rgba(255, 215, 0, 0.6); }
+}
+.song-ctrl {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+.song-ctrl-btn {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: rgba(192,57,43,0.15);
+    color: #ff8888;
+    cursor: pointer;
+}
+
+/* Stage Area with Trumpet and Visualization */
+.stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 220px;
+}
+.glow {
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .25s;
+}
+.glow.lit { opacity: 1; animation: br 2s ease-in-out infinite; }
+@keyframes br { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+.rings {
+    position: absolute;
+    right: calc(50% - 110px);
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 2;
+}
+.ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,215,0,.45);
+    opacity: 0;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
+}
+.rings.lit .ring:nth-child(1) { animation: ro 1.8s ease-out 0s infinite; }
+.rings.lit .ring:nth-child(2) { animation: ro 1.8s ease-out .55s infinite; }
+.rings.lit .ring:nth-child(3) { animation: ro 1.8s ease-out 1.1s infinite; }
+@keyframes ro {
+    0% { width: 14px; height: 14px; opacity: .8; }
+    100% { width: 220px; height: 220px; opacity: 0; }
+}
+
+#vu {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold3), var(--gold), #fff);
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform .04s linear;
+    pointer-events: none;
+    z-index: 5;
+}
+.foot {
+    position: absolute;
+    bottom: 6px;
+    width: 100%;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: .55rem;
+    color: #553e1f;
+    letter-spacing: .08em;
+    pointer-events: none;
+}
+
+/* Flying note visualizer elements */
+.flying-note {
+    position: absolute;
+    color: var(--gold);
+    font-weight: bold;
+    font-size: 1.1rem;
+    font-family: 'Playfair Display', serif;
+    pointer-events: none;
+    z-index: 15;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.8), 0 0 12px rgba(255, 150, 0, 0.4);
+    animation: flyUpAndAway 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes flyUpAndAway {
+    0% {
+        transform: translate(0, 0) scale(0.6) rotate(0deg);
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(var(--rot));
+        opacity: 0;
+    }
+}
+
+/* Keyboards section styling */
+.keys-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background: rgba(12, 9, 4, 0.95);
+    border-top: 1px solid rgba(255, 215, 0, 0.08);
+    flex-shrink: 0;
+}
+.keys {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 500px;
+}
+.key {
+    aspect-ratio: 1;
+    border-radius: 14px;
+    border: 1px solid rgba(200,152,10,.2);
+    background: linear-gradient(145deg, #231507, #110a02);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,215,0,.07);
+    transition: transform .07s, box-shadow .07s;
+}
+.key::after {
+    content: '';
+    position: absolute;
+    width: 72%;
+    height: 72%;
+    border-radius: 50%;
+    border: 1px solid rgba(200,152,10,.14);
+    pointer-events: none;
+}
+.kth { font-size: 1.15rem; font-weight: 700; color: var(--gold); position: relative; z-index: 2; line-height: 1; }
+.ken { font-family: 'DM Mono', monospace; font-size: .6rem; color: var(--gold3); position: relative; z-index: 2; margin-top: 3px; }
+
+.key.dn {
+    transform: scale(.95) translateY(2px);
+    background: linear-gradient(145deg, #3c1f06, #1b0e02);
+    border-color: rgba(255,215,0,0.38);
+    box-shadow: 0 1px 6px rgba(0,0,0,.9), 0 0 16px rgba(255,215,0,.12), inset 0 3px 8px rgba(0,0,0,.65);
+}
+.key.dn .kth { color: #fff9d0; text-shadow: 0 0 10px rgba(255,215,0,.6); }
+.key.dn::after { border-color: rgba(255,215,0,.28); }
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,215,0,.18);
+    transform: scale(0);
+    animation: rip .5s ease-out forwards;
+    pointer-events: none;
+}
+@keyframes rip { to { transform: scale(4); opacity: 0; } }
+
+/* Toast Messages (Elegant Replacement for alerts) */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+.toast {
+    background: rgba(30, 20, 10, 0.95);
+    border: 1px solid var(--gold2);
+    color: #fffdec;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.82rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    opacity: 0;
+    animation: fadeInOut 3.5s forwards;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+@keyframes fadeInOut {
+    0% { transform: translateY(-20px); opacity: 0; }
+    10% { transform: translateY(0); opacity: 1; }
+    90% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-20px); opacity: 0; }
+}
+
+@media(max-width:380px) {
+    .keys { gap: 7px; padding: 9px 10px calc(9px + env(safe-area-inset-bottom)); }
+    .kth { font-size: 1rem; }
+    input[type=range] { width: 44px; }
+    .action-btn { font-size: 0.68rem; padding: 5px 10px; }
+}
 </style>
 </head>
 <body>
 
-<div id="ov">
-    <div class="ov-e">🎺</div>
-    <h1 class="ov-t">Trumpet Pro</h1>
-    <p class="ov-s">เสียงทรัมเป็ตจำลองฟิสิกส์จริง</p>
-    <p class="ov-m">HARMONIC SERIES · FORMANT FILTER · LIP BUZZ</p>
-    <button id="start-btn">▶ เริ่มเล่น</button>
-    <p class="ov-h">กดค้าง = เป่า · ปล่อย = หยุด · PC: A S D F G H J K</p>
-</div>
+<div class="app-viewport">
+    <!-- Start-up Welcome Overlay -->
+    <div id="ov">
+        <div class="ov-e">🎺</div>
+        <h1 class="ov-t">Trumpet Pro</h1>
+        <p class="ov-s">เสียงทรัมเป็ตจำลองฟิสิกส์จริง</p>
+        <p class="ov-m">HARMONIC SERIES · FORMANT FILTER · LIP BUZZ</p>
+        <button id="start-btn">▶ เริ่มเล่น</button>
+        <p class="ov-h">กดค้าง = เป่า · ปล่อย = หยุด · PC: A S D F G H J K</p>
+    </div>
 
-<div class="hdr">
-    <div class="logo">Trumpet <em>Pro</em></div>
-    <div class="cr">
-        <div class="sw"><span class="sl">VOL</span><input type="range" id="vol" min="0" max="100" value="80"></div>
-        <div class="sw"><span class="sl">TONE</span><input type="range" id="tone" min="0" max="100" value="60"></div>
-        <div class="sw"><span class="sl">REV</span><input type="range" id="rev" min="0" max="100" value="30"></div>
-        <button class="ibtn rec" id="btn-rec" title="บันทึก">●</button>
-        <button class="ibtn" id="btn-dl" title="ดาวน์โหลด" disabled>↓</button>
+    <!-- Main Navigation Header -->
+    <div class="hdr">
+        <div class="logo">Trumpet <em>Pro</em></div>
+        <div class="cr">
+            <div class="sw"><span class="sl">VOL</span><input type="range" id="vol" min="0" max="100" value="70"></div>
+            <div class="sw"><span class="sl">TONE</span><input type="range" id="tone" min="0" max="100" value="65"></div>
+            <div class="sw"><span class="sl">REV</span><input type="range" id="rev" min="0" max="100" value="30"></div>
+            <button class="ibtn rec" id="btn-rec" title="บันทึกเสียง">●</button>
+            <button class="ibtn" id="btn-dl" title="ดาวน์โหลดที่บันทึก" disabled>↓</button>
+        </div>
+    </div>
+
+    <!-- Sub Toolbar for Advanced & Demo songs features -->
+    <div class="sub-toolbar">
+        <button class="action-btn" id="toggle-songs">🎵 เพลงสาธิต</button>
+        <button class="action-btn" id="toggle-advanced">⚙️ ปรับแต่งเสียงขั้นสูง</button>
+    </div>
+
+    <!-- Hidden Advanced Settings Drawer -->
+    <div class="settings-drawer" id="advanced-drawer">
+        <div class="settings-grid">
+            <div class="control-item">
+                <div class="control-label">ความเร็วสั่น (Vib Rate) <span class="val" id="val-vrate">5.5Hz</span></div>
+                <input type="range" id="param-vrate" min="30" max="100" value="55">
+            </div>
+            <div class="control-item">
+                <div class="control-label">ความลึกสั่น (Vib Depth) <span class="val" id="val-vdepth">3.5</span></div>
+                <input type="range" id="param-vdepth" min="0" max="150" value="35">
+            </div>
+            <div class="control-item">
+                <div class="control-label">จังหวะเริ่มเป่า (Attack) <span class="val" id="val-atk">0.025s</span></div>
+                <input type="range" id="param-atk" min="5" max="250" value="25">
+            </div>
+            <div class="control-item">
+                <div class="control-label">จังหวะเสียงหยุด (Release) <span class="val" id="val-rel">0.10s</span></div>
+                <input type="range" id="param-rel" min="20" max="800" value="100">
+            </div>
+            <div class="control-item">
+                <div class="control-label">แรงตึงริมฝีปาก (Lip Tension) <span class="val" id="val-detune">14</span></div>
+                <input type="range" id="param-detune" min="0" max="35" value="14">
+            </div>
+            <div class="control-item">
+                <div class="control-label">ความคมของกระบอกสูบ (Saturator) <span class="val" id="val-sat">18</span></div>
+                <input type="range" id="param-sat" min="1" max="40" value="18">
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Demo Songs Drawer -->
+    <div class="demo-panel" id="demo-panel">
+        <div class="song-selector">
+            <button class="song-btn" id="song1" data-id="1">💤 Taps (แตรเดี่ยวเป่านอน)</button>
+            <button class="song-btn" id="song2" data-id="2">😊 Ode to Joy (เพลงแห่งความสุข)</button>
+            <button class="song-btn" id="song3" data-id="3">🦟 La Cucaracha (แมลงสาบเริงระบำ)</button>
+        </div>
+        <div class="song-ctrl">
+            <button class="song-ctrl-btn" id="btn-stop-song" style="display: none;">■ หยุดเพลง</button>
+        </div>
+    </div>
+
+    <!-- Visual Interactive Instrument Stage -->
+    <div class="stage" id="bell-stage">
+        <div class="glow" id="glow"></div>
+        <div class="rings" id="rings">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+        </div>
+        
+        <!-- Beautiful SVG Golden Trumpet Graphics -->
+        <svg viewBox="0 0 320 130" width="295" height="115" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f2d055"/><stop offset="45%" stop-color="#c8980a"/><stop offset="100%" stop-color="#6a3e05"/>
+                </linearGradient>
+                <radialGradient id="bg" cx="32%" cy="30%">
+                    <stop offset="0%" stop-color="#fff7cc"/><stop offset="38%" stop-color="#d4a017"/><stop offset="72%" stop-color="#9a5e0e"/><stop offset="100%" stop-color="#3a1c00"/>
+                </radialGradient>
+                <radialGradient id="vg" cx="30%" cy="28%">
+                    <stop offset="0%" stop-color="#f5ead0"/><stop offset="50%" stop-color="#b8b8b8"/><stop offset="100%" stop-color="#707070"/>
+                </radialGradient>
+            </defs>
+            <path d="M42 67 Q42 100 80 100 Q118 100 118 67" stroke="url(#tg)" stroke-width="11" fill="none" stroke-linecap="round"/>
+            <rect x="42" y="54" width="140" height="14" rx="7" fill="url(#tg)"/>
+            <path d="M90 54 Q90 28 120 28 Q150 28 150 54" stroke="url(#tg)" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <rect x="10" y="58" width="36" height="7" rx="3.5" fill="#b8860b"/>
+            <ellipse cx="10" cy="61.5" rx="6" ry="7.5" fill="#d4a017" stroke="#f0d060" stroke-width=".8"/>
+            
+            <!-- Trumpet Bell outline where notes will emerge from -->
+            <path id="trumpet-bell" d="M182 47 Q242 47 272 18 Q298 0 308 10 Q294 30 260 57 Q240 72 182 72 Z" fill="url(#bg)"/>
+            <path d="M182 52 Q220 52 248 35 Q264 24 270 28 Q258 45 230 59 Q212 68 182 68 Z" fill="rgba(0,0,0,.18)"/>
+            <path d="M182 47 L182 72" stroke="#f0d060" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M220 30 Q250 17 270 15" stroke="rgba(255,255,255,.16)" stroke-width="2.5" stroke-linecap="round"/>
+            
+            <!-- Valves Section -->
+            <rect x="78" y="44" width="21" height="38" rx="3.5" fill="url(#tg)"/>
+            <rect x="81" y="39" width="15" height="8" rx="3" fill="url(#vg)"/>
+            <rect x="81" y="75" width="15" height="8" rx="3" fill="url(#vg)"/>
+            <circle cx="88.5" cy="63" r="7" fill="url(#vg)" stroke="#d4a017" stroke-width=".8"/>
+            <rect x="106" y="44" width="21" height="38" rx="3.5" fill="url(#tg)"/>
+            <rect x="109" y="39" width="15" height="8" rx="3" fill="url(#vg)"/>
+            <rect x="109" y="75" width="15" height="8" rx="3" fill="url(#vg)"/>
+            <circle cx="116.5" cy="63" r="7" fill="url(#vg)" stroke="#d4a017" stroke-width=".8"/>
+            <rect x="134" y="44" width="21" height="38" rx="3.5" fill="url(#tg)"/>
+            <rect x="137" y="39" width="15" height="8" rx="3" fill="url(#vg)"/>
+            <rect x="137" y="75" width="15" height="8" rx="3" fill="url(#vg)"/>
+            <circle cx="144.5" cy="63" r="7" fill="url(#vg)" stroke="#d4a017" stroke-width=".8"/>
+        </svg>
+        
+        <div id="vu"></div>
+        <div class="foot">PHYSICS BRASS SYNTHESIZER • FLOATING NOTE VISUALS</div>
+    </div>
+
+    <!-- Virtual Valves / Musical Keys Section -->
+    <div class="keys-container">
+        <div class="keys">
+            <button class="key" data-note="C4"><span class="kth">โด</span><span class="ken">C4</span></button>
+            <button class="key" data-note="D4"><span class="kth">เร</span><span class="ken">D4</span></button>
+            <button class="key" data-note="E4"><span class="kth">มี</span><span class="ken">E4</span></button>
+            <button class="key" data-note="F4"><span class="kth">ฟา</span><span class="ken">F4</span></button>
+            <button class="key" data-note="G4"><span class="kth">ซอล</span><span class="ken">G4</span></button>
+            <button class="key" data-note="A4"><span class="kth">ลา</span><span class="ken">A4</span></button>
+            <button class="key" data-note="B4"><span class="kth">ที</span><span class="ken">B4</span></button>
+            <button class="key" data-note="C5"><span class="kth">โด↑</span><span class="ken">C5</span></button>
+        </div>
     </div>
 </div>
 
-<div class="stage">
-    <div class="glow" id="glow"></div>
-    <div class="rings" id="rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
-    <svg viewBox="0 0 320 130" width="295" height="115" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f2d055"/><stop offset="45%" stop-color="#c8980a"/><stop offset="100%" stop-color="#6a3e05"/></linearGradient>
-            <radialGradient id="bg" cx="32%" cy="30%"><stop offset="0%" stop-color="#fff7cc"/><stop offset="38%" stop-color="#d4a017"/><stop offset="72%" stop-color="#9a5e0e"/><stop offset="100%" stop-color="#3a1c00"/></radialGradient>
-            <radialGradient id="vg" cx="30%" cy="28%"><stop offset="0%" stop-color="#f5ead0"/><stop offset="50%" stop-color="#b8b8b8"/><stop offset="100%" stop-color="#707070"/></radialGradient>
-        </defs>
-        <path d="M42 67 Q42 100 80 100 Q118 100 118 67" stroke="url(#tg)" stroke-width="11" fill="none" stroke-linecap="round"/>
-        <rect x="42" y="54" width="140" height="14" rx="7" fill="url(#tg)"/>
-        <path d="M90 54 Q90 28 120 28 Q150 28 150 54" stroke="url(#tg)" stroke-width="10" fill="none" stroke-linecap="round"/>
-        <rect x="10" y="58" width="36" height="7" rx="3.5" fill="#b8860b"/>
-        <ellipse cx="10" cy="61.5" rx="6" ry="7.5" fill="#d4a017" stroke="#f0d060" stroke-width=".8"/>
-        <path d="M182 47 Q242 47 272 18 Q298 0 308 10 Q294 30 260 57 Q240 72 182 72 Z" fill="url(#bg)"/>
-        <path d="M182 52 Q220 52 248 35 Q264 24 270 28 Q258 45 230 59 Q212 68 182 68 Z" fill="rgba(0,0,0,.18)"/>
-        <path d="M182 47 L182 72" stroke="#f0d060" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M220 30 Q250 17 270 15" stroke="rgba(255,255,255,.16)" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="78" y="44" width="21" height="38" rx="3.5" fill="url(#tg)"/>
-        <rect x="81" y="39" width="15" height="8" rx="3" fill="url(#vg)"/>
-        <rect x="81" y="75" width="15" height="8" rx="3" fill="url(#vg)"/>
-        <circle cx="88.5" cy="63" r="7" fill="url(#vg)" stroke="#d4a017" stroke-width=".8"/>
-        <rect x="106" y="44" width="21" height="38" rx="3.5" fill="url(#tg)"/>
-        <rect x="109" y="39" width="15" height="8" rx="3" fill="url(#vg)"/>
-        <rect x="109" y="75" width="15" height="8" rx="3" fill="url(#vg)"/>
-        <circle cx="116.5" cy="63" r="7" fill="url(#vg)" stroke="#d4a017" stroke-width=".8"/>
-        <rect x="134" y="44" width="21" height="38" rx="3.5" fill="url(#tg)"/>
-        <rect x="137" y="39" width="15" height="8" rx="3" fill="url(#vg)"/>
-        <rect x="137" y="75" width="15" height="8" rx="3" fill="url(#vg)"/>
-        <circle cx="144.5" cy="63" r="7" fill="url(#vg)" stroke="#d4a017" stroke-width=".8"/>
-    </svg>
-    <div id="vu"></div>
-    <div class="foot">WEB AUDIO API — BRASS PHYSICS ENGINE</div>
-</div>
-
-<div class="keys">
-    <button class="key" data-note="C4"><span class="kth">โด</span><span class="ken">C4</span></button>
-    <button class="key" data-note="D4"><span class="kth">เร</span><span class="ken">D4</span></button>
-    <button class="key" data-note="E4"><span class="kth">มี</span><span class="ken">E4</span></button>
-    <button class="key" data-note="F4"><span class="kth">ฟา</span><span class="ken">F4</span></button>
-    <button class="key" data-note="G4"><span class="kth">ซอล</span><span class="ken">G4</span></button>
-    <button class="key" data-note="A4"><span class="kth">ลา</span><span class="ken">A4</span></button>
-    <button class="key" data-note="B4"><span class="kth">ที</span><span class="ken">B4</span></button>
-    <button class="key" data-note="C5"><span class="kth">โด↑</span><span class="ken">C5</span></button>
-</div>
+<!-- Container for elegant Floating Toast Notifications -->
+<div class="toast-container" id="toast-container"></div>
 
 <script>
-const FREQ={C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392.00,A4:440.00,B4:493.88,C5:523.25};
-let ctx=null,masterGain,reverbGain,dryGain,conv,recDest;
-const active=new Map();
-let P={vol:.80,tone:.60,rev:.30};
+const FREQ = { C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, B4: 493.88, C5: 523.25 };
+const NOTE_NAMES = { C4: 'โด', D4: 'เร', E4: 'มี', F4: 'ฟา', G4: 'ซอล', A4: 'ลา', B4: 'ที', C5: 'โด↑' };
 
-function initAudio(){
-    if(ctx) return;
-    ctx=new (window.AudioContext||window.webkitAudioContext)();
+// Global audio graph elements
+let ctx = null, masterGain, reverbGain, dryGain, conv, recDest, compressor;
+const active = new Map(); // Key: Note ID, Value: Active note object
+const keyPlaying = new Set(); // Tracks currently playing note keys to prevent mobile event double triggers
 
-    masterGain=ctx.createGain();
-    masterGain.gain.value=P.vol;
+// Synthesis parameters
+let P = {
+    vol: 0.70,
+    tone: 0.65,
+    rev: 0.30,
+    vibratoSpeed: 5.5,
+    vibratoDepth: 3.5,
+    attackTime: 0.025,
+    releaseTime: 0.10,
+    lipDetune: 14,
+    saturator: 18
+};
 
-    dryGain=ctx.createGain();
-    reverbGain=ctx.createGain();
-    conv=ctx.createConvolver();
-    conv.buffer=makeIR();
-    recDest=ctx.createMediaStreamDestination();
+// UI Element references
+const elements = {
+    toggleSongs: document.getElementById('toggle-songs'),
+    toggleAdvanced: document.getElementById('toggle-advanced'),
+    advancedDrawer: document.getElementById('advanced-drawer'),
+    demoPanel: document.getElementById('demo-panel'),
+    btnStopSong: document.getElementById('btn-stop-song')
+};
 
-    dryGain.gain.value=1-P.rev;
-    reverbGain.gain.value=P.rev*.5;
+elements.toggleSongs.onclick = () => {
+    elements.demoPanel.classList.toggle('open');
+    elements.toggleSongs.classList.toggle('active');
+    elements.advancedDrawer.classList.remove('open');
+    elements.toggleAdvanced.classList.remove('active');
+};
 
+elements.toggleAdvanced.onclick = () => {
+    elements.advancedDrawer.classList.toggle('open');
+    elements.toggleAdvanced.classList.toggle('active');
+    elements.demoPanel.classList.remove('open');
+    elements.toggleSongs.classList.remove('active');
+};
+
+function showToast(message, isInfo = true) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<span>${isInfo ? '🎺' : '⚠️'}</span><span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.remove();
+    }, 3500);
+}
+
+function initAudio() {
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    masterGain = ctx.createGain();
+    masterGain.gain.value = P.vol;
+
+    // Dynamics compressor to prevent distortion and clipping on intense notes
+    compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-14, ctx.currentTime);
+    compressor.knee.setValueAtTime(8, ctx.currentTime);
+    compressor.ratio.setValueAtTime(12, ctx.currentTime);
+    compressor.attack.setValueAtTime(0.003, ctx.currentTime);
+    compressor.release.setValueAtTime(0.08, ctx.currentTime);
+
+    dryGain = ctx.createGain();
+    reverbGain = ctx.createGain();
+    conv = ctx.createConvolver();
+    conv.buffer = makeIR();
+    recDest = ctx.createMediaStreamDestination();
+
+    dryGain.gain.value = 1 - P.rev;
+    reverbGain.gain.value = P.rev * 0.25; // slightly softer reverb split to keep audio clean
+
+    // Connecting audio graph safely
     masterGain.connect(dryGain);
     masterGain.connect(conv);
     conv.connect(reverbGain);
+    
     dryGain.connect(ctx.destination);
     dryGain.connect(recDest);
     reverbGain.connect(ctx.destination);
     reverbGain.connect(recDest);
 }
 
-function makeIR(){
-    const sr=ctx.sampleRate,len=sr*2|0,buf=ctx.createBuffer(2,len,sr);
-    for(let c=0;c<2;c++){
-        const d=buf.getChannelData(c);
-        for(let i=0;i<len;i++){
-            const t=i/sr;
-            d[i]=(Math.random()*2-1)*Math.exp(-t*(Math.log(1000)/1.5))*(c===0?1:.92);
+function makeIR() {
+    const sr = ctx.sampleRate, len = sr * 2 | 0, buf = ctx.createBuffer(2, len, sr);
+    for (let c = 0; c < 2; c++) {
+        const d = buf.getChannelData(c);
+        for (let i = 0; i < len; i++) {
+            const t = i / sr;
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-t * (Math.log(1000) / 1.5)) * (c === 0 ? 1 : 0.92);
         }
     }
     return buf;
 }
 
-function makeCurve(drive){
-    const N=256,c=new Float32Array(N);
-    for(let i=0;i<N;i++){
-        const x=2*i/N-1;
-        c[i]=x>0?(1+drive)*x/(1+drive*x):(1+drive*.6)*x/(1+drive*.6*Math.abs(x));
+// Safer waveshaper formula avoiding clipping or division by zero
+function makeCurve(drive) {
+    const N = 256, c = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+        const x = 2 * i / N - 1;
+        const absX = Math.abs(x);
+        c[i] = (x * (1 + drive)) / (1 + drive * absX);
     }
     return c;
 }
 
-function playNote(freq,id){
-    if(!ctx) return;
-    if(ctx.state==='suspended') ctx.resume();
-    if(active.has(id)) stopNote(id,true);
+function playNote(freq, id) {
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    
+    // Stop note immediately if it's already active to avoid oscillator accumulation
+    if (active.has(id)) {
+        stopNote(id, true);
+    }
 
-    const t=ctx.currentTime,tone=P.tone;
+    const t = ctx.currentTime, tone = P.tone;
 
-    // Harmonic bank: sawtooth-heavy = brass timbre
-    const HARMS=[[1,1.0,'sawtooth'],[2,.78,'sawtooth'],[3,.60,'triangle'],
-                  [4,.46,'sawtooth'],[5,.34,'triangle'],[6,.24,'sawtooth'],
-                  [7,.16,'triangle'],[8,.10,'sine']];
+    // Harmonic profile representing a physical trumpet brass timbre
+    const HARMS = [
+        [1, 0.8, 'sawtooth'], [2, 0.5, 'sawtooth'], [3, 0.4, 'triangle'],
+        [4, 0.3, 'sawtooth'], [5, 0.2, 'triangle'], [6, 0.15, 'sawtooth'],
+        [7, 0.1, 'triangle'], [8, 0.05, 'sine']
+    ];
 
-    const oscs=HARMS.map(([n,amp,type])=>{
-        const osc=ctx.createOscillator(),g=ctx.createGain();
-        osc.type=type;
-        osc.frequency.value=freq*n*(1+.001*n*n); // slight inharmonicity
-        const bf=n<=3?1:1+(tone-.5)*(n-3)*.18;
-        g.gain.value=amp*Math.max(.04,bf);
+    const oscs = HARMS.map(([n, amp, type]) => {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq * n * (1 + 0.0004 * n * n); // organic inharmonicity
+        const bf = n <= 3 ? 1 : 1 + (tone - 0.5) * (n - 3) * 0.15;
+        g.gain.value = amp * Math.max(0.05, bf);
         osc.connect(g);
-        return{osc,g};
+        return { osc, g };
     });
 
-    const sum=ctx.createGain();
-    sum.gain.value=1.0; // full level
-    oscs.forEach(({g})=>g.connect(sum));
+    const sum = ctx.createGain();
+    sum.gain.value = 0.55; // Keep slightly lower to prevent analog-style overloading
+    oscs.forEach(({ g }) => g.connect(sum));
 
-    // Bell formant resonators
-    const FMT=[{f:520,Q:4.5,gdb:6},{f:1100,Q:3.5,gdb:8},{f:2300,Q:2.2,gdb:5},{f:3600,Q:1.5,gdb:3}];
-    let chain=sum;
-    FMT.forEach(({f,Q,gdb})=>{
-        const flt=ctx.createBiquadFilter();
-        flt.type='peaking'; flt.frequency.value=f; flt.Q.value=Q;
-        flt.gain.value=gdb*(.5+tone);
-        chain.connect(flt); chain=flt;
+    // Acoustic formant resonances
+    const FMT = [
+        { f: 520, Q: 3.5, gdb: 4 }, 
+        { f: 1100, Q: 3.0, gdb: 5 }, 
+        { f: 2300, Q: 2.0, gdb: 3 }
+    ];
+    let chain = sum;
+    FMT.forEach(({ f, Q, gdb }) => {
+        const flt = ctx.createBiquadFilter();
+        flt.type = 'peaking'; flt.frequency.value = f; flt.Q.value = Q;
+        flt.gain.value = gdb * (0.5 + tone);
+        chain.connect(flt); chain = flt;
     });
 
-    // Brightness lowpass
-    const lpf=ctx.createBiquadFilter();
-    lpf.type='lowpass'; lpf.Q.value=.5;
-    const cutoff=freq*(2+tone*6);
-    lpf.frequency.setValueAtTime(300,t);
-    lpf.frequency.exponentialRampToValueAtTime(cutoff,t+.04);
-    lpf.frequency.exponentialRampToValueAtTime(cutoff*.6,t+.4);
+    // Dynamic Filter sweep mimicking breath pressure
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.Q.value = 0.7;
+    const cutoff = freq * (1.5 + tone * 5);
+    lpf.frequency.setValueAtTime(200, t);
+    lpf.frequency.exponentialRampToValueAtTime(cutoff, t + P.attackTime);
+    lpf.frequency.exponentialRampToValueAtTime(cutoff * 0.7, t + P.attackTime + 0.3);
     chain.connect(lpf);
 
-    // Wave shaper — brass "edge"
-    const ws=ctx.createWaveShaper();
-    ws.curve=makeCurve(10+tone*18);
-    ws.oversample='2x';
+    // Wave shaper - safe brass clip distortion
+    const ws = ctx.createWaveShaper();
+    ws.curve = makeCurve(3 + P.saturator * 0.5);
+    ws.oversample = '2x';
     lpf.connect(ws);
 
-    // Amplitude envelope
-    const amp=ctx.createGain();
-    amp.gain.setValueAtTime(.001,t);
-    amp.gain.exponentialRampToValueAtTime(1.0,t+.025);
-    amp.gain.linearRampToValueAtTime(.85,t+.10);
+    // Envelope Generator (Attack & Sustain)
+    const amp = ctx.createGain();
+    amp.gain.setValueAtTime(0.0001, t);
+    amp.gain.exponentialRampToValueAtTime(1.0, t + P.attackTime);
+    amp.gain.linearRampToValueAtTime(0.8, t + P.attackTime + 0.08);
     ws.connect(amp);
-    amp.connect(masterGain);
+    amp.connect(compressor); // Send to compressor before outputting to master
 
-    // Pitch envelope (lip tension on attack)
-    oscs.slice(0,4).forEach(({osc},i)=>{
-        const r=14/(i+1);
-        osc.detune.setValueAtTime(-r*.5,t);
-        osc.detune.linearRampToValueAtTime(r,t+.018);
-        osc.detune.linearRampToValueAtTime(0,t+.04);
+    // Dynamic Lip Tension Detuning
+    oscs.forEach(({ osc }, i) => {
+        const r = P.lipDetune / (i + 1);
+        osc.detune.setValueAtTime(-r * 0.6, t);
+        osc.detune.linearRampToValueAtTime(r * 0.2, t + 0.015);
+        osc.detune.linearRampToValueAtTime(0, t + 0.04);
     });
 
-    // Vibrato LFO — starts after delay
-    const lfo=ctx.createOscillator(),lfoG=ctx.createGain();
-    lfo.type='sine'; lfo.frequency.value=5.3+Math.random()*.3;
-    lfoG.gain.value=0;
+    // Vibrato LFO generator
+    const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+    lfo.type = 'sine'; lfo.frequency.value = P.vibratoSpeed;
+    lfoG.gain.value = 0;
     lfo.connect(lfoG);
-    oscs.forEach(({osc})=>lfoG.connect(osc.detune));
+    oscs.forEach(({ osc }) => lfoG.connect(osc.detune));
 
-    // Breath burst
-    const bb=makeBreath();
-    const bSrc=ctx.createBufferSource(),bG=ctx.createGain(),bH=ctx.createBiquadFilter();
-    bSrc.buffer=bb; bH.type='highpass'; bH.frequency.value=500;
-    bG.gain.setValueAtTime(0,t);
-    bG.gain.linearRampToValueAtTime(.12,t+.01);
-    bG.gain.exponentialRampToValueAtTime(.001,t+.2);
-    bSrc.connect(bH); bH.connect(bG); bG.connect(masterGain);
+    // Transient Breath Burst simulation
+    const bb = makeBreath();
+    const bSrc = ctx.createBufferSource(), bG = ctx.createGain();
+    bSrc.buffer = bb;
+    bG.gain.setValueAtTime(0, t);
+    bG.gain.linearRampToValueAtTime(0.08, t + 0.005);
+    bG.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+    bSrc.connect(bG); bG.connect(compressor);
 
-    oscs.forEach(({osc})=>osc.start(t));
+    // Fire sound sources
+    oscs.forEach(({ osc }) => osc.start(t));
     lfo.start(t); bSrc.start(t);
 
-    const vTid=setTimeout(()=>{
-        if(!active.has(id)) return;
-        const now=ctx.currentTime;
-        lfoG.gain.setValueAtTime(0,now);
-        lfoG.gain.linearRampToValueAtTime(3.5,now+.2);
-    },370);
+    const instanceId = Math.random().toString(36).substring(2);
 
-    active.set(id,{oscs,lfo,lfoG,amp,lpf,vTid});
+    // Delayed vibrato onset
+    const vTid = setTimeout(() => {
+        const activeNote = active.get(id);
+        if (activeNote && activeNote.instanceId === instanceId) {
+            const now = ctx.currentTime;
+            lfoG.gain.setValueAtTime(0, now);
+            lfoG.gain.linearRampToValueAtTime(P.vibratoDepth, now + 0.15);
+        }
+    }, 150 + P.attackTime * 1000);
+
+    active.set(id, { oscs, lfo, lfoG, amp, lpf, vTid, instanceId, bSrc, bG });
+
+    // Emit beautiful golden note elements
+    triggerFloatingNote(NOTE_NAMES[id] || id);
 }
 
-function makeBreath(){
-    const sr=ctx.sampleRate,len=sr*.25|0,buf=ctx.createBuffer(1,len,sr),d=buf.getChannelData(0);
-    let y=0;
-    for(let i=0;i<len;i++){
-        y=.5*(Math.random()*2-1)+.5*y;
-        const e=Math.pow(i/len<.05?i/(len*.05):(1-i/len),1.2);
-        d[i]=y*e;
+function makeBreath() {
+    const sr = ctx.sampleRate, len = sr * 0.2 | 0, buf = ctx.createBuffer(1, len, sr), d = buf.getChannelData(0);
+    let y = 0;
+    for (let i = 0; i < len; i++) {
+        y = 0.5 * (Math.random() * 2 - 1) + 0.5 * y;
+        const e = Math.pow(1 - i / len, 1.5);
+        d[i] = y * e;
     }
     return buf;
 }
 
-function stopNote(id,immediate=false){
-    const n=active.get(id);
-    if(!n||!ctx) return;
+function stopNote(id, immediate = false) {
+    const n = active.get(id);
+    if (!n || !ctx) return;
+    
     clearTimeout(n.vTid);
-    const t=ctx.currentTime,rt=immediate?.035:.08;
-    n.amp.gain.cancelScheduledValues(t);
-    n.amp.gain.setValueAtTime(Math.max(n.amp.gain.value,.001),t);
-    n.amp.gain.exponentialRampToValueAtTime(.0001,t+rt);
-    n.oscs.slice(0,3).forEach(({osc},i)=>{
-        try{osc.detune.cancelScheduledValues(t);osc.detune.setValueAtTime(0,t);osc.detune.linearRampToValueAtTime(-10/(i+1),t+.05);}catch(e){}
+    active.delete(id); // Instantly pull from active registry map to avoid release overlaps
+
+    const t = ctx.currentTime, rt = immediate ? 0.015 : P.releaseTime;
+    
+    try {
+        n.amp.gain.cancelScheduledValues(t);
+        n.amp.gain.setValueAtTime(n.amp.gain.value, t);
+        n.amp.gain.exponentialRampToValueAtTime(0.0001, t + rt);
+    } catch (e) {}
+    
+    n.oscs.forEach(({ osc }, i) => {
+        try {
+            osc.detune.cancelScheduledValues(t);
+            osc.detune.setValueAtTime(osc.detune.value, t);
+            osc.detune.linearRampToValueAtTime(-15 / (i + 1), t + rt);
+        } catch (e) {}
     });
-    n.lpf.frequency.cancelScheduledValues(t);
-    n.lpf.frequency.setValueAtTime(n.lpf.frequency.value,t);
-    n.lpf.frequency.exponentialRampToValueAtTime(200,t+rt*.8);
-    n.lfoG.gain.cancelScheduledValues(t);
-    n.lfoG.gain.setValueAtTime(n.lfoG.gain.value,t);
-    n.lfoG.gain.linearRampToValueAtTime(0,t+.04);
-    const st=t+rt+.05;
-    n.oscs.forEach(({osc})=>{try{osc.stop(st);}catch(e){}});
-    n.lfo.stop(st);
-    setTimeout(()=>active.delete(id),(rt+.08)*1000);
+    
+    const st = t + rt + 0.05;
+    n.oscs.forEach(({ osc }) => { try { osc.stop(st); } catch (e) {} });
+    try { n.lfo.stop(st); } catch (e) {}
+    try { n.bSrc.stop(st); } catch (e) {}
+    
+    // EXTREMELY CRITICAL: Garbage collection - disconnect nodes completely from Web Audio pipeline
+    // This frees RAM/CPU and prevents crackling or note hanging in the browser!
+    setTimeout(() => {
+        try {
+            n.amp.disconnect();
+            n.oscs.forEach(({ osc, g }) => {
+                osc.disconnect();
+                g.disconnect();
+            });
+            n.lfo.disconnect();
+            n.lfoG.disconnect();
+            n.lpf.disconnect();
+            n.bSrc.disconnect();
+            n.bG.disconnect();
+        } catch (e) {}
+    }, (rt + 0.25) * 1000);
 }
 
-// Recorder
-let mr,chunks=[],recBlob,recURL,isRec=false;
-function toggleRec(){isRec?stopRec():startRec();}
-function startRec(){
-    if(!recDest) return;
-    chunks=[];
-    const mime=['audio/webm;codecs=opus','audio/webm','audio/ogg'].find(m=>MediaRecorder.isTypeSupported(m));
-    try{mr=new MediaRecorder(recDest.stream,{mimeType:mime});}
-    catch(e){alert('ไม่รองรับการบันทึก');return;}
-    mr.ondataavailable=e=>e.data.size>0&&chunks.push(e.data);
-    mr.onstop=()=>{recBlob=new Blob(chunks,{type:mr.mimeType});recURL=URL.createObjectURL(recBlob);document.getElementById('btn-dl').disabled=false;};
-    mr.start(80);isRec=true;
-    const b=document.getElementById('btn-rec');b.classList.add('on');b.textContent='■';
-}
-function stopRec(){
-    if(mr?.state!=='inactive')mr.stop();
-    isRec=false;
-    const b=document.getElementById('btn-rec');b.classList.remove('on');b.textContent='●';
-}
-function download(){
-    if(!recURL)return;
-    const a=document.createElement('a');
-    a.href=recURL;a.download=`trumpet-${Date.now().toString(36)}.${recBlob.type.includes('webm')?'webm':'ogg'}`;a.click();
+function triggerFloatingNote(text) {
+    const stage = document.getElementById('bell-stage');
+    if (!stage) return;
+    const noteEl = document.createElement('div');
+    noteEl.className = 'flying-note';
+    noteEl.textContent = text;
+
+    const rect = stage.getBoundingClientRect();
+    const bellX = rect.width / 2 + 100;
+    const bellY = rect.height / 2 - 25;
+
+    noteEl.style.left = `${bellX}px`;
+    noteEl.style.top = `${bellY}px`;
+
+    const dx = (80 + Math.random() * 120) * (Math.random() > 0.35 ? 1 : -0.5);
+    const dy = -100 - Math.random() * 150;
+    const rot = -40 + Math.random() * 80;
+
+    noteEl.style.setProperty('--dx', `${dx}px`);
+    noteEl.style.setProperty('--dy', `${dy}px`);
+    noteEl.style.setProperty('--rot', `${rot}deg`);
+
+    stage.appendChild(noteEl);
+    
+    setTimeout(() => {
+        noteEl.remove();
+    }, 2000);
 }
 
-// VU meter
-let vu=0;
-(function loop(){
-    vu=active.size>0?Math.min(1,vu+.10):Math.max(0,vu-.06);
-    document.getElementById('vu').style.transform=`scaleX(${vu})`;
-    const lit=active.size>0;
-    document.getElementById('glow').classList.toggle('lit',lit);
-    document.getElementById('rings').classList.toggle('lit',lit);
+let mr, chunks = [], recBlob, recURL, isRec = false;
+
+function toggleRec() {
+    isRec ? stopRec() : startRec();
+}
+
+function startRec() {
+    if (!recDest) return;
+    chunks = [];
+    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'].find(m => MediaRecorder.isTypeSupported(m));
+    try {
+        mr = new MediaRecorder(recDest.stream, { mimeType: mime });
+    } catch (e) {
+        showToast('การบันทึกเสียงไม่รองรับบนเบราว์เซอร์นี้', false);
+        return;
+    }
+    mr.ondataavailable = e => e.data.size > 0 && chunks.push(e.data);
+    mr.onstop = () => {
+        recBlob = new Blob(chunks, { type: mr.mimeType });
+        recURL = URL.createObjectURL(recBlob);
+        document.getElementById('btn-dl').disabled = false;
+        showToast('บันทึกเสียงเสร็จสิ้น! กดปุ่ม ↓ เพื่อดาวน์โหลด');
+    };
+    mr.start(80);
+    isRec = true;
+    const b = document.getElementById('btn-rec');
+    b.classList.add('on');
+    b.textContent = '■';
+    showToast('เริ่มอัดเสียงคีย์ทรัมเป็ต...');
+}
+
+function stopRec() {
+    if (mr && mr.state !== 'inactive') mr.stop();
+    isRec = false;
+    const b = document.getElementById('btn-rec');
+    b.classList.remove('on');
+    b.textContent = '●';
+}
+
+function download() {
+    if (!recURL) return;
+    const a = document.createElement('a');
+    a.href = recURL;
+    a.download = `trumpet-${Date.now().toString(36)}.${recBlob.type.includes('webm') ? 'webm' : 'ogg'}`;
+    a.click();
+}
+
+// VU meter rendering loop
+let vu = 0;
+(function loop() {
+    vu = active.size > 0 ? Math.min(1, vu + 0.12) : Math.max(0, vu - 0.08);
+    document.getElementById('vu').style.transform = `scaleX(${vu})`;
+    const lit = active.size > 0;
+    document.getElementById('glow').classList.toggle('lit', lit);
+    document.getElementById('rings').classList.toggle('lit', lit);
     requestAnimationFrame(loop);
 })();
 
-// Ripple helper
-function ripple(btn){
-    const r=document.createElement('span');
-    r.className='ripple';
-    const s=btn.offsetWidth*.7;
-    r.style.cssText=`width:${s}px;height:${s}px;left:${(btn.offsetWidth-s)/2}px;top:${(btn.offsetHeight-s)/2}px`;
-    btn.appendChild(r);setTimeout(()=>r.remove(),500);
+function ripple(btn) {
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    const s = btn.offsetWidth * 0.7;
+    r.style.cssText = `width:${s}px;height:${s}px;left:${(btn.offsetWidth-s)/2}px;top:${(btn.offsetHeight-s)/2}px`;
+    btn.appendChild(r);
+    setTimeout(() => r.remove(), 500);
 }
 
-// Start button
-document.getElementById('start-btn').addEventListener('click',()=>{
+// Start button launch trigger
+document.getElementById('start-btn').addEventListener('click', () => {
     initAudio();
-    const ov=document.getElementById('ov');
-    ov.style.transition='opacity .4s';ov.style.opacity='0';
-    setTimeout(()=>ov.remove(),420);
-    if(navigator.vibrate)navigator.vibrate(20);
+    // Route dry/reverb signals after starting
+    compressor.connect(masterGain);
+
+    const ov = document.getElementById('ov');
+    ov.style.transition = 'opacity 0.4s';
+    ov.style.opacity = '0';
+    setTimeout(() => ov.remove(), 420);
+    if (navigator.vibrate) navigator.vibrate(20);
+    showToast('🎺 ระบบจำลองเสียงพร้อมเล่น! กดเป่าและปล่อยคีย์ได้เลย');
 });
 
-// Sliders
-document.getElementById('vol').oninput=e=>{P.vol=e.target.value/100;if(masterGain&&ctx)masterGain.gain.setTargetAtTime(P.vol,ctx.currentTime,.01);};
-document.getElementById('tone').oninput=e=>{P.tone=e.target.value/100;};
-document.getElementById('rev').oninput=e=>{P.rev=e.target.value/100;if(ctx){dryGain.gain.setTargetAtTime(1-P.rev,ctx.currentTime,.04);reverbGain.gain.setTargetAtTime(P.rev*.5,ctx.currentTime,.04);}};
-document.getElementById('btn-rec').onclick=toggleRec;
-document.getElementById('btn-dl').onclick=download;
+// Setting control changes
+document.getElementById('vol').oninput = e => {
+    P.vol = e.target.value / 100;
+    if (masterGain && ctx) masterGain.gain.setTargetAtTime(P.vol, ctx.currentTime, 0.01);
+};
+document.getElementById('tone').oninput = e => { P.tone = e.target.value / 100; };
+document.getElementById('rev').oninput = e => {
+    P.rev = e.target.value / 100;
+    if (ctx) {
+        dryGain.gain.setTargetAtTime(1 - P.rev, ctx.currentTime, 0.04);
+        reverbGain.gain.setTargetAtTime(P.rev * 0.25, ctx.currentTime, 0.04);
+    }
+};
 
-// Keys
-document.querySelectorAll('.key').forEach(btn=>{
-    const id=btn.dataset.note,freq=FREQ[id];
-    const onD=e=>{e.preventDefault();if(!ctx)return;btn.classList.add('dn');ripple(btn);playNote(freq,id);if(navigator.vibrate)navigator.vibrate(10);};
-    const onU=e=>{e.preventDefault();btn.classList.remove('dn');stopNote(id);};
-    btn.addEventListener('touchstart',onD,{passive:false});
-    btn.addEventListener('touchend',onU,{passive:false});
-    btn.addEventListener('touchcancel',onU,{passive:false});
-    btn.addEventListener('mousedown',onD);
-    btn.addEventListener('mouseup',onU);
-    btn.addEventListener('mouseleave',onU);
-    btn.oncontextmenu=e=>e.preventDefault();
+// Setting up advanced controls
+document.getElementById('param-vrate').oninput = e => {
+    P.vibratoSpeed = e.target.value / 10;
+    document.getElementById('val-vrate').textContent = `${P.vibratoSpeed.toFixed(1)}Hz`;
+};
+document.getElementById('param-vdepth').oninput = e => {
+    P.vibratoDepth = e.target.value / 10;
+    document.getElementById('val-vdepth').textContent = P.vibratoDepth.toFixed(1);
+};
+document.getElementById('param-atk').oninput = e => {
+    P.attackTime = e.target.value / 1000;
+    document.getElementById('val-atk').textContent = `${P.attackTime.toFixed(3)}s`;
+};
+document.getElementById('param-rel').oninput = e => {
+    P.releaseTime = e.target.value / 1000;
+    document.getElementById('val-rel').textContent = `${P.releaseTime.toFixed(2)}s`;
+};
+document.getElementById('param-detune').oninput = e => {
+    P.lipDetune = parseInt(e.target.value);
+    document.getElementById('val-detune').textContent = P.lipDetune;
+};
+document.getElementById('param-sat').oninput = e => {
+    P.saturator = parseInt(e.target.value);
+    document.getElementById('val-sat').textContent = P.saturator;
+};
+
+document.getElementById('btn-rec').onclick = toggleRec;
+document.getElementById('btn-dl').onclick = download;
+
+const DEMO_SONGS = {
+    1: [
+        { note: 'G4', dur: 400 }, { note: null, dur: 100 },
+        { note: 'G4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'C4', dur: 600 }, { note: null, dur: 200 },
+        { note: 'G4', dur: 400 }, { note: null, dur: 100 },
+        { note: 'E4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'C4', dur: 600 }, { note: null, dur: 200 },
+        { note: 'G4', dur: 400 }, { note: null, dur: 100 },
+        { note: 'E4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'C4', dur: 400 }, { note: null, dur: 100 },
+        { note: 'G4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'E4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'C4', dur: 400 }, { note: null, dur: 100 },
+        { note: 'G4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'E4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'C4', dur: 800 }, { note: null, dur: 400 },
+        { note: 'G4', dur: 400 }, { note: null, dur: 100 },
+        { note: 'E4', dur: 400 }, { note: null, dur: 100 },
+        { note: 'C4', dur: 1000 }
+    ],
+    2: [
+        { note: 'E4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'E4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'F4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'G4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'G4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'F4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'E4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'D4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'C4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'C4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'D4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'E4', dur: 400 }, { note: null, dur: 50 },
+        { note: 'E4', dur: 600 }, { note: null, dur: 50 },
+        { note: 'D4', dur: 200 }, { note: null, dur: 50 },
+        { note: 'D4', dur: 800 }
+    ],
+    3: [
+        { note: 'C4', dur: 200 }, { note: null, dur: 30 },
+        { note: 'C4', dur: 200 }, { note: null, dur: 30 },
+        { note: 'C4', dur: 200 }, { note: null, dur: 30 },
+        { note: 'F4', dur: 500 }, { note: null, dur: 50 },
+        { note: 'A4', dur: 500 }, { note: null, dur: 150 },
+        { note: 'C4', dur: 200 }, { note: null, dur: 30 },
+        { note: 'C4', dur: 200 }, { note: null, dur: 30 },
+        { note: 'C4', dur: 200 }, { note: null, dur: 30 },
+        { note: 'F4', dur: 500 }, { note: null, dur: 50 },
+        { note: 'A4', dur: 500 }, { note: null, dur: 250 },
+        { note: 'F4', dur: 400 }, { note: null, dur: 40 },
+        { note: 'F4', dur: 200 }, { note: null, dur: 40 },
+        { note: 'E4', dur: 200 }, { note: null, dur: 40 },
+        { note: 'E4', dur: 200 }, { note: null, dur: 40 },
+        { note: 'D4', dur: 200 }, { note: null, dur: 40 },
+        { note: 'D4', dur: 200 }, { note: null, dur: 40 },
+        { note: 'C4', dur: 600 }
+    ]
+};
+
+let currentPlayingNote = null;
+let currentSongTimeouts = [];
+
+function stopCurrentSong() {
+    currentSongTimeouts.forEach(t => clearTimeout(t));
+    currentSongTimeouts = [];
+    
+    // Purge active notes completely to prevent stuck notes on song exit
+    active.forEach((val, id) => {
+        stopNote(id, true);
+    });
+    
+    currentPlayingNote = null;
+    keyPlaying.clear();
+    
+    document.querySelectorAll('.key').forEach(b => b.classList.remove('dn'));
+    document.querySelectorAll('.song-btn').forEach(b => b.classList.remove('playing'));
+    elements.btnStopSong.style.display = 'none';
+}
+
+function playSong(songId) {
+    initAudio();
+    stopCurrentSong();
+    
+    const song = DEMO_SONGS[songId];
+    if (!song) return;
+    
+    const songBtn = document.getElementById(`song${songId}`);
+    if (songBtn) songBtn.classList.add('playing');
+    elements.btnStopSong.style.display = 'block';
+    
+    showToast(`เล่นเพลงสาธิต: ${songBtn.textContent}`);
+    
+    let accumulatedTime = 0;
+    
+    song.forEach((item) => {
+        const playTimeout = setTimeout(() => {
+            if (item.note) {
+                currentPlayingNote = item.note;
+                const activeKey = document.querySelector(`.key[data-note="${item.note}"]`);
+                if (activeKey) {
+                    activeKey.classList.add('dn');
+                    ripple(activeKey);
+                }
+                playNote(FREQ[item.note], item.note);
+            }
+        }, accumulatedTime);
+        currentSongTimeouts.push(playTimeout);
+        
+        accumulatedTime += item.dur;
+        
+        const stopTimeout = setTimeout(() => {
+            if (item.note) {
+                stopNote(item.note);
+                const activeKey = document.querySelector(`.key[data-note="${item.note}"]`);
+                if (activeKey) activeKey.classList.remove('dn');
+                if (currentPlayingNote === item.note) {
+                    currentPlayingNote = null;
+                }
+            }
+        }, accumulatedTime);
+        currentSongTimeouts.push(stopTimeout);
+    });
+    
+    const finishTimeout = setTimeout(() => {
+        stopCurrentSong();
+        showToast('จบการเล่นเพลงสาธิต');
+    }, accumulatedTime + 300);
+    currentSongTimeouts.push(finishTimeout);
+}
+
+document.querySelectorAll('.song-btn').forEach(btn => {
+    btn.onclick = () => {
+        const songId = btn.dataset.id;
+        if (btn.classList.contains('playing')) {
+            stopCurrentSong();
+        } else {
+            playSong(songId);
+        }
+    };
+});
+elements.btnStopSong.onclick = stopCurrentSong;
+
+document.querySelectorAll('.key').forEach(btn => {
+    const id = btn.dataset.note, freq = FREQ[id];
+    
+    const onD = e => {
+        e.preventDefault();
+        
+        // Prevent key duplicate playing (Crucial on iOS and Android touch events)
+        if (keyPlaying.has(id)) return;
+        keyPlaying.add(id);
+
+        if (currentSongTimeouts.length > 0) stopCurrentSong();
+        
+        if (!ctx) return;
+        btn.classList.add('dn');
+        ripple(btn);
+        playNote(freq, id);
+        if (navigator.vibrate) navigator.vibrate(10);
+    };
+    
+    const onU = e => {
+        e.preventDefault();
+        keyPlaying.delete(id);
+        btn.classList.remove('dn');
+        stopNote(id);
+    };
+    
+    // Explicit event listeners targeting both mouse and screen touch devices
+    btn.addEventListener('touchstart', onD, { passive: false });
+    btn.addEventListener('touchend', onU, { passive: false });
+    btn.addEventListener('touchcancel', onU, { passive: false });
+    btn.addEventListener('mousedown', onD);
+    btn.addEventListener('mouseup', onU);
+    btn.addEventListener('mouseleave', onU);
+    btn.oncontextmenu = e => e.preventDefault();
 });
 
-// Keyboard
-const KB={a:'C4',s:'D4',d:'E4',f:'F4',g:'G4',h:'A4',j:'B4',k:'C5'};
-const held=new Set();
-document.addEventListener('keydown',e=>{
-    if(e.repeat||held.has(e.key)||!ctx)return;
-    const id=KB[e.key.toLowerCase()];if(!id)return;
+const KB = { a: 'C4', s: 'D4', d: 'E4', f: 'F4', g: 'G4', h: 'A4', j: 'B4', k: 'C5' };
+const held = new Set();
+
+document.addEventListener('keydown', e => {
+    if (e.repeat || held.has(e.key) || !ctx) return;
+    const id = KB[e.key.toLowerCase()]; if (!id) return;
+    
+    if (keyPlaying.has(id)) return;
+    keyPlaying.add(id);
+
+    if (currentSongTimeouts.length > 0) stopCurrentSong();
+    
     held.add(e.key);
     document.querySelector(`.key[data-note="${id}"]`)?.classList.add('dn');
-    playNote(FREQ[id],id);
+    playNote(FREQ[id], id);
 });
-document.addEventListener('keyup',e=>{
+
+document.addEventListener('keyup', e => {
     held.delete(e.key);
-    const id=KB[e.key.toLowerCase()];if(!id)return;
+    const id = KB[e.key.toLowerCase()]; if (!id) return;
+    keyPlaying.delete(id);
     document.querySelector(`.key[data-note="${id}"]`)?.classList.remove('dn');
     stopNote(id);
 });
 
-// iOS unlock
-document.addEventListener('touchstart',()=>{ctx?.state==='suspended'&&ctx.resume();},{once:true,passive:true});
+// Resuming Context safely on first touch on iOS systems
+document.addEventListener('touchstart', () => {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+}, { once: true, passive: true });
 </script>
 </body>
 </html>
