@@ -3,347 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oboe Simulator</title>
+    <title>Oboe Pro Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ป้องกันการเลือกข้อความและการซูม */
-        body {
-            overscroll-behavior: none;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            font-family: 'Sarabun', sans-serif;
-            background-color: #1a1a1a;
-            overflow: hidden;
-        }
-
-        /* ลวดลายไม้สีดำ (Blackwood Texture) */
-        .oboe-body {
-            background: linear-gradient(90deg, #0f0f0f 0%, #2b1d12 40%, #1a120b 60%, #050505 100%);
-            box-shadow: inset 0 0 20px #000;
-            position: relative;
-        }
-
-        /* ปุ่มคีย์เงิน (Silver Keys) */
-        .key-btn {
-            background: radial-gradient(circle at 30% 30%, #ffffff, #d1d5db, #6b7280, #374151);
-            border: 2px solid #9ca3af;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.05s, box-shadow 0.05s;
-            position: relative;
-            touch-action: none; /* สำคัญมากสำหรับมือถือ */
-            /* ทำให้ปุ่มคงรูปวงกลมเสมอ */
-            aspect-ratio: 1 / 1; 
-        }
-
-        .key-btn:active, .key-btn.active {
-            transform: scale(0.95) translateY(2px);
-            background: radial-gradient(circle at 30% 30%, #d1d5db, #9ca3af, #4b5563, #1f2937);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
-
-        /* รูกลางปุ่ม (เพื่อให้เหมือนคีย์โอโบจริงบางรุ่น) */
-        .key-hole {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40%;
-            height: 40%;
-            background-color: #1a120b;
-            border-radius: 50%;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-            border: 1px solid #4b5563;
-        }
-
-        /* ไฟสถานะอัดเสียง */
-        .rec-dot {
-            width: 12px;
-            height: 12px;
-            background-color: red;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-
-        /* เอฟเฟกต์ Glow เมื่อกด */
-        .glow-effect {
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-        }
+        body { overscroll-behavior: none; touch-action: none; user-select: none; -webkit-user-select: none; font-family: 'Sarabun', sans-serif; background-color: #1a1a1a; overflow: hidden; }
+        .oboe-body { background: linear-gradient(90deg, #0f0f0f 0%, #2b1d12 40%, #1a120b 60%, #050505 100%); box-shadow: inset 0 0 20px #000; position: relative; }
+        .key-btn { background: radial-gradient(circle at 30% 30%, #ffffff, #d1d5db, #6b7280, #374151); border: 2px solid #9ca3af; box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.3); transition: transform 0.05s; aspect-ratio: 1 / 1; }
+        .key-btn:active, .key-btn.active { transform: scale(0.95) translateY(2px); filter: brightness(1.2); }
+        .note-float { position: absolute; color: #fbbf24; font-weight: bold; font-size: 1.2rem; pointer-events: none; z-index: 100; animation: floatUp 1s ease-out forwards; text-shadow: 0 0 5px black; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(1.5); } }
+        .rec-dot { width: 10px; height: 10px; background-color: red; border-radius: 50%; display: inline-block; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
-<body class="h-[100dvh] w-screen flex flex-col items-center justify-between text-white">
+<body class="h-[100dvh] w-screen flex flex-col text-white">
 
-    <!-- Header & Controls -->
-    <div class="w-full bg-gray-900 p-3 flex justify-between items-center z-10 shadow-lg border-b border-gray-700 flex-shrink-0">
-        <div>
-            <h1 class="text-lg font-bold text-amber-500 tracking-wider">OBOE PRO</h1>
-            <p class="text-[10px] text-gray-400">เครื่องจำลองเสียงโอโบ</p>
-        </div>
-        
+    <!-- Header -->
+    <div class="bg-gray-900 p-3 flex justify-between items-center border-b border-gray-700">
+        <h1 class="text-lg font-bold text-amber-500">OBOE PRO</h1>
         <div class="flex gap-2">
-            <button id="recordBtn" class="bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow flex items-center transition">
-                <span class="material-icons">REC</span>
-            </button>
-            <button id="stopRecBtn" class="hidden bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow transition">
-                STOP
-            </button>
-            <button id="playBtn" class="hidden bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow transition">
-                PLAY/SAVE
-            </button>
+            <button id="recordBtn" class="bg-red-700 p-2 rounded text-xs font-bold">REC</button>
+            <button id="stopRecBtn" class="hidden bg-gray-600 p-2 rounded text-xs font-bold">STOP</button>
         </div>
     </div>
 
-    <!-- Instrument Body -->
-    <div class="oboe-body flex-grow w-full max-w-md flex flex-col items-center py-2 relative overflow-hidden">
-        <!-- Decoration: Gold Rings -->
-        <div class="absolute top-0 w-full h-2 bg-gradient-to-r from-yellow-600 via-yellow-300 to-yellow-600 z-0"></div>
-        <div class="absolute bottom-0 w-full h-4 bg-gradient-to-r from-yellow-600 via-yellow-300 to-yellow-600 z-0"></div>
-
-        <!-- Keys Container -->
-        <div class="flex flex-col w-full items-center justify-evenly h-full px-4 py-2 z-10" id="keys-container">
-            <!-- Keys will be generated by JS -->
-        </div>
+    <!-- Settings -->
+    <div class="bg-gray-800 p-3 grid grid-cols-2 gap-4 text-xs">
+        <div><label>Volume</label><input type="range" id="volRange" min="0" max="1" step="0.1" value="0.5" class="w-full"></div>
+        <div><label>Reverb</label><input type="range" id="revRange" min="0" max="0.5" step="0.1" value="0.2" class="w-full"></div>
     </div>
 
-    <!-- Hidden Audio Player for playback -->
-    <audio id="audioPlayer" controls class="hidden"></audio>
+    <!-- Demo Songs -->
+    <div class="bg-black/20 p-2 flex gap-2 justify-center">
+        <button onclick="playSong('happyBirthday')" class="bg-amber-800 text-[10px] px-2 py-1 rounded">BDAY</button>
+        <button onclick="playSong('twinkle')" class="bg-blue-800 text-[10px] px-2 py-1 rounded">STAR</button>
+        <button onclick="stopSong()" class="bg-red-900 text-[10px] px-2 py-1 rounded">STOP</button>
+    </div>
+
+    <!-- Body -->
+    <div class="oboe-body flex-grow flex items-center justify-center p-4">
+        <div id="keys-container" class="grid grid-cols-4 gap-4 w-full max-w-sm"></div>
+    </div>
 
     <script>
-        // --- Configuration ---
+        let audioCtx, masterGain, reverbNode, activeOscillators = {};
         const NOTES = [
-            { note: 'C5', freq: 523.25, label: 'โด' },
-            { note: 'B4', freq: 493.88, label: 'ที' },
-            { note: 'A4', freq: 440.00, label: 'ลา' },
-            { note: 'G4', freq: 392.00, label: 'ซอล' },
-            { note: 'F4', freq: 349.23, label: 'ฟา' },
-            { note: 'E4', freq: 329.63, label: 'มี' },
-            { note: 'D4', freq: 293.66, label: 'เร' },
-            { note: 'C4', freq: 261.63, label: 'โด' }
+            { note: 'C5', freq: 523.25, label: 'Do' }, { note: 'B4', freq: 493.88, label: 'Ti' },
+            { note: 'A4', freq: 440.00, label: 'La' }, { note: 'G4', freq: 392.00, label: 'So' },
+            { note: 'F4', freq: 349.23, label: 'Fa' }, { note: 'E4', freq: 329.63, label: 'Mi' },
+            { note: 'D4', freq: 293.66, label: 'Re' }, { note: 'C4', freq: 261.63, label: 'Do' }
         ];
 
-        // --- Global Variables ---
-        let audioCtx;
-        let masterGain;
-        let compressor;
-        let activeOscillators = {}; // Map to track playing notes
-        
-        // Recording variables
-        let mediaRecorder;
-        let audioChunks = [];
-        let dest; // MediaStreamDestination
-        let isRecording = false;
-
-        // --- Initialization ---
         function initAudio() {
-            if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
-                
-                // Master Volume
-                masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.5;
-
-                // Compressor (to prevent clipping when many keys pressed)
-                compressor = audioCtx.createDynamicsCompressor();
-                compressor.threshold.value = -24;
-                compressor.knee.value = 30;
-                compressor.ratio.value = 12;
-                compressor.attack.value = 0.003;
-                compressor.release.value = 0.25;
-
-                // Routing
-                masterGain.connect(compressor);
-                compressor.connect(audioCtx.destination);
-
-                // Setup Recording Destination
-                dest = audioCtx.createMediaStreamDestination();
-                compressor.connect(dest);
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = audioCtx.createGain();
+            reverbNode = audioCtx.createConvolver();
+            masterGain.connect(audioCtx.destination);
         }
 
-        // --- Sound Engine (Oboe Synthesis) ---
-        function playNote(freq, id) {
-            initAudio(); // Ensure context is ready
-
-            if (activeOscillators[id]) return; // Prevent double trigger
+        function playNote(freq, id, element) {
+            initAudio();
+            if (activeOscillators[id]) return;
 
             const t = audioCtx.currentTime;
+            
+            // Oscillator Layering
+            const osc1 = audioCtx.createOscillator(); // Main Tone
+            osc1.type = 'sawtooth';
+            osc1.frequency.value = freq;
 
-            // 1. Create Oscillator (Sawtooth is good for reeds)
-            const osc = audioCtx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(freq, t);
+            const osc2 = audioCtx.createOscillator(); // Harmonic Overtone
+            osc2.type = 'square';
+            osc2.frequency.value = freq * 1.005; // Slightly detuned
 
-            // 2. Filter (Lowpass to dampen the harsh sawtooth)
+            // Breath/Reed Noise
+            const noise = audioCtx.createBufferSource();
+            const bufferSize = audioCtx.sampleRate * 0.1;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            noise.buffer = buffer;
+
+            // Envelopes
+            const gainNode = audioCtx.createGain();
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
-            filter.Q.value = 2; // Resonance
-            filter.frequency.setValueAtTime(1200, t); // Oboe format range
+            filter.frequency.setValueAtTime(400, t);
+            filter.frequency.exponentialRampToValueAtTime(1500, t + 0.1); // Reed bite
 
-            // 3. Gain Envelope (ADSR)
-            const gainNode = audioCtx.createGain();
             gainNode.gain.setValueAtTime(0, t);
-            gainNode.gain.linearRampToValueAtTime(0.8, t + 0.05); // Attack
-            gainNode.gain.exponentialRampToValueAtTime(0.6, t + 0.2); // Decay
+            gainNode.gain.linearRampToValueAtTime(0.4, t + 0.05);
 
-            // 4. Vibrato (LFO) - Crucial for Oboe realism
-            const lfo = audioCtx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.value = 5.5; // Vibrato speed (Hz)
-            const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = 3; // Vibrato depth
-            
-            lfo.connect(lfoGain);
-            lfoGain.connect(osc.frequency);
-            lfo.start(t);
-
-            // Connect graph
-            osc.connect(filter);
+            osc1.connect(filter); osc2.connect(filter);
             filter.connect(gainNode);
             gainNode.connect(masterGain);
 
-            osc.start(t);
-
-            // Store nodes to stop later
-            activeOscillators[id] = { osc, gainNode, lfo, filter };
+            osc1.start(); osc2.start();
+            activeOscillators[id] = { osc1, osc2, gainNode, filter };
+            if (element) createFloatingNote(NOTES.find(n=>n.freq===freq)?.label || '♪', element);
         }
 
         function stopNote(id) {
             if (!activeOscillators[id]) return;
-
-            const { osc, gainNode, lfo } = activeOscillators[id];
-            const t = audioCtx.currentTime;
-
-            // Release phase
-            gainNode.gain.cancelScheduledValues(t);
-            gainNode.gain.setValueAtTime(gainNode.gain.value, t);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.1); // Quick release
-
-            osc.stop(t + 0.15);
-            lfo.stop(t + 0.15);
-            
-            // Cleanup after sound stops
-            setTimeout(() => {
-                if (activeOscillators[id] === activeOscillators[id]) { // Check if not replaced
-                   delete activeOscillators[id];
-                }
-            }, 150);
+            const { osc1, osc2, gainNode } = activeOscillators[id];
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            osc1.stop(audioCtx.currentTime + 0.1);
+            osc2.stop(audioCtx.currentTime + 0.1);
+            delete activeOscillators[id];
         }
 
-        // --- UI Construction ---
-        const keysContainer = document.getElementById('keys-container');
+        function createFloatingNote(label, element) {
+            const rect = element.getBoundingClientRect();
+            const noteDiv = document.createElement('div');
+            noteDiv.className = 'note-float';
+            noteDiv.innerText = label;
+            noteDiv.style.left = (rect.left + rect.width/3) + 'px';
+            noteDiv.style.top = (rect.top - 20) + 'px';
+            document.body.appendChild(noteDiv);
+            setTimeout(() => noteDiv.remove(), 1000);
+        }
 
-        NOTES.forEach((n, index) => {
+        const container = document.getElementById('keys-container');
+        NOTES.forEach((n, i) => {
             const btn = document.createElement('div');
-            // Responsive sizing logic (Fitscreen)
-            // ใช้ความสูงหน้าจอ (vh) เป็นเกณฑ์: 
-            // 8 ปุ่ม * 9vh = 72% ของจอ (เหลือที่ให้ Header/Padding)
-            // กำหนด max/min เพื่อไม่ให้ใหญ่/เล็กเกินไป
-            btn.className = `key-btn h-[9.5vh] w-[9.5vh] max-h-[85px] max-w-[85px] min-h-[50px] min-w-[50px] rounded-full flex items-center justify-center cursor-pointer select-none relative`;
-            btn.dataset.note = n.note;
-            btn.dataset.freq = n.freq;
-            btn.id = `key-${index}`;
-
-            // Inner styling
-            btn.innerHTML = `
-                <div class="key-hole pointer-events-none"></div>
-                <span class="pointer-events-none text-gray-900 font-bold text-lg drop-shadow-md absolute -right-[4.5rem] bg-black/50 text-white px-2 py-0.5 rounded text-sm">${n.label}</span>
-                <span class="pointer-events-none text-[10px] text-gray-600 font-mono absolute bottom-1 opacity-70">${n.note}</span>
-            `;
-
-            // Event Listeners (Universal for Touch & Mouse)
-            const startHandler = (e) => {
-                e.preventDefault();
-                playNote(n.freq, index);
-                btn.classList.add('active', 'glow-effect');
-            };
-
-            const endHandler = (e) => {
-                e.preventDefault();
-                stopNote(index);
-                btn.classList.remove('active', 'glow-effect');
-            };
-
-            // Touch events
-            btn.addEventListener('touchstart', startHandler, { passive: false });
-            btn.addEventListener('touchend', endHandler);
-            btn.addEventListener('touchcancel', endHandler);
-
-            // Mouse events
-            btn.addEventListener('mousedown', startHandler);
-            btn.addEventListener('mouseup', endHandler);
-            btn.addEventListener('mouseleave', endHandler);
-
-            keysContainer.appendChild(btn);
+            btn.className = "key-btn flex items-center justify-center font-bold text-gray-800";
+            btn.innerHTML = n.label;
+            btn.onmousedown = () => { playNote(n.freq, i, btn); btn.classList.add('active'); };
+            btn.onmouseup = () => { stopNote(i); btn.classList.remove('active'); };
+            btn.ontouchstart = (e) => { e.preventDefault(); btn.onmousedown(); };
+            btn.ontouchend = () => btn.onmouseup();
+            container.appendChild(btn);
         });
 
-        // --- Recording Logic ---
-        const recordBtn = document.getElementById('recordBtn');
-        const stopRecBtn = document.getElementById('stopRecBtn');
-        const playBtn = document.getElementById('playBtn');
+        const SONGS = {
+            happyBirthday: [7, 7, 6, 7, 4, 5, 7, 7, 6, 7, 3, 4],
+            twinkle: [7, 7, 3, 3, 2, 2, 4, 3, 3, 2, 2, 3, 4]
+        };
 
-        recordBtn.addEventListener('click', () => {
-            initAudio();
-            audioChunks = [];
-            
-            // Use the destination stream
-            const stream = dest.stream;
-            mediaRecorder = new MediaRecorder(stream);
+        let songInterval = null;
+        function playSong(key) {
+            stopSong();
+            let i = 0;
+            songInterval = setInterval(() => {
+                if(i >= SONGS[key].length) return stopSong();
+                const idx = SONGS[key][i];
+                const btn = container.children[7-idx];
+                playNote(NOTES[7-idx].freq, 'song', btn);
+                setTimeout(() => stopNote('song'), 400);
+                i++;
+            }, 600);
+        }
 
-            mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audioPlayer = document.getElementById('audioPlayer');
-                audioPlayer.src = audioUrl;
-                
-                // Allow download
-                playBtn.onclick = () => {
-                    const a = document.createElement('a');
-                    a.href = audioUrl;
-                    a.download = 'my-oboe-solo.webm';
-                    a.click();
-                    audioPlayer.play();
-                };
-            };
-
-            mediaRecorder.start();
-            isRecording = true;
-            
-            // UI Update
-            recordBtn.innerHTML = '<span class="rec-dot"></span>กำลังบันทึก';
-            recordBtn.classList.remove('bg-red-700');
-            recordBtn.classList.add('bg-gray-800', 'border', 'border-red-500');
-            stopRecBtn.classList.remove('hidden');
-            playBtn.classList.add('hidden');
-        });
-
-        stopRecBtn.addEventListener('click', () => {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-
-                // UI Update
-                recordBtn.innerHTML = '<span class="material-icons">REC</span>';
-                recordBtn.classList.add('bg-red-700');
-                recordBtn.classList.remove('bg-gray-800', 'border', 'border-red-500');
-                stopRecBtn.classList.add('hidden');
-                playBtn.classList.remove('hidden');
-            }
-        });
-
+        function stopSong() { clearInterval(songInterval); Object.keys(activeOscillators).forEach(stopNote); }
     </script>
 </body>
 </html>
