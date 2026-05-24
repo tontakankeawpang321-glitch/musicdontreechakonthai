@@ -3,1064 +3,771 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ฆ้องวงใหญ่จำลองอัจฉริยะ (Virtual Khong Wong Yai Pro)</title>
-    <!-- Tailwind CSS for modern premium UI -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Sarabun & Kanit -->
+    <title>ซอสามสายจำลอง Pro (Virtual Saw Sam Sai)</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&family=Sarabun:wght@300;400;600;700&display=swap');
-        
-        body {
-            font-family: 'Sarabun', 'Kanit', sans-serif;
-            background: radial-gradient(circle at center, #2d1b0d 0%, #0d0804 100%);
-            touch-action: none;
-            -webkit-user-select: none;
+        /* Reset & Base Variables */
+        :root {
+            --bg-dark: #1a0f0a;
+            --gold: #d4af37;
+            --gold-light: #ffe680;
+            --gold-dark: #aa8c2c;
+            --wood-dark: #2e1e15;
+            --wood-light: #5d4037;
+            --danger: #ff4444;
+        }
+
+        * {
+            box-sizing: border-box;
             user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* Custom styling for wooden elements and gold gongs */
-        .wood-pattern {
-            background-color: #3e2723;
-            background-image: linear-gradient(45deg, #2c1a11 25%, transparent 25%), 
-                              linear-gradient(-45deg, #2c1a11 25%, transparent 25%), 
-                              linear-gradient(45deg, transparent 75%, #2c1a11 75%), 
-                              linear-gradient(-45deg, transparent 75%, #2c1a11 75%);
-            background-size: 40px 40px;
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            font-family: 'Sarabun', Tahoma, sans-serif;
+            overflow: hidden; /* Main container hidden, manage internally */
+            display: flex;
+            flex-direction: column;
+            color: white;
         }
 
-        /* Beautiful responsive Scrollable Area for Mobile viewports */
-        .gong-scroller {
-            scrollbar-width: thin;
-            scrollbar-color: #8d6e63 #3e2723;
-        }
-        .gong-scroller::-webkit-scrollbar {
-            height: 6px;
-        }
-        .gong-scroller::-webkit-scrollbar-track {
-            background: #2c1a11;
-        }
-        .gong-scroller::-webkit-scrollbar-thumb {
-            background: #8d6e63;
-            border-radius: 3px;
-        }
-
-        /* Floating Note Animation Class */
-        .floating-note {
-            position: absolute;
-            animation: floatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-            pointer-events: none;
+        /* --- Layout: Split Screen --- */
+        #top-bar {
+            height: 60px;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            border-bottom: 2px solid var(--gold);
             z-index: 100;
         }
 
+        #play-area {
+            height: 50vh; /* Takes half screen */
+            position: relative;
+            background: radial-gradient(circle, var(--wood-dark) 0%, #0d0603 100%);
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            touch-action: none; /* Prevent scroll on instrument */
+        }
+
+        #controls-scroll-area {
+            height: calc(50vh - 60px); /* Remaining space */
+            overflow-y: auto; /* Scrollable panels */
+            overflow-x: hidden;
+            padding: 15px;
+            background: #111;
+            padding-bottom: 50px;
+        }
+
+        /* --- UI Elements --- */
+        .title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--gold-light);
+        }
+
+        .btn {
+            background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border: 1px solid var(--gold-light);
+            color: var(--wood-dark);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            text-align: center;
+            outline: none;
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { filter: grayscale(1); opacity: 0.5; pointer-events: none; }
+        
+        .btn-danger { background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border-color: #ff6666;}
+        .btn-play { background: linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%); color: white; border-color: #81C784;}
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            color: var(--gold);
+            font-size: 14px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .flex-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* --- Composer & Settings --- */
+        textarea.composer-input {
+            width: 100%;
+            height: 60px;
+            background: #222;
+            color: var(--gold-light);
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 14px;
+            resize: none;
+            margin-bottom: 8px;
+            font-family: inherit;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .slider-group input[type="range"] { flex: 1; margin-left: 10px; }
+
+        /* --- Instrument Body --- */
+        #neck {
+            width: 100%;
+            max-width: 300px;
+            height: 100%;
+            background: linear-gradient(90deg, #2a1a14 0%, var(--wood-light) 50%, #2a1a14 100%);
+            border-left: 4px solid #111;
+            border-right: 4px solid #111;
+            display: flex;
+            justify-content: space-evenly;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .string-lane {
+            width: 30%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .string {
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(90deg, #ccc, #fff, #999);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .string.vibrating { animation: vibrate 0.05s infinite; }
+
+        @keyframes vibrate {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(1.5px); }
+            75% { transform: translateX(-1.5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* --- Visual Feedback --- */
+        .fret-marker {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 215, 0, 0.4);
+            font-size: 14px;
+            pointer-events: none;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .fret-marker.show { opacity: 1; }
+
+        .finger-glow {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.5) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            z-index: 20;
+        }
+
+        /* --- Floating Notes --- */
+        #floating-notes-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 30;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .floating-note {
+            position: absolute;
+            bottom: 20%;
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--gold-light);
+            text-shadow: 0 0 10px var(--gold), 0 2px 5px #000;
+            animation: floatUp 1.5s ease-out forwards;
+        }
+
         @keyframes floatUp {
-            0% {
-                transform: translateY(0) scale(0.8);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100px) scale(1.3);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        /* Toast Message */
+        #toast {
+            position: fixed;
+            top: 70px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white;
+            padding: 8px 16px; border-radius: 20px; font-size: 13px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            z-index: 1000; border: 1px solid var(--gold);
         }
     </style>
 </head>
-<body class="min-h-screen text-gray-100 flex flex-col justify-between overflow-x-hidden">
+<body>
 
-    <!-- Header -->
-    <header class="w-full bg-black/60 border-b border-yellow-900/40 p-3 md:p-4 backdrop-blur-md z-50">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-black font-bold text-xl shadow-[0_0_15px_rgba(245,158,11,0.5)]">
-                    🪘
-                </div>
-                <div>
-                    <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-100">
-                        ฆ้องวงใหญ่จำลองอัจฉริยะ
-                    </h1>
-                    <p class="text-xs text-amber-200/60 font-light">Virtual Khong Wong Yai Pro v2.5</p>
-                </div>
-            </div>
-            
-            <!-- Quick Action Info / Status -->
-            <div class="flex items-center gap-2 bg-yellow-950/40 px-3 py-1.5 rounded-full border border-yellow-600/20 text-xs md:text-sm">
-                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-                <span id="status-text" class="text-amber-200">ระบบสังเคราะห์เสียงสมบูรณ์แบบพร้อมบรรเลง</span>
-            </div>
+    <!-- Top Bar -->
+    <div id="top-bar">
+        <div class="title">ซอสามสาย Pro</div>
+        <div>
+            <button class="btn" id="stop-all-btn" onclick="stopAllAndReset()" style="padding: 5px 10px;">⏹️ หยุดเสียงทั้งหมด</button>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Content Grid -->
-    <main class="flex-grow max-w-6xl w-full mx-auto p-2 md:p-4 flex flex-col justify-center items-center gap-4">
+    <!-- Play Area (Top Half) -->
+    <div id="play-area">
+        <div id="floating-notes-container"></div>
+        <div id="neck">
+            <!-- สายทุ้ม (ซ) -->
+            <div class="string-lane" data-string="0"><div class="string"></div></div>
+            <!-- สายกลาง (ด) -->
+            <div class="string-lane" data-string="1"><div class="string"></div></div>
+            <!-- สายเอก (ซ สูง) -->
+            <div class="string-lane" data-string="2"><div class="string"></div></div>
+            <div id="glow-pool" class="finger-glow"></div>
+        </div>
+    </div>
+
+    <!-- Toast Message -->
+    <div id="toast">ข้อความ</div>
+
+    <!-- Controls Area (Bottom Half - Scrollable) -->
+    <div id="controls-scroll-area">
         
-        <!-- Interactive Play Mode / Instrument Frame Container -->
-        <div class="w-full bg-black/40 rounded-2xl p-4 border border-yellow-900/30 shadow-2xl relative">
+        <!-- Panel: Demo Songs -->
+        <div class="panel">
+            <div class="panel-title">🎶 เพลงสาธิต (Demo Songs)
+                <span id="demo-status" style="color:#aaa; font-size: 12px;"></span>
+            </div>
+            <div class="flex-row">
+                <button class="btn btn-play" onclick="playDemo('khmen')">เขมรไทรโยค</button>
+                <button class="btn btn-play" onclick="playDemo('lao')">ลาวดวงเดือน</button>
+                <button class="btn btn-play" onclick="playDemo('kang')">ค้างคาวกินกล้วย</button>
+                <button class="btn btn-danger" onclick="stopSequence()">หยุดเล่น</button>
+            </div>
+        </div>
+
+        <!-- Panel: Composer -->
+        <div class="panel">
+            <div class="panel-title">✍️ ระบบแต่งเพลง (Composer)
+                <button class="btn" onclick="toggleNotesUI()" style="font-size:10px; padding:2px 8px;">ตาข่ายโน้ตบนสาย</button>
+            </div>
+            <textarea id="composer-text" class="composer-input" placeholder="พิมพ์โน้ต (ซ ล ท ด ร ม ฟ) เว้นวรรคคือพักจังหวะ ตัวอย่าง: ด ร ม ฟ ซ"></textarea>
+            <div class="flex-row">
+                <button class="btn btn-play" onclick="playComposed()">▶️ เล่นโน้ตที่แต่ง</button>
+                <button class="btn" onclick="clearComposer()">ล้างข้อมูล</button>
+                <button class="btn" onclick="document.getElementById('composer-text').value = 'ซ ด ร ม ร ด ท ล ซ ล ท ด ท ล ซ'">ตัวอย่าง</button>
+            </div>
+        </div>
+
+        <!-- Panel: Advanced Audio Settings -->
+        <div class="panel">
+            <div class="panel-title">🎛️ ปรับแต่งเสียงขั้นสูง (Advanced Audio)</div>
             
-            <!-- Floating indicators panel -->
-            <div class="absolute top-2 right-4 flex gap-2 z-20">
-                <button onclick="toggleNoteDisplay()" id="btn-toggle-labels" class="bg-yellow-900/40 border border-yellow-600/30 px-3 py-1 rounded-full text-xs hover:bg-yellow-800/60 transition active:scale-95 text-amber-100 flex items-center gap-1">
-                    <span>👁️</span> <span id="label-mode-text">แสดงโน้ตไทย</span>
-                </button>
+            <div class="slider-group">
+                <label>เสียงก้อง (Reverb)</label>
+                <input type="range" id="reverb-slider" min="0" max="100" value="60" oninput="updateSettings()">
             </div>
-
-            <div class="absolute top-2 left-4 z-20">
-                <span class="text-xs text-amber-500/80 font-mono bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/30">
-                    Thai Equidistant 7-Tone Tuning
-                </span>
-            </div>
-
-            <!-- Scroll View Wrap for Mobile Screen Safety -->
-            <div class="gong-scroller w-full overflow-x-auto pb-4 pt-8 flex justify-center items-center">
-                <div class="relative w-[760px] h-[380px] shrink-0 mx-auto" id="khong-arena">
-                    <!-- Elegant Wooden Rim Background -->
-                    <!-- Outer Horseshoe Rim -->
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[700px] h-[300px] rounded-t-full border-[28px] border-amber-950/90 shadow-[0_15px_30px_rgba(0,0,0,0.8),inset_0_2px_15px_rgba(0,0,0,0.9)] pointer-events-none" style="clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 85% 100%, 15% 100%, 0% 90%);"></div>
-                    <!-- Inner Horseshoe Rim -->
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[28%] w-[500px] h-[200px] rounded-t-full border-[18px] border-amber-900/80 shadow-[inset_0_2px_10px_rgba(0,0,0,0.9)] pointer-events-none" style="clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 80% 100%, 20% 100%, 0% 90%);"></div>
-                    
-                    <!-- Beautiful Wooden Pillar Brackets for Authenticity -->
-                    <div class="absolute bottom-16 left-[80px] w-4 h-16 bg-amber-950 border border-yellow-800/30 rounded shadow-md pointer-events-none"></div>
-                    <div class="absolute bottom-16 right-[80px] w-4 h-16 bg-amber-950 border border-yellow-800/30 rounded shadow-md pointer-events-none"></div>
-                    <div class="absolute bottom-6 left-[210px] w-4 h-14 bg-amber-950 border border-yellow-800/30 rounded shadow-md pointer-events-none"></div>
-                    <div class="absolute bottom-6 right-[210px] w-4 h-14 bg-amber-950 border border-yellow-800/30 rounded shadow-md pointer-events-none"></div>
-
-                    <!-- Gongs are dynamically rendered here -->
-                </div>
-            </div>
-
-            <!-- Playing Mode Hint -->
-            <p class="text-center text-xs text-amber-500/70 mt-1">💡 เคล็ดลับ: แตะสัมผัสบนปุ่มนูนศูนย์กลางของลูกฆ้องสีทองเพื่อให้เสียงดังกังวานเป็นธรรมชาติที่สุด</p>
-        </div>
-
-        <!-- Controls Console Split -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 w-full gap-4 items-stretch">
             
-            <!-- Left Side: Demo Songs & Advanced Audio Controls (7 Columns) -->
-            <div class="lg:col-span-7 flex flex-col gap-4">
-                
-                <!-- Section 1: 3 Premium Demo Songs Playback Panel -->
-                <div class="bg-amber-950/20 border border-yellow-900/30 rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-amber-300 flex items-center gap-1.5">
-                            <span>🎵</span> เพลงบรรเลงสาธิตอัตโนมัติ
-                        </h3>
-                        <button onclick="stopDemoPlayback()" id="btn-stop-demo" class="hidden bg-red-600 hover:bg-red-700 text-white font-medium text-xs px-3 py-1 rounded-full animate-pulse transition active:scale-95 flex items-center gap-1">
-                            <span>🛑</span> หยุดเล่นชั่วคราว
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2">
-                        <!-- Song 1 -->
-                        <button onclick="playDemoSong(0)" id="song-btn-0" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-gradient-to-b from-yellow-900/30 to-yellow-950/50 border border-yellow-700/20 hover:border-amber-400/50 transition active:scale-95 text-center group">
-                            <span class="text-lg mb-1 group-hover:scale-110 transition duration-300">🌾</span>
-                            <span class="font-semibold text-xs text-amber-200">๑. แขกบรเทศ</span>
-                            <span class="text-[10px] text-amber-400/60 mt-0.5">จังหวะปานกลาง</span>
-                        </button>
-                        <!-- Song 2 -->
-                        <button onclick="playDemoSong(1)" id="song-btn-1" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-gradient-to-b from-yellow-900/30 to-yellow-950/50 border border-yellow-700/20 hover:border-amber-400/50 transition active:scale-95 text-center group">
-                            <span class="text-lg mb-1 group-hover:scale-110 transition duration-300">🌸</span>
-                            <span class="font-semibold text-xs text-amber-200">๒. ลาวดวงดอกไม้</span>
-                            <span class="text-[10px] text-amber-400/60 mt-0.5">จังหวะหวานซึ้ง</span>
-                        </button>
-                        <!-- Song 3 -->
-                        <button onclick="playDemoSong(2)" id="song-btn-2" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-gradient-to-b from-yellow-900/30 to-yellow-950/50 border border-yellow-700/20 hover:border-amber-400/50 transition active:scale-95 text-center group">
-                            <span class="text-lg mb-1 group-hover:scale-110 transition duration-300">🍌</span>
-                            <span class="font-semibold text-xs text-amber-200">๓. ค้างคาวกินกล้วย</span>
-                            <span class="text-[10px] text-amber-400/60 mt-0.5">จังหวะสนุกสนาน</span>
-                        </button>
-                    </div>
-
-                    <!-- Song Playing Progress -->
-                    <div id="demo-info" class="hidden bg-yellow-950/40 p-2 rounded-lg border border-yellow-700/10 text-center">
-                        <p class="text-xs text-amber-300">กำลังประโคมโน้ต: <span id="current-demo-note" class="font-bold text-sm text-yellow-400">-</span></p>
-                        <div class="w-full bg-yellow-950 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                            <div id="demo-progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-300"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 2: Advanced Audio Synthesizer Control -->
-                <div class="bg-amber-950/20 border border-yellow-900/30 rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
-                    <h3 class="text-base font-semibold text-amber-300 flex items-center gap-1.5">
-                        <span>🎛️</span> แผงปรับแต่งเสียงอัตลักษณ์ดนตรีไทยขั้นสูง
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Volume Control -->
-                        <div class="flex flex-col gap-1">
-                            <div class="flex justify-between text-xs text-amber-200">
-                                <span>ระดับความดัง (Master Gain)</span>
-                                <span id="val-vol">75%</span>
-                            </div>
-                            <input id="slider-vol" type="range" min="0" max="100" value="75" oninput="updateAudioParams()" class="w-full accent-amber-500 h-1.5 bg-yellow-950 rounded-lg appearance-none cursor-pointer">
-                        </div>
-
-                        <!-- Decay Control -->
-                        <div class="flex flex-col gap-1">
-                            <div class="flex justify-between text-xs text-amber-200">
-                                <span>เวลาสั่นสะเทือนหางเสียง (Decay Rate)</span>
-                                <span id="val-decay">1.8 วินาที</span>
-                            </div>
-                            <input id="slider-decay" type="range" min="5" max="40" value="18" oninput="updateAudioParams()" class="w-full accent-amber-500 h-1.5 bg-yellow-950 rounded-lg appearance-none cursor-pointer">
-                        </div>
-
-                        <!-- Mallet Softness (Lowpass cut) -->
-                        <div class="flex flex-col gap-1">
-                            <div class="flex justify-between text-xs text-amber-200">
-                                <span>ความนุ่มไม้ตี (Mallet Lowpass)</span>
-                                <span id="val-soft">ไม้แข็ง (กังวานจัด)</span>
-                            </div>
-                            <input id="slider-soft" type="range" min="1000" max="12000" step="500" value="12000" oninput="updateAudioParams()" class="w-full accent-amber-500 h-1.5 bg-yellow-950 rounded-lg appearance-none cursor-pointer">
-                        </div>
-
-                        <!-- Reverb/Resonance level -->
-                        <div class="flex flex-col gap-1">
-                            <div class="flex justify-between text-xs text-amber-200">
-                                <span>มิติก้องกังวาน (Thai Chamber Reverb)</span>
-                                <span id="val-reverb">30%</span>
-                            </div>
-                            <input id="slider-reverb" type="range" min="0" max="100" value="30" oninput="updateAudioParams()" class="w-full accent-amber-500 h-1.5 bg-yellow-950 rounded-lg appearance-none cursor-pointer">
-                        </div>
-
-                        <!-- Overtone detune weight -->
-                        <div class="flex flex-col gap-1 md:col-span-2">
-                            <div class="flex justify-between text-xs text-amber-200">
-                                <span>ความหนาแน่นมวลทองเหลือง (Gong Metallic Overtone Detune)</span>
-                                <span id="val-detune">2.02x (เสียงเสถียรธรรมชาติ)</span>
-                            </div>
-                            <input id="slider-detune" type="range" min="190" max="220" value="202" oninput="updateAudioParams()" class="w-full accent-amber-500 h-1.5 bg-yellow-950 rounded-lg appearance-none cursor-pointer">
-                        </div>
-                    </div>
-                </div>
-
+            <div class="slider-group">
+                <label>การสั่นนิ้ว (Vibrato)</label>
+                <input type="range" id="vibrato-slider" min="0" max="100" value="30" oninput="updateSettings()">
             </div>
-
-            <!-- Right Side: Song Composer, Editor & Voice Recorder (5 Columns) -->
-            <div class="lg:col-span-5 flex flex-col gap-4">
-                
-                <!-- Section 3: Professional Recorder -->
-                <div class="bg-amber-950/20 border border-yellow-900/30 rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
-                    <h3 class="text-base font-semibold text-amber-300 flex items-center gap-1.5">
-                        <span>🎙️</span> ระบบบันทึกเสียงบรรเลงหลัก (Direct Rec)
-                    </h3>
-                    
-                    <div class="flex flex-wrap items-center gap-2">
-                        <!-- Record Button -->
-                        <button id="btn-record" onclick="toggleAudioRecording()" class="flex-grow bg-red-700 hover:bg-red-600 text-white py-2 px-4 rounded-xl font-bold transition flex items-center justify-center gap-2 active:scale-95 shadow-[0_4px_10px_rgba(220,38,38,0.2)]">
-                            <span id="rec-dot" class="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></span>
-                            <span id="rec-text">กดอัดเสียง</span>
-                        </button>
-                        <!-- Stop/Play Back Recorded Button -->
-                        <button id="btn-play-recorded" onclick="playRecordedAudio()" disabled class="flex-grow bg-emerald-800 hover:bg-emerald-700 disabled:bg-neutral-800 disabled:opacity-40 disabled:scale-100 disabled:hover:border-transparent text-white py-2 px-4 rounded-xl font-bold transition flex items-center justify-center gap-2 active:scale-95">
-                            <span>🔊</span> บรรเลงเพลงอัด
-                        </button>
-                        <!-- Download Button -->
-                        <button id="btn-download-recorded" onclick="downloadRecordedAudio()" disabled class="p-2 bg-blue-800 hover:bg-blue-700 disabled:bg-neutral-800 disabled:opacity-40 disabled:scale-100 text-white rounded-xl transition flex items-center justify-center active:scale-95" title="ดาวน์โหลดไฟล์เสียง WebM">
-                            <span>💾</span> ดาวน์โหลด
-                        </button>
-                    </div>
-
-                    <!-- Hidden Audio player for recording purpose -->
-                    <audio id="direct-audio-player" class="hidden"></audio>
-                </div>
-
-                <!-- Section 4: Song Composer & Sequence Editor -->
-                <div class="bg-amber-950/20 border border-yellow-900/30 rounded-2xl p-4 flex flex-col gap-3 shadow-lg flex-grow">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-base font-semibold text-amber-300 flex items-center gap-1.5">
-                            <span>🎼</span> สตูดิโอแต่งร้อยเรียงโน้ตเพลงไทย
-                        </h3>
-                        <div class="flex gap-1.5">
-                            <button onclick="clearComposer()" class="bg-red-950/60 border border-red-500/30 hover:bg-red-900/80 text-red-200 text-[11px] px-2.5 py-1 rounded transition active:scale-95">
-                                ล้างกระดาน
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Speed & Mode controls of Composer -->
-                    <div class="flex items-center gap-2 bg-black/30 p-2 rounded-xl border border-yellow-900/10">
-                        <div class="flex-grow flex flex-col gap-0.5">
-                            <div class="flex justify-between text-[11px] text-amber-200">
-                                <span>ความเร็วของจังหวะ (BPM)</span>
-                                <span id="val-bpm" class="font-bold">120</span>
-                            </div>
-                            <input id="slider-bpm" type="range" min="60" max="300" value="120" oninput="document.getElementById('val-bpm').innerText = this.value" class="w-full accent-amber-500 h-1 bg-yellow-950 rounded-lg appearance-none cursor-pointer">
-                        </div>
-                        <div class="flex flex-col gap-0.5">
-                            <span class="text-[11px] text-amber-200 text-center">โหมดแต่งเพลง</span>
-                            <button id="btn-toggle-composer-rec" onclick="toggleComposerRecordMode()" class="px-2 py-1 bg-neutral-800 hover:bg-neutral-700 text-xs rounded font-semibold text-amber-300 transition active:scale-95">
-                                🛑 ปิดการเขียนโน้ตลงสตูดิโอ
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Sequencer Note List Box (Vertical Scroll List) -->
-                    <div class="flex-grow bg-black/40 rounded-xl border border-yellow-900/20 p-2 min-h-[140px] max-h-[180px] overflow-y-auto flex flex-col gap-1.5" id="composer-steps-container">
-                        <!-- Auto populating notes will display here -->
-                        <p id="composer-empty-alert" class="text-xs text-amber-500/50 text-center my-auto">
-                            ไม่มีโน้ตในระบบแต่งเพลงขณะนี้ <br>กดปุ่ม "เปิดการเขียนโน้ตลงสตูดิโอ" และสัมผัสฆ้องเพื่อร้อยเรียงโน้ตดนตรีได้ทีละขั้น!
-                        </p>
-                    </div>
-
-                    <!-- Sequence Playback Controls -->
-                    <div class="flex items-center gap-2">
-                        <button id="btn-play-composition" onclick="playComposition()" class="flex-grow py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-extrabold text-sm rounded-xl transition active:scale-95 shadow-md flex items-center justify-center gap-1.5">
-                            <span>▶️</span> บรรเลงบทเพลงที่ร้อยเรียง
-                        </button>
-                        <button id="btn-stop-composition" onclick="stopComposition()" class="hidden py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition active:scale-95">
-                            🛑 หยุด
-                        </button>
-                    </div>
-                </div>
-
+            
+            <div class="slider-group">
+                <label>ความใส (Tone)</label>
+                <input type="range" id="tone-slider" min="500" max="4000" value="1500" oninput="updateSettings()">
             </div>
-
+            
+            <div class="slider-group">
+                <label>ระดับเสียง (Volume)</label>
+                <input type="range" id="vol-slider" min="0" max="100" value="70" oninput="updateSettings()">
+            </div>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="w-full bg-black/80 border-t border-yellow-900/40 p-3 mt-4 text-center text-xs text-amber-300/60 flex flex-col sm:flex-row justify-between items-center gap-2">
-        <p>© ๒๕๖๙ ฆ้องวงใหญ่จำลองระดับอัจฉริยะแบบไร้เสียงแตกค้าง พัฒนาขึ้นด้วยเทคโนโลยี Web Audio API</p>
-        <div class="flex items-center gap-3">
-            <span class="hover:text-amber-400 cursor-pointer transition">คู่มือการใช้งาน</span>
-            <span>•</span>
-            <span class="hover:text-amber-400 cursor-pointer transition">เกี่ยวกับดนตรีไทย</span>
+        <!-- Panel: Recording -->
+        <div class="panel">
+            <div class="panel-title">🎙️ บันทึกเสียง</div>
+            <div class="flex-row">
+                <button id="rec-btn" class="btn" onclick="toggleRecord()">อัดเสียง</button>
+                <button id="play-rec-btn" class="btn" onclick="playRecording()" disabled>ฟัง</button>
+                <button id="dl-rec-btn" class="btn" onclick="downloadRecording()" disabled>โหลด</button>
+            </div>
         </div>
-    </footer>
+    </div>
 
-    <!-- JS Programming Logic starts here -->
     <script>
-        // Thai Authentic equidistant 7-tone tuning system configuration
-        // High fidelity audio synthesizer for realistic brass resonator and mallet hitting
-        let audioCtx = null;
-        let masterGain = null;
-        let reverbNode = null;
-        let delayNode = null;
-        let mediaRecorder = null;
-        let recordedChunks = [];
-        let audioBlob = null;
-        let destStreamNode = null;
+        // --- System State ---
+        let isUIReady = false;
+        let showNotesOnNeck = false;
+        let isPlayingSequence = false;
+        let sequenceTimeouts = [];
 
-        // Custom base frequency for the lowest note of Khong Wong Yai
-        // Derived from traditional G3-A3 ranges. Standard scale built from 220Hz (A3)
-        // 16 Gongs ordered from lowest frequency (left bottom) to highest frequency (right bottom)
-        const totalGongCount = 16;
-        const frequencies = [];
-        const baseFrequency = 210.0; // Perfect traditional resonant bottom scale freq
-        
-        // Populate authentic 7 equal-spaced intervals per octave
-        for (let i = 0; i < totalGongCount; i++) {
-            frequencies.push(baseFrequency * Math.pow(2, i / 7));
+        // --- Audio Engine Variables ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let ctx, masterGain, convolver, reverbGain, dryGain;
+        let activeVoices = {}; // Tracks manual touches
+        let autoVoices = [];   // Tracks sequencer notes
+        let settings = { reverb: 0.6, vibrato: 0.3, tone: 1500, volume: 0.7 };
+
+        // Thai 7-TET System Setup
+        // Base notes approximate mapping
+        const baseFreqs = [196.00, 261.63, 392.00]; // สายทุ้ม(G3), สายกลาง(C4), สายเอก(G4)
+        const noteLabels = ["ซ", "ล", "ท", "ด", "ร", "ม", "ฟ"];
+        const stringStartNoteIndex = [0, 3, 0]; 
+
+        // Map note text to 7-TET frequency based on G3 (ซ) = 196Hz
+        // Formula: Freq = Base * 2^(steps/7)
+        function getFreqFromText(noteText) {
+            const map = {'ซ':0, 'ล':1, 'ท':2, 'ด':3, 'ร':4, 'ม':5, 'ฟ':6, 
+                         'ซซ':7, 'ลล':8, 'ทท':9, 'ดด':10}; // Support higher octave via double letters
+            const step = map[noteText.replace(/\s/g, '')];
+            if (step === undefined) return null;
+            return 196.00 * Math.pow(2, step / 7);
         }
 
-        // Note Labels arrays
-        const thaiNotes = ["๑ (ด)", "๒ (ร)", "๓ (ม)", "๔ (ฟ)", "๕ (ซ)", "๖ (ล)", "๗ (ท)", "๑̇ (ด)", "๒̇ (ร)", "๓̇ (ม)", "๔̇ (ฟ)", "๕̇ (ซ)", "๖̇ (ล)", "๗̇ (ท)", "๑̇̇ (ด)", "๒̇̇ (ร)"];
-        const westernNotes = ["Re3", "Mi3", "Fa#3", "Sol3", "La3", "Ti3", "Do4", "Re4", "Mi4", "Fa#4", "Sol4", "La4", "Ti4", "Do5", "Re5", "Mi5"];
-        const simpleThaiNotes = ["ด", "ร", "ม", "ฟ", "ซ", "ล", "ท", "ดํ", "รํ", "มํ", "ฟํ", "ซํ", "ลํ", "ทํ", "ดํํ", "รํํ"];
-        
-        let currentLabelStyle = 0; // 0: Thai, 1: Western Solfege, 2: Simple Thai, 3: Hidden
+        // --- Init Audio Context & Reverb ---
+        function initAudio() {
+            if (ctx) return;
+            ctx = new AudioContext();
+            
+            // Nodes
+            masterGain = ctx.createGain();
+            dryGain = ctx.createGain();
+            reverbGain = ctx.createGain();
+            convolver = ctx.createConvolver();
 
-        // Composer & Seq Storage
-        let composerNotesList = [];
-        let isComposerRecordOn = false;
-        let composerPlaybackInterval = null;
-        let currentComposerIndex = -1;
-
-        // Auto play demo configurations
-        let demoPlaybackTimeoutList = [];
-        let isDemoPlaying = false;
-        let currentDemoSongIndex = -1;
-
-        // Demo Songs Notes: [gongIndex, delayFactor]
-        // Authentic classic Thai traditional compositions
-        const demoSongs = [
-            {
-                name: "แขกบรเทศ (Khaek Borathes)",
-                notes: [
-                    [4, 1], [4, 1], [5, 1], [6, 1], [5, 1], [4, 1], [3, 1], [2, 1],
-                    [4, 1], [4, 1], [3, 1], [2, 1], [3, 1], [4, 1], [5, 2],
-                    [6, 1], [6, 1], [7, 1], [8, 1], [7, 1], [6, 1], [5, 1], [4, 1],
-                    [6, 1], [6, 1], [5, 1], [4, 1], [5, 1], [6, 1], [7, 2],
-                    [8, 1], [9, 1], [8, 1], [7, 1], [6, 1], [5, 1], [4, 2],
-                    [4, 1], [5, 1], [6, 1], [7, 1], [6, 1], [5, 1], [6, 2]
-                ]
-            },
-            {
-                name: "ลาวดวงดอกไม้ (Lao Duang Dok Mai)",
-                notes: [
-                    [6, 1.5], [8, 0.5], [6, 1], [5, 1], [4, 1.5], [5, 0.5], [6, 1], [4, 1],
-                    [5, 1.5], [6, 0.5], [5, 1], [4, 1], [2, 3], [0, 1],
-                    [2, 1.5], [4, 0.5], [2, 1], [0, 1], [2, 1.5], [4, 0.5], [5, 1], [2, 1],
-                    [4, 1.5], [5, 0.5], [6, 1], [4, 1], [5, 3], [5, 1]
-                ]
-            },
-            {
-                name: "ค้างคาวกินกล้วย (Khang Khao Kin Kluay)",
-                notes: [
-                    [7, 0.5], [8, 0.5], [9, 0.5], [7, 0.5], [8, 0.5], [9, 0.5], [10, 1], [9, 1],
-                    [8, 0.5], [7, 0.5], [8, 1], [7, 1], [6, 1], [5, 1],
-                    [4, 0.5], [5, 0.5], [6, 0.5], [4, 0.5], [5, 0.5], [6, 0.5], [7, 1], [6, 1],
-                    [5, 0.5], [4, 0.5], [5, 1], [4, 1], [3, 1], [2, 1],
-                    [0, 1], [2, 1], [4, 1], [5, 1], [6, 1.5], [7, 0.5], [8, 2]
-                ]
-            }
-        ];
-
-        // Initialize Web Audio context on user action to prevent browser blockages
-        function startAudioEngine() {
-            if (audioCtx) {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
+            // Generate simple Impulse Response for Reverb (saves loading external files)
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * 1.5; // 1.5 seconds tail
+            const impulse = ctx.createBuffer(2, length, sampleRate);
+            for (let i = 0; i < 2; i++) {
+                const channel = impulse.getChannelData(i);
+                for (let j = 0; j < length; j++) {
+                    channel[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / length, 3); // Exponential decay
                 }
+            }
+            convolver.buffer = impulse;
+
+            // Routing
+            dryGain.connect(masterGain);
+            convolver.connect(reverbGain);
+            reverbGain.connect(masterGain);
+            masterGain.connect(ctx.destination);
+
+            updateSettings();
+            setupRecorder();
+        }
+
+        function updateSettings() {
+            if (!ctx) return;
+            settings.reverb = document.getElementById('reverb-slider').value / 100;
+            settings.vibrato = document.getElementById('vibrato-slider').value / 100;
+            settings.tone = document.getElementById('tone-slider').value;
+            settings.volume = document.getElementById('vol-slider').value / 100;
+
+            masterGain.gain.value = settings.volume;
+            reverbGain.gain.value = settings.reverb;
+            dryGain.gain.value = 1 - (settings.reverb * 0.5); // Balance wet/dry
+        }
+
+        // --- Synthesizer Voice (Saw Sam Sai) ---
+        function createVoice(freq, isAuto = false) {
+            initAudio();
+
+            const osc = ctx.createOscillator();
+            const subOsc = ctx.createOscillator(); // Body resonance
+            const lfo = ctx.createOscillator(); // Vibrato
+            const lfoGain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            const voiceGain = ctx.createGain();
+
+            // Timbre Setup
+            osc.type = 'sawtooth'; // Bow friction
+            subOsc.type = 'triangle'; // Wood resonance
+            
+            osc.frequency.value = freq;
+            subOsc.frequency.value = freq / 2; // Sub-octave for warmth
+
+            // Vibrato Setup
+            lfo.type = 'sine';
+            lfo.frequency.value = 5.5; // 5.5 Hz vibrato rate
+            lfoGain.gain.value = freq * 0.015 * settings.vibrato; // Pitch variation
+            
+            if(settings.vibrato > 0) {
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfoGain.connect(subOsc.frequency);
+                lfo.start();
+            }
+
+            // Filter (Wood body characteristic)
+            filter.type = 'lowpass';
+            filter.frequency.value = settings.tone;
+            filter.Q.value = 2;
+
+            // ADSR Envelope (Bowing characteristic)
+            const now = ctx.currentTime;
+            voiceGain.gain.setValueAtTime(0, now);
+            voiceGain.gain.linearRampToValueAtTime(0.5, now + 0.1); // Attack
+            voiceGain.gain.linearRampToValueAtTime(0.3, now + 0.3); // Decay
+
+            // Routing
+            osc.connect(filter);
+            subOsc.connect(filter);
+            filter.connect(voiceGain);
+            
+            // Connect to master mix
+            voiceGain.connect(dryGain);
+            voiceGain.connect(convolver);
+
+            osc.start();
+            subOsc.start();
+
+            const voice = { osc, subOsc, lfo, voiceGain, filter };
+            if(isAuto) autoVoices.push(voice);
+            return voice;
+        }
+
+        function releaseVoice(voice) {
+            if (!voice || !voice.voiceGain) return;
+            const now = ctx.currentTime;
+            const releaseTime = 0.3; // Natural string ring out
+            
+            voice.voiceGain.gain.cancelScheduledValues(now);
+            voice.voiceGain.gain.setValueAtTime(voice.voiceGain.gain.value, now);
+            voice.voiceGain.gain.exponentialRampToValueAtTime(0.001, now + releaseTime);
+            
+            setTimeout(() => {
+                try {
+                    voice.osc.stop();
+                    voice.subOsc.stop();
+                    if(voice.lfo) voice.lfo.stop();
+                    voice.osc.disconnect();
+                } catch(e){}
+            }, releaseTime * 1000 + 100);
+        }
+
+        function stopAllAndReset() {
+            // Panic button / Reset
+            stopSequence();
+            
+            // Kill manual touches
+            for(let id in activeVoices) {
+                releaseVoice(activeVoices[id]);
+                delete activeVoices[id];
+            }
+            
+            // Kill auto voices
+            autoVoices.forEach(v => releaseVoice(v));
+            autoVoices = [];
+            
+            document.querySelectorAll('.string').forEach(s => s.classList.remove('vibrating'));
+            hideTouchVisual();
+            showToast("หยุดเสียงทั้งหมด");
+        }
+
+        // --- Touch Interaction on Neck ---
+        function getFrequencyFromPos(stringIdx, yRatio) {
+            // Map 0-1 to approx 1 Octave (7 steps)
+            let steps = yRatio * 7; 
+            return baseFreqs[stringIdx] * Math.pow(2, steps / 7);
+        }
+
+        function handleInteractStart(e, isTouch) {
+            if(isPlayingSequence) stopSequence(); // Interrupt sequence if manual play
+            e.preventDefault();
+            
+            const clientY = isTouch ? e.changedTouches[0].clientY : e.clientY;
+            const clientX = isTouch ? e.changedTouches[0].clientX : e.clientX;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const stringIdx = parseInt(e.currentTarget.dataset.string);
+            const id = isTouch ? e.changedTouches[0].identifier : 'mouse';
+
+            let y = (clientY - rect.top) / rect.height;
+            if (y < 0.05) y = 0; // Open string buffer
+
+            const freq = getFrequencyFromPos(stringIdx, y);
+            activeVoices[id] = createVoice(freq, false);
+            
+            visualizeTouch(clientY, clientX);
+            e.currentTarget.querySelector('.string').classList.add('vibrating');
+        }
+
+        function handleInteractMove(e, isTouch) {
+            e.preventDefault();
+            const clientY = isTouch ? e.changedTouches[0].clientY : e.clientY;
+            const clientX = isTouch ? e.changedTouches[0].clientX : e.clientX;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const stringIdx = parseInt(e.currentTarget.dataset.string);
+            const id = isTouch ? e.changedTouches[0].identifier : 'mouse';
+
+            if (activeVoices[id]) {
+                let y = (clientY - rect.top) / rect.height;
+                if (y < 0.05) y = 0;
+                const freq = getFrequencyFromPos(stringIdx, y);
+                
+                // Glide pitch (Portamento)
+                activeVoices[id].osc.frequency.setTargetAtTime(freq, ctx.currentTime, 0.05);
+                activeVoices[id].subOsc.frequency.setTargetAtTime(freq/2, ctx.currentTime, 0.05);
+                visualizeTouch(clientY, clientX);
+            }
+        }
+
+        function handleInteractEnd(e, isTouch) {
+            e.preventDefault();
+            const id = isTouch ? e.changedTouches[0].identifier : 'mouse';
+            if (activeVoices[id]) {
+                releaseVoice(activeVoices[id]);
+                delete activeVoices[id];
+            }
+            e.currentTarget.querySelector('.string').classList.remove('vibrating');
+            hideTouchVisual();
+        }
+
+        // Attach Listeners
+        document.querySelectorAll('.string-lane').forEach(lane => {
+            // Touch
+            lane.addEventListener('touchstart', (e) => handleInteractStart(e, true), {passive: false});
+            lane.addEventListener('touchmove', (e) => handleInteractMove(e, true), {passive: false});
+            lane.addEventListener('touchend', (e) => handleInteractEnd(e, true), {passive: false});
+            lane.addEventListener('touchcancel', (e) => handleInteractEnd(e, true), {passive: false});
+            // Mouse
+            lane.addEventListener('mousedown', (e) => handleInteractStart(e, false));
+        });
+
+        // Global mouse/touch fail-safes
+        window.addEventListener('mouseup', () => stopAllAndReset());
+        window.addEventListener('visibilitychange', () => { if(document.hidden) stopAllAndReset(); });
+
+        const glow = document.getElementById('glow-pool');
+        function visualizeTouch(y, x) {
+            glow.style.display = 'block';
+            glow.style.top = y + 'px';
+            glow.style.left = x + 'px';
+        }
+        function hideTouchVisual() { glow.style.display = 'none'; }
+
+        // --- Sequencer & Demos ---
+        const DEMOS = {
+            'khmen': "ด ร ม ฟ ซ - ล ซ ฟ ม ร - ด ร ม - ร ด ท - ล ซ",
+            'lao': "ซ ล ด ร ม - - ร ด ล ด - - ร ม ซ ม ร - ด ล ซ",
+            'kang': "ด ด ด ด ท ล ซ ฟ ม ร ด - - - ซ ซ ซ ซ ฟ ม ร ด ท ล ซ"
+        };
+
+        function spawnFloatingNote(text) {
+            const container = document.getElementById('floating-notes-container');
+            const el = document.createElement('div');
+            el.className = 'floating-note';
+            el.innerText = text;
+            
+            // Random horizontal position near center
+            const randomX = (Math.random() * 40) - 20; 
+            el.style.left = `calc(50% + ${randomX}px)`;
+            
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 1500); // Remove after animation
+        }
+
+        async function playSequenceArray(notesArray, speedMs = 300) {
+            isPlayingSequence = true;
+            document.getElementById('demo-status').innerText = "(กำลังเล่น...)";
+
+            for(let i=0; i<notesArray.length; i++) {
+                if(!isPlayingSequence) break; // User cancelled
+                
+                const note = notesArray[i];
+                if(note && note !== '-') {
+                    const freq = getFreqFromText(note);
+                    if(freq) {
+                        const voice = createVoice(freq, true);
+                        spawnFloatingNote(note);
+                        
+                        // Visually vibrate all strings slightly for effect
+                        document.querySelectorAll('.string').forEach(s => s.classList.add('vibrating'));
+                        
+                        // Stop note after its duration
+                        const tid = setTimeout(() => {
+                            releaseVoice(voice);
+                            document.querySelectorAll('.string').forEach(s => s.classList.remove('vibrating'));
+                        }, speedMs * 0.8);
+                        sequenceTimeouts.push(tid);
+                    }
+                }
+
+                // Wait for next beat
+                await new Promise(r => {
+                    const id = setTimeout(r, speedMs);
+                    sequenceTimeouts.push(id);
+                });
+            }
+            
+            if(isPlayingSequence) stopSequence(); // Clean up if finished naturally
+        }
+
+        function playDemo(key) {
+            stopSequence(); // Stop current if playing
+            initAudio();
+            const arr = DEMOS[key].split(' ');
+            playSequenceArray(arr, 350);
+        }
+
+        function playComposed() {
+            stopSequence();
+            initAudio();
+            const text = document.getElementById('composer-text').value;
+            if(!text.trim()) {
+                showToast("โปรดพิมพ์ตัวโน้ตก่อนเล่น");
                 return;
             }
-
-            try {
-                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioCtxClass();
-
-                // Master Gain volume node creation
-                masterGain = audioCtx.createGain();
-                updateAudioParams(); // Map UI values immediately to properties
-
-                // Custom reverb simulated via simple delay & lowpass filter feedback loop for resonance
-                reverbNode = audioCtx.createDelay(1.0);
-                const reverbFeedback = audioCtx.createGain();
-                const reverbFilter = audioCtx.createBiquadFilter();
-
-                reverbNode.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
-                reverbFeedback.gain.setValueAtTime(0.25, audioCtx.currentTime); // Resonance intensity
-                reverbFilter.frequency.setValueAtTime(1500, audioCtx.currentTime); // Warm filter to sound muddy/chambered
-                reverbFilter.type = "lowpass";
-
-                // Connect sound source -> master gain -> reverb line -> master gain
-                masterGain.connect(audioCtx.destination);
-                
-                // Create stream node for recording direct output cleanly
-                destStreamNode = audioCtx.createMediaStreamDestination();
-                masterGain.connect(destStreamNode);
-
-                updateStatus("ระบบสังเคราะห์เสียงเปิดทำงานเรียบร้อย", "info");
-            } catch (err) {
-                console.error("Audio Context Init Failed: ", err);
-                updateStatus("เบราว์เซอร์ของคุณไม่สนับสนุนระบบเสียงขั้นสูง", "error");
-            }
+            const arr = text.split(/\s+/);
+            playSequenceArray(arr, 400);
         }
 
-        // Synthesizes a beautiful metallic authentic Thai Gong sound with no click and soft release
-        function playGongSound(freq, volumeScale = 1) {
-            startAudioEngine();
-            if (!audioCtx) return;
-
-            const now = audioCtx.currentTime;
-
-            // Extract slider values dynamically
-            const masterVol = parseFloat(document.getElementById('slider-vol').value) / 100;
-            const decayValue = parseFloat(document.getElementById('slider-decay').value) / 10; // e.g. 1.8 seconds
-            const overtoneDetune = parseFloat(document.getElementById('slider-detune').value) / 100; // e.g. 2.02
-            const lowpassCutoff = parseFloat(document.getElementById('slider-soft').value);
-            const reverbMix = parseFloat(document.getElementById('slider-reverb').value) / 100;
-
-            // 1. Primary fundamental oscillator (Sine wave)
-            const osc1 = audioCtx.createOscillator();
-            osc1.type = "sine";
-            osc1.frequency.setValueAtTime(freq, now);
-
-            // 2. Secondary metallic harmonic oscillator (Triangle/Sawtooth hybrid approximation)
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = "triangle";
-            osc2.frequency.setValueAtTime(freq * overtoneDetune, now); // Slightly detuned overtone for brass reality
-
-            // 3. Ultra High pitch striker transient (Ting sound)
-            const osc3 = audioCtx.createOscillator();
-            osc3.type = "sine";
-            osc3.frequency.setValueAtTime(freq * 4.9, now);
-
-            // Filters to soften mallet impact
-            const lowpassFilter = audioCtx.createBiquadFilter();
-            lowpassFilter.type = "lowpass";
-            lowpassFilter.frequency.setValueAtTime(lowpassCutoff, now);
-
-            // Individual gains to avoid clipping and optimize transients
-            const oscGain1 = audioCtx.createGain();
-            const oscGain2 = audioCtx.createGain();
-            const oscGain3 = audioCtx.createGain();
-
-            // Exponential decay ADSR envelopes
-            // OSC 1 (Core body)
-            oscGain1.gain.setValueAtTime(0.0001, now);
-            oscGain1.gain.linearRampToValueAtTime(0.6 * volumeScale * masterVol, now + 0.008); // Rapid attack
-            oscGain1.gain.exponentialRampToValueAtTime(0.0001, now + decayValue);
-
-            // OSC 2 (Overtone metal resonance)
-            oscGain2.gain.setValueAtTime(0.0001, now);
-            oscGain2.gain.linearRampToValueAtTime(0.25 * volumeScale * masterVol, now + 0.015);
-            oscGain2.gain.exponentialRampToValueAtTime(0.0001, now + (decayValue * 0.7)); // Faster decay for overtones
-
-            // OSC 3 (Sharp initial tip touch)
-            oscGain3.gain.setValueAtTime(0.0001, now);
-            oscGain3.gain.linearRampToValueAtTime(0.18 * volumeScale * masterVol, now + 0.002);
-            oscGain3.gain.exponentialRampToValueAtTime(0.0001, now + 0.08); // Extremely fast decay
-
-            // Reverb Simulation Nodes
-            let resonanceGain = null;
-            let feedbackDelay = null;
-            if (reverbMix > 0.02) {
-                resonanceGain = audioCtx.createGain();
-                feedbackDelay = audioCtx.createDelay(1.0);
-                
-                feedbackDelay.delayTime.setValueAtTime(0.15, now);
-                resonanceGain.gain.setValueAtTime(reverbMix * 0.45, now);
-                
-                // Route paths
-                lowpassFilter.connect(feedbackDelay);
-                feedbackDelay.connect(resonanceGain);
-                resonanceGain.connect(masterGain);
-            }
-
-            // Connection chain
-            osc1.connect(oscGain1);
-            osc2.connect(oscGain2);
-            osc3.connect(oscGain3);
-
-            oscGain1.connect(lowpassFilter);
-            oscGain2.connect(lowpassFilter);
-            oscGain3.connect(lowpassFilter);
-
-            lowpassFilter.connect(masterGain);
-
-            // Trigger oscillators
-            osc1.start(now);
-            osc2.start(now);
-            osc3.start(now);
-
-            // Precise node cleanup to guarantee zero memory leaks and stop hung notes
-            const totalLifetimeSeconds = decayValue + 0.5;
-            osc1.stop(now + totalLifetimeSeconds);
-            osc2.stop(now + totalLifetimeSeconds);
-            osc3.stop(now + totalLifetimeSeconds);
-
-            setTimeout(() => {
-                osc1.disconnect();
-                osc2.disconnect();
-                osc3.disconnect();
-                oscGain1.disconnect();
-                oscGain2.disconnect();
-                oscGain3.disconnect();
-                lowpassFilter.disconnect();
-                if (resonanceGain) {
-                    resonanceGain.disconnect();
-                    feedbackDelay.disconnect();
-                }
-            }, totalLifetimeSeconds * 1000);
-        }
-
-        // Dynamically creates the gongs in a horseshoe shape using trigonometry
-        function renderGongs() {
-            const container = document.getElementById('khong-arena');
-            
-            // Wipe out existing gongs
-            const oldGongs = document.querySelectorAll('.gong-element');
-            oldGongs.forEach(g => g.remove());
-
-            const containerW = container.clientWidth;
-            const containerH = container.clientHeight;
-
-            // Elliptical shape layout configurations
-            const rx = containerW * 0.43; // horizontal radius
-            const ry = containerH * 0.46; // vertical radius
-            const cx = containerW / 2;
-            const cy = containerH * 0.52; // centered slightly downwards
-
-            // Horseshoe angles: PI + margin to 0 - margin
-            // Thai Khong Wong Yai notes sequence from left (lowest) to right (highest)
-            const startAngle = Math.PI + 0.18; // approx 8 o'clock
-            const endAngle = -0.18;            // approx 4 o'clock
-
-            for (let i = 0; i < totalGongCount; i++) {
-                const fraction = i / (totalGongCount - 1);
-                const angle = startAngle - (fraction * (startAngle - endAngle));
-
-                // Calculate elliptical path coordinates
-                const x = cx + rx * Math.cos(angle);
-                const y = cy - ry * Math.sin(angle);
-
-                // Create outer Gong elements
-                const gong = document.createElement('div');
-                gong.className = `gong-element absolute w-[46px] h-[46px] md:w-[56px] md:h-[56px] rounded-full cursor-pointer flex items-center justify-center transition-all duration-75 active:scale-90 z-10`;
-                gong.style.left = `${x - 28}px`;
-                gong.style.top = `${y - 28}px`;
-                gong.id = `gong-node-${i}`;
-
-                // Set shiny brass gold metallic gradient
-                gong.style.background = "radial-gradient(circle at 35% 35%, #ffd700 0%, #b8860b 60%, #4a3500 100%)";
-                gong.style.boxShadow = "0 8px 16px rgba(0,0,0,0.7), inset 0 -3px 8px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.6)";
-
-                // Inner brass knob center button (where the mallet strikes)
-                const knob = document.createElement('div');
-                knob.className = "w-[44%] h-[44%] rounded-full absolute pointer-events-none shadow-md";
-                knob.style.background = "radial-gradient(circle at 30% 30%, #fff176 0%, #d4af37 50%, #855c00 100%)";
-                gong.appendChild(knob);
-
-                // Text labels element
-                const label = document.createElement('span');
-                label.className = "note-label absolute text-[10px] md:text-xs font-extrabold text-amber-950/90 pointer-events-none mt-10 md:mt-12 bg-black/70 px-1.5 py-0.5 rounded text-amber-300 border border-yellow-700/30 font-sans shadow-md";
-                label.id = `label-node-${i}`;
-                gong.appendChild(label);
-
-                // Touch & Mouse triggers
-                const triggerHit = (e) => {
-                    e.preventDefault();
-                    hitGong(i);
-                };
-
-                gong.addEventListener('mousedown', triggerHit);
-                gong.addEventListener('touchstart', triggerHit);
-
-                container.appendChild(gong);
-            }
-
-            refreshLabels();
-        }
-
-        // Highlight active nodes, trigger synth sounds and handle composer sequence captures
-        function hitGong(index, volumeScale = 1, isDemo = false) {
-            const gongNode = document.getElementById(`gong-node-${index}`);
-            if (!gongNode) return;
-
-            // Spark golden highlight effect
-            gongNode.classList.add('brightness-125', 'scale-95');
-            gongNode.style.boxShadow = "0 0 20px #ffd700, inset 0 -2px 5px rgba(0,0,0,0.4)";
-            
-            setTimeout(() => {
-                gongNode.classList.remove('brightness-125', 'scale-95');
-                gongNode.style.boxShadow = "0 8px 16px rgba(0,0,0,0.7), inset 0 -3px 8px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.6)";
-            }, 120);
-
-            // Play authentic synthesized tone
-            playGongSound(frequencies[index], volumeScale);
-
-            // Floating note visual text
-            createFloatingNote(gongNode, index);
-
-            // Record into composer sequencer if composer mode is turned on
-            if (isComposerRecordOn && !isDemo) {
-                addNoteToComposer(index);
-            }
-        }
-
-        // Creates a beautiful floating Thai music character rising upwards from tapped node
-        function createFloatingNote(parentElement, index) {
-            const arena = document.getElementById('khong-arena');
-            const rect = parentElement.getBoundingClientRect();
-            const arenaRect = arena.getBoundingClientRect();
-
-            // Calculate exact position relative to parent container
-            const x = rect.left - arenaRect.left + (rect.width / 2);
-            const y = rect.top - arenaRect.top;
-
-            const floatText = document.createElement('div');
-            floatText.className = "floating-note text-sm md:text-base font-extrabold text-yellow-300 drop-shadow-[0_2px_5px_rgba(0,0,0,0.9)]";
-            floatText.style.left = `${x - 10}px`;
-            floatText.style.top = `${y - 15}px`;
-            
-            // Display simplified thai note representation
-            floatText.innerText = simpleThaiNotes[index];
-
-            arena.appendChild(floatText);
-
-            // Auto purge floating DOM node
-            setTimeout(() => {
-                floatText.remove();
-            }, 1200);
-        }
-
-        function toggleNoteDisplay() {
-            currentLabelStyle = (currentLabelStyle + 1) % 4;
-            refreshLabels();
-        }
-
-        function refreshLabels() {
-            const btn = document.getElementById('btn-toggle-labels');
-            const labelModeText = document.getElementById('label-mode-text');
-            
-            for (let i = 0; i < totalGongCount; i++) {
-                const label = document.getElementById(`label-node-${i}`);
-                if (!label) continue;
-
-                if (currentLabelStyle === 0) {
-                    label.innerText = thaiNotes[i];
-                    label.style.display = "block";
-                    labelModeText.innerText = "แสดงโน้ตไทย";
-                } else if (currentLabelStyle === 1) {
-                    label.innerText = westernNotes[i];
-                    label.style.display = "block";
-                    labelModeText.innerText = "แสดงโน้ตสากล";
-                } else if (currentLabelStyle === 2) {
-                    label.innerText = simpleThaiNotes[i];
-                    label.style.display = "block";
-                    labelModeText.innerText = "แสดงโน้ตย่อ";
-                } else {
-                    label.style.display = "none";
-                    labelModeText.innerText = "ซ่อนโน้ตเพลง";
-                }
-            }
-        }
-
-        function updateAudioParams() {
-            const vol = document.getElementById('slider-vol').value;
-            document.getElementById('val-vol').innerText = `${vol}%`;
-
-            const decay = document.getElementById('slider-decay').value;
-            document.getElementById('val-decay').innerText = `${(decay / 10).toFixed(1)} วินาที`;
-
-            const soft = parseInt(document.getElementById('slider-soft').value);
-            let softText = "ไม้แข็ง (กังวานจัด)";
-            if (soft < 3000) softText = "ไม้นวมอย่างนุ่ม";
-            else if (soft < 7000) softText = "ไม้นวมมาตรฐาน";
-            else if (soft < 11000) softText = "ไม้ครึ่งนวม";
-            document.getElementById('val-soft').innerText = softText;
-
-            const reverb = document.getElementById('slider-reverb').value;
-            document.getElementById('val-reverb').innerText = `${reverb}%`;
-
-            const detune = parseFloat(document.getElementById('slider-detune').value) / 100;
-            document.getElementById('val-detune').innerText = `${detune}x (${detune < 2.0 ? "เสียงหนาทุ้ม" : detune > 2.05 ? "เสียงแหลมใส" : "เสียงเสถียรธรรมชาติ"})`;
-        }
-
-        function toggleAudioRecording() {
-            startAudioEngine();
-            const btn = document.getElementById('btn-record');
-            const recText = document.getElementById('rec-text');
-            const recDot = document.getElementById('rec-dot');
-
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                // Stop active recording session
-                mediaRecorder.stop();
-                btn.classList.remove('bg-neutral-800', 'hover:bg-neutral-700');
-                btn.classList.add('bg-red-700', 'hover:bg-red-600');
-                recText.innerText = "กดอัดเสียง";
-                recDot.classList.add('animate-pulse');
-                updateStatus("หยุดกระบวนการบันทึกเสียง", "info");
-            } else {
-                // Initiate recording
-                recordedChunks = [];
-                const options = { mimeType: 'audio/webm;codecs=opus' };
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                    options.mimeType = 'audio/ogg;codecs=opus';
-                }
-
-                try {
-                    mediaRecorder = new MediaRecorder(destStreamNode.stream, options);
-                } catch (e) {
-                    updateStatus("เบราว์เซอร์นี้ไม่รองรับมีเดียเรคคอร์ดเดอร์", "error");
-                    return;
-                }
-
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
-                    }
-                };
-
-                mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(recordedChunks, { type: options.mimeType });
-                    const audioURL = URL.createObjectURL(audioBlob);
-                    const player = document.getElementById('direct-audio-player');
-                    player.src = audioURL;
-
-                    document.getElementById('btn-play-recorded').disabled = false;
-                    document.getElementById('btn-download-recorded').disabled = false;
-                    updateStatus("บันทึกเสร็จสมบูรณ์! พร้อมเปิดฟังและดาวน์โหลด", "success");
-                };
-
-                mediaRecorder.start();
-                btn.classList.remove('bg-red-700', 'hover:bg-red-600');
-                btn.classList.add('bg-neutral-800', 'hover:bg-neutral-700');
-                recText.innerText = "กำลังบันทึกเสียง... กดอีกครั้งเพื่อหยุด";
-                recDot.classList.remove('animate-pulse');
-                updateStatus("กำลังอัดเสียงการเล่นตรงจากระบบสังเคราะห์...", "recording");
-            }
-        }
-
-        function playRecordedAudio() {
-            const player = document.getElementById('direct-audio-player');
-            if (player.src) {
-                player.play();
-                updateStatus("กำลังฟังเพลงบันทึกการบรรเลงหลัก", "playing");
-            }
-        }
-
-        function downloadRecordedAudio() {
-            if (!audioBlob) return;
-            const url = URL.createObjectURL(audioBlob);
-            const anchor = document.createElement('a');
-            anchor.style.display = 'none';
-            anchor.href = url;
-            anchor.download = 'Khong_Wong_Yai_Solo_Rec.webm';
-            document.body.appendChild(anchor);
-            anchor.click();
-            setTimeout(() => {
-                document.body.removeChild(anchor);
-                window.URL.revokeObjectURL(url);
-                updateStatus("ดาวน์โหลดไฟล์เสียงเรียบร้อยแล้ว", "success");
-            }, 100);
-        }
-
-        function toggleComposerRecordMode() {
-            isComposerRecordOn = !isComposerRecordOn;
-            const btn = document.getElementById('btn-toggle-composer-rec');
-            if (isComposerRecordOn) {
-                btn.innerText = "🔴 เปิดการเขียนโน้ตลงสตูดิโอ";
-                btn.classList.remove('bg-neutral-800', 'hover:bg-neutral-700', 'text-amber-300');
-                btn.classList.add('bg-red-800', 'hover:bg-red-700', 'text-white');
-                updateStatus("เปิดโหมดเขียนโน้ต สัมผัสปุ่มฆ้องด้านบนเพื่อป้อนขั้นตอนโน้ตลงสตูดิโอ", "info");
-            } else {
-                btn.innerText = "🛑 ปิดการเขียนโน้ตลงสตูดิโอ";
-                btn.classList.remove('bg-red-800', 'hover:bg-red-700', 'text-white');
-                btn.classList.add('bg-neutral-800', 'hover:bg-neutral-700', 'text-amber-300');
-            }
-        }
-
-        function addNoteToComposer(index) {
-            composerNotesList.push(index);
-            refreshComposerStepsUI();
-        }
-
-        function removeNoteFromComposer(stepIdx) {
-            composerNotesList.splice(stepIdx, 1);
-            refreshComposerStepsUI();
+        function stopSequence() {
+            isPlayingSequence = false;
+            sequenceTimeouts.forEach(clearTimeout);
+            sequenceTimeouts = [];
+            autoVoices.forEach(v => releaseVoice(v));
+            autoVoices = [];
+            document.getElementById('demo-status').innerText = "";
+            document.querySelectorAll('.string').forEach(s => s.classList.remove('vibrating'));
         }
 
         function clearComposer() {
-            composerNotesList = [];
-            stopComposition();
-            refreshComposerStepsUI();
-            updateStatus("ล้างโน้ตสตูดิโอจัดทำเรียบร้อย", "info");
+            document.getElementById('composer-text').value = '';
         }
 
-        function refreshComposerStepsUI() {
-            const container = document.getElementById('composer-steps-container');
-            const alertMsg = document.getElementById('composer-empty-alert');
+        // --- Recording Logic ---
+        let recorder, destNode, recordingChunks = [], audioBlob = null, isRecording = false;
 
-            if (composerNotesList.length === 0) {
-                alertMsg.style.display = "block";
-                // Delete everything else
-                const steps = container.querySelectorAll('.composer-step-item');
-                steps.forEach(s => s.remove());
-                return;
+        function setupRecorder() {
+            if(!destNode && ctx) {
+                destNode = ctx.createMediaStreamDestination();
+                masterGain.connect(destNode);
             }
-
-            alertMsg.style.display = "none";
-            // Repopulate UI
-            const steps = container.querySelectorAll('.composer-step-item');
-            steps.forEach(s => s.remove());
-
-            composerNotesList.forEach((gongIndex, idx) => {
-                const row = document.createElement('div');
-                row.className = "composer-step-item flex items-center justify-between bg-yellow-950/40 border border-yellow-800/20 px-3 py-1.5 rounded-lg text-xs gap-2 transition hover:bg-yellow-950/60";
-                row.id = `composer-item-${idx}`;
-
-                const leftPart = document.createElement('div');
-                leftPart.className = "flex items-center gap-2";
-                leftPart.innerHTML = `
-                    <span class="font-mono text-[10px] text-amber-500">ขั้นที่ ${(idx+1).toString().padStart(2, '0')}:</span>
-                    <span class="w-5 h-5 rounded-full bg-amber-500 text-black font-extrabold flex items-center justify-center text-[10px]">${simpleThaiNotes[gongIndex]}</span>
-                    <span class="text-amber-200">เสียง ${thaiNotes[gongIndex].split(' ')[1]}</span>
-                `;
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = "text-red-400 hover:text-red-300 font-bold transition active:scale-90 px-1";
-                deleteBtn.innerText = "✕ ลบ";
-                deleteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    removeNoteFromComposer(idx);
-                };
-
-                row.appendChild(leftPart);
-                row.appendChild(deleteBtn);
-                container.appendChild(row);
-            });
-
-            // Scroll container to bottom
-            container.scrollTop = container.scrollHeight;
         }
 
-        function playComposition() {
-            if (composerNotesList.length === 0) {
-                updateStatus("ขออภัย! ไม่มีขั้นตอนโน้ตใดๆ เพื่อบรรเลง", "error");
-                return;
-            }
-
-            stopComposition();
-            stopDemoPlayback();
-
-            const bpm = parseInt(document.getElementById('slider-bpm').value);
-            const intervalMs = (60 / bpm) * 1000; // time per note
+        function toggleRecord() {
+            const btn = document.getElementById('rec-btn');
+            if(!ctx) initAudio();
             
-            currentComposerIndex = 0;
-            const playButton = document.getElementById('btn-play-composition');
-            const stopButton = document.getElementById('btn-stop-composition');
-            playButton.classList.add('hidden');
-            stopButton.classList.remove('hidden');
-
-            updateStatus("ระบบกำลังบรรเลงเพลงร้อยเรียงแต่งเอง...", "playing");
-
-            // Execute Sequencer Loop
-            composerPlaybackInterval = setInterval(() => {
-                if (currentComposerIndex >= composerNotesList.length) {
-                    stopComposition();
-                    updateStatus("การบรรเลงเพลงแต่งร้อยเรียงบรรลุเรียบร้อย", "success");
-                    return;
-                }
-
-                // Highlight Active composition item in UI list
-                // Clean older highlights
-                document.querySelectorAll('.composer-step-item').forEach(el => el.classList.remove('border-yellow-400', 'bg-yellow-900/60'));
-                const activeItem = document.getElementById(`composer-item-${currentComposerIndex}`);
-                if (activeItem) {
-                    activeItem.classList.add('border-yellow-400', 'bg-yellow-900/60');
-                    activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-
-                const targetGong = composerNotesList[currentComposerIndex];
-                hitGong(targetGong, 0.9);
-
-                currentComposerIndex++;
-            }, intervalMs);
-        }
-
-        function stopComposition() {
-            if (composerPlaybackInterval) {
-                clearInterval(composerPlaybackInterval);
-                composerPlaybackInterval = null;
-            }
-            
-            currentComposerIndex = -1;
-            document.getElementById('btn-play-composition').classList.remove('hidden');
-            document.getElementById('btn-stop-composition').classList.add('hidden');
-            
-            // Wipe highlights
-            document.querySelectorAll('.composer-step-item').forEach(el => el.classList.remove('border-yellow-400', 'bg-yellow-900/60'));
-            updateStatus("หยุดบรรเลงเพลงแต่งแล้ว", "info");
-        }
-
-        function playDemoSong(songIdx) {
-            stopComposition();
-            stopDemoPlayback();
-
-            isDemoPlaying = true;
-            currentDemoSongIndex = songIdx;
-            
-            const song = demoSongs[songIdx];
-            const bpm = songIdx === 2 ? 140 : songIdx === 1 ? 100 : 120; // Default tempo matching character of Thai tunes
-            const noteDurationMultiplier = (60 / bpm) * 1000;
-
-            const demoInfoDiv = document.getElementById('demo-info');
-            const noteDisplay = document.getElementById('current-demo-note');
-            const stopBtn = document.getElementById('btn-stop-demo');
-            const progressBar = document.getElementById('demo-progress-bar');
-
-            demoInfoDiv.classList.remove('hidden');
-            stopBtn.classList.remove('hidden');
-            updateStatus(`กำลังเปิดเพลงสาธิต: ${song.name}`, "playing");
-
-            // Highlight chosen song button
-            for (let i = 0; i < 3; i++) {
-                const btn = document.getElementById(`song-btn-${i}`);
-                if (i === songIdx) {
-                    btn.classList.add('border-yellow-400', 'bg-yellow-950/80');
-                } else {
-                    btn.classList.remove('border-yellow-400', 'bg-yellow-950/80');
-                }
-            }
-
-            // Timeline Scheduler for Demo Playback without breaking Web Audio
-            let accumulatedTime = 0;
-            song.notes.forEach((noteData, stepIndex) => {
-                const gongIdx = noteData[0];
-                const delayFactor = noteData[1];
-
-                const timeoutId = setTimeout(() => {
-                    if (!isDemoPlaying) return;
-
-                    // Display Current Note in Info Display
-                    noteDisplay.innerText = `${simpleThaiNotes[gongIdx]} (ลำดับเสียงที่ ${gongIdx + 1})`;
-                    
-                    // Trigger Virtual Gong Strike
-                    hitGong(gongIdx, 0.85, true);
-
-                    // Update Progress bar visually
-                    const progressPercentage = ((stepIndex + 1) / song.notes.length) * 100;
-                    progressBar.style.width = `${progressPercentage}%`;
-
-                    // Handle completion of song
-                    if (stepIndex === song.notes.length - 1) {
-                        setTimeout(() => {
-                            stopDemoPlayback();
-                            updateStatus("จบการสาธิตบทเพลงเสร็จสมบูรณ์ ปิดเครื่องเล่นอัตโนมัติเรียบร้อย", "success");
-                        }, noteDurationMultiplier * 1.5);
-                    }
-
-                }, accumulatedTime);
-
-                demoPlaybackTimeoutList.push(timeoutId);
-                accumulatedTime += (delayFactor * noteDurationMultiplier);
-            });
-        }
-
-        function stopDemoPlayback() {
-            isDemoPlaying = false;
-            currentDemoSongIndex = -1;
-
-            // Clear all registered timeouts to prevent overlapping and audio mess
-            demoPlaybackTimeoutList.forEach(timeoutId => clearTimeout(timeoutId));
-            demoPlaybackTimeoutList = [];
-
-            // UI Adjustments
-            document.getElementById('demo-info').classList.add('hidden');
-            document.getElementById('btn-stop-demo').classList.add('hidden');
-            document.getElementById('demo-progress-bar').style.width = "0%";
-
-            for (let i = 0; i < 3; i++) {
-                document.getElementById(`song-btn-${i}`).classList.remove('border-yellow-400', 'bg-yellow-950/80');
-            }
-
-            updateStatus("ระบบหยุดสวดประโคมเพลงสาธิต", "info");
-        }
-
-        function updateStatus(text, type = "info") {
-            const el = document.getElementById('status-text');
-            if (!el) return;
-            el.innerText = text;
-
-            // Adjust styles of dot on header
-            const dot = el.previousElementSibling;
-            if (!dot) return;
-
-            dot.className = "inline-block w-2.5 h-2.5 rounded-full animate-ping";
-            if (type === "success") {
-                dot.classList.add("bg-emerald-500");
-            } else if (type === "error") {
-                dot.classList.add("bg-red-500");
-                dot.classList.remove("animate-ping"); // Stop pulse on static error
-            } else if (type === "recording") {
-                dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse";
-            } else if (type === "playing") {
-                dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-yellow-400 animate-bounce";
+            if(!isRecording) {
+                recordingChunks = [];
+                try {
+                    recorder = new MediaRecorder(destNode.stream);
+                    recorder.ondataavailable = e => recordingChunks.push(e.data);
+                    recorder.onstop = () => {
+                        audioBlob = new Blob(recordingChunks, { type: 'audio/webm' });
+                        document.getElementById('play-rec-btn').disabled = false;
+                        document.getElementById('dl-rec-btn').disabled = false;
+                        showToast("บันทึกเสียงสำเร็จ");
+                    };
+                    recorder.start();
+                    isRecording = true;
+                    btn.textContent = "⏹️ หยุดอัด";
+                    btn.classList.add('btn-danger');
+                    showToast("เริ่มอัดเสียง...");
+                } catch(e) { showToast("เบราว์เซอร์ไม่รองรับการอัดเสียง"); }
             } else {
-                dot.classList.add("bg-amber-400");
+                recorder.stop();
+                isRecording = false;
+                btn.textContent = "อัดเสียง";
+                btn.classList.remove('btn-danger');
             }
         }
 
-        window.addEventListener('resize', () => {
-            renderGongs();
-        });
+        function playRecording() {
+            if(audioBlob) {
+                const url = URL.createObjectURL(audioBlob);
+                new Audio(url).play();
+                showToast("กำลังเล่นเสียงที่บันทึก...");
+            }
+        }
 
-        // Initialize elements on load
-        window.onload = () => {
-            renderGongs();
-            updateAudioParams();
-        };
+        function downloadRecording() {
+            if(audioBlob) {
+                const url = URL.createObjectURL(audioBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sawsamsai_record.webm';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // --- Utils ---
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = 1;
+            setTimeout(() => t.style.opacity = 0, 2000);
+        }
+
+        function generateFretVisuals() {
+            const lanes = document.querySelectorAll('.string-lane');
+            lanes.forEach((lane, idx) => {
+                const startIdx = stringStartNoteIndex[idx];
+                for (let i = 0; i < 7; i++) {
+                    const note = noteLabels[(startIdx + i) % 7];
+                    const marker = document.createElement('div');
+                    marker.className = 'fret-marker';
+                    marker.style.top = (10 + i * 12) + '%';
+                    marker.innerText = note;
+                    lane.appendChild(marker);
+                }
+            });
+        }
+
+        function toggleNotesUI() {
+            showNotesOnNeck = !showNotesOnNeck;
+            document.querySelectorAll('.fret-marker').forEach(m => {
+                showNotesOnNeck ? m.classList.add('show') : m.classList.remove('show');
+            });
+        }
+
+        // Init
+        generateFretVisuals();
+        
     </script>
 </body>
 </html>
