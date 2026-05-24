@@ -3,176 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic Vibraphone Simulator</title>
+    <title>Realistic Vibraphone Simulator - Pro Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: #1a1a1a;
+            background-color: #0d0d0d;
             color: #eee;
-            overflow: hidden; /* Prevent scrolling on mobile */
-            touch-action: none; /* Crucial for multitouch gaming */
+            overflow: hidden; /* Prevent body scrolling */
+            touch-action: none; /* Crucial for multi-touch */
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Metallic Bar Styling */
+        /* Customize Scrollbar for the Instrument Chassis */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+            border: 2px solid #1a1a1a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #ffd700;
+        }
+
+        /* Metallic Bar Styling with Depth and Reflection */
         .bar {
             position: relative;
             cursor: pointer;
-            border-radius: 4px;
-            box-shadow: 2px 4px 6px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.2);
-            transition: transform 0.05s, background 0.1s;
+            border-radius: 6px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255,255,255,0.25);
+            transition: transform 0.05s, filter 0.05s;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-end;
             align-items: center;
-            font-size: 0.8rem;
-            color: rgba(0,0,0,0.6);
-            font-weight: bold;
-            touch-action: none; /* Disables browser gestures on keys */
+            padding-bottom: 20px;
+            font-size: 0.85rem;
+            color: rgba(0, 0, 0, 0.7);
+            font-weight: 800;
+            touch-action: none;
         }
 
         .bar-natural {
-            background: linear-gradient(135deg, #d4d4d4 0%, #f0f0f0 50%, #a0a0a0 100%);
-            height: 100%;
+            background: linear-gradient(180deg, #f3f4f6 0%, #d1d5db 30%, #9ca3af 70%, #4b5563 100%);
+            border: 1px solid #9ca3af;
             z-index: 10;
         }
 
         .bar-accidental {
-            background: linear-gradient(135deg, #c5a005 0%, #ffd700 50%, #b8860b 100%); /* Gold color */
-            height: 60%;
+            background: linear-gradient(180deg, #ffe066 0%, #ffd700 30%, #e6b800 70%, #997a00 100%);
+            border: 1px solid #d4af37;
             z-index: 20;
             position: absolute;
             top: 0;
-            /* Width and positioning calculated in JS/Inline style */
         }
 
+        /* Visual Feedback Active State */
         .bar:active, .bar.active {
-            transform: scale(0.96) translateY(2px);
-            filter: brightness(1.2);
-        }
-        
-        /* Hit animation */
-        @keyframes hitGlow {
-            0% { box-shadow: 0 0 15px white; }
-            100% { box-shadow: 2px 4px 6px rgba(0,0,0,0.5); }
-        }
-        
-        .hit {
-            animation: hitGlow 0.3s ease-out;
+            transform: scale(0.96) translateY(4px);
+            filter: brightness(1.25) contrast(1.1);
         }
 
-        /* Felt/Damper look */
+        /* Felt/Damper Strip underneath the bars */
         .felt-strip {
-            background-color: #2a2a2a;
-            box-shadow: inset 0 0 10px #000;
-        }
-        
-        /* Controls UI */
-        .knob-container {
-            background: #333;
-            border-radius: 12px;
-            padding: 10px;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            background-color: #171717;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.9);
+            border: 4px solid #0f0f0f;
         }
 
-        /* Slider customization */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
+        /* Floating Note Particle Animations */
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-160px) scale(1.3);
+                opacity: 0;
+            }
         }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #ffd700;
-            cursor: pointer;
-            margin-top: -8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+
+        .floating-note {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp 1.4s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            font-family: monospace;
+            z-index: 50;
         }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #555;
-            border-radius: 2px;
+
+        /* Glassmorphism containers */
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* LED pulse indicators */
+        .led-active {
+            box-shadow: 0 0 8px #22c55e, 0 0 15px #22c55e;
+        }
+        .led-pulse {
+            box-shadow: 0 0 8px #ef4444, 0 0 15px #ef4444;
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-between py-2">
+<body class="h-screen w-screen flex flex-col justify-between py-2 text-gray-200">
 
-    <!-- Top Controls -->
-    <div class="w-full max-w-4xl px-4 flex justify-between items-center h-[15vh]">
-        <div class="flex items-center gap-4">
-            <h1 class="text-xl md:text-2xl font-bold text-gray-300 tracking-wider">VIBRAPHONE</h1>
+    <!-- Top Dashboard Header -->
+    <header class="w-full max-w-6xl mx-auto px-4 py-2 flex justify-between items-center shrink-0">
+        <div class="flex flex-col">
+            <h1 class="text-xl md:text-2xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-gray-200 flex items-center gap-2">
+                <span>VIBRAPHONE</span>
+                <span class="text-xs px-2 py-0.5 rounded bg-yellow-400 text-black font-extrabold uppercase tracking-normal">Pro</span>
+            </h1>
+            <span class="text-[10px] text-gray-400 hidden sm:inline">คีย์บอร์ดเหล็กแบบสั่นสะเทือนเสมือนจริง</span>
         </div>
+
+        <!-- Master Status Bar -->
+        <div class="flex items-center gap-2 text-xs">
+            <button id="showTuningBtn" class="px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 transition flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span>ปรับแต่งเสียง</span>
+            </button>
+            <div id="statusLed" class="w-2.5 h-2.5 rounded-full bg-red-500 led-pulse" title="สถานะ Audio"></div>
+            <span id="statusTxt" class="text-[10px] text-gray-400">ระบบเสียงปิด</span>
+        </div>
+    </header>
+
+    <!-- Playlists & Parameters Workspace -->
+    <main class="w-full max-w-6xl mx-auto px-4 flex-1 flex flex-col justify-center gap-2 overflow-hidden">
         
-        <div class="flex gap-4 items-center knob-container">
-            <!-- Recording Button (New) -->
-            <div class="flex flex-col items-center mr-2 border-r border-gray-600 pr-4">
-                <label class="text-xs text-gray-400 mb-1">บันทึก (Rec)</label>
-                <button id="recordBtn" class="w-12 h-6 rounded-full bg-gray-600 text-[10px] font-bold text-white transition-all flex items-center justify-center shadow-md">
-                    REC
+        <!-- Row: Controls & Demo Playback Settings -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 shrink-0">
+            
+            <!-- Left Panel: 3 Demo Songs Playlist -->
+            <div class="md:col-span-5 glass-panel p-3 rounded-xl flex flex-col gap-2">
+                <div class="flex justify-between items-center border-b border-zinc-700/50 pb-1.5">
+                    <h2 class="text-xs font-semibold text-yellow-400 uppercase tracking-wider flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                        <span>เพลงสาธิต (Demo Play)</span>
+                    </h2>
+                    <span id="playingIndicator" class="text-[9px] text-gray-400 bg-zinc-800 px-1.5 py-0.5 rounded italic hidden animate-pulse">กำลังเล่น...</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button id="song1Btn" onclick="toggleDemoSong(0)" class="text-[11px] bg-zinc-800 border border-zinc-700 hover:border-yellow-500/50 py-2 px-1 rounded-lg text-center transition font-medium truncate flex flex-col items-center justify-between gap-1">
+                        <span class="text-zinc-400 text-[9px] uppercase">Song 1</span>
+                        <span class="font-semibold text-gray-200 truncate w-full">ลาวดวงเดือน</span>
+                    </button>
+                    <button id="song2Btn" onclick="toggleDemoSong(1)" class="text-[11px] bg-zinc-800 border border-zinc-700 hover:border-yellow-500/50 py-2 px-1 rounded-lg text-center transition font-medium truncate flex flex-col items-center justify-between gap-1">
+                        <span class="text-zinc-400 text-[9px] uppercase">Song 2</span>
+                        <span class="font-semibold text-gray-200 truncate w-full">Gymnopédie</span>
+                    </button>
+                    <button id="song3Btn" onclick="toggleDemoSong(2)" class="text-[11px] bg-zinc-800 border border-zinc-700 hover:border-yellow-500/50 py-2 px-1 rounded-lg text-center transition font-medium truncate flex flex-col items-center justify-between gap-1">
+                        <span class="text-zinc-400 text-[9px] uppercase">Song 3</span>
+                        <span class="font-semibold text-gray-200 truncate w-full">Ode to Joy</span>
+                    </button>
+                </div>
+                <button id="stopSongBtn" onclick="stopCurrentSong()" class="w-full text-xs py-1 bg-red-900/40 border border-red-800/80 hover:bg-red-800/80 text-red-200 rounded-lg transition font-medium hidden">
+                    หยุดเพลงสาธิต
                 </button>
             </div>
 
-            <!-- Motor Switch -->
-            <div class="flex flex-col items-center">
-                <label class="text-xs text-gray-400 mb-1">มอเตอร์ (Motor)</label>
-                <button id="motorBtn" class="w-12 h-6 rounded-full bg-gray-600 transition-colors relative flex items-center px-1">
-                    <div id="motorKnob" class="w-4 h-4 bg-white rounded-full transition-transform transform translate-x-0"></div>
-                </button>
-            </div>
+            <!-- Middle Panel: Tremolo Motor (Classic Vibraphone Characteristic) -->
+            <div class="md:col-span-7 glass-panel p-3 rounded-xl flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex flex-col">
+                        <label class="text-xs text-zinc-300 font-bold">มอเตอร์สั่นสะเทือน</label>
+                        <span class="text-[9px] text-zinc-500">จำลองพัดลมใต้คีย์ (Tremolo)</span>
+                    </div>
+                    <button id="motorBtn" class="w-14 h-7 rounded-full bg-zinc-800 border border-zinc-700 transition-all relative flex items-center px-1 shadow-inner cursor-pointer">
+                        <div id="motorKnob" class="w-5 h-5 bg-zinc-400 rounded-full transition-transform transform translate-x-0 shadow-md"></div>
+                    </button>
+                </div>
 
-            <!-- Speed Control -->
-            <div class="flex flex-col items-center w-32">
-                <label class="text-xs text-gray-400 mb-1">ความเร็ว (Speed)</label>
-                <input type="range" id="speedSlider" min="1" max="10" step="0.1" value="3" disabled>
+                <div class="flex-1 flex flex-col gap-1 max-w-[200px]">
+                    <div class="flex justify-between text-[10px] text-zinc-400">
+                        <span>ความถี่สั่น (LFO)</span>
+                        <span id="speedVal" class="text-yellow-400 font-mono">3.0 Hz</span>
+                    </div>
+                    <input type="range" id="speedSlider" min="1" max="10" step="0.2" value="3" disabled
+                           class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+
+                <div class="flex flex-col items-center border-l border-zinc-700/50 pl-3">
+                    <span class="text-[9px] text-zinc-400 mb-1">บันทึกเสียง</span>
+                    <button id="recordBtn" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold text-red-400 border border-zinc-700 flex items-center gap-1 transition">
+                        <span class="w-2 h-2 rounded-full bg-red-500" id="recPulse"></span>
+                        <span id="recText">REC</span>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Instrument Area -->
-    <div class="relative w-full max-w-5xl h-[80vh] bg-stone-800 rounded-lg shadow-2xl overflow-hidden border-8 border-stone-900 felt-strip p-2 md:p-4 flex flex-col justify-center">
-        
-        <!-- Note: We use CSS Grid/Flex heavily here for alignment -->
-        <div id="vibraphone-container" class="relative w-full h-full flex justify-center items-end select-none">
-            <!-- Bars will be generated by JS -->
+        <!-- Advanced Synthesis Audio Controls Panel (Toggled on click) -->
+        <div id="tuningPanel" class="glass-panel p-3 rounded-xl flex-col gap-3 transition-all duration-300 hidden shrink-0">
+            <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-zinc-700/50 pb-1">
+                <span>แผงควบคุมสังเคราะห์เสียงขั้นสูง (Advanced Timbre Synthesizer)</span>
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <!-- Parameter 1: Mallet Hardness (Attack & Overtone Blend) -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[10px] text-zinc-400">
+                        <span>น้ำหนักไม้ตี (Mallet Hardness)</span>
+                        <span id="malletVal" class="text-yellow-400 font-mono">Hard</span>
+                    </div>
+                    <input type="range" id="malletSlider" min="0" max="3" step="1" value="1"
+                           class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+
+                <!-- Parameter 2: Sustain Decay Time -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[10px] text-zinc-400">
+                        <span>เวลาการกังวาน (Sustain Decay)</span>
+                        <span id="sustainVal" class="text-yellow-400 font-mono">2.5s</span>
+                    </div>
+                    <input type="range" id="sustainSlider" min="0.5" max="5.0" step="0.1" value="2.5"
+                           class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+
+                <!-- Parameter 3: Echo Delay Level -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[10px] text-zinc-400">
+                        <span>ปริมาณสะท้อน (Echo Level)</span>
+                        <span id="delayLevelVal" class="text-yellow-400 font-mono">20%</span>
+                    </div>
+                    <input type="range" id="delayLevelSlider" min="0" max="80" step="5" value="20"
+                           class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+
+                <!-- Parameter 4: Echo Delay Time -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[10px] text-zinc-400">
+                        <span>ช่วงห่างเสียงสะท้อน (Echo Time)</span>
+                        <span id="delayTimeVal" class="text-yellow-400 font-mono">0.30s</span>
+                    </div>
+                    <input type="range" id="delayTimeSlider" min="0.1" max="1.0" step="0.05" value="0.3"
+                           class="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+            </div>
         </div>
 
-    </div>
+        <!-- Instrument Main Box (Felt & Metal Base) -->
+        <div class="relative w-full h-[55vh] flex-1 rounded-2xl shadow-2xl felt-strip p-1 md:p-3 flex flex-col justify-center overflow-hidden">
+            
+            <!-- Mobile Navigation Hint (Shows up if chassis is scrolled on thin screen) -->
+            <div class="absolute top-1 left-4 right-4 flex justify-between items-center text-[10px] text-gray-500 pointer-events-none z-30 select-none">
+                <span class="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span>เลื่อนซ้าย-ขวาเพื่อเล่นส่วนอื่นได้</span>
+                </span>
+                <span class="flex items-center gap-1">
+                    <span>ลากนิ้วคีย์เหล็กเพื่อบรรเลง</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </span>
+            </div>
 
-    <!-- Audio Start Overlay (needed for browsers) -->
-    <div id="startOverlay" class="fixed inset-0 bg-black/80 z-50 flex flex-col justify-center items-center text-center cursor-pointer">
-        <div class="bg-white/10 p-8 rounded-2xl backdrop-blur-md border border-white/20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h2 class="text-2xl font-bold text-white mb-2">แตะเพื่อเริ่มใช้งาน</h2>
-            <p class="text-gray-300">Tap anywhere to start audio engine</p>
+            <!-- Scrollable Chassis holding the metallic bars (Allows horizontal scroll on narrow views) -->
+            <div class="w-full h-full overflow-x-auto custom-scrollbar pt-4 select-none" id="keyboard-scroll-parent">
+                <div id="vibraphone-container" class="relative min-w-[850px] lg:min-w-[1000px] h-full flex justify-center items-end select-none">
+                    <!-- Javascript will dynamically inject the keys here -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer Controls -->
+    <footer class="w-full py-1 text-center text-[10px] text-zinc-600 shrink-0">
+        <span>สัมผัสหน้าจอโดยตรง หรือใช้งานร่วมกับคีย์บอร์ด (ปุ่ม: A, S, D, F, G, H, J, K, L และ W, E, T, Y, U...)</span>
+    </footer>
+
+    <!-- Audio Start Overlay (Mandatory UX to bypass autoplay restrictions safely) -->
+    <div id="startOverlay" class="fixed inset-0 bg-black/90 z-50 flex flex-col justify-center items-center text-center cursor-pointer px-4">
+        <div class="bg-zinc-900/80 p-6 md:p-10 rounded-2xl backdrop-blur-md border border-zinc-700/50 max-w-sm shadow-2xl flex flex-col items-center">
+            <div class="w-16 h-16 rounded-full bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center mb-4 animate-bounce">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2">เริ่มใช้งานเครื่องไวบราโฟน</h2>
+            <p class="text-xs text-zinc-400 mb-6 leading-relaxed">คลิกเพื่อเริ่มเชื่อมต่อวงจรสร้างเสียงความเที่ยงตรงสูง และเปิดฟังก์ชันทั้งหมดของแอปพริเคชั่น</p>
+            <button class="w-full py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-extrabold rounded-lg hover:brightness-110 active:scale-95 transition-all text-xs tracking-wider">
+                เริ่มเชื่อมต่อ AUDIO ENGINE
+            </button>
         </div>
     </div>
 
 <script>
-    // --- Audio Context & Configuration ---
-    let audioCtx;
+    // --- Global Variables & Audio State ---
+    let audioCtx = null;
+    let masterGain = null;
+    let compressor = null;
+    let delayNode = null;
+    let delayFeedbackGain = null;
+
     let motorEnabled = false;
-    let motorSpeed = 3; // Hz
-    let masterGain;
-    let compressor;
-    let dest; // For recording
-    let mediaRecorder;
+    let motorSpeed = 3; // LFO oscillation speed in Hz
+    
+    // Web Recording Destination
+    let dest = null;
+    let mediaRecorder = null;
     let recordedChunks = [];
     let isRecording = false;
-    
-    // Notes Configuration (F3 to F5 range - typical mid range of vibes)
-    // We can map these to be generated dynamically
+
+    // Advanced Synthesis Timbre Controls
+    let malletSetting = 1; // 0=Soft, 1=Medium, 2=Hard, 3=Extremely Sharp
+    let sustainDecay = 2.5; // in seconds
+    let delayLevelVal = 20; // in percent (0 - 80)
+    let delayTimeVal = 0.30; // in seconds (0.1 - 1.0)
+
+    // Demo Sequence Player Variables
+    let currentDemoPlaybackId = null;
+    let demoSongTimeouts = [];
+    let isDemoPlaying = false;
+
+    // Notes Configuration - Standard vibraphone range F3 to F5
     const notes = [
         { note: 'F3', freq: 174.61, type: 'natural' },
         { note: 'F#3', freq: 185.00, type: 'accidental' },
@@ -201,308 +366,563 @@
         { note: 'F5', freq: 698.46, type: 'natural' }
     ];
 
-    // --- UI Logic ---
-    const container = document.getElementById('vibraphone-container');
-    const motorBtn = document.getElementById('motorBtn');
-    const motorKnob = document.getElementById('motorKnob');
-    const speedSlider = document.getElementById('speedSlider');
-    const overlay = document.getElementById('startOverlay');
-    const recordBtn = document.getElementById('recordBtn');
-
-    // Initialize Audio
+    // --- Audio Init & Graph Assembly ---
     function initAudio() {
         if (!audioCtx) {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
-            // latencyHint: 'interactive' tells the browser to prefer low latency over battery life
             audioCtx = new AudioContext({ latencyHint: 'interactive' });
             
-            // Compressor limits high volume peaks when multiple notes are played
+            // Create Dynamics Compressor (Limits distortion peaks)
             compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -10;
-            compressor.knee.value = 40;
-            compressor.ratio.value = 12;
-            compressor.attack.value = 0;
-            compressor.release.value = 0.25;
+            compressor.threshold.setValueAtTime(-12, audioCtx.currentTime);
+            compressor.knee.setValueAtTime(30, audioCtx.currentTime);
+            compressor.ratio.setValueAtTime(10, audioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.005, audioCtx.currentTime);
+            compressor.release.setValueAtTime(0.2, audioCtx.currentTime);
 
+            // Master Output Gain Node
             masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.7; // Slightly lower master to allow headroom
+            masterGain.gain.setValueAtTime(0.65, audioCtx.currentTime); // Standard safe gain limit
+
+            // Delay / Echo Effect Module
+            delayNode = audioCtx.createDelay(1.5);
+            delayFeedbackGain = audioCtx.createGain();
             
-            // Chain: Master -> Compressor -> Destination
+            // Set Initial values
+            delayNode.delayTime.setValueAtTime(delayTimeVal, audioCtx.currentTime);
+            delayFeedbackGain.gain.setValueAtTime(delayLevelVal / 100 * 0.7, audioCtx.currentTime); // normalized
+
+            // Connect Delay Circuit
+            masterGain.connect(delayNode);
+            delayNode.connect(delayFeedbackGain);
+            delayFeedbackGain.connect(delayNode); // Feedback loop back to delay input
+            
+            // Connect Audio Paths
+            // Direct master and delayed paths connect to compressor
             masterGain.connect(compressor);
+            delayNode.connect(compressor);
+            
+            // Compressor connects to Output Speaker Destination
             compressor.connect(audioCtx.destination);
 
-            // Connect to Recorder Destination
+            // Setup Recording media capture node
             dest = audioCtx.createMediaStreamDestination();
             compressor.connect(dest);
+
+            // UI feedback updates
+            document.getElementById('statusLed').classList.remove('bg-red-500', 'led-pulse');
+            document.getElementById('statusLed').classList.add('bg-green-500', 'led-active');
+            document.getElementById('statusTxt').innerText = 'ระบบเสียงพร้อมทำงาน';
         }
         if (audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
-        overlay.classList.add('hidden');
+        document.getElementById('startOverlay').classList.add('hidden');
     }
 
-    // Build the Instrument UI
-    function buildInstrument() {
-        // We need to arrange keys. Natural keys are a row. Accidentals overlay them.
-        // Calculate widths.
+    // --- Vibraphone Synthetic Physics Engine ---
+    function playNote(freq, fromDemo = false, visualOnlyElement = null) {
+        if (!audioCtx) return;
+        
+        const now = audioCtx.currentTime;
+
+        // 1. Fundamental Harmonic Wave
+        const oscFundamental = audioCtx.createOscillator();
+        oscFundamental.type = 'sine';
+        oscFundamental.frequency.setValueAtTime(freq, now);
+
+        // 2. Overtone Harmonics (Crucial for defining metal bar physics)
+        // Vibraphones typically highlight the 4th harmonic heavily
+        const oscOvertone1 = audioCtx.createOscillator();
+        oscOvertone1.type = 'sine';
+        oscOvertone1.frequency.setValueAtTime(freq * 3.98, now); // slightly detuned 4th harmonic
+
+        // 3. Envelope Adjustments based on Mallet Settings
+        const envFundamental = audioCtx.createGain();
+        const envOvertone1 = audioCtx.createGain();
+
+        let attackTime = 0.002;
+        let overtoneVolume = 0.25;
+
+        if (malletSetting == 0) { // Soft Mallet
+            attackTime = 0.025;
+            overtoneVolume = 0.05;
+        } else if (malletSetting == 1) { // Medium Mallet
+            attackTime = 0.005;
+            overtoneVolume = 0.25;
+        } else if (malletSetting == 2) { // Hard Mallet
+            attackTime = 0.001;
+            overtoneVolume = 0.55;
+        } else if (malletSetting == 3) { // Ultra Mallet / Steel
+            attackTime = 0.0005;
+            overtoneVolume = 0.85;
+        }
+
+        // Apply Envelope Values on Fundamental Wave
+        envFundamental.gain.setValueAtTime(0, now);
+        envFundamental.gain.linearRampToValueAtTime(0.7, now + attackTime);
+        envFundamental.gain.exponentialRampToValueAtTime(0.001, now + sustainDecay);
+
+        // Apply Envelope Values on Overtone Wave (Metal clang decays much faster than fundamental note)
+        envOvertone1.gain.setValueAtTime(0, now);
+        envOvertone1.gain.linearRampToValueAtTime(overtoneVolume, now + attackTime);
+        envOvertone1.gain.exponentialRampToValueAtTime(0.001, now + (sustainDecay * 0.25));
+
+        // 4. Tremolo Fan Modulation (The unique Vibraphone characteristic)
+        const tremoloGainNode = audioCtx.createGain();
+        tremoloGainNode.gain.setValueAtTime(1.0, now);
+
+        let lfo = null;
+        let lfoGain = null;
+
+        if (motorEnabled) {
+            lfo = audioCtx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.setValueAtTime(motorSpeed, now);
+
+            lfoGain = audioCtx.createGain();
+            lfoGain.gain.setValueAtTime(0.45, now); // Amplitude modulation depth of 45%
+
+            lfo.connect(lfoGain);
+            lfoGain.connect(tremoloGainNode.gain);
+            lfo.start(now);
+            lfo.stop(now + sustainDecay);
+        }
+
+        // Connect Nodes Chain
+        oscFundamental.connect(envFundamental);
+        envFundamental.connect(tremoloGainNode);
+
+        oscOvertone1.connect(envOvertone1);
+        envOvertone1.connect(tremoloGainNode);
+
+        tremoloGainNode.connect(masterGain);
+
+        // Fire Oscillators
+        oscFundamental.start(now);
+        oscFundamental.stop(now + sustainDecay + 0.1);
+
+        oscOvertone1.start(now);
+        oscOvertone1.stop(now + sustainDecay + 0.1);
+
+        // Safeguarded Garbage Collection to prevent audio glitches and memory leaks
+        setTimeout(() => {
+            try {
+                oscFundamental.disconnect();
+                oscOvertone1.disconnect();
+                envFundamental.disconnect();
+                envOvertone1.disconnect();
+                tremoloGainNode.disconnect();
+                if (lfo) {
+                    lfo.disconnect();
+                    lfoGain.disconnect();
+                }
+            } catch (err) {
+                // Ignore silent disconnections
+            }
+        }, (sustainDecay + 0.5) * 1000);
+    }
+
+    // --- Spawn Visual Floating Note Element ---
+    function spawnFloatingNote(noteName, indexInNotes) {
+        // Find matching key element in container to determine original spawn coordinates
+        const keyboardChassis = document.getElementById('vibraphone-container');
+        const barElements = keyboardChassis.getElementsByClassName('bar');
+        
+        let correspondingElement = barElements[indexInNotes];
+        if (!correspondingElement) return;
+
+        const containerBounds = keyboardChassis.getBoundingClientRect();
+        const elementBounds = correspondingElement.getBoundingClientRect();
+
+        const xPos = elementBounds.left - containerBounds.left + (elementBounds.width / 2);
+        const yPos = elementBounds.top - containerBounds.top;
+
+        // Create HTML visual representation
+        const particle = document.createElement('div');
+        particle.className = `floating-note text-xs px-2 py-0.5 rounded-full font-black glass-panel flex items-center justify-center pointer-events-none select-none shadow-md`;
+        
+        // Coloring matches natural/accidental theme
+        if (notes[indexInNotes].type === 'natural') {
+            particle.classList.add('text-white', 'border-gray-400');
+        } else {
+            particle.classList.add('text-yellow-400', 'border-yellow-500');
+        }
+
+        particle.innerText = noteName;
+        particle.style.left = `${xPos}px`;
+        particle.style.top = `${yPos}px`;
+
+        keyboardChassis.appendChild(particle);
+
+        // Self garbage collection for visual elements after animation plays out
+        setTimeout(() => {
+            if (particle.parentNode) {
+                particle.parentNode.removeChild(particle);
+            }
+        }, 1450);
+    }
+
+    // --- Build Dynamic Responsive Keyboard Chassis ---
+    function buildKeyboard() {
+        const container = document.getElementById('vibraphone-container');
+        container.innerHTML = ''; // clear initial skeleton
+
         const naturals = notes.filter(n => n.type === 'natural');
         const numNaturals = naturals.length;
-        const widthPercent = 100 / numNaturals; 
-        
+        const widthPercent = 100 / numNaturals;
+
         let naturalIndex = 0;
 
         notes.forEach((noteData, index) => {
             const btn = document.createElement('div');
-            
-            // Text label
-            btn.innerText = noteData.note.replace(/[0-9]/g, ''); // Show C, D, E without octave number
+            btn.dataset.index = index;
+            btn.dataset.note = noteData.note;
+
+            // Display key title removing octaves for classic instrument styling
+            btn.innerText = noteData.note.replace(/[0-9]/g, '');
 
             if (noteData.type === 'natural') {
                 btn.className = 'bar bar-natural';
-                btn.style.width = `${widthPercent - 0.5}%`; // gap
-                btn.style.left = 'auto'; // Flex handles this
-                btn.style.height = `${100 - (naturalIndex * 1.5)}%`; // Tapering height slightly for visual effect
+                btn.style.width = `calc(${widthPercent}% - 6px)`; // consistent spacing
+                btn.style.height = `${100 - (naturalIndex * 1.1)}%`; // elegant slight physical taper
                 naturalIndex++;
             } else {
                 btn.className = 'bar bar-accidental';
-                btn.style.width = `${widthPercent * 0.7}%`;
-                // Calculate position relative to the previous natural key
-                // Accidental usually sits between two naturals.
-                // We need to find how many naturals came before this accidental
-                let prevNaturals = 0;
-                for(let i=0; i<index; i++) {
-                    if(notes[i].type === 'natural') prevNaturals++;
-                }
+                btn.style.width = `calc(${widthPercent * 0.7}% - 4px)`;
                 
-                // Position: (Previous Naturals * Width) - (Half Width of accidental)
-                const leftPos = (prevNaturals * widthPercent) - (widthPercent * 0.35); 
-                btn.style.left = `${leftPos}%`;
-                btn.style.height = `${55 - (naturalIndex * 1.5)}%`; // Tapering
+                // Position Accidental Key appropriately between the Naturals
+                let prevNaturalsCount = 0;
+                for (let i = 0; i < index; i++) {
+                    if (notes[i].type === 'natural') prevNaturalsCount++;
+                }
+                const leftPos = (prevNaturalsCount * widthPercent) - (widthPercent * 0.35);
+                btn.style.left = `calc(${leftPos}%)`;
+                btn.style.height = `${62 - (naturalIndex * 1.1)}%`; // elegant shorter physical taper
             }
 
-            // Events - Improved for Stability
-            const triggerNote = (e) => {
-                // Prevent default behavior to stop scrolling, zooming, and text selection
-                if(e.cancelable) e.preventDefault();
-                
+            // High Precision Mobile Touch Triggers
+            const playThisTrigger = (e) => {
+                if (e.cancelable) e.preventDefault();
                 initAudio();
-                playNote(noteData.freq);
                 
-                // Visual feedback
+                // Play Synth
+                playNote(noteData.freq, false, btn);
+                
+                // Visual Spark
                 btn.classList.add('active');
-                btn.classList.add('hit');
+                spawnFloatingNote(noteData.note, index);
+
                 setTimeout(() => {
                     btn.classList.remove('active');
-                    btn.classList.remove('hit');
-                }, 150);
+                }, 100);
             };
 
-            // Use 'pointerdown' for better cross-device support (mouse, touch, pen)
-            // But we also keep touchstart as a fallback or for specific mobile optimizations
-            // 'touchstart' is often faster than 'pointerdown' on some Androids
-            btn.addEventListener('touchstart', triggerNote, { passive: false });
-            btn.addEventListener('mousedown', triggerNote);
+            // Double touch binding ensures no delay or lost taps across browsers
+            btn.addEventListener('touchstart', playThisTrigger, { passive: false });
+            btn.addEventListener('mousedown', playThisTrigger);
 
             container.appendChild(btn);
         });
     }
 
-    // --- Sound Synthesis Engine ---
-    function playNote(freq) {
-        if (!audioCtx) return;
+    // --- Demo Playlist Sequencer Architecture ---
+    // Note array: [Note String, length of step, time after step until next note]
+    const demoSongs = [
+        // 1. Lao Duang Deuan - Beautiful slow traditional Thai masterpiece
+        [
+            ['E4', 500], ['G4', 500], ['A4', 800], ['C5', 400], ['D5', 800], ['C5', 400], 
+            ['A4', 800], ['G4', 400], ['A4', 400], ['G4', 400], ['E4', 800], ['D4', 400],
+            ['E4', 800], ['G4', 800], ['A4', 1200], ['A4', 400], ['C5', 400], ['A4', 400],
+            ['G4', 800], ['E4', 400], ['D4', 800], ['E4', 400], ['D4', 1600]
+        ],
+        // 2. Gymnopédie No.1 (Erik Satie) - Highly atmospheric slow ringing tones
+        [
+            ['F#4', 1000], ['A4', 1000], ['B4', 1000], ['C#5', 1000], ['D5', 1200], ['A4', 800],
+            ['F#4', 1200], ['D4', 1400], ['E4', 1000], ['F#4', 1000], ['A4', 1000], ['B4', 1000],
+            ['C#5', 1000], ['D5', 1400]
+        ],
+        // 3. Ode to Joy (Beethoven) - Standard cheerful theme
+        [
+            ['E4', 450], ['E4', 450], ['F4', 450], ['G4', 450], ['G4', 450], ['F4', 450], 
+            ['E4', 450], ['D4', 450], ['C4', 450], ['C4', 450], ['D4', 450], ['E4', 450], 
+            ['E4', 600], ['D4', 250], ['D4', 900],
+            ['E4', 450], ['E4', 450], ['F4', 450], ['G4', 450], ['G4', 450], ['F4', 450], 
+            ['E4', 450], ['D4', 450], ['C4', 450], ['C4', 450], ['D4', 450], ['E4', 450], 
+            ['D4', 600], ['C4', 250], ['C4', 900]
+        ]
+    ];
 
-        const now = audioCtx.currentTime;
-
-        // 1. Main Oscillator (The Fundamental)
-        const osc = audioCtx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now);
-
-        // 2. Overtone (Harmonic for metallic timbre - usually around 4x for bars)
-        const osc2 = audioCtx.createOscillator();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(freq * 3.99, now); // Slightly detuned 4th harmonic makes it realistic
-
-        // 3. Amplitude Envelope (Attack & Decay)
-        const gainNode = audioCtx.createGain();
-        const gainNode2 = audioCtx.createGain(); // For overtone
-
-        // Hard mallet attack
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(1.0, now + 0.005); // Sharp attack
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2.5); // Long sustain/decay
-
-        // Overtone decays faster
-        gainNode2.gain.setValueAtTime(0, now);
-        gainNode2.gain.linearRampToValueAtTime(0.3, now + 0.005);
-        gainNode2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-
-        // 4. Motor / Tremolo Effect (Amplitude Modulation)
-        const tremoloGain = audioCtx.createGain();
-        tremoloGain.gain.value = 1; // Default gain passed through
-
-        if (motorEnabled) {
-            const lfo = audioCtx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.value = motorSpeed; // Speed of fans
-            
-            const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = 0.6; // Depth of tremolo (0 to 1)
-
-            lfo.connect(lfoGain);
-            lfoGain.connect(tremoloGain.gain);
-            lfo.start(now);
-            lfo.stop(now + 2.5);
-            
-            // Clean up LFO
-            setTimeout(() => {
-                lfo.disconnect();
-                lfoGain.disconnect();
-            }, 3000);
-        }
-
-        // 5. Connections
-        // Osc 1 -> Envelope -> Tremolo -> Master
-        osc.connect(gainNode);
-        gainNode.connect(tremoloGain);
+    function stopCurrentSong() {
+        // Clear all scheduled timers
+        demoSongTimeouts.forEach(t => clearTimeout(t));
+        demoSongTimeouts = [];
         
-        // Osc 2 -> Envelope -> Tremolo -> Master
-        osc2.connect(gainNode2);
-        gainNode2.connect(tremoloGain);
+        isDemoPlaying = false;
+        currentDemoPlaybackId = null;
 
-        tremoloGain.connect(masterGain);
-
-        // Start & Stop
-        osc.start(now);
-        osc.stop(now + 2.5);
-        osc2.start(now);
-        osc2.stop(now + 2.5);
-
-        // Cleanup
-        setTimeout(() => {
-            osc.disconnect();
-            osc2.disconnect();
-            gainNode.disconnect();
-            gainNode2.disconnect();
-            tremoloGain.disconnect();
-        }, 3000);
+        // Hide GUI triggers
+        document.getElementById('playingIndicator').classList.add('hidden');
+        document.getElementById('stopSongBtn').classList.add('hidden');
+        
+        // Reset song selection UI
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`song${i}Btn`).classList.remove('border-yellow-400', 'bg-yellow-500/10');
+            document.getElementById(`song${i}Btn`).classList.add('border-zinc-700', 'bg-zinc-800');
+        }
     }
 
-    // --- Control Event Listeners ---
-    overlay.addEventListener('click', initAudio);
-    overlay.addEventListener('touchstart', initAudio);
+    function toggleDemoSong(songIndex) {
+        initAudio();
 
-    // Recording Logic
-    recordBtn.addEventListener('click', () => {
-        initAudio(); // Ensure audio context is ready
-        
+        if (isDemoPlaying && currentDemoPlaybackId === songIndex) {
+            stopCurrentSong();
+            return;
+        }
+
+        // Reset if another is active
+        stopCurrentSong();
+
+        isDemoPlaying = true;
+        currentDemoPlaybackId = songIndex;
+
+        // Highlight Active Song UI Card
+        const btnId = `song${songIndex+1}Btn`;
+        document.getElementById(btnId).classList.remove('border-zinc-700', 'bg-zinc-800');
+        document.getElementById(btnId).classList.add('border-yellow-400', 'bg-yellow-500/10');
+
+        document.getElementById('playingIndicator').classList.remove('hidden');
+        document.getElementById('stopSongBtn').classList.remove('hidden');
+
+        // Play sequence notes using synchronized delays
+        let accumulatedDelay = 200; // brief offset to prepare
+        const songData = demoSongs[songIndex];
+
+        songData.forEach(([noteName, duration]) => {
+            const timeoutId = setTimeout(() => {
+                if (!isDemoPlaying || currentDemoPlaybackId !== songIndex) return;
+
+                const noteIndex = notes.findIndex(n => n.note === noteName);
+                if (noteIndex !== -1) {
+                    // Trigger sound engine
+                    playNote(notes[noteIndex].freq, true);
+
+                    // Trigger UI animation manually matching notes
+                    const container = document.getElementById('vibraphone-container');
+                    const barElements = container.getElementsByClassName('bar');
+                    const targetBar = barElements[noteIndex];
+                    if (targetBar) {
+                        targetBar.classList.add('active');
+                        setTimeout(() => targetBar.classList.remove('active'), 150);
+                    }
+
+                    // Float the notes beautifully
+                    spawnFloatingNote(noteName, noteIndex);
+                }
+            }, accumulatedDelay);
+
+            demoSongTimeouts.push(timeoutId);
+            accumulatedDelay += duration; // increase timer for next schedule step
+        });
+
+        // Setup end hook
+        const endTimeoutId = setTimeout(() => {
+            if (isDemoPlaying && currentDemoPlaybackId === songIndex) {
+                stopCurrentSong();
+            }
+        }, accumulatedDelay + 500);
+
+        demoSongTimeouts.push(endTimeoutId);
+    }
+
+    // --- Setup Interactive Input Sliders ---
+    
+    // Toggle Synthesis parameters panel visibility
+    document.getElementById('showTuningBtn').addEventListener('click', () => {
+        const panel = document.getElementById('tuningPanel');
+        panel.classList.toggle('hidden');
+        panel.classList.toggle('flex');
+    });
+
+    // Motor (Vibrato) Toggle
+    document.getElementById('motorBtn').addEventListener('click', () => {
+        motorEnabled = !motorEnabled;
+        const knob = document.getElementById('motorKnob');
+        const btn = document.getElementById('motorBtn');
+        const slider = document.getElementById('speedSlider');
+
+        if (motorEnabled) {
+            btn.classList.add('bg-yellow-500', 'border-yellow-400');
+            btn.classList.remove('bg-zinc-800', 'border-zinc-700');
+            knob.classList.add('translate-x-7');
+            slider.disabled = false;
+        } else {
+            btn.classList.remove('bg-yellow-500', 'border-yellow-400');
+            btn.classList.add('bg-zinc-800', 'border-zinc-700');
+            knob.classList.remove('translate-x-7');
+            slider.disabled = true;
+        }
+    });
+
+    // LFO frequency slider
+    document.getElementById('speedSlider').addEventListener('input', (e) => {
+        motorSpeed = parseFloat(e.target.value);
+        document.getElementById('speedVal').innerText = `${motorSpeed.toFixed(1)} Hz`;
+    });
+
+    // Advanced Synthesis: Mallet Hardness
+    document.getElementById('malletSlider').addEventListener('input', (e) => {
+        malletSetting = parseInt(e.target.value);
+        const textNames = ["Soft (นุ่มมาก)", "Medium (ปานกลาง)", "Hard (หัวไม้แข็ง)", "Ultra (หัวโลหะ)"];
+        document.getElementById('malletVal').innerText = textNames[malletSetting];
+    });
+
+    // Advanced Synthesis: Decay
+    document.getElementById('sustainSlider').addEventListener('input', (e) => {
+        sustainDecay = parseFloat(e.target.value);
+        document.getElementById('sustainVal').innerText = `${sustainDecay.toFixed(1)}s`;
+    });
+
+    // Advanced Echo: Feedback Level
+    document.getElementById('delayLevelSlider').addEventListener('input', (e) => {
+        delayLevelVal = parseInt(e.target.value);
+        document.getElementById('delayLevelVal').innerText = `${delayLevelVal}%`;
+        if (delayFeedbackGain) {
+            // map feedback level to safe linear range
+            delayFeedbackGain.gain.setValueAtTime(delayLevelVal / 100 * 0.7, audioCtx.currentTime);
+        }
+    });
+
+    // Advanced Echo: delay intervals
+    document.getElementById('delayTimeSlider').addEventListener('input', (e) => {
+        delayTimeVal = parseFloat(e.target.value);
+        document.getElementById('delayTimeVal').innerText = `${delayTimeVal.toFixed(2)}s`;
+        if (delayNode) {
+            delayNode.delayTime.setValueAtTime(delayTimeVal, audioCtx.currentTime);
+        }
+    });
+
+    // --- Output Recording Engine ---
+    document.getElementById('recordBtn').addEventListener('click', () => {
+        initAudio();
+
         if (!isRecording) {
-            // Start Recording
+            // Start recording session
             isRecording = true;
             recordedChunks = [];
-            
-            // Create recorder if not exists
-            if(!mediaRecorder) {
-                // Check for supported mime types
-                let options = { mimeType: 'audio/webm' };
-                if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                     options = { mimeType: 'audio/mp4' }; // Fallback for Safari sometimes
-                }
-                
+
+            let options = { mimeType: 'audio/webm' };
+            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                options = { mimeType: 'audio/mp4' }; // alternative iOS format
+            }
+
+            try {
+                mediaRecorder = new MediaRecorder(dest.stream, options);
+            } catch (err) {
+                // Fail-safe manual alert bypass using console and graceful button fallback
+                console.error('Media Recorder setup failed, using default constructor');
                 try {
-                    mediaRecorder = new MediaRecorder(dest.stream, options);
+                    mediaRecorder = new MediaRecorder(dest.stream);
                 } catch (e) {
-                    alert('Browser does not support recording natively.');
                     isRecording = false;
                     return;
                 }
-                
-                mediaRecorder.ondataavailable = (evt) => {
-                    if (evt.data.size > 0) recordedChunks.push(evt.data);
-                };
-                
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    // Create download link
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = `vibraphone-session-${new Date().toISOString().slice(0,19).replace(/:/g,"-")}.webm`;
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    // Cleanup
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                };
             }
 
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: options.mimeType });
+                const audioURL = URL.createObjectURL(blob);
+
+                // Create and fire invisible anchor link download trigger
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.style.display = 'none';
+                downloadAnchor.href = audioURL;
+                downloadAnchor.download = `Vibraphone-Pro-Recording-${new Date().toISOString().slice(0, 10)}.webm`;
+                document.body.appendChild(downloadAnchor);
+                
+                // Fire
+                downloadAnchor.click();
+
+                // Free up memory safely
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(audioURL);
+                    document.body.removeChild(downloadAnchor);
+                }, 100);
+            };
+
             mediaRecorder.start();
-            
-            // UI Feedback
-            recordBtn.classList.remove('bg-gray-600');
-            recordBtn.classList.add('bg-red-600', 'animate-pulse');
-            recordBtn.innerText = 'STOP';
-            
+
+            // UI adjustments
+            document.getElementById('recPulse').classList.add('animate-ping');
+            document.getElementById('recText').innerText = 'STOP';
+            document.getElementById('recordBtn').classList.add('bg-red-950/40', 'border-red-500');
+
         } else {
-            // Stop Recording
+            // Stop recording session
             isRecording = false;
             mediaRecorder.stop();
-            
-            // UI Feedback
-            recordBtn.classList.remove('bg-red-600', 'animate-pulse');
-            recordBtn.classList.add('bg-gray-600');
-            recordBtn.innerText = 'REC';
+
+            document.getElementById('recPulse').classList.remove('animate-ping');
+            document.getElementById('recText').innerText = 'REC';
+            document.getElementById('recordBtn').classList.remove('bg-red-950/40', 'border-red-500');
         }
     });
 
-    motorBtn.addEventListener('click', () => {
-        motorEnabled = !motorEnabled;
-        if (motorEnabled) {
-            motorBtn.classList.remove('bg-gray-600');
-            motorBtn.classList.add('bg-green-500');
-            motorKnob.classList.add('translate-x-6');
-            speedSlider.disabled = false;
-        } else {
-            motorBtn.classList.add('bg-gray-600');
-            motorBtn.classList.remove('bg-green-500');
-            motorKnob.classList.remove('translate-x-6');
-            speedSlider.disabled = true;
-        }
-    });
-
-    speedSlider.addEventListener('input', (e) => {
-        motorSpeed = parseFloat(e.target.value);
-    });
-
-    // Keyboard support (Optional)
+    // --- Computer QWERTY Key mappings ---
     const keyMap = {
-        'a': 'C4', 'w': 'C#4', 's': 'D4', 'e': 'D#4', 'd': 'E4', 'f': 'F4',
-        't': 'F#4', 'g': 'G4', 'y': 'G#4', 'h': 'A4', 'u': 'A#4', 'j': 'B4',
-        'k': 'C5'
+        // Natural Row keys
+        'a': 'F3', 's': 'G3', 'd': 'A3', 'f': 'B3', 'g': 'C4', 'h': 'D4', 'j': 'E4', 'k': 'F4', 'l': 'G4', ';': 'A4', "'": 'B4',
+        // Accidental Row keys
+        'w': 'F#3', 'e': 'G#3', 'r': 'A#3', 'y': 'C#4', 'u': 'D#4', 'o': 'F#4', 'p': 'G#4', '[': 'A#4'
     };
 
     window.addEventListener('keydown', (e) => {
         if (e.repeat) return;
-        const noteName = keyMap[e.key];
-        if (noteName) {
-            const targetNote = notes.find(n => n.note === noteName);
-            if (targetNote) {
-                // Find button to visualize
-                const allButtons = document.querySelectorAll('.bar');
-                // This is a naive lookup for visualization, audio works regardless
-                // In a real app we'd map DOM elements better
-                initAudio();
-                playNote(targetNote.freq);
+        const targetNoteName = keyMap[e.key.toLowerCase()];
+        if (targetNoteName) {
+            initAudio();
+            const noteIndex = notes.findIndex(n => n.note === targetNoteName);
+            if (noteIndex !== -1) {
+                playNote(notes[noteIndex].freq, false);
+
+                // UI feedback
+                const container = document.getElementById('vibraphone-container');
+                const bars = container.getElementsByClassName('bar');
+                const targetBar = bars[noteIndex];
+                if (targetBar) {
+                    targetBar.classList.add('active');
+                    setTimeout(() => targetBar.classList.remove('active'), 100);
+                }
+                spawnFloatingNote(targetNoteName, noteIndex);
             }
         }
     });
 
-    // Initialize UI
-    buildInstrument();
+    // User engagement overlay bindings to initialize Audio Context
+    document.getElementById('startOverlay').addEventListener('click', initAudio);
+    document.getElementById('startOverlay').addEventListener('touchstart', initAudio);
 
+    // Initial build calls
+    window.onload = function() {
+        buildKeyboard();
+
+        // Center the keyboard chassis layout horizontally initially on mobile layouts
+        const scrollParent = document.getElementById('keyboard-scroll-parent');
+        if (scrollParent) {
+            // Center calculation offset
+            const scrollWidth = scrollParent.scrollWidth;
+            const clientWidth = scrollParent.clientWidth;
+            if (scrollWidth > clientWidth) {
+                scrollParent.scrollLeft = (scrollWidth - clientWidth) / 2;
+            }
+        }
+    };
 </script>
 </body>
 </html>
