@@ -3,296 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>กลองคองกาจำลอง (Realistic Conga)</title>
+    <title>กลองคองกาจำลอง & ระบบร้อยเรียงโน้ตขั้นสูง</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for premium Thai & English typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for beautiful instrument icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root {
-            --wood-dark: #5d4037;
-            --wood-light: #8d6e63;
-            --skin-color: #f5deb3;
-            --skin-shadow: #d2b48c;
-            --bg-color: #263238;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden; /* Prevent scrolling */
-            touch-action: none; /* Crucial for fast touch response */
-            user-select: none;
-            -webkit-user-select: none;
+            font-family: 'Kanit', 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            -webkit-tap-highlight-color: transparent;
         }
 
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            pointer-events: none;
+        /* Custom scrollbar for premium feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
         }
 
-        .instructions {
-            font-size: 0.9rem;
-            color: #b0bec5;
-            margin-bottom: 15px;
-            text-align: center;
-            pointer-events: none;
-        }
-
-        /* Controls Area */
-        .controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            z-index: 10;
-        }
-
-        .btn {
-            padding: 8px 20px;
-            border-radius: 30px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            outline: none;
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-record {
-            background-color: #ef5350;
-            color: white;
-        }
-
-        .btn-record.recording {
-            background-color: #c62828;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .rec-dot {
-            width: 10px;
-            height: 10px;
-            background-color: #fff;
-            border-radius: 50%;
-            transition: 0.3s;
-        }
-
-        .btn-record.recording .rec-dot {
-            background-color: #ff8a80;
-            animation: blink 1s infinite;
-        }
-
-        .btn-download {
-            background-color: #29b6f6;
-            color: white;
-            display: none; /* Hidden by default */
-        }
-
-        @keyframes blink { 
-            0% { opacity: 1; } 
-            50% { opacity: 0.3; } 
-            100% { opacity: 1; } 
-        }
-
-        .drum-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 800px;
-        }
-
-        /* Drum Design */
-        .drum {
-            position: relative;
-            width: 40vw;
-            height: 40vw;
-            max-width: 250px;
-            max-height: 250px;
-            background: radial-gradient(circle, var(--skin-color) 30%, var(--skin-shadow) 90%);
-            border-radius: 50%;
-            border: 12px solid var(--wood-dark);
-            box-shadow: 
-                0 10px 20px rgba(0,0,0,0.5),
-                inset 0 0 20px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: transform 0.05s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Hardware Hardware (Rim) simulation */
-        .drum::after {
-            content: '';
-            position: absolute;
-            top: -12px;
-            left: -12px;
-            right: -12px;
-            bottom: -12px;
-            border-radius: 50%;
-            border: 4px solid #b0bec5; /* Rim color */
-            pointer-events: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        /* Visual cue for center zone */
-        .drum::before {
-            content: '';
-            position: absolute;
-            width: 40%;
-            height: 40%;
-            border-radius: 50%;
-            background: rgba(0,0,0,0.03);
-            pointer-events: none;
-        }
-
-        /* Animation when hit */
-        .drum.active {
-            transform: scale(0.96);
-            background: radial-gradient(circle, #ffeebb 30%, var(--skin-shadow) 90%);
-        }
-
-        .drum-label {
-            position: absolute;
-            bottom: -40px;
-            font-weight: bold;
-            color: #cfd8dc;
-            pointer-events: none;
-        }
-
-        #tumbadora {
-            /* Lower pitch drum */
-            width: 45vw;
-            height: 45vw;
-            max-width: 280px;
-            max-height: 280px;
-        }
-
-        /* Overlay to force audio context start */
-        #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            transition: opacity 0.3s;
-        }
-
-        .start-btn {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: #ff5722;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @media (orientation: portrait) {
-            .drum-container {
-                flex-direction: column;
-                gap: 40px;
+        /* Floating music notes keyframes animation */
+        @keyframes floatUp {
+            0% {
+                transform: translateY(10px) scale(0.6) rotate(0deg);
+                opacity: 0;
             }
+            15% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-120px) scale(1.3) rotate(25deg);
+                opacity: 0;
+            }
+        }
+
+        .floating-note {
+            position: absolute;
+            animation: floatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Active drum hit shadow ripples */
+        .drum-glow {
+            transition: all 0.05s ease-out;
+        }
+        .drum-glow:active, .drum-glow.active {
+            transform: scale(0.95);
+            box-shadow: 0 0 35px rgba(245, 158, 11, 0.45);
+        }
+
+        /* Step Sequencer Glowing active column */
+        .active-step {
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+            border-color: #10b981 !important;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden pb-12">
 
-    <!-- Start Overlay -->
-    <div id="start-overlay">
-        <button class="start-btn" id="start-btn">แตะเพื่อเริ่มตีกลอง</button>
-        <p style="margin-top:20px; color:#ccc;">(เปิดเสียงอุปกรณ์ของคุณ)</p>
+    <!-- Start Overlay to legally unlock Web Audio API on mobile devices -->
+    <div id="start-overlay" class="fixed inset-0 bg-slate-950/95 flex flex-col justify-center items-center z-50 transition-all duration-500">
+        <div class="text-center p-6 max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl mx-4">
+            <div class="w-24 h-24 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <i class="fa-solid fa-drum text-5xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-3 text-amber-400">กลองคองกา 3D PRO</h1>
+            <p class="text-slate-400 mb-6 text-sm">เครื่องดนตรีจำลองพร้อมระบบร้อยเรียงเพลงแบบอัจฉริยะ ปรับเสียงขั้นสูง แนะนำให้สวมหูฟังเพื่อมิติเสียงที่ดีที่สุด</p>
+            <button class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg rounded-2xl shadow-lg shadow-orange-500/30 hover:brightness-110 active:scale-95 transition-all" id="start-btn">
+                <i class="fa-solid fa-play mr-2"></i> เข้าสู่ระบบจำลองเสียง
+            </button>
+            <p class="mt-4 text-xs text-slate-500"><i class="fa-solid fa-volume-high mr-1"></i> กรุณาเปิดเสียงอุปกรณ์ของคุณก่อนเริ่มใช้งาน</p>
+        </div>
     </div>
 
-    <h1>กลองคองกา</h1>
-    <p class="instructions">ตีตรงกลาง = เบส | ตีขอบ = เสียงใส<br>ใช้นิ้วหลายนิ้วตีพร้อมกันได้</p>
+    <div class="w-full max-w-4xl px-4 mt-6 flex flex-col gap-6">
+        
+        <!-- Header Section -->
+        <header class="bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2 justify-center md:justify-start">
+                    <i class="fa-solid fa-drum text-amber-500"></i> กลองคองกาจำลอง & ระบบร้อยเรียงเพลง
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">ตีขอบนอก = เสียงใสสแลป | เคาะส่วนใน = เสียงเปิด | ตีกลางวงกลม = เสียงเบสทุ้ม</p>
+            </div>
+            
+            <!-- Quick Recording Controls -->
+            <div class="flex gap-2">
+                <button id="recordBtn" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-rose-600/20 active:scale-95 transition-all">
+                    <span id="recordDot" class="w-2.5 h-2.5 bg-white rounded-full"></span>
+                    <span id="recordText">อัดเสียงการเล่น</span>
+                </button>
+                <button id="downloadBtn" class="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-sky-600/20 active:scale-95 transition-all hidden">
+                    <i class="fa-solid fa-download"></i> ดาวน์โหลด (.webm)
+                </button>
+            </div>
+        </header>
 
-    <!-- Controls for Recording -->
-    <div class="controls">
-        <button id="recordBtn" class="btn btn-record">
-            <span class="rec-dot"></span>
-            <span id="recordText">อัดเสียง</span>
-        </button>
-        <button id="downloadBtn" class="btn btn-download">
-            💾 ดาวน์โหลด
-        </button>
-    </div>
+        <!-- Visual Conga Instrument Area -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900/40 p-6 rounded-3xl border border-slate-800/80 items-center justify-center relative min-h-[340px]">
+            
+            <!-- Drum 1: Quinto (Higher Pitch Drum) -->
+            <div class="flex flex-col items-center gap-3">
+                <div class="relative group">
+                    <div id="quinto" class="drum drum-glow w-[230px] h-[230px] rounded-full border-8 border-amber-950 bg-gradient-to-br from-amber-200 via-amber-100 to-orange-200 cursor-pointer shadow-2xl relative flex items-center justify-center select-none" data-pitch="high">
+                        <!-- Chrome/Hardware Rim representation -->
+                        <div class="absolute inset-[-10px] rounded-full border-[6px] border-slate-400 shadow-lg pointer-events-none opacity-90"></div>
+                        <!-- Tuning lugs representations -->
+                        <div class="absolute top-[-14px] left-[50%] -translate-x-1/2 w-4 h-2.5 bg-slate-400 rounded pointer-events-none"></div>
+                        <div class="absolute bottom-[-14px] left-[50%] -translate-x-1/2 w-4 h-2.5 bg-slate-400 rounded pointer-events-none"></div>
+                        <div class="absolute left-[-14px] top-[50%] -translate-y-1/2 w-2.5 h-4 bg-slate-400 rounded pointer-events-none"></div>
+                        <div class="absolute right-[-14px] top-[50%] -translate-y-1/2 w-2.5 h-4 bg-slate-400 rounded pointer-events-none"></div>
+                        
+                        <!-- Middle hit-zone (Open Sound zone indicator) -->
+                        <div class="absolute w-[60%] h-[60%] rounded-full border border-amber-900/10 bg-black/5 pointer-events-none flex items-center justify-center">
+                            <!-- Inner hit-zone (Bass Sound zone) -->
+                            <div class="w-[45%] h-[45%] rounded-full border-2 border-dashed border-amber-900/15 bg-black/5 pointer-events-none"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-amber-400 font-bold text-sm tracking-wide">QUINTO (เสียงสูง)</h3>
+                    <p class="text-xs text-slate-400">คีย์บอร์ดลัด: Q (เบส), W (เปิด), E (สแลป)</p>
+                </div>
+            </div>
 
-    <div class="drum-container">
-        <!-- Drum 1: Quinto (Higher Pitch) -->
-        <div class="drum" id="quinto" data-pitch="high">
-            <span class="drum-label">Quinto (เสียงสูง)</span>
+            <!-- Drum 2: Conga (Lower Pitch Drum) -->
+            <div class="flex flex-col items-center gap-3">
+                <div class="relative group">
+                    <div id="conga" class="drum drum-glow w-[260px] h-[260px] rounded-full border-8 border-amber-950 bg-gradient-to-br from-amber-300 via-amber-200 to-amber-100 cursor-pointer shadow-2xl relative flex items-center justify-center select-none" data-pitch="low">
+                        <!-- Chrome/Hardware Rim representation -->
+                        <div class="absolute inset-[-10px] rounded-full border-[6px] border-slate-400 shadow-lg pointer-events-none opacity-90"></div>
+                        <!-- Tuning lugs representations -->
+                        <div class="absolute top-[-14px] left-[50%] -translate-x-1/2 w-4 h-2.5 bg-slate-400 rounded pointer-events-none"></div>
+                        <div class="absolute bottom-[-14px] left-[50%] -translate-x-1/2 w-4 h-2.5 bg-slate-400 rounded pointer-events-none"></div>
+                        <div class="absolute left-[-14px] top-[50%] -translate-y-1/2 w-2.5 h-4 bg-slate-400 rounded pointer-events-none"></div>
+                        <div class="absolute right-[-14px] top-[50%] -translate-y-1/2 w-2.5 h-4 bg-slate-400 rounded pointer-events-none"></div>
+                        
+                        <!-- Middle hit-zone (Open Sound zone indicator) -->
+                        <div class="absolute w-[60%] h-[60%] rounded-full border border-amber-900/10 bg-black/5 pointer-events-none flex items-center justify-center">
+                            <!-- Inner hit-zone (Bass Sound zone) -->
+                            <div class="w-[45%] h-[45%] rounded-full border-2 border-dashed border-amber-900/15 bg-black/5 pointer-events-none"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-amber-500 font-bold text-sm tracking-wide">CONGA (เสียงทุ้ม)</h3>
+                    <p class="text-xs text-slate-400">คีย์บอร์ดลัด: A (เบส), S (เปิด), D (สแลป)</p>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Drum 2: Tumbadora (Lower Pitch) -->
-        <div class="drum" id="tumbadora" data-pitch="low">
-            <span class="drum-label">Conga (เสียงทุ้ม)</span>
+        <!-- Demo Playback Panel -->
+        <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-3xl">
+            <h2 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-music text-indigo-400"></i> เพลงสาธิตแสดงลวดลายจังหวะ (พร้อมจำลองโน้ตลอยแบบเรียลไทม์)
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button class="demo-btn px-4 py-3 bg-indigo-950/40 border border-indigo-800/50 hover:bg-indigo-900/40 text-slate-200 text-xs font-semibold rounded-xl flex flex-col items-center gap-1.5 transition-all text-center relative overflow-hidden" data-song="tumbao">
+                    <span class="text-slate-100 text-[13px] font-bold"><i class="fa-solid fa-play-circle mr-1"></i> 1. Classic Tumbao</span>
+                    <span class="text-[10px] text-indigo-300">จังหวะยอดฮิตพื้นฐานแอฟโฟร-คิวบัน</span>
+                </button>
+                <button class="demo-btn px-4 py-3 bg-indigo-950/40 border border-indigo-800/50 hover:bg-indigo-900/40 text-slate-200 text-xs font-semibold rounded-xl flex flex-col items-center gap-1.5 transition-all text-center relative overflow-hidden" data-song="chacha">
+                    <span class="text-slate-100 text-[13px] font-bold"><i class="fa-solid fa-play-circle mr-1"></i> 2. Cha-Cha-Cha</span>
+                    <span class="text-[10px] text-indigo-300">จังหวะสม่ำเสมอ แฝงด้วยเสียงสแลป</span>
+                </button>
+                <button class="demo-btn px-4 py-3 bg-indigo-950/40 border border-indigo-800/50 hover:bg-indigo-900/40 text-slate-200 text-xs font-semibold rounded-xl flex flex-col items-center gap-1.5 transition-all text-center relative overflow-hidden" data-song="afro">
+                    <span class="text-slate-100 text-[13px] font-bold"><i class="fa-solid fa-play-circle mr-1"></i> 3. Afro-Cuban Fiesta</span>
+                    <span class="text-[10px] text-indigo-300">จังหวะรัวกลองอย่างเร็ว ทรงพลังสูง</span>
+                </button>
+            </div>
+            
+            <!-- Song Active Play Status representation -->
+            <div id="demo-status" class="hidden mt-3 p-2 bg-indigo-950/20 border border-indigo-900/30 rounded-xl flex items-center justify-between text-xs text-indigo-300">
+                <span id="demo-status-text">กำลังเล่นเพลงสาธิต...</span>
+                <button id="stopDemoBtn" class="px-2.5 py-1 bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded hover:bg-rose-500/30 transition-all">
+                    <i class="fa-solid fa-square mr-1"></i> หยุดเพลง
+                </button>
+            </div>
         </div>
+
+        <!-- Advanced Control Panel Container -->
+        <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-3xl">
+            <button id="toggleSettingsBtn" class="w-full flex items-center justify-between text-sm font-semibold text-slate-300 focus:outline-none">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-amber-500"></i> ปุ่มปรับเสียงขั้นสูง (Advanced Equalizer)
+                </span>
+                <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300" id="settingsChevron"></i>
+            </button>
+            
+            <div id="advancedSettings" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-5 hidden">
+                <!-- Master Tuning and General Parameters -->
+                <div class="space-y-4 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/60">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-sliders mr-1"></i> ปรับระดับพิตช์ & คาแรกเตอร์เสียง</h3>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span>ความเร็วหางเสียง (Sustain / Decay)</span>
+                            <span id="decayValue" class="text-amber-500 font-bold">0.4 วินาที</span>
+                        </div>
+                        <input type="range" id="decaySlider" min="0.15" max="1.5" step="0.05" value="0.4" class="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span>ระดับเสียงทั่วไป (Quinto Master Pitch)</span>
+                            <span id="quintoPitchValue" class="text-amber-500 font-bold">240 Hz</span>
+                        </div>
+                        <input type="range" id="quintoPitchSlider" min="180" max="320" step="5" value="240" class="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span>ระดับเสียงต่ำพิเศษ (Conga Master Pitch)</span>
+                            <span id="congaPitchValue" class="text-amber-500 font-bold">180 Hz</span>
+                        </div>
+                        <input type="range" id="congaPitchSlider" min="120" max="220" step="5" value="180" class="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Reverb / Ambient & Slap filter -->
+                <div class="space-y-4 bg-slate-950/40 p-4 rounded-2xl border border-slate-800/60">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-mountain mr-1"></i> มิติเสียงสะท้อน & นอยส์ฟิลเตอร์</h3>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span>เสียงก้องและมิติห้อง (Room Reverb Space Mix)</span>
+                            <span id="reverbValue" class="text-amber-500 font-bold">25%</span>
+                        </div>
+                        <input type="range" id="reverbSlider" min="0" max="80" step="5" value="25" class="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span>ความกว้างเสียงสแลป (Slap White Noise Gain)</span>
+                            <span id="slapGainValue" class="text-amber-500 font-bold">1.2</span>
+                        </div>
+                        <input type="range" id="slapGainSlider" min="0.2" max="2.5" step="0.1" value="1.2" class="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span>ความถี่กระแทกของสแลป (Slap High-pass Filter)</span>
+                            <span id="slapFilterValue" class="text-amber-500 font-bold">1000 Hz</span>
+                        </div>
+                        <input type="range" id="slapFilterSlider" min="500" max="2500" step="100" value="1000" class="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Composer & Arranger System Section -->
+        <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-3xl flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-emerald-500"></i> ระบบร้อยเรียงแต่งเพลงกลองและกำหนดจังหวะแบบ 16 ขั้น
+                    </h2>
+                    <p class="text-[11px] text-slate-400">แต่งท่วงทำนองในแบบของคุณเอง หรือกำหนดให้ระบบคำนวณร้อยเรียงแบบสุ่มอัจฉริยะ</p>
+                </div>
+                <!-- Sequencer Action buttons -->
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <button id="autoArrangeBtn" class="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/10 active:scale-95 transition-all">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> จัดเรียงโน้ตอัตโนมัติ
+                    </button>
+                    <button id="playSeqBtn" class="flex-1 sm:flex-initial px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-lg shadow-sky-600/10 active:scale-95 transition-all">
+                        <i class="fa-solid fa-play"></i> เล่นจังหวะแต่งเอง
+                    </button>
+                    <button id="clearSeqBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 active:scale-95 transition-all">
+                        <i class="fa-solid fa-trash-can"></i> ล้างข้อมูล
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tempo Slider control -->
+            <div class="flex items-center gap-4 bg-slate-950/30 p-3 rounded-2xl border border-slate-800/50">
+                <span class="text-xs text-slate-300 flex items-center gap-1 min-w-[70px]">
+                    <i class="fa-solid fa-gauge"></i> ความเร็ว:
+                </span>
+                <input type="range" id="bpmSlider" min="60" max="200" step="5" value="110" class="flex-1 accent-emerald-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                <span id="bpmValue" class="text-xs text-emerald-400 font-bold min-w-[55px] text-right">110 BPM</span>
+            </div>
+
+            <!-- Scrollable container for Sequencer grid in small screens -->
+            <div class="overflow-x-auto w-full pb-2">
+                <div class="min-w-[540px] flex flex-col gap-2.5">
+                    
+                    <!-- Sound 1 Row: Quinto Slap -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-24 text-right text-[11px] font-bold text-amber-300 pr-2 truncate">Q-SLAP</span>
+                        <div class="flex-1 grid grid-cols-16 gap-1" id="row-q-slap">
+                            <!-- JS will inject 16 buttons -->
+                        </div>
+                    </div>
+                    <!-- Sound 2 Row: Quinto Open -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-24 text-right text-[11px] font-bold text-amber-400 pr-2 truncate">Q-OPEN</span>
+                        <div class="flex-1 grid grid-cols-16 gap-1" id="row-q-open"></div>
+                    </div>
+                    <!-- Sound 3 Row: Quinto Bass -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-24 text-right text-[11px] font-bold text-amber-500 pr-2 truncate">Q-BASS</span>
+                        <div class="flex-1 grid grid-cols-16 gap-1" id="row-q-bass"></div>
+                    </div>
+                    <hr class="border-slate-800 my-1">
+                    <!-- Sound 4 Row: Conga Slap -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-24 text-right text-[11px] font-bold text-amber-600 pr-2 truncate">C-SLAP</span>
+                        <div class="flex-1 grid grid-cols-16 gap-1" id="row-c-slap"></div>
+                    </div>
+                    <!-- Sound 5 Row: Conga Open -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-24 text-right text-[11px] font-bold text-amber-700 pr-2 truncate">C-OPEN</span>
+                        <div class="flex-1 grid grid-cols-16 gap-1" id="row-c-open"></div>
+                    </div>
+                    <!-- Sound 6 Row: Conga Bass -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-24 text-right text-[11px] font-bold text-amber-800 pr-2 truncate">C-BASS</span>
+                        <div class="flex-1 grid grid-cols-16 gap-1" id="row-c-bass"></div>
+                    </div>
+
+                    <!-- Step marker indicators index underneath -->
+                    <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold mt-1">
+                        <span class="w-24 text-right pr-2">จังหวะที่:</span>
+                        <div class="flex-1 grid grid-cols-16 gap-1 text-center" id="step-indicators">
+                            <!-- JS will inject step labels -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // --- Audio Engine (Web Audio API) ---
-        let audioCtx;
-        let mainOutputNode; // Node that connects to both speakers and recorder
-        let mediaDest;      // Stream destination for recording
-        let mediaRecorder;
+        // Let's programmatically insert grid layout classes dynamic definitions for 16 columns 
+        // to avoid dependency on customized Tailwind config in standard setups
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            .grid-cols-16 {
+                display: grid;
+                grid-template-columns: repeat(16, minmax(0, 1fr));
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+        // --- Core Web Audio API States ---
+        let audioCtx = null;
+        let mainOutputNode = null;
+        let delayFeedbackNode = null;
+        let mediaDest = null;
+        let mediaRecorder = null;
         let recordedChunks = [];
         let isRecording = false;
-        
-        // Initialize Audio Context on user gesture
+
+        // Current parameters for customization
+        let congaParams = {
+            decay: 0.4,
+            quintoPitch: 240,
+            congaPitch: 180,
+            reverbMix: 0.25,
+            slapGain: 1.2,
+            slapFilter: 1000
+        };
+
+        // Initialize Audio context cleanly
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
 
-                // Create DynamicsCompressor to prevent clipping (distortion) when volume is high
+                // 1. Dynamics Compressor to prevent mobile clipping or speaker distortion
                 const compressor = audioCtx.createDynamicsCompressor();
-                compressor.threshold.value = -10;
-                compressor.ratio.value = 12;
+                compressor.threshold.value = -8;
+                compressor.ratio.value = 10;
                 compressor.connect(audioCtx.destination);
 
-                // Create a main output node (GainNode)
-                // All sounds will connect to THIS instead of audioCtx.destination directly
+                // 2. Main Gain Output Node (All sounds feed through here)
                 mainOutputNode = audioCtx.createGain();
-                mainOutputNode.gain.value = 2.5; // Boost volume significantly (250%)
-                mainOutputNode.connect(compressor); // Connect to compressor -> speakers
+                mainOutputNode.gain.value = 2.0; // Clean boost for mobile
+                mainOutputNode.connect(compressor);
 
-                // Setup Recording Stream
+                // 3. Simple Real room reverb simulator (Stereo Delay Feedback Loop)
+                const delayNode = audioCtx.createDelay(0.5);
+                delayNode.delayTime.value = 0.12; // Standard room reflections
+                const delayFeedback = audioCtx.createGain();
+                delayFeedback.gain.value = 0.25; // Decay of echoes
+                const delayGain = audioCtx.createGain();
+                delayGain.gain.value = congaParams.reverbMix; // User setting
+
+                // Connect sound source through feedback loop
+                mainOutputNode.connect(delayNode);
+                delayNode.connect(delayFeedback);
+                delayFeedback.connect(delayNode);
+                delayNode.connect(delayGain);
+                delayGain.connect(compressor);
+
+                // Reference to modify mix cleanly later
+                delayFeedbackNode = delayGain;
+
+                // 4. Setup Recording destination
                 try {
                     mediaDest = audioCtx.createMediaStreamDestination();
-                    // Connect compressor to recording so the recorded file is also loud and clear
-                    compressor.connect(mediaDest); 
+                    // Connect compressor outputs to recording
+                    compressor.connect(mediaDest);
                 } catch (e) {
-                    console.error("MediaStreamDestination not supported", e);
+                    console.error("Recording stream is not supported in this environment", e);
                 }
             }
             if (audioCtx.state === 'suspended') {
@@ -300,262 +424,778 @@
             }
         }
 
-        // Hide overlay and start
+        // Handle Audio Unlock Overlay
         const startOverlay = document.getElementById('start-overlay');
         const startBtn = document.getElementById('start-btn');
-
         startBtn.addEventListener('click', () => {
             initAudio();
             startOverlay.style.opacity = '0';
             setTimeout(() => {
                 startOverlay.style.display = 'none';
-            }, 300);
+            }, 500);
         });
 
-        // --- Recording Logic ---
+        // --- STREAMING_CHUNK: Synthesize Authentic Conga Sound ---
+        function playCongaSound(pitchType, toneType, timeOffset = 0) {
+            if (!audioCtx) return;
+            
+            const t = audioCtx.currentTime + timeOffset;
+            
+            // Master gain structure for this individual hit
+            const hitGain = audioCtx.createGain();
+            hitGain.connect(mainOutputNode);
+            hitGain.gain.setValueAtTime(1.0, t);
+            hitGain.gain.exponentialRampToValueAtTime(0.01, t + congaParams.decay);
+
+            // Determine base frequency
+            const baseFreq = (pitchType === 'high') ? congaParams.quintoPitch : congaParams.congaPitch;
+
+            // Synthesis Options based on toneType: bass, open, slap
+            if (toneType === 'bass') {
+                // Bass Hit: Low pure sine wave with descending pitch sweep
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(baseFreq * 0.7, t);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.45, t + 0.15);
+
+                oscGain.gain.setValueAtTime(1.5, t);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, t + congaParams.decay * 1.2);
+
+                osc.connect(oscGain);
+                oscGain.connect(hitGain);
+
+                osc.start(t);
+                osc.stop(t + congaParams.decay * 1.5);
+
+            } else if (toneType === 'open') {
+                // Open Ringing Tone: Triangle with rich harmonic content & mild lowpass filter
+                const osc = audioCtx.createOscillator();
+                const filter = audioCtx.createBiquadFilter();
+                const oscGain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(baseFreq, t);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.92, t + 0.12);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(baseFreq * 3.5, t);
+
+                oscGain.gain.setValueAtTime(1.2, t);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, t + congaParams.decay);
+
+                osc.connect(filter);
+                filter.connect(oscGain);
+                oscGain.connect(hitGain);
+
+                osc.start(t);
+                osc.stop(t + congaParams.decay * 1.2);
+
+                // Harmonic ringing overtone for realism
+                const overtone = audioCtx.createOscillator();
+                const overtoneGain = audioCtx.createGain();
+
+                overtone.type = 'sine';
+                overtone.frequency.setValueAtTime(baseFreq * 2.15, t);
+                overtoneGain.gain.setValueAtTime(0.4, t);
+                overtoneGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+
+                overtone.connect(overtoneGain);
+                overtoneGain.connect(hitGain);
+
+                overtone.start(t);
+                overtone.stop(t + 0.2);
+
+            } else if (toneType === 'slap') {
+                // Slap Sharp Tone: Short high-pitched sine + highpass-filtered transient white noise
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(baseFreq * 1.7, t);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.3, t + 0.08);
+
+                oscGain.gain.setValueAtTime(0.9, t);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+
+                osc.connect(oscGain);
+                oscGain.connect(hitGain);
+
+                osc.start(t);
+                osc.stop(t + 0.1);
+
+                // Add Transient Noise (Simulating hand striking skin tightly)
+                const bufferSize = audioCtx.sampleRate * 0.08; // extremely short burst
+                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const noiseData = noiseBuffer.getChannelData(0);
+                
+                // Populate random noise
+                for (let i = 0; i < bufferSize; i++) {
+                    noiseData[i] = Math.random() * 2 - 1;
+                }
+
+                const noiseNode = audioCtx.createBufferSource();
+                noiseNode.buffer = noiseBuffer;
+
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.setValueAtTime(congaParams.slapFilter, t);
+
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(congaParams.slapGain, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+
+                noiseNode.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(hitGain);
+
+                noiseNode.start(t);
+                noiseNode.stop(t + 0.1);
+            }
+        }
+
+        // --- STREAMING_CHUNK: User Interface Input Handling & Floating Notes ---
+        function createFloatingNote(element, toneType) {
+            const rect = element.getBoundingClientRect();
+            // Choose note graphics
+            const notes = ["♫", "♬", "♩", "🥁", "♪", "✨"];
+            const selectedNote = notes[Math.floor(Math.random() * notes.length)];
+            
+            // Generate coordinates close to client hit points inside element
+            const noteEl = document.createElement('div');
+            noteEl.className = 'floating-note font-bold select-none text-2xl';
+            noteEl.innerText = selectedNote;
+
+            // Choose color based on hit type
+            if (toneType === 'bass') {
+                noteEl.classList.add('text-amber-500');
+            } else if (toneType === 'open') {
+                noteEl.classList.add('text-amber-300');
+            } else {
+                noteEl.classList.add('text-emerald-400');
+            }
+
+            // Absolute coordinate calculation
+            const randomOffsetX = (Math.random() - 0.5) * 80; // random drift
+            noteEl.style.left = `${rect.left + rect.width / 2 - 12 + randomOffsetX}px`;
+            noteEl.style.top = `${rect.top + rect.height / 3}px`;
+
+            document.body.appendChild(noteEl);
+
+            // Clean up to prevent DOM bloat and leakage on mobile devices
+            setTimeout(() => {
+                noteEl.remove();
+            }, 1200);
+        }
+
+        function triggerDrumHit(element, x, y, pitchType) {
+            if (!audioCtx) initAudio();
+
+            // Calculate zone hit based on distance from center
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Calculate distance to find zone
+            const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+            const radius = rect.width / 2;
+            const normalizedDistance = distance / radius;
+
+            let toneType = 'open'; // default
+            if (normalizedDistance < 0.35) {
+                toneType = 'bass';
+            } else if (normalizedDistance > 0.72) {
+                toneType = 'slap';
+            }
+
+            // Visual effect
+            element.classList.add('active');
+            setTimeout(() => element.classList.remove('active'), 80);
+
+            // Play Synthesized sound
+            playCongaSound(pitchType, toneType);
+
+            // Trigger visual notes
+            createFloatingNote(element, toneType);
+        }
+
+        // Attach touch and click handlers to drums
+        const drums = document.querySelectorAll('.drum');
+        drums.forEach(drum => {
+            const pitch = drum.getAttribute('data-pitch');
+            
+            // Mouse Interaction
+            drum.addEventListener('mousedown', (e) => {
+                triggerDrumHit(drum, e.clientX, e.clientY, pitch);
+            });
+
+            // Mobile Touch Interaction (Multi-touch support)
+            drum.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // crucial to prevent browser scaling, zooming and double clicks
+                if (!audioCtx) initAudio();
+                
+                // Support multiple touches concurrently
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    triggerDrumHit(drum, touch.clientX, touch.clientY, pitch);
+                }
+            }, { passive: false });
+        });
+
+        // Add keyboard support for professional players
+        window.addEventListener('keydown', (e) => {
+            if (!audioCtx) return;
+            const key = e.key.toLowerCase();
+            const quintoEl = document.getElementById('quinto');
+            const congaEl = document.getElementById('conga');
+            
+            // Quinto
+            if (key === 'q') {
+                quintoEl.classList.add('active');
+                setTimeout(() => quintoEl.classList.remove('active'), 80);
+                playCongaSound('high', 'bass');
+                createFloatingNote(quintoEl, 'bass');
+            } else if (key === 'w') {
+                quintoEl.classList.add('active');
+                setTimeout(() => quintoEl.classList.remove('active'), 80);
+                playCongaSound('high', 'open');
+                createFloatingNote(quintoEl, 'open');
+            } else if (key === 'e') {
+                quintoEl.classList.add('active');
+                setTimeout(() => quintoEl.classList.remove('active'), 80);
+                playCongaSound('high', 'slap');
+                createFloatingNote(quintoEl, 'slap');
+            }
+            // Conga
+            else if (key === 'a') {
+                congaEl.classList.add('active');
+                setTimeout(() => congaEl.classList.remove('active'), 80);
+                playCongaSound('low', 'bass');
+                createFloatingNote(congaEl, 'bass');
+            } else if (key === 's') {
+                congaEl.classList.add('active');
+                setTimeout(() => congaEl.classList.remove('active'), 80);
+                playCongaSound('low', 'open');
+                createFloatingNote(congaEl, 'open');
+            } else if (key === 'd') {
+                congaEl.classList.add('active');
+                setTimeout(() => congaEl.classList.remove('active'), 80);
+                playCongaSound('low', 'slap');
+                createFloatingNote(congaEl, 'slap');
+            }
+        });
+
+        const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+        const advancedSettings = document.getElementById('advancedSettings');
+        const settingsChevron = document.getElementById('settingsChevron');
+
+        toggleSettingsBtn.addEventListener('click', () => {
+            const isHidden = advancedSettings.classList.contains('hidden');
+            if (isHidden) {
+                advancedSettings.classList.remove('hidden');
+                settingsChevron.style.transform = 'rotate(180deg)';
+            } else {
+                advancedSettings.classList.add('hidden');
+                settingsChevron.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // Sliders events & updates
+        const decaySlider = document.getElementById('decaySlider');
+        const decayValue = document.getElementById('decayValue');
+        decaySlider.addEventListener('input', (e) => {
+            congaParams.decay = parseFloat(e.target.value);
+            decayValue.innerText = `${congaParams.decay} วินาที`;
+        });
+
+        const quintoPitchSlider = document.getElementById('quintoPitchSlider');
+        const quintoPitchValue = document.getElementById('quintoPitchValue');
+        quintoPitchSlider.addEventListener('input', (e) => {
+            congaParams.quintoPitch = parseInt(e.target.value);
+            quintoPitchValue.innerText = `${congaParams.quintoPitch} Hz`;
+        });
+
+        const congaPitchSlider = document.getElementById('congaPitchSlider');
+        const congaPitchValue = document.getElementById('congaPitchValue');
+        congaPitchSlider.addEventListener('input', (e) => {
+            congaParams.congaPitch = parseInt(e.target.value);
+            congaPitchValue.innerText = `${congaParams.congaPitch} Hz`;
+        });
+
+        const reverbSlider = document.getElementById('reverbSlider');
+        const reverbValue = document.getElementById('reverbValue');
+        reverbSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            congaParams.reverbMix = val / 100;
+            reverbValue.innerText = `${val}%`;
+            if (delayFeedbackNode) {
+                delayFeedbackNode.gain.setValueAtTime(congaParams.reverbMix, audioCtx.currentTime);
+            }
+        });
+
+        const slapGainSlider = document.getElementById('slapGainSlider');
+        const slapGainValue = document.getElementById('slapGainValue');
+        slapGainSlider.addEventListener('input', (e) => {
+            congaParams.slapGain = parseFloat(e.target.value);
+            slapGainValue.innerText = congaParams.slapGain;
+        });
+
+        const slapFilterSlider = document.getElementById('slapFilterSlider');
+        const slapFilterValue = document.getElementById('slapFilterValue');
+        slapFilterSlider.addEventListener('input', (e) => {
+            congaParams.slapFilter = parseInt(e.target.value);
+            slapFilterValue.innerText = `${congaParams.slapFilter} Hz`;
+        });
+
+        const totalSteps = 16;
+        let sequencerInterval = null;
+        let isSequencerPlaying = false;
+        let currentStep = 0;
+        let tempoBpm = 110;
+
+        const rowIds = ['q-slap', 'q-open', 'q-bass', 'c-slap', 'c-open', 'c-bass'];
+        
+        // Define clean sequencer state grid
+        const gridState = {
+            'q-slap': Array(totalSteps).fill(false),
+            'q-open': Array(totalSteps).fill(false),
+            'q-bass': Array(totalSteps).fill(false),
+            'c-slap': Array(totalSteps).fill(false),
+            'c-open': Array(totalSteps).fill(false),
+            'c-bass': Array(totalSteps).fill(false),
+        };
+
+        // Render visual buttons inside the grid elements
+        function renderSequencerGrid() {
+            rowIds.forEach(rowId => {
+                const container = document.getElementById(`row-${rowId}`);
+                container.innerHTML = '';
+                for (let step = 0; step < totalSteps; step++) {
+                    const btn = document.createElement('button');
+                    btn.className = `h-7 rounded-md border border-slate-800 transition-all focus:outline-none ${step % 4 === 0 ? 'bg-slate-900/80 border-slate-700' : 'bg-slate-950/40'}`;
+                    btn.setAttribute('data-row', rowId);
+                    btn.setAttribute('data-step', step);
+                    
+                    // Click Event
+                    btn.addEventListener('click', () => {
+                        const state = !gridState[rowId][step];
+                        gridState[rowId][step] = state;
+                        if (state) {
+                            btn.classList.add('bg-gradient-to-br', 'from-emerald-400', 'to-teal-500', 'border-emerald-400');
+                            btn.classList.remove('bg-slate-900/80', 'bg-slate-950/40');
+                            // Instantly test hit sound when programming
+                            playStepSound(rowId);
+                        } else {
+                            btn.classList.remove('bg-gradient-to-br', 'from-emerald-400', 'to-teal-500', 'border-emerald-400');
+                            btn.className = `h-7 rounded-md border border-slate-800 transition-all focus:outline-none ${step % 4 === 0 ? 'bg-slate-900/80 border-slate-700' : 'bg-slate-950/40'}`;
+                        }
+                    });
+
+                    container.appendChild(btn);
+                }
+            });
+
+            // Step numbers rendering underneath
+            const indicators = document.getElementById('step-indicators');
+            indicators.innerHTML = '';
+            for (let step = 1; step <= totalSteps; step++) {
+                const stepLabel = document.createElement('div');
+                stepLabel.className = 'py-1 text-slate-600 font-bold';
+                stepLabel.innerText = step;
+                indicators.appendChild(stepLabel);
+            }
+        }
+
+        // Play correct sample helper mapping
+        function playStepSound(rowId, timeOffset = 0) {
+            const quintoEl = document.getElementById('quinto');
+            const congaEl = document.getElementById('conga');
+
+            if (rowId === 'q-slap') {
+                playCongaSound('high', 'slap', timeOffset);
+                createFloatingNote(quintoEl, 'slap');
+            } else if (rowId === 'q-open') {
+                playCongaSound('high', 'open', timeOffset);
+                createFloatingNote(quintoEl, 'open');
+            } else if (rowId === 'q-bass') {
+                playCongaSound('high', 'bass', timeOffset);
+                createFloatingNote(quintoEl, 'bass');
+            } else if (rowId === 'c-slap') {
+                playCongaSound('low', 'slap', timeOffset);
+                createFloatingNote(congaEl, 'slap');
+            } else if (rowId === 'c-open') {
+                playCongaSound('low', 'open', timeOffset);
+                createFloatingNote(congaEl, 'open');
+            } else if (rowId === 'c-bass') {
+                playCongaSound('low', 'bass', timeOffset);
+                createFloatingNote(congaEl, 'bass');
+            }
+        }
+
+        // Auto-arrangement algorithmic generator (Latin & Afro Conga Pattern builder)
+        function triggerAutoArrange() {
+            if (!audioCtx) initAudio();
+            clearSequencerState();
+
+            // Preset Rhythmical algorithm generators
+            // Common Salsa/Tumbao conga architecture
+            const templates = [
+                // Template 1: Premium Tumbao Beat
+                {
+                    'q-slap': [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    'q-open': [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0],
+                    'q-bass': [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                    'c-slap': [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+                    'c-open': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    'c-bass': [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+                },
+                // Template 2: Synco-Samba Fusion
+                {
+                    'q-slap': [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    'q-open': [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+                    'q-bass': [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+                    'c-slap': [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    'c-open': [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0],
+                    'c-bass': [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+                }
+            ];
+
+            // Pick a template randomly
+            const pattern = templates[Math.floor(Math.random() * templates.length)];
+
+            // Fill grid state
+            rowIds.forEach(rowId => {
+                for (let step = 0; step < totalSteps; step++) {
+                    gridState[rowId][step] = pattern[rowId][step] === 1;
+                }
+            });
+
+            // Update DOM buttons classes representation
+            rowIds.forEach(rowId => {
+                for (let step = 0; step < totalSteps; step++) {
+                    const btn = document.querySelector(`[data-row="${rowId}"][data-step="${step}"]`);
+                    if (btn) {
+                        if (gridState[rowId][step]) {
+                            btn.className = `h-7 rounded-md border border-slate-800 transition-all focus:outline-none bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-400`;
+                        } else {
+                            btn.className = `h-7 rounded-md border border-slate-800 transition-all focus:outline-none ${step % 4 === 0 ? 'bg-slate-900/80 border-slate-700' : 'bg-slate-950/40'}`;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Reset grid
+        function clearSequencerState() {
+            rowIds.forEach(rowId => {
+                gridState[rowId].fill(false);
+            });
+            rowIds.forEach(rowId => {
+                for (let step = 0; step < totalSteps; step++) {
+                    const btn = document.querySelector(`[data-row="${rowId}"][data-step="${step}"]`);
+                    if (btn) {
+                        btn.className = `h-7 rounded-md border border-slate-800 transition-all focus:outline-none ${step % 4 === 0 ? 'bg-slate-900/80 border-slate-700' : 'bg-slate-950/40'}`;
+                    }
+                }
+            });
+        }
+
+        // Loop execution clock
+        function stepSequencerLoop() {
+            // Visual indicators updating
+            const labelContainers = document.getElementById('step-indicators').children;
+            
+            // Remove previous active column classes
+            for (let i = 0; i < labelContainers.length; i++) {
+                labelContainers[i].classList.remove('text-emerald-400', 'scale-125');
+                labelContainers[i].classList.add('text-slate-600');
+            }
+            rowIds.forEach(rowId => {
+                const prevBtn = document.querySelector(`[data-row="${rowId}"][data-step="${(currentStep - 1 + totalSteps) % totalSteps}"]`);
+                if (prevBtn) prevBtn.classList.remove('active-step');
+            });
+
+            // Add active step style to current column
+            if (labelContainers[currentStep]) {
+                labelContainers[currentStep].classList.remove('text-slate-600');
+                labelContainers[currentStep].classList.add('text-emerald-400', 'scale-125');
+            }
+            
+            rowIds.forEach(rowId => {
+                const activeBtn = document.querySelector(`[data-row="${rowId}"][data-step="${currentStep}"]`);
+                if (activeBtn) activeBtn.classList.add('active-step');
+
+                // If scheduled hit, play sound!
+                if (gridState[rowId][currentStep]) {
+                    playStepSound(rowId);
+                }
+            });
+
+            // Increment step
+            currentStep = (currentStep + 1) % totalSteps;
+        }
+
+        function toggleSequencer() {
+            if (!audioCtx) initAudio();
+
+            if (isSequencerPlaying) {
+                // Stop
+                clearInterval(sequencerInterval);
+                isSequencerPlaying = false;
+                document.getElementById('playSeqBtn').innerHTML = `<i class="fa-solid fa-play"></i> เล่นจังหวะแต่งเอง`;
+                // Clean up classes
+                const labelContainers = document.getElementById('step-indicators').children;
+                for (let i = 0; i < labelContainers.length; i++) {
+                    labelContainers[i].classList.remove('text-emerald-400', 'scale-125');
+                    labelContainers[i].classList.add('text-slate-600');
+                }
+                rowIds.forEach(rowId => {
+                    for (let s = 0; s < totalSteps; s++) {
+                        const btn = document.querySelector(`[data-row="${rowId}"][data-step="${s}"]`);
+                        if (btn) btn.classList.remove('active-step');
+                    }
+                });
+                currentStep = 0;
+            } else {
+                // Play
+                stopActiveDemo(); // prevent overlap
+                const stepDurationMs = (60000 / tempoBpm) / 4; // 16th notes calculation
+                sequencerInterval = setInterval(stepSequencerLoop, stepDurationMs);
+                isSequencerPlaying = true;
+                document.getElementById('playSeqBtn').innerHTML = `<i class="fa-solid fa-pause"></i> หยุดเล่น`;
+            }
+        }
+
+        // Attach buttons events
+        document.getElementById('autoArrangeBtn').addEventListener('click', triggerAutoArrange);
+        document.getElementById('playSeqBtn').addEventListener('click', toggleSequencer);
+        document.getElementById('clearSeqBtn').addEventListener('click', clearSequencerState);
+
+        const bpmSlider = document.getElementById('bpmSlider');
+        const bpmValue = document.getElementById('bpmValue');
+        bpmSlider.addEventListener('input', (e) => {
+            tempoBpm = parseInt(e.target.value);
+            bpmValue.innerText = `${tempoBpm} BPM`;
+
+            // If playing, restart loop dynamically with new speed
+            if (isSequencerPlaying) {
+                toggleSequencer();
+                toggleSequencer();
+            }
+        });
+
+
+        // --- STREAMING_CHUNK: Demo Playback & Real-time Notation Animation ---
+        let currentDemoTimer = null;
+        let demoScheduledTimeouts = [];
+        let isDemoPlaying = false;
+
+        function playDemoPattern(songName) {
+            if (!audioCtx) initAudio();
+            
+            // Clean up any other active playback immediately
+            stopActiveDemo();
+            if (isSequencerPlaying) toggleSequencer(); // Stop composer
+
+            const quintoEl = document.getElementById('quinto');
+            const congaEl = document.getElementById('conga');
+            const statusPanel = document.getElementById('demo-status');
+            const statusText = document.getElementById('demo-status-text');
+
+            statusPanel.classList.remove('hidden');
+            isDemoPlaying = true;
+
+            let pattern = [];
+            let bpm = 110;
+            let barCount = 4; // play for 4 bars before clean finishing
+
+            if (songName === 'tumbao') {
+                statusText.innerText = "กำลังเล่น: 1. Classic Tumbao (กลิ่นอายคิวบาแท้ๆ)";
+                bpm = 100;
+                // Definition: [step index (16th note), drum type, toneType]
+                // Classic Tumbao structure
+                const bar = [
+                    [0, 'low', 'bass'],
+                    [2, 'low', 'bass'],
+                    [4, 'high', 'slap'],
+                    [6, 'high', 'open'],
+                    [8, 'low', 'bass'],
+                    [10, 'low', 'open'],
+                    [12, 'high', 'open'],
+                    [14, 'high', 'open']
+                ];
+                // Concatenate 4 bars
+                for (let b = 0; b < barCount; b++) {
+                    bar.forEach(note => {
+                        pattern.push([note[0] + (b * 16), note[1], note[2]]);
+                    });
+                }
+            } else if (songName === 'chacha') {
+                statusText.innerText = "กำลังเล่น: 2. Cha-Cha-Cha Beat (สม่ำเสมอ เป็นระบบ)";
+                bpm = 115;
+                const bar = [
+                    [0, 'high', 'open'], [2, 'high', 'open'], 
+                    [4, 'low', 'slap'], 
+                    [6, 'high', 'open'], [8, 'high', 'open'],
+                    [10, 'low', 'bass'], [12, 'high', 'open'],
+                    [14, 'low', 'slap']
+                ];
+                for (let b = 0; b < barCount; b++) {
+                    bar.forEach(note => {
+                        pattern.push([note[0] + (b * 16), note[1], note[2]]);
+                    });
+                }
+            } else if (songName === 'afro') {
+                statusText.innerText = "กำลังเล่น: 3. Afro-Cuban Fiesta (รัวและเร็วเป็นจังหวะสามทึ่ม)";
+                bpm = 135;
+                const bar = [
+                    [0, 'high', 'slap'], [1, 'low', 'bass'], [2, 'high', 'open'],
+                    [4, 'low', 'slap'], [5, 'high', 'bass'], [6, 'low', 'open'],
+                    [8, 'high', 'slap'], [9, 'high', 'open'], [10, 'low', 'bass'],
+                    [12, 'low', 'open'], [13, 'high', 'open'], [14, 'low', 'slap']
+                ];
+                for (let b = 0; b < barCount; b++) {
+                    bar.forEach(note => {
+                        pattern.push([note[0] + (b * 16), note[1], note[2]]);
+                    });
+                }
+            }
+
+            // Duration calculation
+            const stepDurationMs = (60000 / bpm) / 4;
+            
+            // Schedule all hits on absolute browser time using clean JS timeout to maintain strict DOM visual mapping
+            pattern.forEach(note => {
+                const triggerTimeMs = note[0] * stepDurationMs;
+                const timerId = setTimeout(() => {
+                    const drumEl = note[1] === 'high' ? quintoEl : congaEl;
+                    
+                    // visual bounce and notation bubble
+                    drumEl.classList.add('active');
+                    setTimeout(() => drumEl.classList.remove('active'), 85);
+                    
+                    playCongaSound(note[1], note[2]);
+                    createFloatingNote(drumEl, note[2]);
+                }, triggerTimeMs);
+                
+                demoScheduledTimeouts.push(timerId);
+            });
+
+            // Setup clean finish trigger at the end of the song
+            const totalDuration = totalSteps * barCount * stepDurationMs;
+            const endSongTimer = setTimeout(() => {
+                // Final clean Ring-Out crash hit
+                playCongaSound('low', 'open');
+                createFloatingNote(congaEl, 'open');
+                stopActiveDemo();
+            }, totalDuration);
+
+            demoScheduledTimeouts.push(endSongTimer);
+        }
+
+        function stopActiveDemo() {
+            // Clear scheduled timers to prevent overlapping ghost hits
+            demoScheduledTimeouts.forEach(timerId => clearTimeout(timerId));
+            demoScheduledTimeouts = [];
+            isDemoPlaying = false;
+            
+            // Hide indicator panel
+            document.getElementById('demo-status').classList.add('hidden');
+        }
+
+        // Event binding for demo elements
+        document.querySelectorAll('.demo-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const songName = btn.getAttribute('data-song');
+                playDemoPattern(songName);
+            });
+        });
+
+        document.getElementById('stopDemoBtn').addEventListener('click', stopActiveDemo);
+
+
+        // --- STREAMING_CHUNK: High-Quality Web Recording Engine ---
         const recordBtn = document.getElementById('recordBtn');
+        const recordDot = document.getElementById('recordDot');
         const recordText = document.getElementById('recordText');
         const downloadBtn = document.getElementById('downloadBtn');
 
         recordBtn.addEventListener('click', () => {
             if (!audioCtx) initAudio();
-
+            
             if (!isRecording) {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        });
-
-        function startRecording() {
-            if (!mediaDest) return;
-            
-            recordedChunks = [];
-            // Choose mimeType based on support
-            const options = { mimeType: 'audio/webm' };
-            if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                // Fallback for Safari/others if needed (Web Audio usually outputs standard stream)
-                 console.log("webm not supported, trying default");
-                 delete options.mimeType;
-            }
-
-            try {
-                mediaRecorder = new MediaRecorder(mediaDest.stream, options);
-            } catch(e) {
-                alert("อุปกรณ์นี้ไม่รองรับการอัดเสียงผ่านเว็บ");
-                return;
-            }
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    recordedChunks.push(e.data);
+                // Start
+                recordedChunks = [];
+                const options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                    delete options.mimeType; // fallback
                 }
-            };
 
-            mediaRecorder.onstop = () => {
-                // Prepare download
-                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-                const url = URL.createObjectURL(blob);
-                
-                downloadBtn.style.display = 'flex';
-                downloadBtn.onclick = () => {
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = 'my_conga_recording.webm';
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    // Cleanup
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-                        downloadBtn.style.display = 'none';
-                    }, 100);
+                try {
+                    mediaRecorder = new MediaRecorder(mediaDest.stream, options);
+                } catch(e) {
+                    alert("เบราว์เซอร์นี้ไม่สนับสนุนการอัดเสียงแบบไลฟ์สตรีม โปรดเปลี่ยนเบราว์เซอร์");
+                    return;
+                }
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                    }
                 };
-            };
 
-            mediaRecorder.start();
-            isRecording = true;
-            
-            // UI Updates
-            recordBtn.classList.add('recording');
-            recordText.innerText = "หยุดบันทึก";
-            downloadBtn.style.display = 'none';
-        }
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    downloadBtn.classList.remove('hidden');
+                    downloadBtn.onclick = () => {
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = 'conga_studio_performance.webm';
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        // memory flush
+                        setTimeout(() => {
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                            downloadBtn.classList.add('hidden');
+                        }, 150);
+                    };
+                };
 
-        function stopRecording() {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-                
-                // UI Updates
-                recordBtn.classList.remove('recording');
-                recordText.innerText = "อัดเสียงใหม่";
-            }
-        }
+                mediaRecorder.start();
+                isRecording = true;
 
-
-        // Function to create realistic drum sounds synthesis
-        function playSound(pitchType, toneType) {
-            if (!audioCtx) return;
-
-            const t = audioCtx.currentTime;
-            
-            // Master Gain for this hit
-            const hitMasterGain = audioCtx.createGain();
-            
-            // CRITICAL CHANGE: Connect to mainOutputNode (for recording) instead of destination directly
-            hitMasterGain.connect(mainOutputNode);
-
-            hitMasterGain.gain.setValueAtTime(1.2, t); // Boost individual hit gain
-            hitMasterGain.gain.exponentialRampToValueAtTime(0.01, t + 0.5); // Decay
-
-            // --- Oscillators (The Skin Sound) ---
-            const osc = audioCtx.createOscillator();
-            const oscGain = audioCtx.createGain();
-            
-            osc.connect(oscGain);
-            oscGain.connect(hitMasterGain);
-
-            // Pitch Settings
-            let baseFreq = (pitchType === 'high') ? 240 : 180; // Hz
-            
-            if (toneType === 'bass') {
-                // Bass Tone: Lower frequency, pure sine, longer resonance
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(baseFreq * 0.6, t);
-                osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.4, t + 0.1);
-                
-                oscGain.gain.setValueAtTime(1.5, t); // Louder Bass
-                oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-
-            } else if (toneType === 'open') {
-                // Open Tone: Base frequency, ringing sound
-                osc.type = 'triangle'; // Gives a bit more harmonics than sine
-                // Filter to smooth the triangle
-                const filter = audioCtx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 800;
-                
-                osc.disconnect();
-                osc.connect(filter);
-                filter.connect(oscGain);
-
-                osc.frequency.setValueAtTime(baseFreq, t);
-                osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.9, t + 0.15);
-
-                oscGain.gain.setValueAtTime(1.2, t); // Louder Open Tone
-                oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-                
-                // Add a "Slap" overtone for open hit
-                const slapOsc = audioCtx.createOscillator();
-                const slapGain = audioCtx.createGain();
-                slapOsc.frequency.value = baseFreq * 2.5;
-                slapGain.gain.setValueAtTime(0.4, t); // Louder overtone
-                slapGain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
-                slapOsc.connect(slapGain);
-                slapGain.connect(hitMasterGain);
-                slapOsc.start(t);
-                slapOsc.stop(t + 0.1);
-
-            } else if (toneType === 'slap') {
-                 // Slap Tone: High pitch, noise, short decay
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(baseFreq * 1.8, t);
-                
-                oscGain.gain.setValueAtTime(1.0, t); // Louder Slap
-                oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-
-                // Add Noise for the "Crack" sound
-                const bufferSize = audioCtx.sampleRate * 0.1; // 0.1 seconds
-                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = Math.random() * 2 - 1;
-                }
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = buffer;
-                const noiseGain = audioCtx.createGain();
-                
-                // Filter noise to remove too much low end
-                const noiseFilter = audioCtx.createBiquadFilter();
-                noiseFilter.type = 'highpass';
-                noiseFilter.frequency.value = 1000;
-
-                noise.connect(noiseFilter);
-                noiseFilter.connect(noiseGain);
-                noiseGain.connect(hitMasterGain);
-
-                noiseGain.gain.setValueAtTime(1.2, t); // Louder Noise Crack
-                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
-                noise.start(t);
-            }
-
-            osc.start(t);
-            osc.stop(t + 0.6); // Stop slightly after decay ends
-        }
-
-        // --- Input Handling ---
-
-        function handleHit(element, x, y) {
-            // Visual Feedback
-            element.classList.add('active');
-            setTimeout(() => element.classList.remove('active'), 80);
-
-            // Calculate Zone (Center vs Edge)
-            const rect = element.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            // Calculate distance from center (0 to 1 relative to radius)
-            const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-            const radius = rect.width / 2;
-            const normalizedDist = distance / radius;
-
-            const pitch = element.getAttribute('data-pitch');
-            
-            // Logic: 
-            // 0 - 0.4 = Bass (Center)
-            // 0.4 - 1.0 = Open/Slap (Edge)
-            
-            if (normalizedDist < 0.4) {
-                playSound(pitch, 'bass');
+                // UI updates
+                recordBtn.classList.add('bg-rose-800');
+                recordBtn.classList.remove('bg-rose-600');
+                recordDot.classList.add('animate-ping');
+                recordText.innerText = "กำลังหยุดเพื่อบันทึก...";
+                downloadBtn.classList.add('hidden');
             } else {
-                // Randomize slightly between Open and Slap for variety on edge
-                // Or make outer edge Slap and inner ring Open.
-                if (normalizedDist > 0.75) {
-                    playSound(pitch, 'slap');
-                } else {
-                    playSound(pitch, 'open');
+                // Stop
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+
+                    // UI reset
+                    recordBtn.classList.remove('bg-rose-800');
+                    recordBtn.classList.add('bg-rose-600');
+                    recordDot.classList.remove('animate-ping');
+                    recordText.innerText = "อัดเสียงการเล่นใหม่";
                 }
             }
-        }
-
-        // Add event listeners to drums
-        const drums = document.querySelectorAll('.drum');
-
-        drums.forEach(drum => {
-            // Mouse Interaction
-            drum.addEventListener('mousedown', (e) => {
-                handleHit(drum, e.clientX, e.clientY);
-            });
-
-            // Touch Interaction (Multi-touch support)
-            drum.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Prevent scrolling/zooming
-                
-                // Iterate through all changed touches (new fingers touching down)
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    handleHit(drum, touch.clientX, touch.clientY);
-                }
-            }, { passive: false });
         });
 
-        // Prevent context menu on right click
-        window.addEventListener('contextmenu', e => e.preventDefault());
+        // Initialize Sequencer Visual State on screen ready
+        renderSequencerGrid();
 
+        // Prevent context menu on long touch on mobile devices
+        window.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
