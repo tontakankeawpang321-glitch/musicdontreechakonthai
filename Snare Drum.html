@@ -6,14 +6,31 @@
     <title>Dry & Tight Snare Drum Master Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         body {
-            touch-action: none;
+            /* ปรับแต่งให้รองรับการ Scroll แถวปรับเสียงบนมือถือแนวตั้งได้สมบูรณ์ */
+            touch-action: pan-y;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden;
+            overflow-y: auto;
             background-color: #0b0f19;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* ปรับแต่ง Scrollbar ซ่อน/โชว์ให้สวยงามสไตล์ Modern */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
         }
 
         /* กลองสแนร์และขอบ */
@@ -23,16 +40,17 @@
             transition: transform 0.05s ease;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            /* ล็อกการเลื่อนหน้าจอเฉพาะตอนเล่นกลองเพื่อรองรับการรัวนิ้ว */
             touch-action: none;
             flex-shrink: 0;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
         }
 
         .snare-size {
-            width: 70vw;
-            height: 70vw;
-            max-width: 330px;
-            max-height: 330px;
+            width: 68vw;
+            height: 68vw;
+            max-width: 300px;
+            max-height: 300px;
         }
         
         /* ขอบกลองโลหะหรูหรา Chrome Rim */
@@ -189,18 +207,9 @@
                 opacity: 0;
             }
         }
-
-        /* ปรับระดับความคมของลูกคลื่นเสียงเพลงวิ่ง */
-        .wave-bar {
-            animation: soundWave 0.8s ease-in-out infinite alternate;
-        }
-        @keyframes soundWave {
-            0% { height: 4px; }
-            100% { height: 24px; }
-        }
     </style>
 </head>
-<body class="flex flex-col h-screen text-slate-100 overflow-hidden select-none">
+<body class="flex flex-col min-h-screen text-slate-100 select-none pb-8">
 
     <!-- หน้าจอแรกเข้าเพื่อเปิดใช้งาน Web Audio Context -->
     <div id="start-overlay" class="transition-opacity duration-500">
@@ -212,9 +221,9 @@
             <h1 class="text-4xl font-black tracking-tight mb-2 bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">
                 SNARE PRO XT
             </h1>
-            <p class="text-amber-400 font-bold mb-4 text-sm uppercase tracking-widest">Dry, Tight & Rapid Roll</p>
+            <p class="text-amber-400 font-bold mb-4 text-sm uppercase tracking-widest">Dry, Tight & Scrollview Support</p>
             <p class="mb-8 text-slate-300 text-sm leading-relaxed">
-                กลองสแนร์จำลองเสียงสังเคราะห์ขั้นสูง ตอบสนองไว ตีรัวสุดสมจริง พร้อมเพลงสาธิต โน้ตลอยระยิบระยับ และการควบคุมมิติเสียงขั้นลึก
+                กลองสแนร์จำลองเสียงสังเคราะห์ ตอบสนองรวดเร็ว พร้อมรองรับการเลื่อนถลันหน้าจอ (Scrollview) บนสมาร์ทโฟนเพื่อความสะดวกสบายในการปรับแต่ง
             </p>
             <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-sky-500 to-indigo-600 rounded-2xl font-black text-xl hover:from-sky-400 hover:to-indigo-500 transition-all transform active:scale-95 shadow-[0_0_25px_rgba(56,189,248,0.4)]">
                 เริ่มหวดเลย!
@@ -223,12 +232,12 @@
     </div>
 
     <!-- ส่วนหัวหน้าจอ (Header & Recorder Controls) -->
-    <header class="p-4 flex justify-between items-center z-20 bg-slate-900/60 backdrop-blur-md border-b border-slate-800">
+    <header class="p-4 flex justify-between items-center sticky top-0 z-20 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
         <div>
             <h2 class="text-lg font-black tracking-wider bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">SNARE PRO XT</h2>
             <div class="flex items-center gap-2 mt-0.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">TIGHT CORE SYNTH v2.4</span>
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">TIGHT SCROLL SYNTH v2.5</span>
             </div>
         </div>
         
@@ -249,8 +258,8 @@
         </div>
     </header>
 
-    <!-- พื้นที่ทำงานหลัก (จัด Layout แนวตั้งสำหรับมือถือพอดีเป๊ะ) -->
-    <main class="flex-1 flex flex-col justify-between p-4 max-w-lg mx-auto w-full relative">
+    <!-- พื้นที่ทำงานหลัก (เลื่อน Scrollview ได้อย่างเป็นอิสระ ปลอดภัยจากอาการจอแข็ง) -->
+    <main class="flex-1 flex flex-col justify-start p-4 max-w-lg mx-auto w-full relative gap-6">
         
         <!-- ตัวโน้ตลอยแบบไดนามิก Container -->
         <div id="notes-container" class="absolute inset-0 pointer-events-none z-30"></div>
@@ -286,8 +295,8 @@
             </div>
         </section>
 
-        <!-- พื้นที่กลองสแนร์ตรงกลางจอมือถือพอดี -->
-        <section class="flex-1 flex items-center justify-center py-4">
+        <!-- พื้นที่กลองสแนร์ใบงาม (ล็อกห้ามเคลื่อนที่หน้าจอเฉพาะเวลาแตะตัวนี้) -->
+        <section class="flex items-center justify-center py-2">
             <div id="snare-drum" class="drum-wrapper snare-size" data-type="snare">
                 <div class="rim">
                     <!-- น็อตกลอง 8 ทิศทางหรูหราสมจริง -->
@@ -308,61 +317,70 @@
             </div>
         </section>
 
-        <!-- ส่วนควบคุมเสียงและปุ่มพรีเซ็ตด่วน -->
-        <section class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-md">
+        <!-- ส่วนควบคุมเสียงและปุ่มพรีเซ็ตด่วน (รองรับ Scrollview ภายในอย่างนุ่มนวลแบบ iOS/Android) -->
+        <section class="w-full bg-slate-900/95 border border-slate-800 rounded-2xl p-4 shadow-2xl backdrop-blur-lg">
             
-            <!-- ทางเลือกด่วน: ปุ่มพรีเซ็ตเสียง -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-2.5 border-b border-slate-800 scrollbar-none" style="scrollbar-width: none;">
+            <!-- ทางเลือกด่วน: ปุ่มพรีเซ็ตเสียง (สไลด์เลื่อนแนวนอนอิสระ) -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-3 border-b border-slate-800/80" style="-webkit-overflow-scrolling: touch;">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pr-1 flex-shrink-0">เสียงสำเร็จรูป:</span>
-                <button onclick="applyPreset('classicDry')" class="preset-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex-shrink-0">Classic Dry</button>
+                <button onclick="applyPreset('classicDry')" class="preset-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-sky-500/20 text-sky-300 border-2 border-sky-400/50 hover:bg-sky-500/30 transition flex-shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.3)]">Classic Dry</button>
                 <button onclick="applyPreset('modernTight')" class="preset-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex-shrink-0">Modern Tight</button>
                 <button onclick="applyPreset('deepBody')" class="preset-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex-shrink-0">Deep Body</button>
                 <button onclick="applyPreset('marching')" class="preset-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex-shrink-0">Marching</button>
                 <button onclick="applyPreset('lofi')" class="preset-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex-shrink-0">Retro Lo-Fi</button>
             </div>
 
-            <!-- แถบขยายสำหรับการปรับแต่งชั้นสูง -->
-            <div>
-                <button id="toggle-advanced-btn" class="w-full flex items-center justify-between text-xs font-black tracking-widest text-slate-300 bg-slate-800/50 hover:bg-slate-800 p-2.5 rounded-xl transition duration-150">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-sky-400"></i> แผงปรับแต่งเสียงขั้นสูง (SYNTH ENVELOPE)</span>
-                    <i class="fa-solid fa-chevron-up transition-transform duration-300" id="chevron-icon"></i>
-                </button>
+            <!-- กล่อง Scrollview สำหรับตั้งค่าเสียงขั้นสูงบนจอมือถือโดยเฉพาะ -->
+            <div class="max-h-[260px] overflow-y-auto pr-1 space-y-3" style="touch-action: pan-y; -webkit-overflow-scrolling: touch;">
+                <div class="flex items-center justify-between text-xs font-black tracking-widest text-slate-300 bg-slate-800/50 p-2 rounded-lg">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-sky-400"></i> ปรับแต่งเสียง (SCROLLVIEW ENVELOPE)</span>
+                </div>
                 
-                <!-- ตัวสไลเดอร์เสียง (พับเปิด/ปิดได้) -->
-                <div id="advanced-sliders" class="mt-3 space-y-2.5 transition-all duration-300">
+                <!-- ตัวสไลเดอร์เสียงต่างๆ ปรับแต่งง่าย ไม่หน่วงหัวแม่มือ -->
+                <div class="space-y-3 mt-2">
                     <!-- จูนหนังกอง (Tuning Pitch) -->
-                    <div class="flex items-center justify-between gap-3 text-xs">
-                        <span class="text-slate-400 w-24">ความตึงหนังกอง (Pitch)</span>
-                        <input type="range" id="param-tuning" min="120" max="360" value="180" class="flex-1 accent-sky-400 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
-                        <span id="val-tuning" class="text-sky-400 font-mono w-10 text-right font-bold">180Hz</span>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-bold">ความตึงหนังกอง (Pitch)</span>
+                            <span id="val-tuning" class="text-sky-400 font-mono font-bold bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800">180Hz</span>
+                        </div>
+                        <input type="range" id="param-tuning" min="120" max="360" value="180" class="w-full accent-sky-400 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer">
                     </div>
 
                     <!-- หางเสียงแห้ง/ยาว (Decay) -->
-                    <div class="flex items-center justify-between gap-3 text-xs">
-                        <span class="text-slate-400 w-24">หางเสียงตัวกลอง (Decay)</span>
-                        <input type="range" id="param-decay" min="0.03" max="0.35" step="0.01" value="0.08" class="flex-1 accent-sky-400 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
-                        <span id="val-decay" class="text-sky-400 font-mono w-10 text-right font-bold">0.08s</span>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-bold">หางเสียงตัวกลอง (Decay)</span>
+                            <span id="val-decay" class="text-sky-400 font-mono font-bold bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800">0.08s</span>
+                        </div>
+                        <input type="range" id="param-decay" min="0.03" max="0.35" step="0.01" value="0.08" class="w-full accent-sky-400 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer">
                     </div>
 
                     <!-- ปรับปริมาณแส้กลอง (Snare Wire Volume Mix) -->
-                    <div class="flex items-center justify-between gap-3 text-xs">
-                        <span class="text-slate-400 w-24">ความดังแส้ (Snare Mix)</span>
-                        <input type="range" id="param-wires" min="0" max="1.5" step="0.05" value="0.95" class="flex-1 accent-sky-400 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
-                        <span id="val-wires" class="text-sky-400 font-mono w-10 text-right font-bold">0.95</span>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-bold">ความดังแส้ (Snare Mix)</span>
+                            <span id="val-wires" class="text-sky-400 font-mono font-bold bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800">0.95</span>
+                        </div>
+                        <input type="range" id="param-wires" min="0" max="1.5" step="0.05" value="0.95" class="w-full accent-sky-400 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer">
                     </div>
 
                     <!-- มิติความสว่างและโทนเสียง (Tone Cutoff Filter) -->
-                    <div class="flex items-center justify-between gap-3 text-xs">
-                        <span class="text-slate-400 w-24">โทนสว่าง/มืด (Tone HP)</span>
-                        <input type="range" id="param-cutoff" min="1000" max="8000" step="100" value="3200" class="flex-1 accent-sky-400 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
-                        <span id="val-cutoff" class="text-sky-400 font-mono w-10 text-right font-bold">3.2k</span>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-bold">โทนสว่าง/มืด (Tone HP)</span>
+                            <span id="val-cutoff" class="text-sky-400 font-mono font-bold bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800">3.2k</span>
+                        </div>
+                        <input type="range" id="param-cutoff" min="1000" max="8000" step="100" value="3200" class="w-full accent-sky-400 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer">
                     </div>
 
                     <!-- ปรับระบบ Space Reverb จำลองพื้นที่ห้องสะท้อน -->
-                    <div class="flex items-center justify-between gap-3 text-xs">
-                        <span class="text-slate-400 w-24">เสียงสะท้อน (Reverb Wet)</span>
-                        <input type="range" id="param-reverb" min="0" max="0.7" step="0.05" value="0.1" class="flex-1 accent-sky-400 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer">
-                        <span id="val-reverb" class="text-sky-400 font-mono w-10 text-right font-bold">10%</span>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-bold">เสียงสะท้อน (Reverb Wet)</span>
+                            <span id="val-reverb" class="text-sky-400 font-mono font-bold bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800">10%</span>
+                        </div>
+                        <input type="range" id="param-reverb" min="0" max="0.7" step="0.05" value="0.1" class="w-full accent-sky-400 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer">
                     </div>
                 </div>
             </div>
@@ -370,7 +388,7 @@
 
         <!-- แนะนำวิธีการตี -->
         <footer class="text-center text-[10px] text-slate-500 font-semibold tracking-wider py-1 select-none">
-            ตีบนจอ, กดแป้นพิมพ์ <span class="text-slate-400">J, K, F, Space</span> | รองรับสัมผัสพร้อมกันรัวๆ ได้รวดเร็วสุดพริ้วไหว
+            ตีบนตัวกลองสแนร์, เคาะแป้นพิมพ์ <span class="text-slate-400">J, K, F, Space</span> | รูดเลื่อนปรับเสียงเพื่อตั้งค่าบนมือถือได้ลื่นไหล
         </footer>
     </main>
 
@@ -436,7 +454,6 @@
             const right = impulse.getChannelData(1);
 
             for (let i = 0; i < length; i++) {
-                // อัตราการสลายตัวแบบ Exponential Decay ของเสียงสะท้อนห้อง
                 const decay = Math.exp(-i / (rate * (config.reverbTime / 2.5)));
                 left[i] = (Math.random() * 2 - 1) * decay;
                 right[i] = (Math.random() * 2 - 1) * decay;
@@ -465,7 +482,7 @@
 
             if (type === 'snare') {
                 // ============================================
-                // Layer 1: Stick Strike (เสียงหัวไม้สัมผัสตัวหนังกอง - คม ชัด แน่น)
+                // Layer 1: Stick Strike (เสียงหัวไม้สัมผัสตัวหนังกอง)
                 // ============================================
                 const stickOsc = audioCtx.createOscillator();
                 const stickGain = audioCtx.createGain();
@@ -495,14 +512,12 @@
                 const oscGain = audioCtx.createGain();
                 osc.type = 'sine';
                 
-                // ใช้ค่าความถี่เสียงตามสไลเดอร์ Tuning
                 const targetFreq = config.tuning;
                 osc.frequency.setValueAtTime(targetFreq * 1.5, t); 
                 osc.frequency.exponentialRampToValueAtTime(targetFreq, t + 0.04); 
                 
                 oscGain.gain.setValueAtTime(0, t);
                 oscGain.gain.linearRampToValueAtTime(0.6, t + 0.002);
-                // สลายตัวด้วย Decay ของพารามิเตอร์หนังกอง
                 oscGain.gain.exponentialRampToValueAtTime(0.01, t + config.decay); 
 
                 osc.connect(oscGain);
@@ -511,7 +526,7 @@
                 osc.stop(t + config.decay * 1.2);
 
                 // ============================================
-                // Layer 3: Metal Wires (เสียงแส้กลองดนตรีโครม - กรอบ แห้ง สะอาด)
+                // Layer 3: Metal Wires (เสียงแส้กลองสแนร์)
                 // ============================================
                 if (config.wires > 0) {
                     const noise = audioCtx.createBufferSource();
@@ -519,13 +534,11 @@
                     
                     const noiseFilter = audioCtx.createBiquadFilter();
                     noiseFilter.type = 'highpass';
-                    // ปรับความสว่างแห้งกรอบผ่านความถี่ฟิลเตอร์ตัดย่านต่ำ
                     noiseFilter.frequency.setValueAtTime(config.cutoff, t);
                     
                     const noiseGain = audioCtx.createGain();
                     noiseGain.gain.setValueAtTime(0, t);
                     noiseGain.gain.linearRampToValueAtTime(config.wires, t + 0.002);
-                    // หางเสียงของสแนร์แส้มีความยาวสัมพันธ์กันเพื่อความตึงสแนร์แห้งๆ
                     const wireDecay = Math.max(0.03, config.decay * 1.5);
                     noiseGain.gain.exponentialRampToValueAtTime(0.01, t + wireDecay); 
 
@@ -577,7 +590,6 @@
                 const blob = new Blob(audioChunks, { type: 'audio/webm' });
                 const url = URL.createObjectURL(blob);
                 
-                // ดาวน์โหลดคลิปเสียงสแนร์ที่อัดไว้ทันที
                 const a = document.createElement('a');
                 const date = new Date();
                 const timestamp = `${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`;
@@ -659,7 +671,6 @@
             {
                 name: "🎖️ Marching Cadet (เดินสวนสนาม)",
                 bpm: 124,
-                // กำหนดจังหวะเสียง (beat) และน้ำหนักความดัง (velocity)
                 pattern: [
                     { beat: 0, vel: 1.0 }, { beat: 0.5, vel: 0.5 }, { beat: 0.75, vel: 0.5 },
                     { beat: 1.0, vel: 0.8 }, { beat: 1.5, vel: 0.6 },
@@ -669,7 +680,7 @@
                     { beat: 4.0, vel: 0.9 }, { beat: 4.5, vel: 0.5 }, { beat: 4.75, vel: 0.5 },
                     { beat: 5.0, vel: 0.9 }, { beat: 5.5, vel: 0.5 }, { beat: 5.75, vel: 0.5 },
                     { beat: 6.0, vel: 1.2 }, { beat: 6.25, vel: 0.7 }, { beat: 6.5, vel: 0.7 }, { beat: 6.75, vel: 0.7 },
-                    { beat: 7.0, vel: 1.4, isEnding: true } // ลูกจบหนักหน่วงคู่แบบสองมือ
+                    { beat: 7.0, vel: 1.4, isEnding: true }
                 ]
             },
             {
@@ -684,7 +695,7 @@
                     { beat: 4, vel: 1.1 }, { beat: 4.75, vel: 0.4 },
                     { beat: 5.25, vel: 0.4 }, { beat: 5.5, vel: 1.0 },
                     { beat: 6.0, vel: 0.6 }, { beat: 6.25, vel: 0.6 }, { beat: 6.5, vel: 0.8 }, { beat: 6.75, vel: 1.0 },
-                    { beat: 7.0, vel: 1.4, isEnding: true } // จบปิดเพลง
+                    { beat: 7.0, vel: 1.4, isEnding: true }
                 ]
             },
             {
@@ -700,7 +711,7 @@
                     { beat: 4.5, vel: 1.1 }, { beat: 4.75, vel: 1.1 },
                     { beat: 5.0, vel: 1.2 }, { beat: 5.25, vel: 1.2 },
                     { beat: 5.5, vel: 1.3 }, { beat: 5.75, vel: 1.3 },
-                    { beat: 6.0, vel: 1.4, isEnding: true } // จบฟาดกลองเต็มเหนี่ยวแบบร็อคสะใจ
+                    { beat: 6.0, vel: 1.4, isEnding: true }
                 ]
             }
         ];
@@ -711,7 +722,6 @@
             isSongPlaying = false;
             activeSongIndex = null;
             
-            // รีเซ็ตสถานะหน้าจอของปุ่ม
             for (let i = 0; i < 3; i++) {
                 const btn = document.getElementById(`song-btn-${i}`);
                 btn.className = "group flex flex-col items-center justify-center p-2 bg-slate-800/60 border border-slate-700 hover:border-sky-500/50 rounded-xl transition duration-150 active:scale-95 text-center";
@@ -723,7 +733,6 @@
         function triggerDemoSong(index) {
             if (!isAudioEnabled) initAudio();
 
-            // หากกดซ้ำเพลงเดิมที่กำลังเล่นอยู่ -> หยุดเล่นทันที
             if (isSongPlaying && activeSongIndex === index) {
                 stopAllDemoSongs();
                 return;
@@ -735,7 +744,6 @@
             activeSongIndex = index;
             const song = demoSongs[index];
 
-            // อัปเดต UI ให้สว่างเรืองแสง
             const activeBtn = document.getElementById(`song-btn-${index}`);
             activeBtn.className = "group flex flex-col items-center justify-center p-2 bg-sky-950/70 border-2 border-sky-400 rounded-xl transition duration-150 active:scale-95 text-center shadow-[0_0_15px_rgba(56,189,248,0.3)]";
             
@@ -747,15 +755,12 @@
             const secondsPerBeat = 60 / song.bpm;
             const drumElement = document.getElementById('snare-drum');
 
-            // วนจองเวลาตี (Schedule) ทุกตัวโน้ตในคิว
             song.pattern.forEach(note => {
                 const delayMs = note.beat * secondsPerBeat * 1000;
                 
                 const timeoutId = setTimeout(() => {
-                    // เล่นเสียงผ่าน Web Audio
                     playDrumSound('snare', note.vel);
                     
-                    // เอฟเฟกต์ตีบนหน้าจอ
                     const rect = drumElement.getBoundingClientRect();
                     const xOffset = (Math.random() * 80) - 40;
                     const yOffset = (Math.random() * 80) - 40;
@@ -763,11 +768,8 @@
                     const clickY = rect.top + rect.height / 2 + yOffset;
                     
                     animateHit(drumElement, clickX, clickY);
-
-                    // สร้างโน้ตลอยตามจังหวะบีท
                     spawnFloatingNote(clickX, clickY, note.vel);
 
-                    // หากเจอตัวจบเพลง ให้ปิดสวิตช์เพลงออโต้เมื่อหมดเสียงสุดท้าย
                     if (note.isEnding) {
                         setTimeout(() => {
                             stopAllDemoSongs();
@@ -784,26 +786,21 @@
             const note = document.createElement('div');
             note.className = 'floating-note';
             
-            // สุ่มตัวอักษรโน้ตและค่าความลอยเบี่ยงเบน
             const index = Math.floor(Math.random() * noteEmojis.length);
             note.innerText = noteEmojis[index];
             
-            // ตั้งพิกัดสัมบูรณ์
             note.style.left = `${clientX - 12}px`;
             note.style.top = `${clientY - 20}px`;
             
-            // เพิ่มตัวแปร CSS ดริฟท์ส่ายซ้ายขวาตามลมธรรมชาติ
             const drift = (Math.random() * 120 - 60) + 'px';
             const rot = (Math.random() * 90 - 45) + 'deg';
             note.style.setProperty('--drift', drift);
             note.style.setProperty('--rot', rot);
 
-            // ปรับขนาดความโปร่งแสงตามแรงกระแทกของกลอง
             note.style.transform = `scale(${0.5 + velocity * 0.5})`;
             
             notesContainer.appendChild(note);
             
-            // ล้างขยะ DOM เมื่อเล่นอนิเมชันลอยขึ้นเสร็จสิ้น
             setTimeout(() => {
                 note.remove();
             }, 1200);
@@ -813,7 +810,7 @@
         function animateHit(element, x, y) {
             const head = element.querySelector('.drum-head');
             head.classList.remove('hit');
-            void head.offsetWidth; // บังคับให้เบราว์เซอร์สลับสถานะ DOM เพื่อทำทริกเกอร์อนิเมชันซ้ำรัวๆ ได้
+            void head.offsetWidth; 
             head.classList.add('hit');
 
             const rect = head.getBoundingClientRect();
@@ -844,23 +841,19 @@
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
             
-            // ตัวกลางคุมเสียง Master
             masterGain = audioCtx.createGain();
             masterGain.connect(audioCtx.destination);
 
-            // ตัวแปรเชื่อมต่อระบบ Reverb
             reverbNode = audioCtx.createConvolver();
             reverbGain = audioCtx.createGain();
             reverbGain.gain.setValueAtTime(config.reverbWet, audioCtx.currentTime);
 
-            // ต่อสายสัญญาณเสียงพุ่งผ่าน Reverb เพื่อความมีมิติห้องกว้างใหญ่
             reverbNode.connect(masterGain);
             reverbGain.connect(reverbNode);
 
             createNoiseBuffer();
             updateReverbImpulse();
             
-            // หลอกเพื่อข้ามข้อจำกัดความปลอดภัยของเบราว์เซอร์
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const source = audioCtx.createBufferSource();
             source.buffer = buffer;
@@ -870,7 +863,6 @@
             isAudioEnabled = true;
             setupRecorder();
 
-            // ค่อยๆ จางหายโอเวอร์เลย์ต้อนรับ
             startOverlay.style.opacity = '0';
             setTimeout(() => {
                 startOverlay.style.display = 'none';
@@ -879,24 +871,6 @@
 
         startBtn.addEventListener('click', initAudio);
         startOverlay.addEventListener('click', initAudio);
-
-        // --- ระบบผูกความสัมพันธ์อินเตอร์เฟซและสไลเดอร์เสียงขั้นสูง ---
-        const toggleBtn = document.getElementById('toggle-advanced-btn');
-        const slidersContainer = document.getElementById('advanced-sliders');
-        const chevronIcon = document.getElementById('chevron-icon');
-        
-        let isAdvancedOpen = true; // เปิดไว้แต่แรกเพื่อให้ปรับแต่งสนุก
-
-        toggleBtn.addEventListener('click', () => {
-            isAdvancedOpen = !isAdvancedOpen;
-            if (isAdvancedOpen) {
-                slidersContainer.classList.remove('hidden');
-                chevronIcon.style.transform = 'rotate(0deg)';
-            } else {
-                slidersContainer.classList.add('hidden');
-                chevronIcon.style.transform = 'rotate(180deg)';
-            }
-        });
 
         // ดักจับและแมพค่าความดังของตัวสไลเดอร์เข้าสู่เอ็นจิ้นเสียง
         function bindSlider(sliderId, valueSpanId, paramName, unitSuffix = "") {
@@ -907,14 +881,12 @@
                 let val = parseFloat(e.target.value);
                 config[paramName] = val;
                 
-                // รูปแบบการนำเสนอหน่วย
                 if (val >= 1000 && unitSuffix === "Hz") {
                     span.innerText = (val / 1000).toFixed(1) + "k";
                 } else {
                     span.innerText = val + unitSuffix;
                 }
 
-                // หากมีการปรับแต่ง Reverb Wet
                 if (paramName === "reverbWet" && reverbGain && audioCtx) {
                     reverbGain.gain.setValueAtTime(val, audioCtx.currentTime);
                 }
@@ -932,10 +904,8 @@
             const p = presets[presetKey];
             if (!p) return;
 
-            // บันทึกค่าลงคีย์วัตถุตั้งค่าระบบเสียง
             Object.assign(config, p);
 
-            // ปรับแต่ง UI ให้ตรงกันเรียลไทม์
             document.getElementById('param-tuning').value = p.tuning;
             document.getElementById('val-tuning').innerText = p.tuning + "Hz";
 
@@ -955,7 +925,6 @@
                 reverbGain.gain.setValueAtTime(p.reverbWet, audioCtx.currentTime);
             }
 
-            // ไฮไลต์ปุ่ม Preset ปัจจุบัน
             const presetButtons = document.querySelectorAll('.preset-btn');
             presetButtons.forEach(btn => {
                 btn.className = "preset-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex-shrink-0";
@@ -966,14 +935,13 @@
         // --- จัดการระบบสัมผัสและปุ่มกดเพื่อการตีสแนร์ (Multi-touch Support) ---
         drums.forEach(drum => {
             drum.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // ป้องกันการเกิด Double Tap Zoom ใน iOS และ Android
+                e.preventDefault(); 
                 if (!isAudioEnabled) { initAudio(); return; }
 
                 const drumType = drum.dataset.type;
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     const touch = e.changedTouches[i];
                     
-                    // คำนวณความรุนแรง (Velocity) ตามแรงกดจริงถ้าเครื่องปลายทางรองรับ ไม่งั้นสุ่มน้ำหนักเพื่อความเป็นธรรมชาติ
                     let velocity = 1.0;
                     if (touch.force > 0) {
                         velocity = 0.5 + (touch.force * 0.5);
@@ -1004,7 +972,7 @@
             
             if (key === 'j' || key === ' ' || key === 'f' || key === 'k') {
                 const drum = document.getElementById('snare-drum');
-                const velocity = 0.85 + (Math.random() * 0.2); // มอบมิติน้ำหนักกลองรัวๆ
+                const velocity = 0.85 + (Math.random() * 0.2); 
                 
                 playDrumSound('snare', velocity);
                 
@@ -1019,9 +987,8 @@
             }
         });
 
-        // สั่งให้เริ่มอนิเมชันหลังจากเว็บโหลดเสร็จสมบูรณ์
         window.onload = function() {
-            console.log("SNARE MASTER READY");
+            console.log("SNARE MASTER READY WITH SCROLLVIEW SUPPORT");
         }
     </script>
 </body>
