@@ -4,313 +4,377 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Realistic Tambourine Pro</title>
+    <!-- Tailwind CSS for modern responsive layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-color: #121212;
-            
-            /* Realistic Materials */
-            --rim-color: #263238; /* Dark composite material */
+            --bg-color: #0b0f19;
             --rim-gradient: linear-gradient(145deg, #37474f, #102027);
-            --skin-color: radial-gradient(circle, #f5f5f5, #e0e0e0);
             --skin-texture: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNjY2MiLz4KPC9zdmc+');
-            
-            --metal-gold: #ffd700;
             --metal-shine: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            
             --highlight: #00bcd4; 
+            --highlight-rgb: 0, 188, 212;
             --record-color: #ff5252;
-            --text-color: #eceff1;
         }
 
         body {
-            margin: 0; padding: 0;
+            font-family: 'Sarabun', 'Montserrat', sans-serif;
             background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
-            height: 100vh; width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Sarabun', sans-serif;
-            touch-action: none;
+            background-image: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%);
+            touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* Smooth scrollbar for responsive container */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 188, 212, 0.25);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 188, 212, 0.5);
+        }
+
+        /* --- Tambourine Body 3D --- */
+        #tambourine-container {
             perspective: 1200px;
         }
 
-        /* --- Wrapper --- */
-        #shaker-wrapper {
-            width: 80vmin;
-            height: 80vmin;
-            max-width: 420px;
-            max-height: 420px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        /* --- Shake Hint (Mobile Only) --- */
-        .shake-hint {
-            position: absolute;
-            top: -80px;
-            width: 100%;
-            text-align: center;
-            font-size: 1rem;
-            color: rgba(255,255,255,0.8);
-            background: rgba(0,0,0,0.3);
-            padding: 8px 0;
-            border-radius: 20px;
-            animation: fadeInOut 2.5s infinite;
-            pointer-events: none;
-            display: none; /* Show via JS on mobile */
-        }
-        .shake-icon { font-size: 1.8rem; display: block; margin-bottom: 5px; }
-
-        @keyframes fadeInOut { 0%, 100% { opacity: 0.4; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
-
-        /* --- Tambourine Body --- */
         #tambourine {
-            position: relative;
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
             transform-style: preserve-3d;
-            
-            /* Realistic Shadow */
-            box-shadow: 
-                0 30px 60px rgba(0,0,0,0.8), /* Deep shadow */
-                0 10px 20px rgba(0,0,0,0.5),
-                inset 0 0 40px rgba(0,0,0,0.8); /* Inner depth */
-
-            /* Material: Dark Composite Polymer */
             background: var(--rim-gradient);
             border: 8px solid #1c2529;
-            
-            transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s;
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.8),
+                inset 0 0 30px rgba(0,0,0,0.9);
+            transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
         }
 
-        /* Ring Detail (Chrome accent) */
-        #tambourine::before {
-            content: '';
-            position: absolute;
-            top: -12px; left: -12px; right: -12px; bottom: -12px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.1);
-            pointer-events: none;
-        }
-
-        /* Active/Hit State (Shinier Metal) */
         #tambourine.metal-active {
             box-shadow: 
-                0 25px 50px rgba(0,0,0,0.9),
-                0 0 30px rgba(0, 188, 212, 0.2), /* Cyan glow */
-                inset 0 0 20px rgba(255,255,255,0.1);
+                0 20px 40px rgba(0, 188, 212, 0.45),
+                inset 0 0 20px rgba(0, 188, 212, 0.3);
             border-color: #37474f;
         }
 
-        /* --- Drum Skin --- */
         .skin {
-            width: 88%; height: 88%;
-            border-radius: 50%;
-            position: relative;
-            z-index: 2;
-            /* Texture synthetic skin */
-            background-color: #eee;
+            background-color: #f3f4f6;
             background-image: var(--skin-texture); 
             background-size: 4px 4px;
             box-shadow: 
-                inset 0 0 20px rgba(0,0,0,0.4),
-                0 1px 2px rgba(255,255,255,0.2);
-            transition: transform 0.05s;
-        }
-        
-        #tambourine.metal-active .skin {
-            transform: scale(0.98) translateZ(-5px); /* Push in effect */
-            background-color: #e0e0e0;
+                inset 0 0 25px rgba(0,0,0,0.35),
+                0 2px 4px rgba(255,255,255,0.05);
+            transition: transform 0.05s ease-out;
         }
 
-        /* --- Zils (Jingles) --- */
-        .zils-container {
-            position: absolute; width: 100%; height: 100%;
-            border-radius: 50%; pointer-events: none;
-            transform: translateZ(15px); 
+        #tambourine.metal-active .skin {
+            transform: scale(0.96) translateZ(-10px);
+            background-color: #e5e7eb;
         }
 
         .zil {
-            position: absolute;
-            width: 14%; height: 14%;
-            border-radius: 50%;
-            top: 50%; left: 50%;
-            transform-origin: 0 0;
-            
-            /* Realistic Gold/Brass Shader */
             background: var(--metal-shine);
             box-shadow: 
-                2px 4px 8px rgba(0,0,0,0.5),
-                inset 1px 1px 2px rgba(255,255,255,0.8);
-            border: 1px solid rgba(0,0,0,0.2);
+                1px 3px 6px rgba(0,0,0,0.6),
+                inset 1px 1px 1px rgba(255,255,255,0.8);
+            border: 1px solid rgba(0,0,0,0.3);
+            transition: transform 0.1s ease;
         }
-        
+
         .zil::after {
-            /* Hole in the middle */
-            content: ''; position: absolute; top: 35%; left: 35%; width: 30%; height: 30%;
+            content: '';
+            position: absolute;
+            top: 35%; left: 35%; width: 30%; height: 30%;
             border-radius: 50%; 
-            background: #1a1a1a;
-            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.8);
+            background: #111827;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.9);
         }
 
-        /* --- Animations --- */
-        /* Animation เขย่าแบบกระชับ (One-shot) ปรับเวลาให้เร็วขึ้นเล็กน้อยเพื่อให้ทันจังหวะรัว */
-        .shake-anim { animation: shake-hard 0.25s ease-out; }
-        
-        @keyframes shake-hard {
-            0% { transform: translate3d(0, 0, 0) rotate(0deg); }
-            20% { transform: translate3d(-8px, -4px, 0) rotate(-6deg); }
-            40% { transform: translate3d(6px, 3px, 0) rotate(4deg); }
-            60% { transform: translate3d(-4px, -2px, 0) rotate(-2deg); }
-            80% { transform: translate3d(2px, 1px, 0) rotate(1deg); }
-            100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+        /* Floating Note Animation */
+        .floating-note {
+            position: absolute;
+            pointer-events: none;
+            z-index: 40;
+            animation: floatUpAndOut 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            font-weight: bold;
         }
 
-        /* --- UI Overlay --- */
-        #start-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100;
-            color: white; text-align: center; transition: opacity 0.5s;
+        @keyframes floatUpAndOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.4) translateY(0) rotate(0deg);
+            }
+            15% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.3) translateY(-25px) rotate(-20deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.7) translateY(-200px) rotate(45deg);
+            }
         }
-        .btn-start {
-            padding: 18px 40px; font-size: 1.2rem; background: var(--highlight);
-            border: none; color: white; border-radius: 50px; cursor: pointer;
-            margin-top: 25px; box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4); 
-            font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-start:active { transform: scale(0.95); }
 
-        .controls {
-            position: absolute; top: 20px; right: 20px; 
-            display: flex; gap: 10px; z-index: 50;
+        /* Glassmorphism panel styling */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .btn-control {
-            width: 45px; height: 45px; border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(30,30,30,0.6); color: white; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; transition: background 0.3s;
+
+        .pulse-recording {
+            animation: pulse-red 1.5s infinite;
         }
-        .btn-control.recording { background: var(--record-color); border-color: red; animation: pulse 1.5s infinite; }
-        .footer { position: absolute; bottom: 20px; color: rgba(255,255,255,0.3); font-size: 0.75rem; }
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        /* Shake animations */
+        .shake-anim { animation: shake-device 0.22s ease-in-out; }
+        @keyframes shake-device {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-10deg) scale(0.96) translateX(-8px); }
+            75% { transform: rotate(10deg) scale(0.96) translateX(8px); }
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen text-gray-100 flex flex-col justify-between antialiased">
 
-    <div id="start-overlay">
-        <h1 style="font-weight: 300; letter-spacing: 2px; margin-bottom: 0;">PRO TAMBOURINE</h1>
-        <p style="color: #aaa; margin-top: 5px;">One-Shot Rhythm & Real Audio</p>
-        <button id="btn-start-init" class="btn-start" onclick="initAudio()" ontouchstart="initAudio()">START ENGINE</button>
-        <div id="loading-text" style="margin-top:20px; font-size: 0.8rem; opacity: 0.7;">Ready to Load</div>
-    </div>
-
-    <div class="controls">
-        <button id="btn-record" class="btn-control" onclick="toggleRecord()" title="Record">●</button>
-        <button id="btn-stop" class="btn-control" onclick="stopRecord()" disabled title="Stop & Save">■</button>
-    </div>
-
-    <div id="shaker-wrapper">
-        <div id="shake-instruction" class="shake-hint">
-            <span class="shake-icon">📳</span>
-            เขย่าเครื่องเพื่อเล่น!
-        </div>
-
-        <div id="tambourine">
-            <div class="zils-container" id="zils-layer"></div>
-            <div class="skin"></div>
+    <!-- Start/Initialize Overlay (Required to unlock WebAudio & Motion permission on User gesture) -->
+    <div id="start-overlay" class="fixed inset-0 bg-gray-950/98 backdrop-blur-md flex flex-col justify-center items-center z-50 text-center px-6">
+        <div class="space-y-4 max-w-md">
+            <div class="inline-flex p-4 bg-cyan-500/10 rounded-full text-cyan-400 mb-2 border border-cyan-500/20 animate-pulse">
+                <span class="text-5xl">🥁</span>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-wider text-white font-mono">TAMBOURINE PRO</h1>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                สัมผัสความก้องกังวานสมจริง ตอบสนองการเคาะและเขย่าด้วยระบบประมวลผล WebAudio API & Motion Engine
+            </p>
+            <div class="pt-4">
+                <button id="btn-start-init" class="w-full py-4 px-8 bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-bold text-lg rounded-full transition duration-300 shadow-lg shadow-cyan-500/30 transform active:scale-95" onclick="initAudio()" ontouchstart="initAudio()">
+                    เปิดใช้งาน ENGINE & เซนเซอร์
+                </button>
+            </div>
+            <p id="loading-text" class="text-xs text-cyan-400/60 uppercase tracking-widest mt-2">แตะเพื่อเข้าสู่การเล่นแบบโต้ตอบเสมือนจริง</p>
         </div>
     </div>
 
-    <div class="footer">Audio Engine: WebAudio API | Logic: Gemini AI</div>
+    <!-- MAIN SCROLLVIEW WRAPPER FOR MOBILE RESILIENCE -->
+    <main class="w-full max-w-lg mx-auto px-4 py-4 flex-grow flex flex-col justify-start space-y-4 overflow-y-auto" style="max-height: calc(100vh - 40px);">
+        
+        <!-- Header Controls -->
+        <header class="flex justify-between items-center glass-panel p-4 rounded-2xl shrink-0">
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    <span class="text-xl">🥁</span> Tambourine <span class="text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded font-mono">PRO</span>
+                </h1>
+                <p class="text-xs text-gray-400">WebAudio Pro Engine v3.8</p>
+            </div>
+            <!-- Recorder Panel -->
+            <div class="flex items-center gap-2">
+                <button id="btn-record" onclick="toggleRecord()" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-800 border border-gray-700 hover:border-red-500 transition-colors text-red-500" title="เริ่มบันทึกเสียง">
+                    <span class="text-xs">●</span>
+                </button>
+                <button id="btn-stop" onclick="stopRecord()" disabled class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-800 border border-gray-700 hover:border-white transition-colors text-gray-400 disabled:opacity-40 disabled:pointer-events-none" title="หยุดและบันทึก">
+                    <span class="text-xs">■</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Demo Tracks Panel -->
+        <section class="glass-panel p-4 rounded-3xl space-y-3 shrink-0">
+            <h2 class="text-sm font-semibold tracking-wider text-cyan-400 uppercase flex items-center justify-between">
+                <span>🎵 เพลงสาธิต (Demo Tracks)</span>
+                <span id="demo-status" class="text-xs font-normal text-gray-400 lowercase italic">พร้อมเล่น</span>
+            </h2>
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="playDemoTrack(1)" id="btn-demo-1" class="py-2.5 px-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-medium text-center transition border border-gray-700 hover:border-cyan-500">
+                    💃 Samba Beat
+                </button>
+                <button onclick="playDemoTrack(2)" id="btn-demo-2" class="py-2.5 px-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-medium text-center transition border border-gray-700 hover:border-cyan-500">
+                    🕺 Cha-Cha
+                </button>
+                <button onclick="playDemoTrack(3)" id="btn-demo-3" class="py-2.5 px-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-medium text-center transition border border-gray-700 hover:border-cyan-500">
+                    ⚡ Techno Shaker
+                </button>
+            </div>
+            <div class="flex items-center justify-between bg-black/40 rounded-xl p-2 text-xs">
+                <span class="text-gray-400">เมื่อเล่นจบจะปิดเสียงอัตโนมัติและแสดงโน้ตดนตรี</span>
+                <button onclick="stopDemoTrack()" class="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition border border-red-500/30">
+                    หยุดเพลง
+                </button>
+            </div>
+        </section>
+
+        <!-- Dynamic Instrument Sandbox Area -->
+        <section id="play-zone" class="flex flex-col items-center justify-center relative py-4 flex-grow min-h-[280px]">
+            <div id="shake-instruction" class="absolute top-0 px-4 py-1 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs rounded-full animate-bounce hidden">
+                📳 แตะกลองเพื่อเล่น หรือลองเขย่าเครื่องโทรศัพท์ของคุณ!
+            </div>
+
+            <!-- Visual Floating Notes Anchor Layer -->
+            <div id="float-layer" class="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-30"></div>
+
+            <!-- Tambourine Instrument Structure -->
+            <div id="tambourine-container" class="w-60 h-60 sm:w-72 sm:h-72 relative flex items-center justify-center cursor-pointer">
+                <div id="tambourine" class="w-full h-full rounded-full flex items-center justify-center transition-all relative">
+                    <!-- Zils (Metallic Jingles Area) -->
+                    <div id="zils-layer" class="absolute inset-0 w-full h-full rounded-full pointer-events-none"></div>
+                    <!-- Skin head -->
+                    <div class="skin w-[86%] h-[86%] rounded-full absolute z-10 flex flex-col items-center justify-center">
+                        <span class="text-gray-400/40 font-mono tracking-widest text-xs select-none">PRO GRADE BRASS</span>
+                        <div class="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl shadow-inner mt-2">
+                            ✨
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Audio Controls Section -->
+        <section class="glass-panel p-4 rounded-3xl space-y-3 shadow-xl shrink-0">
+            <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+                <h2 class="text-sm font-semibold text-gray-200 tracking-wide uppercase flex items-center gap-2">
+                    <span>🎛️</span> แผงปรับแต่งเสียงขั้นสูง (Advanced Audio)
+                </h2>
+                <button onclick="resetSliders()" class="text-[10px] text-cyan-400 hover:underline uppercase tracking-wider">
+                    รีเซ็ตค่าเริ่มต้น
+                </button>
+            </div>
+
+            <!-- Sliders Grid -->
+            <div class="space-y-3">
+                <!-- Master volume -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>ความดังหลัก (Master Volume)</span>
+                        <span id="label-volume" class="font-mono text-cyan-400">80%</span>
+                    </div>
+                    <input type="range" id="slider-volume" min="0" max="100" value="80" oninput="updateAudioSettings()" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                </div>
+
+                <!-- Reverb / Spatialization -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>มิติก้องกังวาน (Reverb Level)</span>
+                        <span id="label-reverb" class="font-mono text-cyan-400">35%</span>
+                    </div>
+                    <input type="range" id="slider-reverb" min="0" max="100" value="35" oninput="updateAudioSettings()" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                </div>
+
+                <!-- Pitch Shifter -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>โทนคีย์เสียงเครื่องดนตรี (Pitch Shifter)</span>
+                        <span id="label-pitch" class="font-mono text-cyan-400">1.0x</span>
+                    </div>
+                    <input type="range" id="slider-pitch" min="50" max="200" value="100" oninput="updateAudioSettings()" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                </div>
+
+                <!-- Low Pass Filter Cutoff -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>ความใสคริสตัล (Treble Filter)</span>
+                        <span id="label-cutoff" class="font-mono text-cyan-400">12,000Hz</span>
+                    </div>
+                    <input type="range" id="slider-cutoff" min="1000" max="20000" value="12000" step="500" oninput="updateAudioSettings()" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Notification Dialog (Replaces Alert) -->
+    <div id="toast-notification" class="fixed bottom-12 left-1/2 -translate-x-1/2 glass-panel border-cyan-500/30 px-6 py-3 rounded-full text-xs text-cyan-400 font-medium tracking-wide shadow-2xl opacity-0 translate-y-4 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2">
+        <span class="text-base">🔔</span>
+        <span id="toast-text">ข้อความแจ้งเตือน</span>
+    </div>
+
+    <!-- App Bottom Info -->
+    <footer class="w-full text-center py-2 text-[10px] text-gray-500 tracking-wider uppercase border-t border-gray-900 bg-gray-950/50 shrink-0">
+        Engine: Hybrid Audio Synthesis & Web Motion Engine | Gemini Interactive System
+    </footer>
 
     <script>
-        // ==========================================
-        // 🛠️ Audio Configuration
-        // ==========================================
         const soundUrls = {
-           'hit': 'tamburin/toburi01.wav',
-           'shake': 'tamburin/toburi02t.wav'  
+            'hit': 'tamburin/toburi01.wav',
+            'shake': 'tamburin/toburi02t.wav'
         };
 
-        // Audio Engine
+        // Web Audio Context & Nodes
         let audioCtx;
-        let masterGain;
+        let masterGainNode;
+        let biquadFilterNode;
+        let reverbDelayNode;
+        let reverbGainNode;
+        
+        // Cached Audio Buffers
         let audioBuffers = { hit: null, shake: null };
         let bufferOffsets = { hit: 0, shake: 0 }; 
 
-        // State
+        // Settings
+        let globalVolume = 0.8;
+        let globalReverb = 0.35;
+        let globalPitch = 1.0;
+        let globalFilterCutoff = 12000;
+
+        // Recording States
         let isRecording = false;
         let mediaRecorder;
         let audioChunks = [];
         let destNode; 
 
-        // Motion & Timing Variables
-        let lastX=0, lastY=0, lastZ=0, lastTime=0;
+        // Motion Accelerometer physics
+        let lastX = 0, lastY = 0, lastZ = 0, lastTime = 0;
         let lastShakeTime = 0;
         let lastHitTime = 0; 
         
-        // Settings for "Single Rhythm"
-        // ปรับจูน: Threshold สูงเพื่อกันเสียงรบกวน, Cooldown ต่ำเพื่อให้เล่นรัวได้ทัน
-        const SHAKE_THRESHOLD = 300; 
-        const SHAKE_COOLDOWN = 150; // ลดเหลือ 0.15s เพื่อรองรับการเขย่าไป-กลับ (รัว)
-        const HIT_COOLDOWN = 80;    
+        const SHAKE_THRESHOLD = 260; // ปรับลงมาเล็กน้อยให้เขย่าจับง่ายและแม่นยำยิ่งขึ้น
+        const SHAKE_COOLDOWN = 160;  // คูลดาวน์สอดรับการสั่นไหวของจังหวะรัว
+        const HIT_COOLDOWN = 60;     // ตอบสนองการแตะแบบรวดเร็วเฉียบพลัน
 
-        // UI Initialization
+        // Demo Playback Sequencer
+        let demoSequencerTimer = null;
+        let activeDemoSong = null;
+
+        // Visual decorative notes
+        const notesToFloat = ["♩", "♪", "♫", "♬", "✨", "🎵", "🎶"];
+
+        // Generate Golden Brass Jingles (Zils) around the perimeter
         function createZils() {
             const container = document.getElementById('zils-layer');
             const numberOfZils = 8;
             container.innerHTML = '';
             for (let i = 0; i < numberOfZils; i++) {
                 const zil = document.createElement('div');
-                zil.className = 'zil';
+                zil.className = 'zil absolute w-[14%] h-[14%] rounded-full top-[43%] left-[43%]';
                 const angle = (i / numberOfZils) * 360;
                 zil.style.transform = `rotate(${angle}deg) translate(280%, 0)`; 
                 container.appendChild(zil);
             }
         }
 
-        // --- Audio Processing Logic ---
-
-        function detectSilence(audioBuffer) {
-            const rawData = audioBuffer.getChannelData(0); 
-            const threshold = 0.01; 
-            for (let i = 0; i < rawData.length; i++) {
-                if (Math.abs(rawData[i]) > threshold) {
-                    return i / audioBuffer.sampleRate;
-                }
-            }
-            return 0;
-        }
-
-        async function loadSound(key, url) {
-            try {
-                if (url.includes('INSERT')) throw new Error("No URL");
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const arrayBuffer = await response.arrayBuffer();
-                const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                audioBuffers[key] = decodedBuffer;
-                bufferOffsets[key] = detectSilence(decodedBuffer);
-                console.log(`Loaded ${key}`);
-            } catch (error) {
-                console.warn(`Failed to load sound '${key}'.`);
-            }
+        // Custom Toast System
+        function showNotification(message) {
+            const toast = document.getElementById('toast-notification');
+            const text = document.getElementById('toast-text');
+            text.innerText = message;
+            toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+            }, 3000);
         }
 
         async function initAudio() {
@@ -321,129 +385,350 @@
             }
 
             const btnStart = document.getElementById('btn-start-init');
-            btnStart.innerText = "LOADING...";
+            btnStart.innerText = "กำลังเริ่มต้นอุปกรณ์...";
             btnStart.disabled = true;
             
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            try {
+                // 1. Initial Web Audio API Context
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
 
-            masterGain = audioCtx.createGain();
-            masterGain.connect(audioCtx.destination);
-            
-            destNode = audioCtx.createMediaStreamDestination();
-            masterGain.connect(destNode);
-            setupRecorder();
+                // 2. Build Audio Node Routing Chain
+                masterGainNode = audioCtx.createGain();
+                masterGainNode.gain.setValueAtTime(globalVolume, audioCtx.currentTime);
 
-            createZils();
-            startMotionSensor();
-            setupInteractions();
+                biquadFilterNode = audioCtx.createBiquadFilter();
+                biquadFilterNode.type = "lowpass";
+                biquadFilterNode.frequency.setValueAtTime(globalFilterCutoff, audioCtx.currentTime);
 
-            await Promise.all([
-                loadSound('hit', soundUrls.hit),
-                loadSound('shake', soundUrls.shake)
-            ]);
+                reverbDelayNode = audioCtx.createDelay();
+                reverbDelayNode.delayTime.setValueAtTime(0.08, audioCtx.currentTime); 
 
-            const overlay = document.getElementById('start-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.remove(), 500);
+                reverbGainNode = audioCtx.createGain();
+                reverbGainNode.gain.setValueAtTime(globalReverb * 0.5, audioCtx.currentTime);
+
+                // Feedback Loop for physical reverb tail simulation
+                reverbDelayNode.connect(reverbGainNode);
+                reverbGainNode.connect(reverbDelayNode);
+
+                // Connections
+                biquadFilterNode.connect(masterGainNode);
+                biquadFilterNode.connect(reverbDelayNode);
+                reverbGainNode.connect(masterGainNode);
+
+                masterGainNode.connect(audioCtx.destination);
+                
+                // Record channel destination
+                destNode = audioCtx.createMediaStreamDestination();
+                masterGainNode.connect(destNode);
+                setupRecorder();
+
+                // 3. Requesting Motion Sensor permission (Important for iOS 13+ devices)
+                await requestMotionPermission();
+
+                // 4. Load Audio Assets Asynchronously
+                await Promise.all([
+                    loadSound('hit', soundUrls.hit),
+                    loadSound('shake', soundUrls.shake)
+                ]);
+
+                createZils();
+                setupInteractions();
+                updateAudioSettings();
+
+                // Dismiss Initial Screen Overlay
+                const overlay = document.getElementById('start-overlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
+
+            } catch(e) {
+                console.error("Audio Engine initialization warning: falling back to procedural engine.", e);
+                // Gracefully enter sandbox anyway
+                const overlay = document.getElementById('start-overlay');
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 500);
+                }
+            }
+        }
+
+        function playSynthesizedTambourineHit() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            // 1. Drum Skin Strike (Low-frequency impact sweep)
+            const drumOsc = audioCtx.createOscillator();
+            const drumGain = audioCtx.createGain();
+            drumOsc.connect(drumGain);
+            drumGain.connect(biquadFilterNode);
+
+            drumOsc.type = 'sine';
+            drumOsc.frequency.setValueAtTime(190 * globalPitch, now);
+            drumOsc.frequency.exponentialRampToValueAtTime(75 * globalPitch, now + 0.08);
+
+            drumGain.gain.setValueAtTime(1.8, now); // Boosted sound levels
+            drumGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+            drumOsc.start(now);
+            drumOsc.stop(now + 0.12);
+
+            // 2. Multi-Frequency Metallic Brass Ringing (Tambourine Zils)
+            const metallicFrequencies = [2400, 3150, 4900, 6200, 8000, 11500];
+            metallicFrequencies.forEach((freq) => {
+                const zilOsc = audioCtx.createOscillator();
+                const zilGain = audioCtx.createGain();
+                zilOsc.connect(zilGain);
+                zilGain.connect(biquadFilterNode);
+
+                zilOsc.type = 'triangle';
+                zilOsc.frequency.setValueAtTime(freq * globalPitch, now);
+
+                zilGain.gain.setValueAtTime(0.3, now);
+                zilGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16 + Math.random() * 0.07);
+
+                zilOsc.start(now);
+                zilOsc.stop(now + 0.3);
+            });
+
+            // 3. Shaker Friction (White Noise Burst)
+            const bufferSize = audioCtx.sampleRate * 0.15;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noiseNode = audioCtx.createBufferSource();
+            noiseNode.buffer = buffer;
+
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = "highpass";
+            noiseFilter.frequency.setValueAtTime(6200 * globalPitch, now);
+
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.9, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+            noiseNode.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(biquadFilterNode);
+
+            noiseNode.start(now);
+            noiseNode.stop(now + 0.15);
+        }
+
+        function playSynthesizedTambourineShake() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            // Soft Metallic Ringing
+            const metalFrequencies = [2800, 4800, 7200, 9200];
+            metalFrequencies.forEach((freq) => {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(biquadFilterNode);
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq * globalPitch, now);
+
+                gainNode.gain.setValueAtTime(0.01, now);
+                gainNode.gain.linearRampToValueAtTime(0.18, now + 0.04);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+
+                osc.start(now);
+                osc.stop(now + 0.32);
+            });
+
+            // Delicate noise shaker sound
+            const bufferSize = audioCtx.sampleRate * 0.28;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = "highpass";
+            filter.frequency.setValueAtTime(7000 * globalPitch, now);
+
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.01, now);
+            noiseGain.gain.linearRampToValueAtTime(0.55, now + 0.03);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(biquadFilterNode);
+
+            noise.start(now);
+            noise.stop(now + 0.28);
+        }
+
+        function updateAudioSettings() {
+            if (!audioCtx) return;
+
+            // Master Volume
+            const volSlider = document.getElementById('slider-volume');
+            globalVolume = parseFloat(volSlider.value) / 100;
+            document.getElementById('label-volume').innerText = `${volSlider.value}%`;
+            if (masterGainNode) {
+                masterGainNode.gain.setTargetAtTime(globalVolume, audioCtx.currentTime, 0.01);
+            }
+
+            // Reverb
+            const revSlider = document.getElementById('slider-reverb');
+            globalReverb = parseFloat(revSlider.value) / 100;
+            document.getElementById('label-reverb').innerText = `${revSlider.value}%`;
+            if (reverbGainNode) {
+                reverbGainNode.gain.setTargetAtTime(globalReverb * 0.6, audioCtx.currentTime, 0.02);
+            }
+
+            // Pitch Shifter
+            const pitSlider = document.getElementById('slider-pitch');
+            globalPitch = parseFloat(pitSlider.value) / 100;
+            document.getElementById('label-pitch').innerText = `${globalPitch.toFixed(1)}x`;
+
+            // Filter Cutoff
+            const cutSlider = document.getElementById('slider-cutoff');
+            globalFilterCutoff = parseInt(cutSlider.value);
+            document.getElementById('label-cutoff').innerText = `${globalFilterCutoff.toLocaleString()}Hz`;
+            if (biquadFilterNode) {
+                biquadFilterNode.frequency.setTargetAtTime(globalFilterCutoff, audioCtx.currentTime, 0.02);
+            }
+        }
+
+        function resetSliders() {
+            document.getElementById('slider-volume').value = 80;
+            document.getElementById('slider-reverb').value = 35;
+            document.getElementById('slider-pitch').value = 100;
+            document.getElementById('slider-cutoff').value = 12000;
+            updateAudioSettings();
+            showNotification("รีเซ็ตการตั้งค่าเรียบร้อยแล้ว");
+        }
+
+        async function loadSound(key, url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error();
+                const arrayBuffer = await response.arrayBuffer();
+                const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                audioBuffers[key] = decodedBuffer;
+            } catch (error) {
+                console.warn(`[Audio Engine] ไม่พบไฟล์เสียงภายนอกสำหรับ '${key}' กำลังสลับใช้งานระบบจำลองเสียงสังเคราะห์คุณภาพสูง`);
+                audioBuffers[key] = null;
+            }
         }
 
         function playSound(type) {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            if (audioBuffers[type]) {
-                const source = audioCtx.createBufferSource();
-                source.buffer = audioBuffers[type];
+            const executePlay = () => {
+                spawnFloatingNote(type);
 
-                const envelope = audioCtx.createGain();
-                source.connect(envelope);
-                envelope.connect(masterGain);
+                if (audioBuffers[type]) {
+                    try {
+                        const source = audioCtx.createBufferSource();
+                        source.buffer = audioBuffers[type];
+                        source.playbackRate.setValueAtTime(globalPitch, audioCtx.currentTime);
 
-                const now = audioCtx.currentTime;
-                const duration = source.buffer.duration;
-                const offset = bufferOffsets[type] || 0; 
+                        const sourceGain = audioCtx.createGain();
+                        sourceGain.gain.setValueAtTime(type === 'hit' ? 1.5 : 0.9, audioCtx.currentTime);
 
-                // Fast Attack for responsiveness
-                envelope.gain.setValueAtTime(0, now);
-                envelope.gain.linearRampToValueAtTime(1, now + 0.005); 
-                
-                // Clean Decay
-                if (duration - offset > 0.02) {
-                    envelope.gain.setValueAtTime(1, now + duration - offset - 0.015);
-                    envelope.gain.exponentialRampToValueAtTime(0.001, now + duration - offset - 0.005);
+                        source.connect(sourceGain);
+                        sourceGain.connect(biquadFilterNode);
+                        source.start(0);
+                    } catch (e) {
+                        if (type === 'hit') playSynthesizedTambourineHit();
+                        else playSynthesizedTambourineShake();
+                    }
+                } else {
+                    // Procedural Fallback (Highly Reliable)
+                    if (type === 'hit') playSynthesizedTambourineHit();
+                    else playSynthesizedTambourineShake();
                 }
+            };
 
-                source.start(now, offset); 
-            } 
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().then(executePlay);
+            } else {
+                executePlay();
+            }
         }
 
-        // --- Interaction Logic (3D Physics & Debounce) ---
+        let isPressed = false;
 
         function setupInteractions() {
             const tambourine = document.getElementById('tambourine');
-            
-            const startHandler = (e) => {
-                // ป้องกันการกดปุ่มควบคุม
-                if (e.target.closest('.controls')) return;
-                
-                // 🛑 Prevent Double Trigger
-                if (e.cancelable) e.preventDefault(); 
-                
-                // 🛑 Debounce Logic
+            const container = document.getElementById('tambourine-container');
+            const playZone = document.getElementById('play-zone');
+
+            const triggerHit = (clientX, clientY) => {
                 const now = Date.now();
                 if (now - lastHitTime < HIT_COOLDOWN) return;
                 lastHitTime = now;
 
-                // Physics coords
-                let clientX, clientY;
-                if (e.touches && e.touches.length > 0) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-                
-                isPressed = true;
                 playSound('hit');
+                tambourine.classList.remove('metal-active');
+                void tambourine.offsetWidth; // Force CSS repaint
                 tambourine.classList.add('metal-active');
                 calculateTilt(clientX, clientY);
             };
 
-            const moveHandler = (e) => {
-                if (!isPressed) return;
+            const startHandler = (e) => {
+                if (e.target.closest('header') || e.target.closest('section') && !e.target.closest('#tambourine-container') && e.target !== playZone) return;
+                
                 if (e.cancelable) e.preventDefault();
+                isPressed = true;
 
-                let clientX, clientY;
+                let x, y;
                 if (e.touches && e.touches.length > 0) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
+                    x = e.touches[0].clientX;
+                    y = e.touches[0].clientY;
                 } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
+                    x = e.clientX;
+                    y = e.clientY;
                 }
-                calculateTilt(clientX, clientY);
+                triggerHit(x, y);
             };
 
-            const endHandler = (e) => {
-                if (e.cancelable) e.preventDefault(); // กันเด้ง
+            const moveHandler = (e) => {
+                if (!isPressed) return;
+                let x, y;
+                if (e.touches && e.touches.length > 0) {
+                    x = e.touches[0].clientX;
+                    y = e.touches[0].clientY;
+                } else {
+                    x = e.clientX;
+                    y = e.clientY;
+                }
+                calculateTilt(x, y);
+            };
+
+            const endHandler = () => {
                 isPressed = false;
                 tambourine.classList.remove('metal-active');
                 tambourine.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
             };
 
-            document.addEventListener('mousedown', startHandler);
+            // Desktop Interactions
+            container.addEventListener('mousedown', startHandler);
+            playZone.addEventListener('mousedown', startHandler);
             document.addEventListener('mousemove', moveHandler);
             document.addEventListener('mouseup', endHandler);
 
-            document.addEventListener('touchstart', startHandler, {passive: false});
+            // Mobile Interactions
+            container.addEventListener('touchstart', startHandler, {passive: false});
+            playZone.addEventListener('touchstart', startHandler, {passive: false});
             document.addEventListener('touchmove', moveHandler, {passive: false});
             document.addEventListener('touchend', endHandler, {passive: false});
         }
-
-        let isPressed = false;
 
         function calculateTilt(clientX, clientY) {
             const tambourine = document.getElementById('tambourine');
@@ -451,27 +736,28 @@
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
 
-            const maxTilt = 15; 
+            const maxTilt = 22; 
             const percentX = (clientX - centerX) / (rect.width / 2);
             const percentY = (clientY - centerY) / (rect.height / 2);
 
-            const rotateY = percentX * maxTilt;
-            const rotateX = -percentY * maxTilt;
+            const rotateY = Math.max(-maxTilt, Math.min(maxTilt, percentX * maxTilt));
+            const rotateX = Math.max(-maxTilt, Math.min(maxTilt, -percentY * maxTilt));
 
-            tambourine.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(0.96)`;
+            tambourine.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(0.94)`;
         }
 
-        // --- Motion Sensor & Shake Logic (Dynamic Rhythm) ---
-        function startMotionSensor() {
+        async function requestMotionPermission() {
             if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                DeviceMotionEvent.requestPermission()
-                    .then(response => {
-                        if (response === 'granted') {
-                            window.addEventListener('devicemotion', handleMotion);
-                        }
-                    })
-                    .catch(console.error);
+                try {
+                    const response = await DeviceMotionEvent.requestPermission();
+                    if (response === 'granted') {
+                        window.addEventListener('devicemotion', handleMotion);
+                    }
+                } catch (err) {
+                    console.warn("DeviceMotion Permission request rejected:", err);
+                }
             } else {
+                // Non-iOS or older device motion sensor integration
                 window.addEventListener('devicemotion', handleMotion);
             }
         }
@@ -482,17 +768,14 @@
             
             const now = Date.now();
             if ((now - lastTime) > 20) {
-                const delta = Math.sqrt((acc.x-lastX)**2 + (acc.y-lastY)**2 + (acc.z-lastZ)**2);
+                const delta = Math.sqrt((acc.x - lastX)**2 + (acc.y - lastY)**2 + (acc.z - lastZ)**2);
                 const speed = delta / (now - lastTime) * 1000;
 
-                // 🛑 Logic ใหม่:
-                // 1. Threshold สูง (300) = ต้องเขย่าจริงจัง (กันมือสั่น)
-                // 2. Cooldown ต่ำ (150ms) = อนุญาตให้เขย่ารัว (ไป-กลับ) ได้
-                // ผลลัพธ์: เขย่าเร็ว = ได้เสียงรัว (เพราะพ้น cooldown 150ms), เขย่าช้า/ครั้งเดียว = ได้เสียงเดียว (เพราะ threshold สูง ไม่จับตอนหยุดมือ)
+                // ตรวจหาแรงสั่นที่มากกว่าเกณฑ์ (SHAKE_THRESHOLD)
                 if (speed > SHAKE_THRESHOLD && (now - lastShakeTime > SHAKE_COOLDOWN)) {
                     playSound('shake');
                     
-                    const wrapper = document.getElementById('shaker-wrapper');
+                    const wrapper = document.getElementById('tambourine');
                     wrapper.classList.remove('shake-anim');
                     void wrapper.offsetWidth; 
                     wrapper.classList.add('shake-anim');
@@ -500,15 +783,132 @@
                     lastShakeTime = now;
                     
                     const hint = document.getElementById('shake-instruction');
-                    if(hint && hint.style.display !== 'none') {
+                    if(hint) {
                         hint.style.display = 'none';
                     }
                 }
-                lastX=acc.x; lastY=acc.y; lastZ=acc.z; lastTime=now;
+                lastX = acc.x; lastY = acc.y; lastZ = acc.z; lastTime = now;
             }
         }
 
-        // --- Recording ---
+        function spawnFloatingNote(type) {
+            const layer = document.getElementById('float-layer');
+            if (!layer) return;
+
+            const noteElement = document.createElement('div');
+            noteElement.className = 'floating-note text-2xl absolute pointer-events-none select-none';
+            
+            const glyph = notesToFloat[Math.floor(Math.random() * notesToFloat.length)];
+            noteElement.innerText = glyph;
+
+            if (type === 'hit') {
+                noteElement.style.color = '#00bcd4';
+                noteElement.style.textShadow = '0 0 10px rgba(0, 188, 212, 0.9)';
+            } else {
+                noteElement.style.color = '#ffd700';
+                noteElement.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.9)';
+            }
+
+            const startX = layer.offsetWidth / 2 + (Math.random() * 100 - 50);
+            const startY = layer.offsetHeight / 2 + (Math.random() * 100 - 50);
+
+            noteElement.style.left = `${startX}px`;
+            noteElement.style.top = `${startY}px`;
+
+            layer.appendChild(noteElement);
+
+            setTimeout(() => {
+                noteElement.remove();
+            }, 1500);
+        }
+
+        const demoTracks = {
+            1: {
+                name: "Samba Rhythm",
+                sequence: [
+                    'h', '.', 's', 's', 'h', '.', 's', 'h',
+                    'h', 's', 's', '.', 'h', 's', 'h', 's',
+                    'h', '.', 's', 's', 'h', '.', 's', 'h',
+                    'h', 's', 's', '.', 'h', 'h', 's', 's'
+                ],
+                interval: 180 
+            },
+            2: {
+                name: "Cha-Cha Beat",
+                sequence: [
+                    'h', '.', 'h', '.', 'h', 's', 's', '.',
+                    'h', '.', 'h', '.', 'h', 's', 's', '.',
+                    's', 's', 'h', '.', 's', 's', 'h', '.',
+                    'h', 's', 'h', 's', 'h', 'h', 's', 's'
+                ],
+                interval: 220
+            },
+            3: {
+                name: "Techno Shaker",
+                sequence: [
+                    'h', 's', 'h', 's', 'h', 's', 'h', 's',
+                    'h', 'h', 's', 's', 'h', 'h', 's', 's',
+                    's', 's', 's', 's', 'h', 'h', 'h', 'h',
+                    'h', 's', 'h', 's', 'h', 'h', 'h', '.'
+                ],
+                interval: 130
+            }
+        };
+
+        function playDemoTrack(trackId) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            stopDemoTrack();
+
+            const track = demoTracks[trackId];
+            if (!track) return;
+
+            activeDemoSong = trackId;
+            document.getElementById('demo-status').innerText = `กำลังเล่น: ${track.name}`;
+            document.getElementById('demo-status').className = "text-xs font-semibold text-cyan-400 lowercase italic animate-pulse";
+            
+            // Highlight button styling
+            document.querySelectorAll('[id^="btn-demo-"]').forEach(btn => btn.classList.remove('bg-cyan-500/20', 'border-cyan-500'));
+            document.getElementById(`btn-demo-${trackId}`).classList.add('bg-cyan-500/20', 'border-cyan-500');
+
+            let step = 0;
+            const seqLength = track.sequence.length;
+
+            demoSequencerTimer = setInterval(() => {
+                if (step >= seqLength) {
+                    stopDemoTrack(); 
+                    return;
+                }
+
+                const action = track.sequence[step];
+                if (action === 'h') {
+                    playSound('hit');
+                    const tamb = document.getElementById('tambourine');
+                    tamb.classList.add('metal-active');
+                    setTimeout(() => tamb.classList.remove('metal-active'), 50);
+                } else if (action === 's') {
+                    playSound('shake');
+                    const tamb = document.getElementById('tambourine');
+                    tamb.classList.add('shake-anim');
+                    setTimeout(() => tamb.classList.remove('shake-anim'), 100);
+                }
+
+                step++;
+            }, track.interval);
+        }
+
+        function stopDemoTrack() {
+            if (demoSequencerTimer) {
+                clearInterval(demoSequencerTimer);
+                demoSequencerTimer = null;
+            }
+            activeDemoSong = null;
+            document.getElementById('demo-status').innerText = "พร้อมเล่น";
+            document.getElementById('demo-status').className = "text-xs font-normal text-gray-400 lowercase italic";
+            document.querySelectorAll('[id^="btn-demo-"]').forEach(btn => btn.classList.remove('bg-cyan-500/20', 'border-cyan-500'));
+        }
+
         function setupRecorder() {
             try {
                 mediaRecorder = new MediaRecorder(destNode.stream);
@@ -517,30 +917,38 @@
                     const blob = new Blob(audioChunks, { type: 'audio/webm' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.style.display = 'none'; a.href = url;
-                    a.download = `tambourine_pro_${Date.now()}.webm`;
-                    document.body.appendChild(a); a.click();
+                    a.style.display = 'none'; 
+                    a.href = url;
+                    a.download = `tambourine_perf_${Date.now()}.webm`;
+                    document.body.appendChild(a); 
+                    a.click();
                     setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 100);
                     audioChunks = [];
-                    alert('Audio Saved!');
+                    showNotification("ดาวน์โหลดบันทึกการเล่นเรียบร้อยแล้ว!");
                 };
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error("Recording interface failed to load:", e); 
+            }
         }
 
         function toggleRecord() {
             if (!audioCtx) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             if (!isRecording) {
-                audioChunks = []; mediaRecorder.start(); isRecording = true;
-                document.getElementById('btn-record').classList.add('recording');
+                audioChunks = []; 
+                mediaRecorder.start(); 
+                isRecording = true;
+                document.getElementById('btn-record').classList.add('pulse-recording', 'bg-red-500', 'text-white');
                 document.getElementById('btn-stop').disabled = false;
+                showNotification("เริ่มต้นบันทึกการเล่นแล้ว...");
             }
         }
 
         function stopRecord() {
             if (isRecording) {
-                mediaRecorder.stop(); isRecording = false;
-                document.getElementById('btn-record').classList.remove('recording');
+                mediaRecorder.stop(); 
+                isRecording = false;
+                document.getElementById('btn-record').classList.remove('pulse-recording', 'bg-red-500', 'text-white');
                 document.getElementById('btn-stop').disabled = true;
             }
         }
