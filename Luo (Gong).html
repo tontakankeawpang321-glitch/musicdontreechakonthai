@@ -2,11 +2,11 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chinese Luo (Gong) - Ultra-Realistic Synthesis</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for Thai and elegant headings -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,9 +25,10 @@
                 radial-gradient(circle at 50% 30%, #300606 0%, #050000 100%),
                 repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 10px);
             color: var(--text-color);
-            touch-action: none;
             user-select: none;
             -webkit-user-select: none;
+            /* Allow natural scrolling on mobile, removed global touch-action:none */
+            -webkit-overflow-scrolling: touch; 
         }
 
         .header-title {
@@ -67,7 +68,7 @@
             animation: vibrate 0.5s ease-out;
         }
 
-        /* Elegant custom scrollbar for webkit browsers */
+        /* Elegant custom scrollbar */
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -76,25 +77,26 @@
             border-radius: 4px;
         }
 
-        /* Custom style for range input */
+        /* Custom style for range input (Made larger for touch screens) */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             background: #2d1010;
-            height: 6px;
-            border-radius: 3px;
+            height: 8px;
+            border-radius: 4px;
             outline: none;
+            width: 100%;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: var(--gong-gold);
             cursor: pointer;
-            box-shadow: 0 0 5px rgba(229, 193, 88, 0.8);
+            box-shadow: 0 0 8px rgba(229, 193, 88, 0.8);
         }
 
         .gong-face {
@@ -140,40 +142,44 @@
                 inset 0 1px 3px rgba(255,255,255,0.1);
         }
 
-        /* Tabs CSS styling */
         .tab-btn.active {
             background-color: var(--accent-red);
             color: #fff;
             border-color: var(--gong-gold);
         }
+
+        /* Prevent scrolling only when dragging on the gong */
+        .gong-touch-area {
+            touch-action: none; 
+        }
     </style>
 </head>
-<body class="flex flex-col items-center min-height-screen p-3 md:p-6 justify-between select-none overflow-x-hidden">
+<body class="min-h-[100dvh] flex flex-col items-center p-4 md:p-6 overflow-x-hidden overflow-y-auto">
 
     <!-- App Container -->
-    <div id="mainApp" class="w-full max-w-lg flex flex-col items-center flex-grow justify-between gap-4">
+    <div id="mainApp" class="w-full max-w-md flex flex-col items-center flex-grow gap-6 pb-12">
         
         <!-- Header Section -->
-        <header class="text-center w-full">
+        <header class="text-center w-full mt-2">
             <h1 class="header-title text-xl md:text-2xl font-extrabold text-amber-400 tracking-wider flex items-center justify-center gap-2">
-                <span class="text-red-500 font-bold">🏮</span> เครื่องดนตรีจีน: ลั้ว (ฆ้อง) <span class="text-red-500 font-bold">🏮</span>
+                <span class="text-red-500 font-bold">🏮</span> เครื่องดนตรีจีน: ลั้ว <span class="text-red-500 font-bold">🏮</span>
             </h1>
             <p class="text-[11px] md:text-xs text-amber-200/60 mt-1 uppercase tracking-widest">
-                Traditional Chinese Luo Synthesizer • Physical Modeling Audio v2.0
+                Traditional Chinese Luo Synthesizer v2.0
             </p>
         </header>
 
         <!-- Tabbed Dashboard Container -->
-        <div class="w-full bg-[#1b0707]/90 border border-amber-900/40 rounded-2xl p-3 shadow-2xl backdrop-blur-md">
+        <div class="w-full bg-[#1b0707]/90 border border-amber-900/40 rounded-2xl p-3 shadow-2xl backdrop-blur-md flex-shrink-0">
             <!-- Tabs Menu -->
             <div class="flex justify-between border-b border-amber-900/30 pb-2 mb-3 gap-1">
-                <button onclick="switchTab('sound')" id="tabBtn-sound" class="tab-btn flex-1 py-1.5 px-1 text-xs md:text-sm font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg active">
-                    🎛️ ปรับแต่งเสียงสมจริง
+                <button onclick="switchTab('sound')" id="tabBtn-sound" class="tab-btn flex-1 py-2 px-1 text-xs font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg active">
+                    🎛️ ปรับแต่งเสียง
                 </button>
-                <button onclick="switchTab('demo')" id="tabBtn-demo" class="tab-btn flex-1 py-1.5 px-1 text-xs md:text-sm font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg">
+                <button onclick="switchTab('demo')" id="tabBtn-demo" class="tab-btn flex-1 py-2 px-1 text-xs font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg">
                     🎶 เพลงสาธิต
                 </button>
-                <button onclick="switchTab('record')" id="tabBtn-record" class="tab-btn flex-1 py-1.5 px-1 text-xs md:text-sm font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg">
+                <button onclick="switchTab('record')" id="tabBtn-record" class="tab-btn flex-1 py-2 px-1 text-xs font-semibold text-amber-200/70 border-b-2 border-transparent transition-all rounded-t-lg">
                     🎙️ บันทึกเสียง
                 </button>
             </div>
@@ -181,202 +187,168 @@
             <!-- Tab Content 1: Advanced Sound Settings -->
             <div id="tabContent-sound" class="space-y-3">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">ฟิสิกส์โมเดลลิงและการจำลองโลหะสัมฤทธิ์</h3>
-                    <button onclick="resetSliders()" class="text-[10px] bg-amber-900/40 hover:bg-amber-900/80 px-2 py-0.5 rounded border border-amber-700/40 text-amber-200">
+                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">ฟิสิกส์โมเดลลิง</h3>
+                    <button onclick="resetSliders()" class="text-[10px] bg-amber-900/40 hover:bg-amber-900/80 px-2 py-1 rounded border border-amber-700/40 text-amber-200 active:scale-95">
                         ค่าเริ่มต้น ↺
                     </button>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3 text-xs">
-                    <!-- Low Base Pitch -->
-                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                    <div class="space-y-2 bg-black/30 p-2.5 rounded-lg border border-amber-900/10">
                         <div class="flex justify-between text-amber-100/80">
-                            <span>ความถี่หลักฆ้องใหญ่:</span>
+                            <span>ความถี่ฆ้องใหญ่:</span>
                             <span id="valLowPitch" class="text-amber-400 font-mono">110 Hz</span>
                         </div>
-                        <input type="range" id="slideLowPitch" min="60" max="200" value="110" oninput="updateSliderVal('LowPitch', this.value, ' Hz')" class="w-full">
+                        <input type="range" id="slideLowPitch" min="60" max="200" value="110" oninput="updateSliderVal('LowPitch', this.value, ' Hz')">
                     </div>
 
-                    <!-- High Base Pitch -->
-                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                    <div class="space-y-2 bg-black/30 p-2.5 rounded-lg border border-amber-900/10">
                         <div class="flex justify-between text-amber-100/80">
-                            <span>ความถี่หลักฆ้องเล็ก:</span>
+                            <span>ความถี่ฆ้องเล็ก:</span>
                             <span id="valHighPitch" class="text-amber-400 font-mono">220 Hz</span>
                         </div>
-                        <input type="range" id="slideHighPitch" min="150" max="400" value="220" oninput="updateSliderVal('HighPitch', this.value, ' Hz')" class="w-full">
+                        <input type="range" id="slideHighPitch" min="150" max="400" value="220" oninput="updateSliderVal('HighPitch', this.value, ' Hz')">
                     </div>
 
-                    <!-- Sound Decay -->
-                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                    <div class="space-y-2 bg-black/30 p-2.5 rounded-lg border border-amber-900/10">
                         <div class="flex justify-between text-amber-100/80">
-                            <span>ความยาวหางเสียงสะท้อน:</span>
+                            <span>หางเสียงสะท้อน:</span>
                             <span id="valDecay" class="text-amber-400 font-mono">1.2x</span>
                         </div>
-                        <input type="range" id="slideDecay" min="0.3" max="2.5" step="0.1" value="1.2" oninput="updateSliderVal('Decay', this.value, 'x')" class="w-full">
+                        <input type="range" id="slideDecay" min="0.3" max="2.5" step="0.1" value="1.2" oninput="updateSliderVal('Decay', this.value, 'x')">
                     </div>
 
-                    <!-- Echo Reverb -->
-                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                    <div class="space-y-2 bg-black/30 p-2.5 rounded-lg border border-amber-900/10">
                         <div class="flex justify-between text-amber-100/80">
-                            <span>ความก้องสะท้อน (Space Echo):</span>
+                            <span>ความก้อง (Echo):</span>
                             <span id="valEcho" class="text-amber-400 font-mono">40%</span>
                         </div>
-                        <input type="range" id="slideEcho" min="0" max="80" value="40" oninput="updateSliderVal('Echo', this.value, '%')" class="w-full">
+                        <input type="range" id="slideEcho" min="0" max="80" value="40" oninput="updateSliderVal('Echo', this.value, '%')">
                     </div>
                 </div>
 
-                <!-- Custom Sound parameters -->
                 <div class="grid grid-cols-2 gap-3 text-xs">
-                    <!-- Clang Saturation (New Parameter!) -->
-                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                    <div class="space-y-2 bg-black/30 p-2.5 rounded-lg border border-amber-900/10">
                         <div class="flex justify-between text-amber-100/80">
-                            <span>ความแกร่งกระทบ (Saturation):</span>
+                            <span>ความแกร่งกระทบ:</span>
                             <span id="valClang" class="text-amber-400 font-mono">60%</span>
                         </div>
-                        <input type="range" id="slideClang" min="0" max="100" value="60" oninput="updateSliderVal('Clang', this.value, '%')" class="w-full">
+                        <input type="range" id="slideClang" min="0" max="100" value="60" oninput="updateSliderVal('Clang', this.value, '%')">
                     </div>
 
-                    <!-- FM Pitch Bend Sensitivity -->
-                    <div class="space-y-1 bg-black/30 p-2 rounded-lg border border-amber-900/10">
+                    <div class="space-y-2 bg-black/30 p-2.5 rounded-lg border border-amber-900/10">
                         <div class="flex justify-between text-amber-100/80">
-                            <span>ความชันสไลด์โทนเสียง (Pitch Bend):</span>
+                            <span>สไลด์โทนเสียง:</span>
                             <span id="valBend" class="text-amber-400 font-mono">110%</span>
                         </div>
-                        <input type="range" id="slideBend" min="0" max="200" value="110" oninput="updateSliderVal('Bend', this.value, '%')" class="w-full">
+                        <input type="range" id="slideBend" min="0" max="200" value="110" oninput="updateSliderVal('Bend', this.value, '%')">
                     </div>
                 </div>
             </div>
 
-            <!-- Tab Content 2: Demo Songs Playback -->
+            <!-- Tab Content 2: Demo Songs -->
             <div id="tabContent-demo" class="space-y-3 hidden">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">เพลงสาธิตสำหรับบรรเลง</h3>
-                    <div class="flex items-center gap-1.5 text-xs text-amber-200/90 bg-red-950/40 px-2 py-1 rounded border border-red-900/40">
-                        <input type="checkbox" id="chkFinalStrike" checked class="accent-red-600 cursor-pointer h-3.5 w-3.5 rounded">
-                        <label for="chkFinalStrike" class="cursor-pointer select-none text-[11px]">ตีฆ้องใหญ่จบเพลงสุดทรงพลัง</label>
+                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">เพลงสาธิต</h3>
+                    <div class="flex items-center gap-1.5 text-[10px] text-amber-200/90 bg-red-950/40 px-2 py-1.5 rounded border border-red-900/40">
+                        <input type="checkbox" id="chkFinalStrike" checked class="accent-red-600 cursor-pointer h-4 w-4 rounded">
+                        <label for="chkFinalStrike" class="cursor-pointer">ตีจบสุดทรงพลัง</label>
                     </div>
                 </div>
 
-                <!-- Playlists Grid -->
                 <div class="grid grid-cols-3 gap-2">
-                    <!-- Song 1 -->
-                    <button onclick="playDemoSong(1)" id="btnSong1" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center">
+                    <button onclick="playDemoSong(1)" id="btnSong1" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center active:scale-95">
                         <span class="text-xs text-red-400">🦁 เชิดสิงโต</span>
                         <span class="text-[9px] text-amber-200/60 leading-tight">รื่นเริงเร่งเร้า</span>
                         <span class="text-[10px] text-emerald-400 font-semibold" id="songStatus1">เล่นเพลง</span>
                     </button>
-                    <!-- Song 2 -->
-                    <button onclick="playDemoSong(2)" id="btnSong2" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center">
+                    <button onclick="playDemoSong(2)" id="btnSong2" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center active:scale-95">
                         <span class="text-xs text-amber-400">⛪ รุ่งอรุณเซน</span>
                         <span class="text-[9px] text-amber-200/60 leading-tight">กึกก้องผ่อนคลาย</span>
                         <span class="text-[10px] text-emerald-400 font-semibold" id="songStatus2">เล่นเพลง</span>
                     </button>
-                    <!-- Song 3 -->
-                    <button onclick="playDemoSong(3)" id="btnSong3" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center">
+                    <button onclick="playDemoSong(3)" id="btnSong3" class="flex flex-col items-center justify-between p-2 bg-gradient-to-b from-amber-950/30 to-black/30 hover:to-amber-950/20 border border-amber-900/30 rounded-xl transition-all h-20 text-center active:scale-95">
                         <span class="text-xs text-cyan-400">🐉 มังกรทอง</span>
                         <span class="text-[9px] text-amber-200/60 leading-tight">จังหวะเฉลิมฉลอง</span>
                         <span class="text-[10px] text-emerald-400 font-semibold" id="songStatus3">เล่นเพลง</span>
                     </button>
                 </div>
                 
-                <!-- Stop Button -->
-                <button id="btnStopSong" onclick="stopDemoSong()" disabled class="w-full py-1 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-800/40 rounded-lg text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+                <button id="btnStopSong" onclick="stopDemoSong()" disabled class="w-full py-2 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-800/40 rounded-lg text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform">
                     ⏹️ หยุดเล่นเพลงทั้งหมด
                 </button>
             </div>
 
             <!-- Tab Content 3: Recording Tools -->
-            <div id="tabContent-record" class="space-y-3 hidden">
-                <div class="flex items-center justify-between text-xs">
+            <div id="tabContent-record" class="space-y-4 hidden pb-1">
+                <div class="flex items-center justify-between">
                     <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">บันทึกการแสดงของคุณ</h3>
-                    <span id="recordTimer" class="font-mono text-red-400 font-semibold hidden">REC 0:00</span>
+                    <span id="recordTimer" class="font-mono text-red-400 text-xs font-semibold hidden">REC 0:00</span>
                 </div>
 
                 <div class="flex gap-2">
-                    <!-- Record Button -->
-                    <button id="btnRecord" class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-xs text-white font-bold rounded-xl border border-neutral-600 transition-all">
-                        <span id="recDot" class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-                        <span id="recText">เริ่มบันทึก</span>
+                    <button id="btnRecord" class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-[11px] text-white font-bold rounded-xl border border-neutral-600 transition-all">
+                        <div class="flex items-center gap-1.5"><span id="recDot" class="w-2.5 h-2.5 bg-red-500 rounded-full"></span><span id="recText">เริ่มบันทึก</span></div>
                     </button>
-                    <!-- Play Back Button -->
-                    <button id="btnPlay" disabled class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-amber-600/20 hover:bg-amber-600/30 text-amber-200 active:scale-95 text-xs font-bold rounded-xl border border-amber-700/30 disabled:opacity-30 disabled:pointer-events-none transition-all">
-                        <span>▶️ Play</span>
-                        <span>ฟังเสียงอัด</span>
+                    <button id="btnPlay" disabled class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-200 active:scale-95 text-[11px] font-bold rounded-xl border border-amber-700/30 disabled:opacity-30 disabled:pointer-events-none transition-all">
+                        <span>▶️ ฟังเสียง</span>
                     </button>
-                    <!-- Download Button -->
-                    <button id="btnDownload" disabled class="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-200 active:scale-95 text-xs font-bold rounded-xl border border-emerald-700/30 disabled:opacity-30 disabled:pointer-events-none transition-all">
-                        <span>📥 Save</span>
-                        <span>ดาวน์โหลด</span>
+                    <button id="btnDownload" disabled class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-200 active:scale-95 text-[11px] font-bold rounded-xl border border-emerald-700/30 disabled:opacity-30 disabled:pointer-events-none transition-all">
+                        <span>📥 โหลดเก็บ</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="text-center text-[10px] text-amber-200/50 bg-black/40 px-3 py-1 rounded-full border border-amber-900/10">
-            👉 เคาะ <span class="text-amber-400 font-semibold">ตรงกลางปุ่มนูน</span> เพื่อเสียงทุ้มลึกกังวาน • เคาะ <span class="text-amber-400 font-semibold">ขอบแผ่น</span> เพื่อเสียงซ่าสั่นระฆัง
+        <div class="text-center text-[11px] leading-relaxed text-amber-200/70 bg-black/40 px-4 py-2 rounded-xl border border-amber-900/20">
+            👉 เคาะ <span class="text-amber-400 font-semibold">ตรงกลาง</span> เพื่อเสียงทุ้มลึก<br>
+            เคาะ <span class="text-amber-400 font-semibold">ขอบแผ่น</span> เพื่อเสียงซ่าสั่นระฆัง
         </div>
 
         <!-- Instruments Interactive Stage -->
-        <div id="instrumentStage" class="w-full flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 py-1 flex-grow">
+        <div id="instrumentStage" class="w-full flex flex-col items-center justify-center gap-10 py-4 flex-grow">
             
-            <!-- Gong 1: Small Luo (High Pitch) -->
-            <div class="flex flex-col items-center">
+            <!-- Gong 1: Small Luo -->
+            <div class="flex flex-col items-center gong-touch-area">
                 <div class="relative group cursor-pointer active:scale-95 transition-transform" id="gongContainerSmall">
-                    <!-- Outer Decorative Glow -->
                     <div class="absolute inset-0 bg-red-600/10 blur-xl rounded-full scale-110 pointer-events-none"></div>
-                    <!-- Gong Body -->
-                    <div id="gongSmall" class="w-[145px] h-[145px] md:w-[190px] md:h-[190px] rounded-full relative flex items-center justify-center transition-all">
-                        <!-- Simulated Gold Texture -->
+                    <div id="gongSmall" class="w-[160px] h-[160px] rounded-full relative flex items-center justify-center transition-all">
                         <div class="gong-face absolute inset-0 rounded-full border-[3px] border-[#5e4406]"></div>
-                        <!-- Concentric Lathe Ring Lines -->
                         <div class="gong-face-ring"></div>
-                        <!-- Beaten Center Region -->
                         <div class="gong-beaten-texture"></div>
-                        <!-- Central Knob (Boss) -->
-                        <div class="gong-boss w-[38px] h-[38px] md:w-[50px] md:h-[50px] rounded-full absolute z-10"></div>
+                        <div class="gong-boss w-[42px] h-[42px] rounded-full absolute z-10"></div>
                     </div>
                 </div>
-                <div class="mt-2 text-center">
-                    <span class="text-xs md:text-sm text-amber-300 font-semibold tracking-wider block">ลั้วเล็ก (Xiaoluo)</span>
-                    <span class="text-[10px] text-amber-200/40">สไลด์เสียงสูงคมชัด (Rising Pitch)</span>
+                <div class="mt-3 text-center pointer-events-none">
+                    <span class="text-sm text-amber-300 font-semibold tracking-wider block">ลั้วเล็ก (Xiaoluo)</span>
+                    <span class="text-[10px] text-amber-200/50">สไลด์เสียงสูงคมชัด (Rising Pitch)</span>
                 </div>
             </div>
 
-            <!-- Gong 2: Large Luo (Low Pitch) -->
-            <div class="flex flex-col items-center">
+            <!-- Gong 2: Large Luo -->
+            <div class="flex flex-col items-center gong-touch-area">
                 <div class="relative group cursor-pointer active:scale-95 transition-transform" id="gongContainerLarge">
-                    <!-- Outer Decorative Glow -->
                     <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full scale-110 pointer-events-none"></div>
-                    <!-- Gong Body -->
-                    <div id="gongLarge" class="w-[210px] h-[210px] md:w-[270px] md:h-[270px] rounded-full relative flex items-center justify-center transition-all">
-                        <!-- Simulated Gold Texture -->
+                    <div id="gongLarge" class="w-[240px] h-[240px] rounded-full relative flex items-center justify-center transition-all">
                         <div class="gong-face absolute inset-0 rounded-full border-[4px] border-[#453202]"></div>
-                        <!-- Concentric Lathe Ring Lines -->
                         <div class="gong-face-ring"></div>
-                        <!-- Beaten Center Region -->
                         <div class="gong-beaten-texture"></div>
-                        <!-- Central Knob (Boss) -->
-                        <div class="gong-boss w-[62px] h-[62px] md:w-[80px] md:h-[80px] rounded-full absolute z-10"></div>
+                        <div class="gong-boss w-[70px] h-[70px] rounded-full absolute z-10"></div>
                     </div>
                 </div>
-                <div class="mt-2 text-center">
-                    <span class="text-xs md:text-sm text-amber-400 font-semibold tracking-wider block">ลั้วใหญ่ (Daluo)</span>
-                    <span class="text-[10px] text-amber-200/40">สไลด์เสียงต่ำทรงพลัง (Falling Pitch)</span>
+                <div class="mt-3 text-center pointer-events-none">
+                    <span class="text-sm text-amber-400 font-semibold tracking-wider block">ลั้วใหญ่ (Daluo)</span>
+                    <span class="text-[10px] text-amber-200/50">สไลด์เสียงต่ำทรงพลัง (Falling Pitch)</span>
                 </div>
             </div>
 
         </div>
 
-        <!-- Custom Warning / Notification Toast System -->
-        <div id="customToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-950/95 border border-red-700/50 text-red-200 text-xs px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 z-50 text-center w-[85%] max-w-sm">
-            <span id="toastMessage">ระบบเสียงพร้อมใช้งาน</span>
-        </div>
+    </div>
 
-        <!-- Footer -->
-        <footer class="w-full text-center text-[10px] text-amber-200/30 pb-1 mt-auto">
-            เคาะตำแหน่งกึ่งกลางเพื่อเสียงที่อิ่มทุ้ม หรือเคาะรอบนอกเพื่อเสียงสว่างซ่า 🏮
-        </footer>
-
+    <!-- Custom Warning / Notification Toast System -->
+    <div id="customToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-950/95 border border-red-700/50 text-red-200 text-xs px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 z-50 text-center w-[90%] max-w-xs">
+        <span id="toastMessage">ระบบเสียงพร้อมใช้งาน</span>
     </div>
 
     <script>
@@ -395,21 +367,18 @@
         let recInterval;
         let recSeconds = 0;
 
-        // Active timers for demo songs
         let activeSongTimeline = [];
         let currentlyPlayingSongId = null;
 
-        // Sound Configuration values updated by sliders (Physically Optimized defaults)
         const soundConfig = {
             lowPitch: 110,
             highPitch: 220,
             decay: 1.2,
             echo: 0.40,
             bend: 1.10,
-            clang: 60 // Soft saturation / metallic overdrive
+            clang: 60 
         };
 
-        // Custom Notification Toast function
         function showToast(message, isSuccess = false) {
             const toast = document.getElementById('customToast');
             const msgSpan = document.getElementById('toastMessage');
@@ -431,7 +400,6 @@
             }, 3000);
         }
 
-        // Switch panel tabs
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-amber-500', 'text-amber-200'));
             document.querySelectorAll('[id^="tabContent-"]').forEach(c => c.classList.add('hidden'));
@@ -442,7 +410,6 @@
             document.getElementById(`tabContent-${tabId}`).classList.remove('hidden');
         }
 
-        // Sliders handler
         function updateSliderVal(param, val, unit) {
             document.getElementById(`val${param}`).innerText = val + unit;
             
@@ -480,7 +447,6 @@
             updateSliderVal('Bend', 110, '%');
         }
 
-        // Generate Waveshaper Curve for metallic bronze saturation and bite
         function makeDistortionCurve(amount) {
             const k = typeof amount === 'number' ? amount : 50;
             const n_samples = 44100;
@@ -489,60 +455,46 @@
             
             for (let i = 0; i < n_samples; ++i) {
                 const x = (i * 2) / n_samples - 1;
-                // Elegant soft distortion mapping mimicking solid copper overload
                 curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
             }
             return curve;
         }
 
-        // Web Audio Initializer
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new AudioContext();
                 
-                // Master volume node
                 masterGain = audioCtx.createGain();
                 masterGain.gain.value = 0.85;
 
-                // Create custom waveshaper to simulate metallic bronze saturation
                 waveshaperNode = audioCtx.createWaveShaper();
                 waveshaperNode.curve = makeDistortionCurve(soundConfig.clang * 0.7);
                 waveshaperNode.oversample = '4x';
 
-                // Connect routing chain: Synthesizer Nodes -> Saturation -> Master Output
                 waveshaperNode.connect(masterGain);
                 masterGain.connect(audioCtx.destination);
 
-                // Space/Echo Delay setup for lush atmospheric sound
                 echoDelayNode = audioCtx.createDelay(1.5);
                 echoGainNode = audioCtx.createGain();
 
-                echoDelayNode.delayTime.value = 0.36; // Reflective theater resonance
-                echoGainNode.gain.value = soundConfig.echo * 0.65; // Feedback amount
+                echoDelayNode.delayTime.value = 0.36; 
+                echoGainNode.gain.value = soundConfig.echo * 0.65; 
 
-                // Create feedback delay loop
                 masterGain.connect(echoDelayNode);
                 echoDelayNode.connect(echoGainNode);
                 echoGainNode.connect(echoDelayNode);
-                echoGainNode.connect(audioCtx.destination); // Wet signal
+                echoGainNode.connect(audioCtx.destination); 
 
-                // Setup Media Recording Stream
                 recorderDestination = audioCtx.createMediaStreamDestination();
                 masterGain.connect(recorderDestination);
                 echoGainNode.connect(recorderDestination);
 
-                showToast("ระบบเสียงฟิสิกส์โมเดลสัมฤทธิ์พร้อมเล่นแล้ว!", true);
+                showToast("ระบบเสียงพร้อมใช้งาน", true);
             } else if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        /**
-         * Ultra-Realistic Chinese Luo physical model
-         * @param {string} pitchType 'low' (Daluo) or 'high' (Xiaoluo)
-         * @param {number} intensity Strike force (0.0 - 1.0)
-         * @param {number} strikeRatio Position on gong: 0.0 (exact center), 1.0 (very rim)
-         */
         function playGongSound(pitchType, intensity = 1.0, strikeRatio = 0.2) {
             initAudio();
 
@@ -550,49 +502,34 @@
             const baseFreq = isLow ? soundConfig.lowPitch : soundConfig.highPitch;
             const now = audioCtx.currentTime;
 
-            // Attack dynamic gains based on hit location
-            // Center hits emphasize fundamental bass; rim hits bring massive crash-highs and faster decay
-            const rimEffect = strikeRatio; // 0 (center) to 1 (rim)
-            
-            // Overall decay determined by user slider, pitch preset, and strike location
+            const rimEffect = strikeRatio;
             const baseDecay = isLow ? (4.2 * soundConfig.decay) : (2.2 * soundConfig.decay);
-            const decayFactor = baseDecay * (1.0 - rimEffect * 0.4); // Rim strikes dampen faster
+            const decayFactor = baseDecay * (1.0 - rimEffect * 0.4); 
 
-            // Amplitude envelope for the overall hit
             const voiceGain = audioCtx.createGain();
-            voiceGain.connect(waveshaperNode); // Rout into waveshaper for metallic snap
+            voiceGain.connect(waveshaperNode); 
 
             voiceGain.gain.setValueAtTime(0, now);
-            voiceGain.gain.linearRampToValueAtTime(intensity * 0.9, now + 0.003); // Instant acoustic impact
+            voiceGain.gain.linearRampToValueAtTime(intensity * 0.9, now + 0.003); 
             voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + decayFactor);
 
-            // Inharmonic Partial Ratios - modeling the irregular bronze plate modes
-            // Low Daluo vs High Xiaoluo frequencies
             const partialRatios = isLow 
                 ? [1.0, 1.48, 2.05, 2.72, 3.55, 4.48, 5.52, 6.7] 
                 : [1.0, 1.39, 1.82, 2.38, 3.05, 4.15, 5.4];
                 
-            // Balanced volumes for each partial.
-            // Center strikes dampen highs; rim strikes exaggerate them.
             const baseGains = isLow
                 ? [1.0, 0.70, 0.50, 0.35, 0.22, 0.12, 0.06, 0.02]
                 : [1.0, 0.60, 0.40, 0.25, 0.15, 0.08, 0.03];
 
-            // Real physical gongs drop high frequencies faster than low ones!
-            // We apply individual decaying factors to each frequency partial.
             partialRatios.forEach((ratio, index) => {
                 const osc = audioCtx.createOscillator();
                 const oscGain = audioCtx.createGain();
 
-                // Core frequencies use triangle waves for wooden mallet body warmth;
-                // High frequency metallic resonances are modeled with sine waves.
                 osc.type = (index === 0) ? 'triangle' : 'sine';
                 
                 const targetFreq = baseFreq * ratio;
                 osc.frequency.setValueAtTime(targetFreq, now);
 
-                // Authentic Gong Pitch Sweeps (Daluo falls, Xiaoluo rises)
-                // Sweeps are more intense on heavy hits (higher intensity)
                 const bendIntensity = soundConfig.bend;
                 const sweepAmount = bendIntensity * (isLow ? -0.25 : 0.32); 
                 const sweepTime = isLow ? (0.42 * (1.0 + rimEffect)) : 0.28;
@@ -602,23 +539,18 @@
                     osc.frequency.exponentialRampToValueAtTime(targetFreq, now + sweepTime);
                 }
 
-                // Detuning the partials slightly dynamically over time to emulate beating bronze sheets
                 osc.detune.setValueAtTime((Math.random() - 0.5) * 8, now);
                 osc.detune.linearRampToValueAtTime((Math.random() - 0.5) * 20, now + decayFactor);
 
-                // Apply positional strike volume adjustments to partials
                 let partialVolume = baseGains[index];
                 if (index > 0) {
-                    // Rim strikes boost upper harmonics significantly
                     partialVolume *= (1.0 - (1.0 - rimEffect * 1.5) * (1.0 - index / partialRatios.length));
                 } else {
-                    // Center strikes boost core fundamental
                     partialVolume *= (1.2 - rimEffect * 0.7);
                 }
 
                 oscGain.gain.setValueAtTime(partialVolume, now);
                 
-                // Frequency-dependent exponential decay! High partials fade out instantly
                 const partialDecayFactor = decayFactor * Math.pow(0.82 - (rimEffect * 0.12), index);
                 oscGain.gain.exponentialRampToValueAtTime(0.0005, now + Math.max(0.05, partialDecayFactor));
 
@@ -629,8 +561,7 @@
                 osc.stop(now + decayFactor + 0.2);
             });
 
-            // Dual-Stage mallet friction strike excitation sound
-            const noiseBufferLen = audioCtx.sampleRate * 0.08; // 80ms of wood-felt impact
+            const noiseBufferLen = audioCtx.sampleRate * 0.08; 
             const noiseBuffer = audioCtx.createBuffer(1, noiseBufferLen, audioCtx.sampleRate);
             const noiseData = noiseBuffer.getChannelData(0);
             for (let i = 0; i < noiseBufferLen; i++) {
@@ -640,11 +571,9 @@
             const noiseSource = audioCtx.createBufferSource();
             noiseSource.buffer = noiseBuffer;
 
-            // Sweeping bandpass filter to model dynamic compression of soft mallet mallet
             const noiseFilter = audioCtx.createBiquadFilter();
             noiseFilter.type = 'bandpass';
             
-            // Rim strikes produce much brighter high frequency impact noise
             const filterStartFreq = isLow ? (300 + rimEffect * 1200) : (800 + rimEffect * 2000);
             const filterEndFreq = isLow ? 150 : 350;
             
@@ -653,7 +582,6 @@
             noiseFilter.Q.value = isLow ? 3.0 : 5.0;
 
             const noiseGain = audioCtx.createGain();
-            // Edge hit has more prominent initial friction splash
             const noiseLevel = isLow ? (0.35 + rimEffect * 0.3) : (0.45 + rimEffect * 0.4);
             noiseGain.gain.setValueAtTime(noiseLevel * intensity, now);
             noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
@@ -663,24 +591,20 @@
             noiseGain.connect(voiceGain);
             noiseSource.start(now);
 
-            // Clean up node references
             setTimeout(() => {
                 voiceGain.disconnect();
             }, (decayFactor + 0.5) * 1000);
         }
 
-        // Interaction Animations and Shake
         function triggerGongImpact(gongType, event = null) {
             const isLow = gongType === 'low';
             const gongNode = isLow ? document.getElementById('gongLarge') : document.getElementById('gongSmall');
             
-            // Add vibration class
             gongNode.classList.remove('vibrate-gong');
-            void gongNode.offsetWidth; // Force Reflow
+            void gongNode.offsetWidth; 
             gongNode.classList.add('vibrate-gong');
 
-            // Calculate striking position (from exact center of gong) to model physics
-            let strikeRatio = 0.15; // default near center
+            let strikeRatio = 0.15; 
             
             if (event) {
                 const rect = gongNode.getBoundingClientRect();
@@ -688,7 +612,10 @@
                 const gongCenterY = rect.top + rect.height / 2;
                 
                 let clientX, clientY;
-                if (event.touches && event.touches.length > 0) {
+                if (event.changedTouches && event.changedTouches.length > 0) {
+                    clientX = event.changedTouches[0].clientX;
+                    clientY = event.changedTouches[0].clientY;
+                } else if (event.touches && event.touches.length > 0) {
                     clientX = event.touches[0].clientX;
                     clientY = event.touches[0].clientY;
                 } else {
@@ -696,24 +623,20 @@
                     clientY = event.clientY;
                 }
 
-                const dx = clientX - gongCenterX;
-                const dy = clientY - gongCenterY;
-                const distance = Math.sqrt(dx*dx + dy*dy);
-                const maxRadius = rect.width / 2;
-                
-                // Normalise striking distance: 0.0 (perfect center), 1.0 (outermost rim boundary)
-                strikeRatio = Math.min(1.0, distance / maxRadius);
+                if (clientX && clientY) {
+                    const dx = clientX - gongCenterX;
+                    const dy = clientY - gongCenterY;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    const maxRadius = rect.width / 2;
+                    strikeRatio = Math.min(1.0, distance / maxRadius);
+                }
             }
 
-            // Trigger visual ripple at collision coordinate
             createRippleEffect(gongNode, event);
-
-            // Physical Sound Strike using Strike Ratio
             playGongSound(gongType, 1.0, strikeRatio);
 
-            // Subtle Screen Shake on Low Large Gong hit (increases if struck towards center)
             if (isLow) {
-                const shakeIntensity = 1.0 - (strikeRatio * 0.4); // Center hit shakes more
+                const shakeIntensity = 1.0 - (strikeRatio * 0.4); 
                 if (shakeIntensity > 0.5) {
                     const app = document.getElementById('mainApp');
                     app.classList.remove('shake-active');
@@ -724,7 +647,6 @@
             }
         }
 
-        // Touch/Mouse Coordinate Ripple
         function createRippleEffect(element, event) {
             const ripple = document.createElement("div");
             const rect = element.getBoundingClientRect();
@@ -735,15 +657,21 @@
 
             if (event) {
                 let clientX, clientY;
-                if (event.touches && event.touches.length > 0) {
+                if (event.changedTouches && event.changedTouches.length > 0) {
+                    clientX = event.changedTouches[0].clientX;
+                    clientY = event.changedTouches[0].clientY;
+                } else if (event.touches && event.touches.length > 0) {
                     clientX = event.touches[0].clientX;
                     clientY = event.touches[0].clientY;
                 } else {
                     clientX = event.clientX;
                     clientY = event.clientY;
                 }
-                x = clientX - rect.left;
-                y = clientY - rect.top;
+                
+                if (clientX && clientY) {
+                    x = clientX - rect.left;
+                    y = clientY - rect.top;
+                }
             }
 
             ripple.className = "absolute bg-white/40 rounded-full pointer-events-none transform -translate-x-1/2 -translate-y-1/2 scale-0 animate-[ripple-anim_0.5s_linear]";
@@ -767,12 +695,10 @@
             setTimeout(() => ripple.remove(), 600);
         }
 
-        // Attach touch and mouse events safely
         function setupEventListeners() {
             const smallCont = document.getElementById('gongContainerSmall');
             const largeCont = document.getElementById('gongContainerLarge');
 
-            // Small Gong
             smallCont.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 triggerGongImpact('high', e);
@@ -783,7 +709,6 @@
                 triggerGongImpact('high', e);
             });
 
-            // Large Gong
             largeCont.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 triggerGongImpact('low', e);
@@ -796,7 +721,7 @@
         }
 
         const DEMO_SONGS = {
-            1: [ // Chinese Lion Dance / เชิดสิงโตเร้าใจ
+            1: [ 
                 { time: 0, type: 'low', vol: 0.9, pos: 0.1 },
                 { time: 400, type: 'high', vol: 0.7, pos: 0.3 },
                 { time: 600, type: 'high', vol: 0.7, pos: 0.3 },
@@ -815,8 +740,8 @@
                 { time: 3700, type: 'high', vol: 0.9, pos: 0.5 },
                 { time: 3850, type: 'high', vol: 1.0, pos: 0.6 }
             ],
-            2: [ // Temple Dawn Bell / รุ่งอรุณเซน (Deeper resonances)
-                { time: 0, type: 'low', vol: 1.0, pos: 0.0 }, // pure center hits
+            2: [ 
+                { time: 0, type: 'low', vol: 1.0, pos: 0.0 }, 
                 { time: 1200, type: 'high', vol: 0.5, pos: 0.1 },
                 { time: 2000, type: 'low', vol: 0.8, pos: 0.0 },
                 { time: 3200, type: 'high', vol: 0.6, pos: 0.1 },
@@ -825,7 +750,7 @@
                 { time: 6200, type: 'high', vol: 0.6, pos: 0.3 },
                 { time: 7000, type: 'low', vol: 0.7, pos: 0.0 }
             ],
-            3: [ // Golden Dragon Festival / เทศกาลมังกรทอง
+            3: [ 
                 { time: 0, type: 'high', vol: 0.8, pos: 0.2 },
                 { time: 250, type: 'low', vol: 0.8, pos: 0.1 },
                 { time: 500, type: 'high', vol: 0.8, pos: 0.2 },
@@ -847,15 +772,13 @@
             ]
         };
 
-        // Play Selected Demo Song
         function playDemoSong(songId) {
             initAudio();
-            stopDemoSong(); // Clear active songs
+            stopDemoSong(); 
 
             currentlyPlayingSongId = songId;
             document.getElementById('btnStopSong').disabled = false;
 
-            // Highlight active song in UI
             document.getElementById(`songStatus${songId}`).innerText = "กำลังบรรเลง...";
             document.getElementById(`songStatus${songId}`).classList.replace('text-emerald-400', 'text-amber-300');
             document.getElementById(`btnSong${songId}`).classList.add('ring-2', 'ring-red-500');
@@ -863,7 +786,6 @@
             const pattern = [...DEMO_SONGS[songId]];
             let lastEventTime = 0;
 
-            // Handle optional Grand Final Strike (Strike ratio set to 0.0 for pure center force)
             if (document.getElementById('chkFinalStrike').checked) {
                 const lastNote = pattern[pattern.length - 1];
                 lastEventTime = lastNote.time + 800;
@@ -872,7 +794,6 @@
                 lastEventTime = pattern[pattern.length - 1].time + 600;
             }
 
-            // Schedule note triggers
             pattern.forEach(note => {
                 const timerId = setTimeout(() => {
                     const isLow = note.type === 'low';
@@ -883,7 +804,6 @@
                         void gongNode.offsetWidth;
                         gongNode.classList.add('vibrate-gong');
                         
-                        // Extra massive shake
                         const app = document.getElementById('mainApp');
                         app.classList.remove('shake-active');
                         void app.offsetWidth;
@@ -891,7 +811,7 @@
                         
                         playGongSound('low', note.vol, note.pos);
                         createRippleEffect(gongNode, null);
-                        showToast("🐉 ปิดฉากการแสดงด้วยความก้องกังวานปฐพี!", true);
+                        showToast("🐉 ปิดฉากด้วยความกังวาน!", true);
                     } else {
                         gongNode.classList.remove('vibrate-gong');
                         void gongNode.offsetWidth;
@@ -903,7 +823,6 @@
                 activeSongTimeline.push(timerId);
             });
 
-            // Schedule ending of the song
             const endTimer = setTimeout(() => {
                 cleanupSongUI(songId);
             }, lastEventTime + 1200);
@@ -911,7 +830,6 @@
             activeSongTimeline.push(endTimer);
         }
 
-        // Clean UI after playing
         function cleanupSongUI(songId) {
             document.getElementById(`songStatus${songId}`).innerText = "เล่นเพลง";
             document.getElementById(`songStatus${songId}`).classList.replace('text-amber-300', 'text-emerald-400');
@@ -920,7 +838,6 @@
             currentlyPlayingSongId = null;
         }
 
-        // Stop all active song schedules
         function stopDemoSong() {
             activeSongTimeline.forEach(id => clearTimeout(id));
             activeSongTimeline = [];
@@ -930,7 +847,6 @@
             }
         }
 
-        // Recording Logic
         const btnRecord = document.getElementById('btnRecord');
         const btnPlay = document.getElementById('btnPlay');
         const btnDownload = document.getElementById('btnDownload');
@@ -976,18 +892,17 @@
 
                 btnPlay.disabled = false;
                 btnDownload.disabled = false;
-                showToast("บันทึกเสียงสะท้อนสมจริงเสร็จสิ้น!", true);
+                showToast("บันทึกการแสดงเสร็จสิ้น!", true);
             };
 
             mediaRecorder.start();
             isRecording = true;
 
-            // Setup Recording Timer
             recSeconds = 0;
             recTimer.classList.remove('hidden');
             recTimer.innerText = "REC 0:00";
             recDot.classList.add('animate-ping');
-            recText.innerText = "หยุดการบันทึก";
+            recText.innerText = "หยุดบันทึก";
             btnRecord.classList.replace('bg-neutral-800', 'bg-red-700');
 
             recInterval = setInterval(() => {
@@ -1017,9 +932,9 @@
         btnPlay.addEventListener('click', () => {
             if (recordedAudio.src) {
                 recordedAudio.play();
-                btnPlay.innerHTML = "<span>🔊 Playing...</span>";
+                btnPlay.innerHTML = "<span>🔊 เล่นเสียง</span>";
                 recordedAudio.onended = () => {
-                    btnPlay.innerHTML = "<span>▶️ Play</span><span>ฟังเสียงอัด</span>";
+                    btnPlay.innerHTML = "<span>▶️ ฟังเสียง</span>";
                 };
             }
         });
@@ -1040,11 +955,10 @@
             }
         });
 
-        // Initialize engine on interaction
         window.addEventListener('load', () => {
             setupEventListeners();
             document.body.addEventListener('click', initAudio, { once: true });
-            document.body.addEventListener('touchstart', initAudio, { once: true });
+            document.body.addEventListener('touchstart', initAudio, { once: true, passive: true });
         });
     </script>
 </body>
